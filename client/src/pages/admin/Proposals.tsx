@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,24 +10,191 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, RefreshCw, Link as LinkIcon, X } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
-// Mock Data
-const INITIAL_PROPOSALS = [
-  { id: 1, client: "Maria", createdAt: "Invalid Date", validUntil: "", status: "Inativo" },
-  { id: 2, client: "Aurora Tecnologia", createdAt: "17/06/2025", validUntil: "27/06/2025", status: "Ativo" },
-  { id: 3, client: "teste", createdAt: "16/06/2025", validUntil: "26/06/2025", status: "Ativo" },
-  { id: 4, client: "Delivery App", createdAt: "17/06/2025", validUntil: "27/06/2025", status: "Ativo" },
-  { id: 5, client: "Deliveru=y App Simples", createdAt: "17/06/2025", validUntil: "27/06/2025", status: "Ativo" },
-  { id: 6, client: "Eduardo", createdAt: "11/12/2025", validUntil: "21/12/2025", status: "Ativo" },
-];
+import { supabase } from "@/lib/supabase";
 
 export default function AdminProposals() {
-  const [proposals, setProposals] = useState(INITIAL_PROPOSALS);
+  const [proposals, setProposals] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingProposal, setEditingProposal] = useState<any | null>(null);
+
+  // Form State
+  const [clientName, setClientName] = useState("");
+  const [slug, setSlug] = useState("");
+  const [slugError, setSlugError] = useState("");
+  const [createdAt, setCreatedAt] = useState(new Date().toISOString().split('T')[0]);
+  const [objective, setObjective] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState("");
+  const [investmentValue, setInvestmentValue] = useState("");
+
+  // Scope & Timeline
   const [scopeItems, setScopeItems] = useState<string[]>([]);
   const [newScopeItem, setNewScopeItem] = useState("");
-  const [timelineItems, setTimelineItems] = useState<{step: string, period: string}[]>([]);
+  const [timelineItems, setTimelineItems] = useState<{ step: string, period: string }[]>([]);
   const [newTimelineStep, setNewTimelineStep] = useState("");
   const [newTimelinePeriod, setNewTimelinePeriod] = useState("");
+
+  // Payment & Conditions
+  const [payment50_50, setPayment50_50] = useState(true);
+  const [payment100, setPayment100] = useState(false);
+  const [payment3x, setPayment3x] = useState(false);
+  const [paymentCustom, setPaymentCustom] = useState(false);
+  const [customPaymentMethod, setCustomPaymentMethod] = useState("");
+  const [conditions, setConditions] = useState<Array<{ text: string; checked: boolean }>>([
+    { text: "Revisões: até 2 rodadas incluídas por etapa. Alterações fora do escopo serão orçadas.", checked: true },
+    { text: "Garantia: correções de falhas por até 30 dias após entrega.", checked: true },
+    { text: "Suporte: incluso durante o projeto. Após entrega, sob contratação extra.", checked: true },
+    { text: "Prazos: contagem começa após pagamento e recebimento dos materiais.", checked: true }
+  ]);
+
+  useEffect(() => {
+    fetchProposals();
+  }, []);
+
+  const fetchProposals = async () => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .schema('app_portfolio')
+      .from('proposals')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error("Error fetching proposals:", error);
+    } else {
+      setProposals(data || []);
+    }
+    setIsLoading(false);
+  };
+
+  const checkSlugAvailability = async (slugToCheck: string) => {
+    if (!slugToCheck) return;
+    let query = supabase
+      .schema('app_portfolio')
+      .from('proposals')
+      .select('id')
+      .eq('slug', slugToCheck);
+    
+    // Se estiver editando, excluir a proposta atual da verificação
+    if (editingProposal) {
+      query = query.neq('id', editingProposal.id);
+    }
+    
+    const { data, error } = await query.maybeSingle();
+
+    if (data) {
+      setSlugError("Este slug já está em uso.");
+    } else {
+      setSlugError("");
+    }
+  };
+
+  const handleCreateProposal = async () => {
+    if (slugError) return alert("Corrija o erro do slug antes de continuar.");
+    if (!clientName || !slug) return alert("Preencha os campos obrigatórios.");
+
+    // Construir array de métodos de pagamento baseado nos checkboxes
+    const selectedPaymentMethods: string[] = [];
+    if (payment50_50) selectedPaymentMethods.push("50% no início / 50% na entrega");
+    if (payment100) selectedPaymentMethods.push("100% antecipado (desconto de 10%)");
+    if (payment3x) selectedPaymentMethods.push("Parcelado em até 3x (sem juros)");
+    if (paymentCustom && customPaymentMethod.trim()) {
+      selectedPaymentMethods.push(customPaymentMethod.trim());
+    }
+
+    // Construir array de condições baseado nos checkboxes marcados
+    const selectedConditions = conditions
+      .filter(c => c.checked)
+      .map(c => c.text);
+
+    const payload = {
+      client_name: clientName,
+      slug,
+      created_at: new Date(createdAt).toISOString(),
+      objective,
+      scope: scopeItems,
+      timeline: timelineItems,
+      delivery_date: deliveryDate || null,
+      investment_value: parseFloat(investmentValue.replace(',', '.')) || 0,
+      payment_methods: selectedPaymentMethods,
+      conditions: selectedConditions
+    };
+
+    if (editingProposal) {
+      // Update existing proposal
+      const { error } = await supabase
+        .schema('app_portfolio')
+        .from('proposals')
+        .update(payload)
+        .eq('id', editingProposal.id);
+
+      if (error) {
+        console.error("Error updating proposal:", error);
+        alert("Erro ao atualizar proposta.");
+      } else {
+        alert("Proposta atualizada com sucesso!");
+        setIsModalOpen(false);
+        setEditingProposal(null);
+        fetchProposals();
+        resetForm();
+      }
+    } else {
+      // Create new proposal
+      const { error } = await supabase
+        .schema('app_portfolio')
+        .from('proposals')
+        .insert(payload);
+
+      if (error) {
+        console.error("Error creating proposal:", error);
+        alert("Erro ao criar proposta.");
+      } else {
+        alert("Proposta criada com sucesso!");
+        setIsModalOpen(false);
+        fetchProposals();
+        resetForm();
+      }
+    }
+  };
+
+  const resetForm = () => {
+    setEditingProposal(null);
+    setClientName("");
+    setSlug("");
+    setSlugError("");
+    setCreatedAt(new Date().toISOString().split('T')[0]);
+    setObjective("");
+    setScopeItems([]);
+    setTimelineItems([]);
+    setDeliveryDate("");
+    setInvestmentValue("");
+    setPayment50_50(true);
+    setPayment100(false);
+    setPayment3x(false);
+    setPaymentCustom(false);
+    setCustomPaymentMethod("");
+    setConditions([
+      { text: "Revisões: até 2 rodadas incluídas por etapa. Alterações fora do escopo serão orçadas.", checked: true },
+      { text: "Garantia: correções de falhas por até 30 dias após entrega.", checked: true },
+      { text: "Suporte: incluso durante o projeto. Após entrega, sob contratação extra.", checked: true },
+      { text: "Prazos: contagem começa após pagamento e recebimento dos materiais.", checked: true }
+    ]);
+  };
+
+  const calculateValidUntil = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    date.setDate(date.getDate() + 10);
+    return date.toLocaleDateString('pt-BR');
+  };
+
+  const getStatus = (createdAtString: string) => {
+    const created = new Date(createdAtString);
+    const validUntil = new Date(created);
+    validUntil.setDate(validUntil.getDate() + 10);
+    const now = new Date();
+    return now > validUntil ? "Inativo" : "Ativo";
+  };
 
   const handleAddScopeItem = () => {
     if (newScopeItem.trim()) {
@@ -52,10 +219,101 @@ export default function AdminProposals() {
     setTimelineItems(timelineItems.filter((_, i) => i !== index));
   };
 
-  const handleCopyLink = (id: number) => {
-    const link = `${window.location.origin}/proposta/${id}`;
+  const handleCopyLink = (slug: string) => {
+    const link = `${window.location.origin}/proposta/${slug}`;
     navigator.clipboard.writeText(link);
     alert("Link copiado para a área de transferência!");
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm("Tem certeza que deseja excluir esta proposta?")) return;
+
+    const { error } = await supabase
+      .schema('app_portfolio')
+      .from('proposals')
+      .delete()
+      .eq('id', id);
+
+    if (error) {
+      console.error("Error deleting proposal:", error);
+      alert("Erro ao excluir proposta.");
+    } else {
+      alert("Proposta excluída com sucesso!");
+      fetchProposals();
+    }
+  };
+
+  const handleEdit = (proposal: any) => {
+    setEditingProposal(proposal);
+    setClientName(proposal.client_name || "");
+    setSlug(proposal.slug || "");
+    setCreatedAt(new Date(proposal.created_at).toISOString().split('T')[0]);
+    setObjective(proposal.objective || "");
+    setDeliveryDate(proposal.delivery_date || "");
+    setInvestmentValue(proposal.investment_value?.toString().replace('.', ',') || "");
+    setScopeItems(Array.isArray(proposal.scope) ? proposal.scope : []);
+    setTimelineItems(Array.isArray(proposal.timeline) ? proposal.timeline : []);
+    
+    // Carregar métodos de pagamento
+    const paymentMethods = proposal.payment_methods || [];
+    setPayment50_50(paymentMethods.includes("50% no início / 50% na entrega"));
+    setPayment100(paymentMethods.includes("100% antecipado (desconto de 10%)"));
+    setPayment3x(paymentMethods.includes("Parcelado em até 3x (sem juros)"));
+    
+    // Verificar se há método personalizado (não é uma das opções padrão)
+    const standardMethods = [
+      "50% no início / 50% na entrega",
+      "100% antecipado (desconto de 10%)",
+      "Parcelado em até 3x (sem juros)"
+    ];
+    const customMethod = paymentMethods.find((pm: string) => !standardMethods.includes(pm));
+    if (customMethod) {
+      setPaymentCustom(true);
+      setCustomPaymentMethod(customMethod);
+    } else {
+      setPaymentCustom(false);
+      setCustomPaymentMethod("");
+    }
+    
+    // Carregar condições
+    const savedConditions = proposal.conditions || [];
+    const defaultConditions = [
+      "Revisões: até 2 rodadas incluídas por etapa. Alterações fora do escopo serão orçadas.",
+      "Garantia: correções de falhas por até 30 dias após entrega.",
+      "Suporte: incluso durante o projeto. Após entrega, sob contratação extra.",
+      "Prazos: contagem começa após pagamento e recebimento dos materiais."
+    ];
+    
+    setConditions(defaultConditions.map(defaultText => ({
+      text: defaultText,
+      checked: savedConditions.includes(defaultText)
+    })).concat(
+      savedConditions
+        .filter((sc: string) => !defaultConditions.includes(sc))
+        .map((customText: string) => ({
+          text: customText,
+          checked: true
+        }))
+    ));
+    
+    setIsModalOpen(true);
+  };
+
+  const handleReload = async (id: number) => {
+    const today = new Date().toISOString();
+    const { error } = await supabase
+      .schema('app_portfolio')
+      .from('proposals')
+      .update({ created_at: today })
+      .eq('id', id);
+
+    if (error) {
+      console.error("Error updating proposal date:", error);
+      alert("Erro ao atualizar data da proposta.");
+    } else {
+      alert("Data de criação atualizada para hoje!");
+      fetchProposals();
+    }
   };
 
   return (
@@ -73,45 +331,74 @@ export default function AdminProposals() {
             </DialogTrigger>
             <DialogContent className="bg-card border-white/10 max-w-2xl w-full max-h-[85vh] overflow-y-scroll text-white">
               <DialogHeader>
-                <DialogTitle className="text-xl font-bold">Nova Proposta</DialogTitle>
+                <DialogTitle className="text-xl font-bold">
+                  {editingProposal ? "Editar Proposta" : "Nova Proposta"}
+                </DialogTitle>
                 <VisuallyHidden>
-                  <h2>Formulário de criação de proposta</h2>
+                  <h2>Formulário de {editingProposal ? "edição" : "criação"} de proposta</h2>
                 </VisuallyHidden>
               </DialogHeader>
-              
+
               <div className="space-y-6 py-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label className="block text-sm mb-1">Nome do Cliente</Label>
-                    <Input className="bg-background border-input" />
+                    <Input
+                      className="bg-background border-input"
+                      value={clientName}
+                      onChange={(e) => setClientName(e.target.value)}
+                    />
                   </div>
                   <div>
                     <Label className="block text-sm mb-1">Slug</Label>
-                    <Input className="bg-background border-input" />
+                    <Input
+                      className={`bg-background border-input ${slugError ? "border-red-500" : ""}`}
+                      value={slug}
+                      onChange={(e) => {
+                        setSlug(e.target.value);
+                        setSlugError("");
+                      }}
+                      onBlur={(e) => checkSlugAvailability(e.target.value)}
+                    />
+                    {slugError && <p className="text-red-500 text-xs mt-1">{slugError}</p>}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label className="block text-sm mb-1">Data de Criação</Label>
-                    <Input type="date" className="bg-background border-input" />
+                    <Input
+                      type="date"
+                      className="bg-background border-input"
+                      value={createdAt}
+                      onChange={(e) => setCreatedAt(e.target.value)}
+                    />
                   </div>
                   <div>
                     <Label className="block text-sm mb-1">Validade</Label>
-                    <Input className="bg-background border-input" disabled />
+                    <Input
+                      className="bg-background border-input"
+                      disabled
+                      value={calculateValidUntil(createdAt)}
+                    />
                   </div>
                 </div>
 
                 <div>
                   <Label className="block text-sm mb-1">Objetivo do Projeto</Label>
-                  <Textarea className="bg-background border-input min-h-[80px]" rows={3} />
+                  <Textarea
+                    className="bg-background border-input min-h-[80px]"
+                    rows={3}
+                    value={objective}
+                    onChange={(e) => setObjective(e.target.value)}
+                  />
                 </div>
 
                 <div>
                   <Label className="block text-sm mb-1">Escopo dos Serviços</Label>
                   <div className="flex gap-2 mb-2">
-                    <Input 
-                      placeholder="Adicionar item..." 
+                    <Input
+                      placeholder="Adicionar item..."
                       className="bg-background border-input"
                       value={newScopeItem}
                       onChange={(e) => setNewScopeItem(e.target.value)}
@@ -133,14 +420,14 @@ export default function AdminProposals() {
                 <div>
                   <Label className="block text-sm mb-1">Cronograma</Label>
                   <div className="flex gap-2 mb-2">
-                    <Input 
-                      placeholder="Etapa" 
+                    <Input
+                      placeholder="Etapa"
                       className="bg-background border-input"
                       value={newTimelineStep}
                       onChange={(e) => setNewTimelineStep(e.target.value)}
                     />
-                    <Input 
-                      placeholder="Período estimado" 
+                    <Input
+                      placeholder="Período estimado"
                       className="bg-background border-input"
                       value={newTimelinePeriod}
                       onChange={(e) => setNewTimelinePeriod(e.target.value)}
@@ -159,7 +446,12 @@ export default function AdminProposals() {
                   </ul>
                   <div className="mt-2">
                     <Label className="block text-sm mb-1">Data Prevista para Entrega</Label>
-                    <Input type="date" className="bg-background border-input" />
+                    <Input
+                      type="date"
+                      className="bg-background border-input"
+                      value={deliveryDate}
+                      onChange={(e) => setDeliveryDate(e.target.value)}
+                    />
                   </div>
                 </div>
 
@@ -167,7 +459,12 @@ export default function AdminProposals() {
                   <Label className="block text-sm mb-1">Valor do Projeto</Label>
                   <div className="relative">
                     <span className="absolute left-3 top-2.5 text-gray-400 text-sm">R$</span>
-                    <Input className="bg-background border-input pl-8" placeholder="0,00" />
+                    <Input
+                      className="bg-background border-input pl-8"
+                      placeholder="0,00"
+                      value={investmentValue}
+                      onChange={(e) => setInvestmentValue(e.target.value)}
+                    />
                   </div>
                 </div>
 
@@ -175,27 +472,51 @@ export default function AdminProposals() {
                   <Label className="block text-sm mb-1">Formas de Pagamento</Label>
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center gap-2">
-                      <input type="checkbox" defaultChecked className="rounded border-gray-300" />
+                      <input 
+                        type="checkbox" 
+                        checked={payment50_50}
+                        onChange={(e) => setPayment50_50(e.target.checked)}
+                        className="rounded border-gray-300" 
+                      />
                       <span className="text-sm">50% no início / 50% na entrega</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <input type="checkbox" className="rounded border-gray-300" />
+                      <input 
+                        type="checkbox" 
+                        checked={payment100}
+                        onChange={(e) => setPayment100(e.target.checked)}
+                        className="rounded border-gray-300" 
+                      />
                       <span className="text-sm">100% antecipado (desconto de 10%)</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <input type="checkbox" className="rounded border-gray-300" />
+                      <input 
+                        type="checkbox" 
+                        checked={payment3x}
+                        onChange={(e) => setPayment3x(e.target.checked)}
+                        className="rounded border-gray-300" 
+                      />
                       <span className="text-sm">Parcelado em até 3x (sem juros)</span>
                     </div>
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center gap-2">
-                        <input type="checkbox" className="rounded border-gray-300" />
+                        <input 
+                          type="checkbox" 
+                          checked={paymentCustom}
+                          onChange={(e) => setPaymentCustom(e.target.checked)}
+                          className="rounded border-gray-300" 
+                        />
                         <span className="text-sm">Personalizado</span>
                       </div>
-                      <Textarea 
-                        className="bg-background border-input min-h-[80px]" 
-                        rows={2} 
-                        placeholder="Detalhe a forma de pagamento personalizada..." 
-                      />
+                      {paymentCustom && (
+                        <Textarea
+                          className="bg-background border-input min-h-[80px]"
+                          rows={2}
+                          placeholder="Detalhe a forma de pagamento personalizada..."
+                          value={customPaymentMethod}
+                          onChange={(e) => setCustomPaymentMethod(e.target.value)}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -203,17 +524,26 @@ export default function AdminProposals() {
                 <div>
                   <Label className="block text-sm mb-1">Condições Gerais</Label>
                   <div className="flex flex-col gap-2">
-                    {[
-                      "Revisões: até 2 rodadas incluídas por etapa. Alterações fora do escopo serão orçadas.",
-                      "Garantia: correções de falhas por até 30 dias após entrega.",
-                      "Suporte: incluso durante o projeto. Após entrega, sob contratação extra.",
-                      "Prazos: contagem começa após pagamento e recebimento dos materiais."
-                    ].map((condition, i) => (
+                    {conditions.map((condition, i) => (
                       <div key={i} className="flex items-start gap-2">
-                        <input type="checkbox" defaultChecked className="mt-1 rounded border-gray-300" />
-                        <Textarea 
-                          defaultValue={condition}
-                          className="bg-background border-input min-h-[60px] text-sm" 
+                        <input 
+                          type="checkbox" 
+                          checked={condition.checked}
+                          onChange={(e) => {
+                            const newConditions = [...conditions];
+                            newConditions[i].checked = e.target.checked;
+                            setConditions(newConditions);
+                          }}
+                          className="mt-1 rounded border-gray-300" 
+                        />
+                        <Textarea
+                          value={condition.text}
+                          onChange={(e) => {
+                            const newConditions = [...conditions];
+                            newConditions[i].text = e.target.value;
+                            setConditions(newConditions);
+                          }}
+                          className="bg-background border-input min-h-[60px] text-sm"
                           rows={2}
                         />
                       </div>
@@ -222,8 +552,16 @@ export default function AdminProposals() {
                 </div>
 
                 <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4">
-                  <Button variant="ghost" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
-                  <Button className="bg-primary text-primary-foreground hover:bg-primary/90">Criar</Button>
+                  <Button variant="ghost" onClick={() => {
+                    setIsModalOpen(false);
+                    resetForm();
+                  }}>Cancelar</Button>
+                  <Button
+                    className="bg-primary text-primary-foreground hover:bg-primary/90"
+                    onClick={handleCreateProposal}
+                  >
+                    {editingProposal ? "Salvar" : "Criar"}
+                  </Button>
                 </div>
               </div>
             </DialogContent>
@@ -244,37 +582,51 @@ export default function AdminProposals() {
             <TableBody>
               {proposals.map((proposal) => (
                 <TableRow key={proposal.id} className="border-white/10 hover:bg-white/5">
-                  <TableCell className="font-medium text-white">{proposal.client}</TableCell>
-                  <TableCell className="text-gray-400">{proposal.createdAt}</TableCell>
-                  <TableCell className="text-gray-400">{proposal.validUntil}</TableCell>
+                  <TableCell className="font-medium text-white">{proposal.client_name}</TableCell>
+                  <TableCell className="text-gray-400">{new Date(proposal.created_at).toLocaleDateString('pt-BR')}</TableCell>
+                  <TableCell className="text-gray-400">{calculateValidUntil(proposal.created_at)}</TableCell>
                   <TableCell>
-                    <Badge 
-                      variant="outline" 
-                      className={`${
-                        proposal.status === "Ativo" 
-                          ? "bg-green-500/10 text-green-500 border-green-500/20" 
+                    <Badge
+                      variant="outline"
+                      className={`${getStatus(proposal.created_at) === "Ativo"
+                          ? "bg-green-500/10 text-green-500 border-green-500/20"
                           : "bg-gray-500/10 text-gray-500 border-gray-500/20"
-                      }`}
+                        }`}
                     >
-                      {proposal.status}
+                      {getStatus(proposal.created_at)}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
+                        onClick={() => handleEdit(proposal)}
+                      >
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-400/10">
+                      <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                        onClick={() => handleDelete(proposal.id)}
+                      >
                         <Trash2 className="h-4 w-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10">
-                        <RefreshCw className="h-4 w-4" />
                       </Button>
                       <Button 
                         variant="ghost" 
                         size="icon" 
                         className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
-                        onClick={() => handleCopyLink(proposal.id)}
+                        onClick={() => handleReload(proposal.id)}
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
+                        onClick={() => handleCopyLink(proposal.slug)}
                       >
                         <LinkIcon className="h-4 w-4" />
                       </Button>

@@ -1,56 +1,67 @@
 import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { motion } from "framer-motion";
-import { CheckCircle2, Clock, Calendar, DollarSign, ArrowRight, Download, Share2 } from "lucide-react";
+import { CheckCircle2, Clock, Calendar, DollarSign, ArrowRight, Download, Share2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-
-// Mock Data for Proposal
-const PROPOSAL_DATA = {
-  client: "Aurora Tecnologia",
-  title: "Desenvolvimento de Plataforma SaaS",
-  date: "17/06/2025",
-  validUntil: "27/06/2025",
-  objective: "Desenvolver uma plataforma SaaS escalável e intuitiva para gestão de processos internos, focada em automação e análise de dados em tempo real.",
-  scope: [
-    "Desenvolvimento Frontend com React e Tailwind CSS",
-    "Integração com API RESTful",
-    "Dashboard interativo com gráficos em tempo real",
-    "Sistema de autenticação e gestão de usuários",
-    "Otimização de performance e SEO",
-    "Testes automatizados e documentação técnica"
-  ],
-  timeline: [
-    { step: "Planejamento e Design", period: "2 semanas" },
-    { step: "Desenvolvimento Frontend", period: "4 semanas" },
-    { step: "Integração Backend", period: "3 semanas" },
-    { step: "Testes e QA", period: "2 semanas" },
-    { step: "Deploy e Treinamento", period: "1 semana" }
-  ],
-  investment: "R$ 18.500,00",
-  paymentMethods: [
-    "50% no início / 50% na entrega",
-    "Parcelado em até 3x (sem juros)"
-  ],
-  conditions: [
-    "Revisões: até 2 rodadas incluídas por etapa.",
-    "Garantia: correções de falhas por até 30 dias após entrega.",
-    "Suporte: incluso durante o projeto."
-  ]
-};
+import { supabase } from "@/lib/supabase";
 
 export default function Proposal() {
-  const { id } = useParams();
+  const { id } = useParams(); // This is the slug
   const [isVisible, setIsVisible] = useState(false);
+  const [proposal, setProposal] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isExpired, setIsExpired] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
-  }, []);
+    if (id) {
+      fetchProposal(id);
+    }
+  }, [id]);
+
+  const fetchProposal = async (slug: string) => {
+    setIsLoading(true);
+    const { data, error } = await supabase
+      .schema('app_portfolio')
+      .from('proposals')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+
+    if (error) {
+      console.error("Error fetching proposal:", error);
+    } else if (data) {
+      setProposal(data);
+      checkExpiration(data.created_at);
+    }
+    setIsLoading(false);
+  };
+
+  const checkExpiration = (createdAt: string) => {
+    const created = new Date(createdAt);
+    const validUntil = new Date(created);
+    validUntil.setDate(validUntil.getDate() + 10);
+    const now = new Date();
+    if (now > validUntil) {
+      setIsExpired(true);
+    }
+  };
+
+  const calculateValidUntil = (createdAt: string) => {
+    const date = new Date(createdAt);
+    date.setDate(date.getDate() + 10);
+    return date.toLocaleDateString('pt-BR');
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
+  };
 
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
       transition: { staggerChildren: 0.1 }
     }
@@ -58,12 +69,20 @@ export default function Proposal() {
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
-    visible: { 
-      y: 0, 
+    visible: {
+      y: 0,
       opacity: 1,
       transition: { type: "spring", stiffness: 50 }
     }
   };
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-black text-white flex items-center justify-center">Carregando proposta...</div>;
+  }
+
+  if (!proposal) {
+    return <div className="min-h-screen bg-black text-white flex items-center justify-center">Proposta não encontrada.</div>;
+  }
 
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-neon-purple selection:text-white overflow-x-hidden">
@@ -75,7 +94,18 @@ export default function Proposal() {
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-20">
-        <motion.div 
+        {isExpired && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-lg mb-8 flex items-center gap-3"
+          >
+            <AlertTriangle className="w-5 h-5" />
+            <p className="font-medium">Atenção: Esta proposta expirou em {calculateValidUntil(proposal.created_at)}.</p>
+          </motion.div>
+        )}
+
+        <motion.div
           initial="hidden"
           animate={isVisible ? "visible" : "hidden"}
           variants={containerVariants}
@@ -84,23 +114,23 @@ export default function Proposal() {
           {/* Header */}
           <motion.header variants={itemVariants} className="text-center space-y-6">
             <Badge variant="outline" className="border-neon-purple text-neon-purple px-4 py-1 text-sm uppercase tracking-widest">
-              Proposta Comercial #{id || "001"}
+              Proposta Comercial
             </Badge>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-400">
-              {PROPOSAL_DATA.title}
+              Projeto para {proposal.client_name}
             </h1>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Preparado especialmente para <span className="text-white font-semibold">{PROPOSAL_DATA.client}</span>
+              Preparado especialmente para <span className="text-white font-semibold">{proposal.client_name}</span>
             </p>
-            
+
             <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 mt-4">
               <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
                 <Calendar className="w-4 h-4 text-neon-purple" />
-                <span>Criado em: {PROPOSAL_DATA.date}</span>
+                <span>Criado em: {new Date(proposal.created_at).toLocaleDateString('pt-BR')}</span>
               </div>
               <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
-                <Clock className="w-4 h-4 text-neon-green" />
-                <span>Válido até: {PROPOSAL_DATA.validUntil}</span>
+                <Clock className={`w-4 h-4 ${isExpired ? "text-red-500" : "text-neon-green"}`} />
+                <span className={isExpired ? "text-red-400" : ""}>Válido até: {calculateValidUntil(proposal.created_at)}</span>
               </div>
             </div>
           </motion.header>
@@ -115,7 +145,7 @@ export default function Proposal() {
                   Objetivo do Projeto
                 </h2>
                 <p className="text-lg text-gray-300 leading-relaxed">
-                  {PROPOSAL_DATA.objective}
+                  {proposal.objective}
                 </p>
               </CardContent>
             </Card>
@@ -132,7 +162,7 @@ export default function Proposal() {
                     Escopo dos Serviços
                   </h2>
                   <ul className="space-y-4">
-                    {PROPOSAL_DATA.scope.map((item, index) => (
+                    {proposal.scope?.map((item: string, index: number) => (
                       <li key={index} className="flex items-start gap-3 text-gray-300 group">
                         <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-neon-purple group-hover:scale-150 transition-transform" />
                         <span className="group-hover:text-white transition-colors">{item}</span>
@@ -154,8 +184,8 @@ export default function Proposal() {
                   <div className="space-y-6 relative pl-2">
                     {/* Vertical Line */}
                     <div className="absolute left-[11px] top-2 bottom-2 w-[2px] bg-white/10" />
-                    
-                    {PROPOSAL_DATA.timeline.map((item, index) => (
+
+                    {proposal.timeline?.map((item: any, index: number) => (
                       <div key={index} className="relative flex items-center gap-4 pl-6 group">
                         <div className="absolute left-0 w-6 h-6 rounded-full bg-black border-2 border-white/20 flex items-center justify-center z-10 group-hover:border-neon-green transition-colors">
                           <div className="w-2 h-2 rounded-full bg-white/50 group-hover:bg-neon-green transition-colors" />
@@ -167,6 +197,11 @@ export default function Proposal() {
                       </div>
                     ))}
                   </div>
+                  {proposal.delivery_date && (
+                    <div className="mt-4 pt-4 border-t border-white/10">
+                      <p className="text-sm text-gray-400">Entrega prevista: <span className="text-white">{new Date(proposal.delivery_date).toLocaleDateString('pt-BR')}</span></p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.section>
@@ -186,7 +221,7 @@ export default function Proposal() {
                   </div>
                   <div className="text-center">
                     <div className="text-5xl md:text-6xl font-bold text-white tracking-tighter mb-2">
-                      {PROPOSAL_DATA.investment}
+                      {formatCurrency(proposal.investment_value)}
                     </div>
                     <Badge className="bg-neon-green/10 text-neon-green hover:bg-neon-green/20 border-neon-green/20">
                       Pagamento Facilitado
@@ -201,7 +236,7 @@ export default function Proposal() {
                       Formas de Pagamento
                     </h3>
                     <ul className="space-y-2">
-                      {PROPOSAL_DATA.paymentMethods.map((method, idx) => (
+                      {proposal.payment_methods?.map((method: string, idx: number) => (
                         <li key={idx} className="text-gray-400 flex items-center gap-2">
                           <div className="w-1 h-1 bg-gray-500 rounded-full" />
                           {method}
@@ -215,7 +250,7 @@ export default function Proposal() {
                       Condições Gerais
                     </h3>
                     <ul className="space-y-2">
-                      {PROPOSAL_DATA.conditions.map((condition, idx) => (
+                      {proposal.conditions?.map((condition: string, idx: number) => (
                         <li key={idx} className="text-gray-400 flex items-center gap-2">
                           <div className="w-1 h-1 bg-gray-500 rounded-full" />
                           {condition}
@@ -230,9 +265,9 @@ export default function Proposal() {
 
           {/* CTA Actions */}
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4 pb-12">
-            <Button size="lg" className="bg-neon-purple hover:bg-neon-purple/90 text-white px-8 h-14 text-lg shadow-lg shadow-neon-purple/20 w-full sm:w-auto group">
-              Aceitar Proposta
-              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            <Button size="lg" className="bg-neon-purple hover:bg-neon-purple/90 text-white px-8 h-14 text-lg shadow-lg shadow-neon-purple/20 w-full sm:w-auto group" disabled={isExpired}>
+              {isExpired ? "Proposta Expirada" : "Aceitar Proposta"}
+              {!isExpired && <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />}
             </Button>
             <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/5 h-14 px-8 w-full sm:w-auto">
               <Download className="mr-2 w-5 h-5" />
