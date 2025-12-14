@@ -100,9 +100,10 @@ export default function Resume() {
                           <p className="text-sm text-gray-400">{item.content.period}</p>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-gray-300 leading-relaxed whitespace-pre-line">
-                            {item.content.description}
-                          </p>
+                          <div 
+                            className="text-gray-300 leading-relaxed prose prose-invert prose-headings:text-white prose-strong:text-white prose-ul:text-gray-300 prose-li:text-gray-300 max-w-none [&_ul]:list-disc [&_ul]:list-outside [&_ul]:space-y-2 [&_ul]:ml-6 [&_ul]:pl-0 [&_li]:pl-2"
+                            dangerouslySetInnerHTML={{ __html: item.content.description }}
+                          />
                         </CardContent>
                       </Card>
                     </motion.div>
@@ -132,9 +133,10 @@ export default function Resume() {
                           <p className="text-sm text-gray-400">{item.content.period}</p>
                         </CardHeader>
                         <CardContent>
-                          <p className="text-gray-300 leading-relaxed">
-                            {item.content.description}
-                          </p>
+                          <div 
+                            className="text-gray-300 leading-relaxed prose prose-invert prose-headings:text-white prose-strong:text-white prose-ul:text-gray-300 prose-li:text-gray-300 max-w-none [&_ul]:list-disc [&_ul]:list-outside [&_ul]:space-y-2 [&_ul]:ml-6 [&_ul]:pl-0 [&_li]:pl-2"
+                            dangerouslySetInnerHTML={{ __html: item.content.description }}
+                          />
                         </CardContent>
                       </Card>
                     </motion.div>

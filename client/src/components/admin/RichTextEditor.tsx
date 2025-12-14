@@ -1,5 +1,6 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { 
   Bold, 
@@ -26,10 +27,16 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-invert max-w-none min-h-[150px] p-4 focus:outline-none text-gray-300',
+        class: 'prose prose-invert max-w-none min-h-[150px] p-4 focus:outline-none text-gray-300 tiptap',
       },
     },
   });
+
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
 
   if (!editor) {
     return null;
@@ -37,6 +44,30 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
 
   return (
     <div className="border border-white/10 rounded-md overflow-hidden bg-white/5">
+      <style>{`
+        .tiptap ul {
+          list-style-type: disc;
+          list-style-position: outside;
+          margin-left: 1.5rem;
+          padding-left: 0;
+        }
+        .tiptap ul li {
+          padding-left: 0.5rem;
+          margin-left: 0;
+          display: list-item;
+        }
+        .tiptap ol {
+          list-style-type: decimal;
+          list-style-position: outside;
+          margin-left: 1.5rem;
+          padding-left: 0;
+        }
+        .tiptap ol li {
+          padding-left: 0.5rem;
+          margin-left: 0;
+          display: list-item;
+        }
+      `}</style>
       <div className="flex flex-wrap gap-1 p-2 border-b border-white/10 bg-white/5">
         <Button
           variant="ghost"
