@@ -19,6 +19,7 @@ export default function AdminProposals() {
   const [editingProposal, setEditingProposal] = useState<any | null>(null);
 
   // Form State
+  const [title, setTitle] = useState("");
   const [clientName, setClientName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugError, setSlugError] = useState("");
@@ -108,6 +109,7 @@ export default function AdminProposals() {
       .map(c => c.text);
 
     const payload = {
+      title: title || null,
       client_name: clientName,
       slug,
       created_at: new Date(createdAt).toISOString(),
@@ -159,6 +161,7 @@ export default function AdminProposals() {
 
   const resetForm = () => {
     setEditingProposal(null);
+    setTitle("");
     setClientName("");
     setSlug("");
     setSlugError("");
@@ -245,6 +248,7 @@ export default function AdminProposals() {
 
   const handleEdit = (proposal: any) => {
     setEditingProposal(proposal);
+    setTitle(proposal.title || "");
     setClientName(proposal.client_name || "");
     setSlug(proposal.slug || "");
     setCreatedAt(new Date(proposal.created_at).toISOString().split('T')[0]);
@@ -340,6 +344,16 @@ export default function AdminProposals() {
               </DialogHeader>
 
               <div className="space-y-6 py-2">
+                <div>
+                  <Label className="block text-sm mb-1">Título da Proposta</Label>
+                  <Input
+                    className="bg-background border-input"
+                    placeholder="Ex: Projeto para [Nome do Cliente]"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                  />
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <Label className="block text-sm mb-1">Nome do Cliente</Label>

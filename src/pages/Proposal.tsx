@@ -331,7 +331,7 @@ export default function Proposal() {
               Proposta Comercial
             </Badge>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-400">
-              Projeto para {proposal.client_name}
+              {proposal.title || `Projeto para ${proposal.client_name}`}
             </h1>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
               Preparado especialmente para <span className="text-white font-semibold">{proposal.client_name}</span>
