@@ -256,7 +256,7 @@ export default function AdminHome() {
 
         {/* Shared Modal */}
         <Dialog open={!!activeModal} onOpenChange={() => handleCloseModal()}>
-          <DialogContent className="bg-black border-white/10 max-w-2xl">
+          <DialogContent className="bg-background border-white/10 max-w-2xl">
             <DialogHeader>
               <DialogTitle className="text-white">
                 {editingItem ? "Editar" : "Adicionar"} {activeModal === "service" ? "Serviço" : "Depoimento"}

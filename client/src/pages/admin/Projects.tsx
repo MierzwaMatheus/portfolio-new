@@ -55,10 +55,10 @@ function SortableProjectCard({
           ) : (
             <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">Sem imagem</div>
           )}
-          <div className="absolute top-2 right-2 bg-black/60 px-2 py-1 rounded text-xs text-white">
+          <div className="absolute top-2 right-2 bg-background/60 px-2 py-1 rounded text-xs text-white">
             {project.images?.length || 0} imagens
           </div>
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+          <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
             <Button size="icon" variant="secondary" onClick={() => onEdit(project)}>
               <Pencil className="w-4 h-4" />
             </Button>
@@ -276,7 +276,7 @@ export default function AdminProjects() {
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="bg-black border-white/10 max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-background border-white/10 max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-white">
                 {editingProject ? "Editar Projeto" : "Adicionar Novo Projeto"}
@@ -315,7 +315,7 @@ export default function AdminProjects() {
                         <X className="w-3 h-3" />
                       </button>
                       {index === 0 && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs py-1 text-center">
+                        <div className="absolute bottom-0 left-0 right-0 bg-background/60 text-white text-xs py-1 text-center">
                           Capa
                         </div>
                       )}

@@ -60,7 +60,7 @@
   /* HSL values without 'hsl()' wrapper to allow opacity modification */
   
   /* Almost pure black: #050505 -> 0 0% 2% */
-  --background: 0 0% 2%;
+  --background: 0 0% 14.5%;
   /* #e5e5e5 -> 0 0% 90% */
   --foreground: 0 0% 90%;
   
@@ -116,7 +116,7 @@
 
 .dark {
   /* Same as root because we are forcing dark theme mostly */
-  --background: 0 0% 2%;
+  --background: 0 0% 8%;
   --foreground: 0 0% 90%;
   --card: 0 0% 4%;
   --card-foreground: 0 0% 90%;
@@ -135,7 +135,7 @@
   --border: 0 0% 15%;
   --input: 0 0% 15%;
   --ring: 263 90% 66%;
-  --sidebar: 0 0% 0%;
+  --sidebar: 0 0% 4%;
   --sidebar-foreground: 0 0% 64%;
   --sidebar-primary: 263 90% 66%;
   --sidebar-primary-foreground: 0 0% 100%;

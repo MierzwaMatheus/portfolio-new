@@ -167,7 +167,7 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="bg-black border-white/10 max-w-3xl">
+      <DialogContent className="bg-background border-white/10 max-w-3xl">
         <DialogHeader>
           <DialogTitle className="text-white">Galeria de Imagens</DialogTitle>
           <VisuallyHidden>

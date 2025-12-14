@@ -654,7 +654,7 @@ export default function AdminResume() {
 
         {/* Shared Modal */}
         <Dialog open={!!activeModal} onOpenChange={() => handleCloseModal()}>
-          <DialogContent className="bg-black border-white/10 max-w-2xl max-h-[85vh] flex flex-col p-0">
+          <DialogContent className="bg-background border-white/10 max-w-2xl max-h-[85vh] flex flex-col p-0">
             <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
               <DialogTitle className="text-white">
                 {editingItem ? "Editar" : "Adicionar"} {
@@ -757,7 +757,7 @@ export default function AdminResume() {
                       <SelectTrigger className="bg-white/5 border-white/10 text-white w-full">
                         <SelectValue placeholder="Selecione o nível" />
                       </SelectTrigger>
-                      <SelectContent className="bg-black border-white/10">
+                      <SelectContent className="bg-background border-white/10">
                         <SelectItem value="Básico" className="text-white focus:bg-white/10">Básico</SelectItem>
                         <SelectItem value="Intermediário" className="text-white focus:bg-white/10">Intermediário</SelectItem>
                         <SelectItem value="Avançado" className="text-white focus:bg-white/10">Avançado</SelectItem>

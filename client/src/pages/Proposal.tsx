@@ -291,15 +291,15 @@ export default function Proposal() {
   };
 
   if (isLoading) {
-    return <div className="min-h-screen bg-black text-white flex items-center justify-center">Carregando proposta...</div>;
+    return <div className="min-h-screen bg-background text-white flex items-center justify-center">Carregando proposta...</div>;
   }
 
   if (!proposal) {
-    return <div className="min-h-screen bg-black text-white flex items-center justify-center">Proposta não encontrada.</div>;
+    return <div className="min-h-screen bg-background text-white flex items-center justify-center">Proposta não encontrada.</div>;
   }
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-neon-purple selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-background text-white font-sans selection:bg-neon-purple selection:text-white overflow-x-hidden">
       {/* Background Elements */}
       <div className="fixed inset-0 z-0 pointer-events-none no-print">
         <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-neon-purple/20 rounded-full blur-[120px]" />
@@ -401,7 +401,7 @@ export default function Proposal() {
 
                     {proposal.timeline?.map((item: any, index: number) => (
                       <div key={index} className="relative flex items-center gap-4 pl-6 group">
-                        <div className="absolute left-0 w-6 h-6 rounded-full bg-black border-2 border-white/20 flex items-center justify-center z-10 group-hover:border-neon-green transition-colors">
+                        <div className="absolute left-0 w-6 h-6 rounded-full bg-background border-2 border-white/20 flex items-center justify-center z-10 group-hover:border-neon-green transition-colors">
                           <div className="w-2 h-2 rounded-full bg-white/50 group-hover:bg-neon-green transition-colors" />
                         </div>
                         <div className="flex-1">

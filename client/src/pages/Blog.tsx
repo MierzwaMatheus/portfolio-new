@@ -232,8 +232,8 @@ export default function Blog() {
                     </CarouselItem>
                   ))}
                 </CarouselContent>
-                <CarouselPrevious className="left-4 border-white/20 bg-black/50 hover:bg-black/70 text-white hover:text-white" />
-                <CarouselNext className="right-4 border-white/20 bg-black/50 hover:bg-black/70 text-white hover:text-white" />
+                <CarouselPrevious className="left-4 border-white/20 bg-background/50 hover:bg-background/70 text-white hover:text-white" />
+                <CarouselNext className="right-4 border-white/20 bg-background/50 hover:bg-background/70 text-white hover:text-white" />
               </Carousel>
             )}
           </motion.section>
@@ -267,7 +267,7 @@ export default function Blog() {
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-80 bg-black/95 border-white/10 backdrop-blur-sm">
+            <PopoverContent className="w-80 bg-background/95 border-white/10 backdrop-blur-sm">
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="font-semibold text-white">Filtrar por tags</h4>

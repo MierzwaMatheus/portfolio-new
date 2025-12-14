@@ -48,10 +48,10 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black p-4">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-neon-purple/20 via-black to-black z-0"></div>
 
-      <Card className="w-full max-w-md z-10 border-white/10 bg-black/50 backdrop-blur-xl">
+      <Card className="w-full max-w-md z-10 border-white/10 bg-background/50 backdrop-blur-xl">
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
             <div className="h-12 w-12 rounded-full bg-neon-purple/10 flex items-center justify-center">

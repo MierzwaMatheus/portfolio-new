@@ -75,8 +75,8 @@ export function ProjectTagsInput({ selectedTags, onChange }: ProjectTagsInputPro
                         <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0 bg-black border-white/10">
-                    <Command className="bg-black text-gray-300">
+                <PopoverContent className="w-full p-0 bg-background border-white/10">
+                    <Command className="bg-background text-gray-300">
                         <CommandInput placeholder="Buscar tag..." className="text-white" />
                         <CommandList>
                             <CommandEmpty>Nenhuma tag encontrada.</CommandEmpty>

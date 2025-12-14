@@ -136,7 +136,7 @@ export default function Portfolio() {
                     <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">Sem imagem</div>
                   )}
                   <div className="absolute top-3 right-3 z-20 flex gap-2">
-                    <div className="bg-black/60 backdrop-blur-md p-2 rounded-full border border-white/10 text-white opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300">
+                    <div className="bg-background/60 backdrop-blur-md p-2 rounded-full border border-white/10 text-white opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300">
                       <Layers className="w-4 h-4" />
                     </div>
                   </div>
@@ -175,7 +175,7 @@ export default function Portfolio() {
 
                       <div className="overflow-y-auto flex-1">
                         {/* Carousel Section */}
-                        <div className="bg-black/50 p-6 flex items-center justify-center relative min-h-[250px]">
+                        <div className="bg-background/50 p-6 flex items-center justify-center relative min-h-[250px]">
                           {project.images && project.images.length > 0 ? (
                             <Carousel className="w-full max-w-md mx-auto">
                               <CarouselContent>
@@ -187,8 +187,8 @@ export default function Portfolio() {
                                   </CarouselItem>
                                 ))}
                               </CarouselContent>
-                              <CarouselPrevious className="left-2 bg-black/50 border-white/10 text-white hover:bg-neon-purple hover:border-neon-purple" />
-                              <CarouselNext className="right-2 bg-black/50 border-white/10 text-white hover:bg-neon-purple hover:border-neon-purple" />
+                              <CarouselPrevious className="left-2 bg-background/50 border-white/10 text-white hover:bg-neon-purple hover:border-neon-purple" />
+                              <CarouselNext className="right-2 bg-background/50 border-white/10 text-white hover:bg-neon-purple hover:border-neon-purple" />
                             </Carousel>
                           ) : (
                             <div className="text-gray-500">Sem imagens disponíveis</div>

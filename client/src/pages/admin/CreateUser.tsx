@@ -90,7 +90,7 @@ export default function CreateUser() {
                                     <FormItem>
                                         <FormLabel className="text-white">Nome</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Nome do usuário" {...field} className="bg-black/50 border-white/10 text-white" />
+                                            <Input placeholder="Nome do usuário" {...field} className="bg-background/50 border-white/10 text-white" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -104,7 +104,7 @@ export default function CreateUser() {
                                     <FormItem>
                                         <FormLabel className="text-white">Email</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="email@exemplo.com" {...field} className="bg-black/50 border-white/10 text-white" />
+                                            <Input placeholder="email@exemplo.com" {...field} className="bg-background/50 border-white/10 text-white" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -118,7 +118,7 @@ export default function CreateUser() {
                                     <FormItem>
                                         <FormLabel className="text-white">Senha</FormLabel>
                                         <FormControl>
-                                            <Input type="password" placeholder="******" {...field} className="bg-black/50 border-white/10 text-white" />
+                                            <Input type="password" placeholder="******" {...field} className="bg-background/50 border-white/10 text-white" />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -133,7 +133,7 @@ export default function CreateUser() {
                                         <FormLabel className="text-white">Função (Role)</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
-                                                <SelectTrigger className="bg-black/50 border-white/10 text-white">
+                                                <SelectTrigger className="bg-background/50 border-white/10 text-white">
                                                     <SelectValue placeholder="Selecione uma função" />
                                                 </SelectTrigger>
                                             </FormControl>

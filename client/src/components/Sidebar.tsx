@@ -101,7 +101,7 @@ export function Sidebar() {
 
   const SidebarContent = () => {
     return (
-      <div className="flex flex-col h-full bg-black border-r border-white/10 w-full">
+      <div className="flex flex-col h-full bg-background border-r border-white/10 w-full">
         {/* Profile Section */}
         <div className="flex flex-col items-center pt-8 pb-6 px-6">
           {loading ? (
@@ -178,7 +178,7 @@ export function Sidebar() {
         </nav>
 
         {/* Footer Info */}
-        <div className="mt-auto px-6 py-6 border-t border-white/10 bg-black/50">
+        <div className="mt-auto px-6 py-6 border-t border-white/10 bg-background/50">
           <div className="mb-6 space-y-3">
             <p className="text-[10px] uppercase tracking-wider text-gray-600 font-bold mb-2">Contato</p>
 
@@ -269,7 +269,7 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="fixed top-0 left-0 right-0 h-16 bg-black/90 backdrop-blur-md border-b border-white/10 z-50 flex items-center justify-between px-4 lg:hidden">
+      <div className="fixed top-0 left-0 right-0 h-16 bg-background/90 backdrop-blur-md border-b border-white/10 z-50 flex items-center justify-between px-4 lg:hidden">
         <div className="flex items-center">
           <div className="h-8 w-8 rounded-full overflow-hidden border border-neon-purple mr-3">
             <img
@@ -287,7 +287,7 @@ export function Sidebar() {
               <Menu className="h-5 w-5" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-72 border-r border-white/10 bg-black">
+          <SheetContent side="left" className="p-0 w-72 border-r border-white/10 bg-background">
             <VisuallyHidden>
               <SheetTitle>Menu de Navegação</SheetTitle>
             </VisuallyHidden>
@@ -297,7 +297,7 @@ export function Sidebar() {
       </div>
 
       {/* Desktop Sidebar */}
-      <aside className="fixed inset-y-0 left-0 w-72 hidden lg:block z-50">
+      <aside className="fixed inset-y-0 left-0 w-72 hidden lg:block z-50 bg-sidebar border-r border-white/10">
         <SidebarContent />
       </aside>
     </>

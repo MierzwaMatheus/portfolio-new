@@ -203,7 +203,7 @@ export default function AdminBlog() {
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="bg-black border-white/10 max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-background border-white/10 max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-white">
                 {editingPost ? "Editar Artigo" : "Novo Artigo"}
