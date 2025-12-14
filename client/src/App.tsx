@@ -18,6 +18,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import Resume from "./pages/Resume";
 import Portfolio from "./pages/Portfolio";
 import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 import Proposal from "./pages/Proposal";
 
 function Router() {
@@ -25,7 +26,7 @@ function Router() {
     <Switch>
       <Route path={"/"} component={Home} />
       <Route path={"/login"} component={Login} />
-      
+
       {/* Admin Routes */}
       <ProtectedRoute path="/admin/dashboard" component={Dashboard} />
       <ProtectedRoute path="/admin" component={Dashboard} />
@@ -35,13 +36,14 @@ function Router() {
       <ProtectedRoute path="/admin/home" component={AdminHome} />
       <ProtectedRoute path="/admin/contact" component={AdminContact} />
       <ProtectedRoute path="/admin/proposals" component={AdminProposals} />
-      
+
       {/* Public Routes */}
       <Route path="/curriculo" component={Resume} />
       <Route path="/portfolio" component={Portfolio} />
       <Route path="/blog" component={Blog} />
+      <Route path="/blog/:slug" component={BlogPost} />
       <Route path="/proposta/:id" component={Proposal} />
-      
+
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
@@ -53,12 +55,12 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-      <ThemeProvider defaultTheme="dark">
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </ThemeProvider>
+        <ThemeProvider defaultTheme="dark">
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </ThemeProvider>
       </AuthProvider>
     </ErrorBoundary>
   );

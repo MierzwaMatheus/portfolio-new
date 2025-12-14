@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -12,75 +12,175 @@ import { ImagePicker } from "@/components/admin/ImagePicker";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-
-// Mock Data
-const INITIAL_POSTS = [
-  {
-    id: 1,
-    title: "Economia de Plataformas",
-    subtitle: "Novas dinâmicas do trabalho digital",
-    status: "published",
-    featured: true,
-    date: "2025-03-19",
-    tags: ["Economia", "Trabalho"],
-    image: "https://images.unsplash.com/photo-1556761175-5973dc0f32e7?q=80&w=2832&auto=format&fit=crop"
-  },
-  {
-    id: 2,
-    title: "O Front-end na Era da IA",
-    subtitle: "Revolução semântica e experiências superiores",
-    status: "published",
-    featured: false,
-    date: "2025-06-15",
-    tags: ["IA", "Frontend"],
-    image: "https://images.unsplash.com/photo-1620712943543-bcc4688e7485?q=80&w=2565&auto=format&fit=crop"
-  }
-];
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export default function AdminBlog() {
-  const [posts, setPosts] = useState(INITIAL_POSTS);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<any>(null);
   const [content, setContent] = useState("");
   const [previewImage, setPreviewImage] = useState("");
 
-  const handleOpenDialog = (post: any = null) => {
-    setEditingPost(post);
-    setPreviewImage(post ? post.image : "");
-    setContent(post ? "Conteúdo do post..." : ""); // In real app, load content
-    setIsDialogOpen(true);
-  };
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
-  const handleSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsDialogOpen(false);
-    setEditingPost(null);
-    setContent("");
-    setPreviewImage("");
-  };
+  const fetchPosts = async () => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .schema('app_portfolio')
+        .from('posts')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-  const handleDelete = (id: number) => {
-    if (confirm("Tem certeza que deseja excluir este post?")) {
-      setPosts(posts.filter(p => p.id !== id));
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+      
+      console.log('Posts fetched:', data?.length || 0);
+      setPosts(data || []);
+    } catch (error: any) {
+      console.error('Error fetching posts:', error);
+      toast.error(`Erro ao carregar posts: ${error?.message || 'Erro desconhecido'}`);
+      setPosts([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const toggleStatus = (id: number) => {
-    setPosts(posts.map(p => {
-      if (p.id === id) {
-        return { ...p, status: p.status === "published" ? "draft" : "published" };
-      }
-      return p;
-    }));
+  const handleOpenDialog = (post: any = null) => {
+    setEditingPost(post);
+    setPreviewImage(post ? post.image : "");
+    setContent(post ? post.content : "");
+    setIsDialogOpen(true);
   };
 
-  const toggleFeatured = (id: number) => {
-    setPosts(posts.map(p => {
-      if (p.id === id) {
-        return { ...p, featured: !p.featured };
+  const slugify = (text: string) => {
+    return text
+      .toString()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/[^\w\-]+/g, '')
+      .replace(/\-\-+/g, '-')
+      .replace(/^-+/, '')
+      .replace(/-+$/, '');
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formData = new FormData(e.target as HTMLFormElement);
+
+    const title = formData.get("title") as string;
+    const subtitle = formData.get("subtitle") as string;
+    const date = formData.get("date") as string;
+    const tagsStr = formData.get("tags") as string;
+    const featured = formData.get("featured") === "on"; // Checkbox returns "on" if checked
+    const status = (document.getElementById("status") as HTMLInputElement).checked ? "published" : "draft";
+
+    const tags = tagsStr.split(",").map(t => t.trim()).filter(t => t);
+    const slug = slugify(title);
+
+    const postData = {
+      title,
+      subtitle,
+      content,
+      image: previewImage,
+      featured,
+      status,
+      published_at: date || null,
+      tags,
+      slug
+    };
+
+    try {
+      if (editingPost) {
+        const { error } = await supabase
+          .schema('app_portfolio')
+          .from('posts')
+          .update(postData)
+          .eq('id', editingPost.id);
+
+        if (error) throw error;
+        toast.success("Post atualizado com sucesso!");
+      } else {
+        const { error } = await supabase
+          .schema('app_portfolio')
+          .from('posts')
+          .insert([postData]);
+
+        if (error) throw error;
+        toast.success("Post criado com sucesso!");
       }
-      return p;
-    }));
+
+      setIsDialogOpen(false);
+      setEditingPost(null);
+      setContent("");
+      setPreviewImage("");
+      fetchPosts();
+    } catch (error) {
+      console.error('Error saving post:', error);
+      toast.error("Erro ao salvar post");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (confirm("Tem certeza que deseja excluir este post?")) {
+      try {
+        const { error } = await supabase
+          .schema('app_portfolio')
+          .from('posts')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+        toast.success("Post excluído com sucesso!");
+        fetchPosts();
+      } catch (error) {
+        console.error('Error deleting post:', error);
+        toast.error("Erro ao excluir post");
+      }
+    }
+  };
+
+  const toggleStatus = async (post: any) => {
+    const newStatus = post.status === "published" ? "draft" : "published";
+    try {
+      const { error } = await supabase
+        .schema('app_portfolio')
+        .from('posts')
+        .update({ status: newStatus })
+        .eq('id', post.id);
+
+      if (error) throw error;
+      toast.success(`Post ${newStatus === 'published' ? 'publicado' : 'despublicado'}`);
+      fetchPosts();
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error("Erro ao atualizar status");
+    }
+  };
+
+  const toggleFeatured = async (post: any) => {
+    try {
+      const { error } = await supabase
+        .schema('app_portfolio')
+        .from('posts')
+        .update({ featured: !post.featured })
+        .eq('id', post.id);
+
+      if (error) throw error;
+      toast.success(`Destaque ${!post.featured ? 'adicionado' : 'removido'}`);
+      fetchPosts();
+    } catch (error) {
+      console.error('Error updating featured:', error);
+      toast.error("Erro ao atualizar destaque");
+    }
   };
 
   return (
@@ -112,22 +212,22 @@ export default function AdminBlog() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="title" className="text-white">Título</Label>
-                    <Input id="title" defaultValue={editingPost?.title} className="bg-white/5 border-white/10 text-white" />
+                    <Input name="title" id="title" defaultValue={editingPost?.title} className="bg-white/5 border-white/10 text-white" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="subtitle" className="text-white">Subtítulo</Label>
-                    <Input id="subtitle" defaultValue={editingPost?.subtitle} className="bg-white/5 border-white/10 text-white" />
+                    <Input name="subtitle" id="subtitle" defaultValue={editingPost?.subtitle} className="bg-white/5 border-white/10 text-white" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="date" className="text-white">Data de Publicação</Label>
-                    <Input id="date" type="date" defaultValue={editingPost?.date} className="bg-white/5 border-white/10 text-white" />
+                    <Input name="date" id="date" type="date" defaultValue={editingPost?.published_at} className="bg-white/5 border-white/10 text-white" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="tags" className="text-white">Tags</Label>
-                    <Input id="tags" defaultValue={editingPost?.tags.join(", ")} className="bg-white/5 border-white/10 text-white" />
+                    <Label htmlFor="tags" className="text-white">Tags (separadas por vírgula)</Label>
+                    <Input name="tags" id="tags" defaultValue={editingPost?.tags?.join(", ")} className="bg-white/5 border-white/10 text-white" />
                   </div>
                 </div>
-                
+
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label className="text-white">Imagem de Destaque</Label>
@@ -146,10 +246,10 @@ export default function AdminBlog() {
                       )}
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-6 pt-4">
                     <div className="flex items-center space-x-2">
-                      <Switch id="featured" defaultChecked={editingPost?.featured} />
+                      <Input type="checkbox" name="featured" id="featured" defaultChecked={editingPost?.featured} className="w-4 h-4" />
                       <Label htmlFor="featured" className="text-white">Destacar Post</Label>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -185,81 +285,87 @@ export default function AdminBlog() {
         </div>
 
         <div className="space-y-4">
-          {posts.map((post) => (
-            <Card key={post.id} className="bg-card border-white/10 hover:border-neon-purple/30 transition-colors">
-              <div className="flex flex-col md:flex-row gap-4 p-4">
-                <img src={post.image} alt={post.title} className="w-full md:w-48 h-32 object-cover rounded-lg" />
-                <div className="flex-1 space-y-2">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                        {post.title}
-                        {post.featured && <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />}
-                      </h3>
-                      <p className="text-gray-400 text-sm">{post.subtitle}</p>
+          {isLoading ? (
+            <div className="text-center text-gray-400 py-10">Carregando posts...</div>
+          ) : posts.length === 0 ? (
+            <div className="text-center text-gray-400 py-10">Nenhum post encontrado.</div>
+          ) : (
+            posts.map((post) => (
+              <Card key={post.id} className="bg-card border-white/10 hover:border-neon-purple/30 transition-colors">
+                <div className="flex flex-col md:flex-row gap-4 p-4">
+                  <img src={post.image || "https://via.placeholder.com/300x200"} alt={post.title} className="w-full md:w-48 h-32 object-cover rounded-lg" />
+                  <div className="flex-1 space-y-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                          {post.title}
+                          {post.featured && <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />}
+                        </h3>
+                        <p className="text-gray-400 text-sm">{post.subtitle}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => toggleFeatured(post)}
+                                className={post.featured ? "text-yellow-400" : "text-gray-500"}
+                              >
+                                <Star className={`w-4 h-4 ${post.featured ? "fill-yellow-400" : ""}`} />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{post.featured ? "Remover destaque" : "Destacar post"}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => toggleStatus(post)}
+                                className={post.status === "published" ? "text-green-400" : "text-gray-500"}
+                              >
+                                {post.status === "published" ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{post.status === "published" ? "Despublicar" : "Publicar"}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+
+                        <Button size="icon" variant="ghost" onClick={() => handleOpenDialog(post)}>
+                          <Pencil className="w-4 h-4 text-blue-400" />
+                        </Button>
+                        <Button size="icon" variant="ghost" onClick={() => handleDelete(post.id)}>
+                          <Trash2 className="w-4 h-4 text-red-400" />
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex gap-2">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              onClick={() => toggleFeatured(post.id)}
-                              className={post.featured ? "text-yellow-400" : "text-gray-500"}
-                            >
-                              <Star className={`w-4 h-4 ${post.featured ? "fill-yellow-400" : ""}`} />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{post.featured ? "Remover destaque" : "Destacar post"}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
 
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              size="icon" 
-                              variant="ghost" 
-                              onClick={() => toggleStatus(post.id)}
-                              className={post.status === "published" ? "text-green-400" : "text-gray-500"}
-                            >
-                              {post.status === "published" ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>{post.status === "published" ? "Despublicar" : "Publicar"}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-
-                      <Button size="icon" variant="ghost" onClick={() => handleOpenDialog(post)}>
-                        <Pencil className="w-4 h-4 text-blue-400" />
-                      </Button>
-                      <Button size="icon" variant="ghost" onClick={() => handleDelete(post.id)}>
-                        <Trash2 className="w-4 h-4 text-red-400" />
-                      </Button>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {post.tags?.map((tag: string) => (
+                        <Badge key={tag} variant="secondary" className="bg-white/5 text-gray-300 border-white/10">{tag}</Badge>
+                      ))}
                     </div>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {post.tags.map(tag => (
-                      <Badge key={tag} variant="secondary" className="bg-white/5 text-gray-300 border-white/10">{tag}</Badge>
-                    ))}
-                  </div>
 
-                  <div className="flex items-center gap-4 text-sm text-gray-500 mt-auto pt-2">
-                    <span>{post.date}</span>
-                    <span className={`flex items-center gap-1 ${post.status === "published" ? "text-green-400" : "text-gray-500"}`}>
-                      {post.status === "published" ? "Publicado" : "Rascunho"}
-                    </span>
+                    <div className="flex items-center gap-4 text-sm text-gray-500 mt-auto pt-2">
+                      <span>{post.published_at}</span>
+                      <span className={`flex items-center gap-1 ${post.status === "published" ? "text-green-400" : "text-gray-500"}`}>
+                        {post.status === "published" ? "Publicado" : "Rascunho"}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Card>
-          ))}
+              </Card>
+            ))
+          )}
         </div>
       </div>
     </AdminLayout>
