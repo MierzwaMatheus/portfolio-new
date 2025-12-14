@@ -8,12 +8,19 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/lib/supabase";
 import { Link } from "wouter";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 export default function Blog() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [posts, setPosts] = useState<any[]>([]);
-  const [featuredPost, setFeaturedPost] = useState<any>(null);
+  const [featuredPosts, setFeaturedPosts] = useState<any[]>([]);
 
   useEffect(() => {
     fetchPosts();
@@ -32,22 +39,21 @@ export default function Blog() {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        // Find the first featured post (only if it's actually featured)
-        const featured = data.find((p: any) => p.featured === true);
-        setFeaturedPost(featured || null);
+        // Find all featured posts
+        const featured = data.filter((p: any) => p.featured === true);
+        setFeaturedPosts(featured || []);
 
-        // Filter out the featured post from the main list if it was found
-        const otherPosts = featured 
-          ? data.filter((p: any) => p.id !== featured.id)
-          : data;
+        // Filter out all featured posts from the main list
+        const featuredIds = featured.map((p: any) => p.id);
+        const otherPosts = data.filter((p: any) => !featuredIds.includes(p.id));
         setPosts(otherPosts);
       } else {
-        setFeaturedPost(null);
+        setFeaturedPosts([]);
         setPosts([]);
       }
     } catch (error: any) {
       console.error('Error fetching posts:', error);
-      setFeaturedPost(null);
+      setFeaturedPosts([]);
       setPosts([]);
     } finally {
       setIsLoading(false);
@@ -96,53 +102,108 @@ export default function Blog() {
           <p className="text-gray-400">Compartilhando conhecimento sobre desenvolvimento e design</p>
         </header>
 
-        {/* Featured Post */}
-        {featuredPost && (
+        {/* Featured Posts Carousel */}
+        {featuredPosts.length > 0 && (
           <motion.section variants={item} className="space-y-6">
             <h2 className="text-xl font-bold text-white">Em Destaque</h2>
 
-            <Link href={`/blog/${featuredPost.slug}`}>
-              <div className="relative rounded-2xl overflow-hidden group cursor-pointer border border-white/5 shadow-2xl h-[400px]">
-                <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent z-10"></div>
-                <img
-                  src={featuredPost.image || "https://via.placeholder.com/800x400"}
-                  alt={featuredPost.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                />
+            {featuredPosts.length === 1 ? (
+              <Link href={`/blog/${featuredPosts[0].slug}`}>
+                <div className="relative rounded-2xl overflow-hidden group cursor-pointer border border-white/5 shadow-2xl h-[400px]">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent z-10"></div>
+                  <img
+                    src={featuredPosts[0].image || "https://via.placeholder.com/800x400"}
+                    alt={featuredPosts[0].title}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                  />
 
-                <div className="absolute bottom-0 left-0 right-0 p-8 z-20">
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {featuredPost.tags?.map((tag: string) => (
-                      <Badge key={tag} className="bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-sm">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-
-                  <h3 className="text-2xl md:text-4xl font-bold text-white mb-4 leading-tight max-w-4xl">
-                    {featuredPost.title}
-                  </h3>
-
-                  <p className="text-gray-300 text-lg mb-6 max-w-3xl line-clamp-2">
-                    {featuredPost.subtitle}
-                  </p>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center text-sm text-gray-400 space-x-4">
-                      <span>{new Date(featuredPost.published_at).toLocaleDateString('pt-BR')}</span>
-                      <span className="flex items-center">
-                        <Clock className="w-4 h-4 mr-1" />
-                        {Math.ceil(featuredPost.content.split(' ').length / 200)} min de leitura
-                      </span>
+                  <div className="absolute bottom-0 left-0 right-0 p-8 z-20">
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {featuredPosts[0].tags?.map((tag: string) => (
+                        <Badge key={tag} className="bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-sm">
+                          {tag}
+                        </Badge>
+                      ))}
                     </div>
 
-                    <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white">
-                      Ler agora
-                    </Button>
+                    <h3 className="text-2xl md:text-4xl font-bold text-white mb-4 leading-tight max-w-4xl">
+                      {featuredPosts[0].title}
+                    </h3>
+
+                    <p className="text-gray-300 text-lg mb-6 max-w-3xl line-clamp-2">
+                      {featuredPosts[0].subtitle}
+                    </p>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center text-sm text-gray-400 space-x-4">
+                        <span>{new Date(featuredPosts[0].published_at).toLocaleDateString('pt-BR')}</span>
+                        <span className="flex items-center">
+                          <Clock className="w-4 h-4 mr-1" />
+                          {Math.ceil(featuredPosts[0].content.split(' ').length / 200)} min de leitura
+                        </span>
+                      </div>
+
+                      <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white">
+                        Ler agora
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </Link>
+              </Link>
+            ) : (
+              <Carousel className="w-full" opts={{ loop: true }}>
+                <CarouselContent className="-ml-2 md:-ml-4">
+                  {featuredPosts.map((post) => (
+                    <CarouselItem key={post.id} className="pl-2 md:pl-4 basis-full">
+                      <Link href={`/blog/${post.slug}`}>
+                        <div className="relative rounded-2xl overflow-hidden group cursor-pointer border border-white/5 shadow-2xl h-[400px]">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent z-10"></div>
+                          <img
+                            src={post.image || "https://via.placeholder.com/800x400"}
+                            alt={post.title}
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          />
+
+                          <div className="absolute bottom-0 left-0 right-0 p-8 z-20">
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {post.tags?.map((tag: string) => (
+                                <Badge key={tag} className="bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-sm">
+                                  {tag}
+                                </Badge>
+                              ))}
+                            </div>
+
+                            <h3 className="text-2xl md:text-4xl font-bold text-white mb-4 leading-tight max-w-4xl">
+                              {post.title}
+                            </h3>
+
+                            <p className="text-gray-300 text-lg mb-6 max-w-3xl line-clamp-2">
+                              {post.subtitle}
+                            </p>
+
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center text-sm text-gray-400 space-x-4">
+                                <span>{new Date(post.published_at).toLocaleDateString('pt-BR')}</span>
+                                <span className="flex items-center">
+                                  <Clock className="w-4 h-4 mr-1" />
+                                  {Math.ceil(post.content.split(' ').length / 200)} min de leitura
+                                </span>
+                              </div>
+
+                              <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white">
+                                Ler agora
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious className="left-4 border-white/20 bg-black/50 hover:bg-black/70 text-white hover:text-white" />
+                <CarouselNext className="right-4 border-white/20 bg-black/50 hover:bg-black/70 text-white hover:text-white" />
+              </Carousel>
+            )}
           </motion.section>
         )}
 
