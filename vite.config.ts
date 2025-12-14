@@ -12,7 +12,7 @@ const isDev = process.env.NODE_ENV !== "production";
  * Usado APENAS em desenvolvimento
  */
 function transformInspectorPaths(): Plugin {
-  const srcPath = path.resolve(import.meta.dirname, "client", "src");
+  const srcPath = path.resolve(import.meta.dirname, "src");
 
   return {
     name: "transform-inspector-paths",
@@ -59,30 +59,28 @@ function transformInspectorPaths(): Plugin {
 }
 
 export default defineConfig({
-  root: path.resolve(import.meta.dirname, "client"),
-
-  envDir: path.resolve(import.meta.dirname, "client"),
+  // index.html agora está na raiz, então NÃO existe root customizado
 
   plugins: [
     react(),
     tailwindcss(),
     vitePluginManusRuntime(),
 
-    // Debug only
+    // Debug apenas em desenvolvimento
     isDev && reactInspector(),
     isDev && transformInspectorPaths(),
   ].filter(Boolean),
 
   resolve: {
     alias: {
-      "@": path.resolve(import.meta.dirname, "client", "src"),
+      "@": path.resolve(import.meta.dirname, "src"),
       "@shared": path.resolve(import.meta.dirname, "shared"),
       "@assets": path.resolve(import.meta.dirname, "attached_assets"),
     },
   },
 
   build: {
-    outDir: "dist",        // gera client/dist (correto pra Vercel)
+    outDir: "dist",        // dist na raiz (padrão do Vite e da Vercel)
     emptyOutDir: true,
     sourcemap: isDev,
   },
