@@ -1,71 +1,122 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, GripVertical, X } from "lucide-react";
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { supabase } from "@/lib/supabase";
+import { ProjectTagsInput } from "@/components/admin/ProjectTagsInput";
 
-// Mock Data
-const INITIAL_PROJECTS = [
-  {
-    id: 1,
-    title: "E-commerce Dashboard",
-    description: "Dashboard administrativo completo para gestão de vendas e estoque.",
-    tags: ["React", "TypeScript", "Tailwind"],
-    images: [
-      "https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2670&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2426&auto=format&fit=crop"
-    ]
-  },
-  {
-    id: 2,
-    title: "App de Finanças Pessoais",
-    description: "Aplicação mobile-first para controle de gastos e investimentos.",
-    tags: ["React Native", "Expo", "Node.js"],
-    images: [
-      "https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=2626&auto=format&fit=crop"
-    ]
-  },
-  {
-    id: 3,
-    title: "Plataforma de Cursos",
-    description: "Sistema de LMS com suporte a vídeo aulas e exercícios interativos.",
-    tags: ["Next.js", "Prisma", "PostgreSQL"],
-    images: [
-      "https://images.unsplash.com/photo-1501504905252-473c47e087f8?q=80&w=2574&auto=format&fit=crop"
-    ]
-  }
-];
+interface Project {
+  id: number;
+  title: string;
+  description: string;
+  long_description: string;
+  tags: string[];
+  images: string[];
+  demo_link: string;
+  github_link: string;
+}
 
 export default function AdminProjects() {
-  const [projects, setProjects] = useState(INITIAL_PROJECTS);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingProject, setEditingProject] = useState<any>(null);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [projectImages, setProjectImages] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleOpenDialog = (project: any = null) => {
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .schema('app_portfolio')
+        .from('projects')
+        .select('*')
+        .order('id', { ascending: false });
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOpenDialog = (project: Project | null = null) => {
     setEditingProject(project);
     setProjectImages(project ? project.images : []);
+    setSelectedTags(project ? project.tags : []);
     setIsDialogOpen(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Logic to save project would go here
-    setIsDialogOpen(false);
-    setEditingProject(null);
-    setProjectImages([]);
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+
+    const projectData = {
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      long_description: formData.get('long_description') as string,
+      tags: selectedTags,
+      images: projectImages,
+      demo_link: formData.get('demo') as string,
+      github_link: formData.get('github') as string,
+    };
+
+    try {
+      if (editingProject) {
+        const { error } = await supabase
+          .schema('app_portfolio')
+          .from('projects')
+          .update(projectData)
+          .eq('id', editingProject.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .schema('app_portfolio')
+          .from('projects')
+          .insert([projectData]);
+        if (error) throw error;
+      }
+
+      await fetchProjects();
+      setIsDialogOpen(false);
+      setEditingProject(null);
+      setProjectImages([]);
+      setSelectedTags([]);
+    } catch (error) {
+      console.error('Error saving project:', error);
+      alert('Erro ao salvar projeto');
+    }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (confirm("Tem certeza que deseja excluir este projeto?")) {
-      setProjects(projects.filter(p => p.id !== id));
+      try {
+        const { error } = await supabase
+          .schema('app_portfolio')
+          .from('projects')
+          .delete()
+          .eq('id', id);
+
+        if (error) throw error;
+        setProjects(projects.filter(p => p.id !== id));
+      } catch (error) {
+        console.error('Error deleting project:', error);
+        alert('Erro ao excluir projeto');
+      }
     }
   };
 
@@ -104,12 +155,17 @@ export default function AdminProjects() {
             <form onSubmit={handleSave} className="space-y-6 mt-4">
               <div className="space-y-2">
                 <Label htmlFor="title" className="text-white">Título</Label>
-                <Input id="title" defaultValue={editingProject?.title} className="bg-white/5 border-white/10 text-white" />
+                <Input name="title" id="title" defaultValue={editingProject?.title} className="bg-white/5 border-white/10 text-white" required />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="description" className="text-white">Descrição Curta</Label>
-                <Textarea id="description" defaultValue={editingProject?.description} className="bg-white/5 border-white/10 text-white" />
+                <Textarea name="description" id="description" defaultValue={editingProject?.description} className="bg-white/5 border-white/10 text-white" required />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="long_description" className="text-white">Descrição Longa</Label>
+                <Textarea name="long_description" id="long_description" defaultValue={editingProject?.long_description} className="bg-white/5 border-white/10 text-white h-32" />
               </div>
 
               <div className="space-y-2">
@@ -140,18 +196,18 @@ export default function AdminProjects() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tags" className="text-white">Tags (separadas por vírgula)</Label>
-                <Input id="tags" defaultValue={editingProject?.tags.join(", ")} className="bg-white/5 border-white/10 text-white" />
+                <Label className="text-white">Tags</Label>
+                <ProjectTagsInput selectedTags={selectedTags} onChange={setSelectedTags} />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="demo" className="text-white">Link Demo</Label>
-                  <Input id="demo" placeholder="https://" className="bg-white/5 border-white/10 text-white" />
+                  <Input name="demo" id="demo" defaultValue={editingProject?.demo_link} placeholder="https://" className="bg-white/5 border-white/10 text-white" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="github" className="text-white">Link GitHub</Label>
-                  <Input id="github" placeholder="https://" className="bg-white/5 border-white/10 text-white" />
+                  <Input name="github" id="github" defaultValue={editingProject?.github_link} placeholder="https://" className="bg-white/5 border-white/10 text-white" />
                 </div>
               </div>
 
@@ -163,40 +219,48 @@ export default function AdminProjects() {
           </DialogContent>
         </Dialog>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project) => (
-            <Card key={project.id} className="bg-card border-white/10 overflow-hidden group">
-              <div className="relative h-48">
-                <img src={project.images[0]} alt={project.title} className="w-full h-full object-cover" />
-                <div className="absolute top-2 right-2 bg-black/60 px-2 py-1 rounded text-xs text-white">
-                  {project.images.length} imagens
+        {isLoading ? (
+          <div className="text-white">Carregando projetos...</div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {projects.map((project) => (
+              <Card key={project.id} className="bg-card border-white/10 overflow-hidden group">
+                <div className="relative h-48">
+                  {project.images && project.images.length > 0 ? (
+                    <img src={project.images[0]} alt={project.title} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">Sem imagem</div>
+                  )}
+                  <div className="absolute top-2 right-2 bg-black/60 px-2 py-1 rounded text-xs text-white">
+                    {project.images?.length || 0} imagens
+                  </div>
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                    <Button size="icon" variant="secondary" onClick={() => handleOpenDialog(project)}>
+                      <Pencil className="w-4 h-4" />
+                    </Button>
+                    <Button size="icon" variant="destructive" onClick={() => handleDelete(project.id)}>
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <Button size="icon" variant="secondary" onClick={() => handleOpenDialog(project)}>
-                    <Pencil className="w-4 h-4" />
-                  </Button>
-                  <Button size="icon" variant="destructive" onClick={() => handleDelete(project.id)}>
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-              <CardHeader>
-                <CardTitle className="text-white flex justify-between items-start">
-                  {project.title}
-                  <GripVertical className="w-5 h-5 text-gray-500 cursor-move" />
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-400 text-sm line-clamp-2 mb-4">{project.description}</p>
-                <div className="flex flex-wrap gap-2">
-                  {project.tags.map(tag => (
-                    <Badge key={tag} variant="secondary" className="bg-white/5 text-gray-300 border-white/10">{tag}</Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                <CardHeader>
+                  <CardTitle className="text-white flex justify-between items-start">
+                    {project.title}
+                    <GripVertical className="w-5 h-5 text-gray-500 cursor-move" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-gray-400 text-sm line-clamp-2 mb-4">{project.description}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {project.tags?.map(tag => (
+                      <Badge key={tag} variant="secondary" className="bg-white/5 text-gray-300 border-white/10">{tag}</Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </AdminLayout>
   );
