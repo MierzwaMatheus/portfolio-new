@@ -41,7 +41,7 @@ export default function Portfolio() {
         .schema('app_portfolio')
         .from('projects')
         .select('*')
-        .order('id', { ascending: false });
+        .order('order_index', { ascending: true, nullsFirst: false });
 
       if (error) throw error;
       setProjects(data || []);

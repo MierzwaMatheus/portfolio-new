@@ -12,6 +12,10 @@ import { ImagePicker } from "@/components/admin/ImagePicker";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { supabase } from "@/lib/supabase";
 import { ProjectTagsInput } from "@/components/admin/ProjectTagsInput";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { toast } from "sonner";
 
 interface Project {
   id: number;
@@ -22,6 +26,66 @@ interface Project {
   images: string[];
   demo_link: string;
   github_link: string;
+  order_index?: number;
+}
+
+// Sortable Project Card Component
+function SortableProjectCard({ 
+  project, 
+  onEdit, 
+  onDelete 
+}: { 
+  project: Project; 
+  onEdit: (project: Project) => void; 
+  onDelete: (id: number) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: project.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className="bg-card border-white/10 overflow-hidden group">
+        <div className="relative h-48">
+          {project.images && project.images.length > 0 ? (
+            <img src={project.images[0]} alt={project.title} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">Sem imagem</div>
+          )}
+          <div className="absolute top-2 right-2 bg-black/60 px-2 py-1 rounded text-xs text-white">
+            {project.images?.length || 0} imagens
+          </div>
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+            <Button size="icon" variant="secondary" onClick={() => onEdit(project)}>
+              <Pencil className="w-4 h-4" />
+            </Button>
+            <Button size="icon" variant="destructive" onClick={() => onDelete(project.id)}>
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+        <CardHeader>
+          <CardTitle className="text-white flex justify-between items-start">
+            {project.title}
+            <div {...attributes} {...listeners} className="cursor-move">
+              <GripVertical className="w-5 h-5 text-gray-500 hover:text-white transition-colors" />
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-gray-400 text-sm line-clamp-2 mb-4">{project.description}</p>
+          <div className="flex flex-wrap gap-2">
+            {project.tags?.map(tag => (
+              <Badge key={tag} variant="secondary" className="bg-white/5 text-gray-300 border-white/10">{tag}</Badge>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 export default function AdminProjects() {
@@ -42,10 +106,17 @@ export default function AdminProjects() {
         .schema('app_portfolio')
         .from('projects')
         .select('*')
-        .order('id', { ascending: false });
+        .order('order_index', { ascending: true, nullsFirst: false });
 
       if (error) throw error;
-      setProjects(data || []);
+      
+      // Se não houver order_index, inicializar com base no id
+      const projectsWithOrder = (data || []).map((project, index) => ({
+        ...project,
+        order_index: project.order_index ?? index
+      }));
+      
+      setProjects(projectsWithOrder);
     } catch (error) {
       console.error('Error fetching projects:', error);
     } finally {
@@ -65,7 +136,7 @@ export default function AdminProjects() {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
 
-    const projectData = {
+    const projectData: any = {
       title: formData.get('title') as string,
       description: formData.get('description') as string,
       long_description: formData.get('long_description') as string,
@@ -84,6 +155,12 @@ export default function AdminProjects() {
           .eq('id', editingProject.id);
         if (error) throw error;
       } else {
+        // Ao criar novo projeto, adicionar no final da lista
+        const maxOrder = projects.length > 0 
+          ? Math.max(...projects.map(p => p.order_index ?? 0)) 
+          : -1;
+        projectData.order_index = maxOrder + 1;
+        
         const { error } = await supabase
           .schema('app_portfolio')
           .from('projects')
@@ -96,9 +173,10 @@ export default function AdminProjects() {
       setEditingProject(null);
       setProjectImages([]);
       setSelectedTags([]);
+      toast.success(editingProject ? 'Projeto atualizado com sucesso' : 'Projeto criado com sucesso');
     } catch (error) {
       console.error('Error saving project:', error);
-      alert('Erro ao salvar projeto');
+      toast.error('Erro ao salvar projeto');
     }
   };
 
@@ -126,6 +204,61 @@ export default function AdminProjects() {
 
   const removeImage = (index: number) => {
     setProjectImages(projectImages.filter((_, i) => i !== index));
+  };
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = projects.findIndex((project) => project.id === active.id);
+      const newIndex = projects.findIndex((project) => project.id === over.id);
+
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const newOrder = arrayMove(projects, oldIndex, newIndex);
+
+      // Update order_index in the projects array
+      const updatedOrder = newOrder.map((project, index) => ({
+        ...project,
+        order_index: index
+      }));
+
+      // Optimistic update
+      setProjects(updatedOrder);
+
+      // Update in DB
+      try {
+        const updatePromises = updatedOrder.map((project, index) =>
+          supabase
+            .schema("app_portfolio")
+            .from("projects")
+            .update({ order_index: index })
+            .eq("id", project.id)
+        );
+
+        const results = await Promise.all(updatePromises);
+        const hasError = results.some(result => result.error);
+
+        if (hasError) {
+          const errors = results.filter(r => r.error).map(r => r.error);
+          console.error("Error reordering projects:", errors);
+          throw new Error("Erro ao atualizar ordem dos projetos");
+        }
+
+        toast.success("Ordem atualizada com sucesso");
+      } catch (error) {
+        console.error("Error reordering projects:", error);
+        toast.error("Erro ao reordenar projetos");
+        fetchProjects(); // Revert on error
+      }
+    }
   };
 
   return (
@@ -222,44 +355,27 @@ export default function AdminProjects() {
         {isLoading ? (
           <div className="text-white">Carregando projetos...</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {projects.map((project) => (
-              <Card key={project.id} className="bg-card border-white/10 overflow-hidden group">
-                <div className="relative h-48">
-                  {project.images && project.images.length > 0 ? (
-                    <img src={project.images[0]} alt={project.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">Sem imagem</div>
-                  )}
-                  <div className="absolute top-2 right-2 bg-black/60 px-2 py-1 rounded text-xs text-white">
-                    {project.images?.length || 0} imagens
-                  </div>
-                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <Button size="icon" variant="secondary" onClick={() => handleOpenDialog(project)}>
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button size="icon" variant="destructive" onClick={() => handleDelete(project.id)}>
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-                <CardHeader>
-                  <CardTitle className="text-white flex justify-between items-start">
-                    {project.title}
-                    <GripVertical className="w-5 h-5 text-gray-500 cursor-move" />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-400 text-sm line-clamp-2 mb-4">{project.description}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {project.tags?.map(tag => (
-                      <Badge key={tag} variant="secondary" className="bg-white/5 text-gray-300 border-white/10">{tag}</Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
+            <SortableContext
+              items={projects.map(p => p.id)}
+              strategy={rectSortingStrategy}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {projects.map((project) => (
+                  <SortableProjectCard
+                    key={project.id}
+                    project={project}
+                    onEdit={handleOpenDialog}
+                    onDelete={handleDelete}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
     </AdminLayout>
