@@ -14,8 +14,9 @@ import {
   FileSignature,
   UserPlus
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase";
 
 // Admin Sidebar Component
 function AdminSidebar() {
@@ -110,6 +111,51 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
 // Dashboard Page
 export default function Dashboard() {
+  const [stats, setStats] = useState({
+    projects: 0,
+    articles: 0,
+    proposals: 0
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Buscar contagem de projetos
+      const { count: projectsCount } = await supabase
+        .schema('app_portfolio')
+        .from('projects')
+        .select('*', { count: 'exact', head: true });
+
+      // Buscar contagem de artigos (posts)
+      const { count: articlesCount } = await supabase
+        .schema('app_portfolio')
+        .from('posts')
+        .select('*', { count: 'exact', head: true });
+
+      // Buscar contagem de propostas
+      const { count: proposalsCount } = await supabase
+        .schema('app_portfolio')
+        .from('proposals')
+        .select('*', { count: 'exact', head: true });
+
+      setStats({
+        projects: projectsCount || 0,
+        articles: articlesCount || 0,
+        proposals: proposalsCount || 0
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-8">
@@ -120,9 +166,9 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
-            { title: "Projetos", count: 12, icon: FolderKanban, color: "text-blue-400", bg: "bg-blue-400/10" },
-            { title: "Artigos", count: 8, icon: FileText, color: "text-green-400", bg: "bg-green-400/10" },
-            { title: "Propostas", count: 6, icon: FileSignature, color: "text-purple-400", bg: "bg-purple-400/10" },
+            { title: "Projetos", count: stats.projects, icon: FolderKanban, color: "text-blue-400", bg: "bg-blue-400/10" },
+            { title: "Artigos", count: stats.articles, icon: FileText, color: "text-green-400", bg: "bg-green-400/10" },
+            { title: "Propostas", count: stats.proposals, icon: FileSignature, color: "text-purple-400", bg: "bg-purple-400/10" },
           ].map((stat, index) => (
             <div key={index} className="bg-card border border-white/10 rounded-xl p-6 flex items-center space-x-4">
               <div className={cn("p-4 rounded-lg", stat.bg)}>
@@ -130,7 +176,9 @@ export default function Dashboard() {
               </div>
               <div>
                 <p className="text-gray-400 text-sm">{stat.title}</p>
-                <p className="text-2xl font-bold text-white">{stat.count}</p>
+                <p className="text-2xl font-bold text-white">
+                  {isLoading ? "..." : stat.count}
+                </p>
               </div>
             </div>
           ))}
@@ -138,7 +186,7 @@ export default function Dashboard() {
 
         <div className="bg-card border border-white/10 rounded-xl p-6">
           <h2 className="text-xl font-bold text-white mb-4">Atalhos Rápidos</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <Link href="/admin/projects">
               <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2 border-white/10 hover:bg-white/5 hover:border-neon-purple/50">
                 <FolderKanban className="w-6 h-6 text-neon-purple" />
@@ -158,7 +206,7 @@ export default function Dashboard() {
               </Button>
             </Link>
             <Link href="/admin/contact">
-              <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2 border-white/10 hover:bg-white/5 hover:border-neon-purple/50">
+              <Button variant="outline" className=" w-full h-24 flex flex-col items-center justify-center gap-2 border-white/10 hover:bg-white/5 hover:border-neon-purple/50 hidden">
                 <Mail className="w-6 h-6 text-neon-purple" />
                 Ver Mensagens
               </Button>
