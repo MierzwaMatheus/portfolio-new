@@ -1,8 +1,8 @@
 {
-  "buildCommand": "cd .. && npm ci && npm run build",
-  "installCommand": "cd .. && npm ci",
+  "buildCommand": "npm ci && npm run build",
+  "installCommand": "npm ci",
   "framework": null,
-  "outputDirectory": "dist",
+  "outputDirectory": "client/dist",
   "rewrites": [
     {
       "source": "/(.*)",
