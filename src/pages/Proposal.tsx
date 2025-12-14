@@ -349,6 +349,30 @@ export default function Proposal() {
             </div>
           </motion.header>
 
+          {/* Apresentação */}
+          <motion.section variants={itemVariants}>
+            <Card className="bg-card/50 backdrop-blur-sm border-white/10 overflow-hidden relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-neon-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <CardContent className="p-8 md:p-10 space-y-4">
+                <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                  <span className="w-1 h-8 bg-neon-purple rounded-full" />
+                  Apresentação
+                </h2>
+                <div className="text-lg text-gray-300 leading-relaxed space-y-4">
+                  <p>
+                    Olá, tudo bem?
+                  </p>
+                  <p>
+                    Antes de tudo, agradeço o interesse no meu trabalho! Sou Matheus Mierzwa, desenvolvedor front-end com foco em React, TypeScript, interfaces modernas e experiências digitais que encantam. Tenho mais de 4 anos de experiência com projetos que envolvem interfaces interativas, dados dinâmicos e integração com inteligência artificial.
+                  </p>
+                  <p>
+                    Meu objetivo é transformar ideias em soluções funcionais, visuais e inteligentes. Vamos conversar sobre como isso pode funcionar no seu projeto?
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.section>
+
           {/* Objective */}
           <motion.section variants={itemVariants}>
             <Card className="bg-card/50 backdrop-blur-sm border-white/10 overflow-hidden relative group">
