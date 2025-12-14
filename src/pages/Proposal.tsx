@@ -379,7 +379,7 @@ export default function Proposal() {
                     {proposal.scope?.map((item: string, index: number) => (
                       <li key={index} className="flex items-start gap-3 text-gray-300 group">
                         <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-neon-purple group-hover:scale-150 transition-transform" />
-                        <span className="group-hover:text-white transition-colors">{item}</span>
+                        <span className="group-hover:text-white transition-colors w-[95%]">{item}</span>
                       </li>
                     ))}
                   </ul>
@@ -392,24 +392,41 @@ export default function Proposal() {
               <Card className="h-full bg-card/50 backdrop-blur-sm border-white/10 hover:border-neon-green/30 transition-colors duration-300">
                 <CardContent className="p-8 space-y-6">
                   <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    <Clock className="w-6 h-6 text-neon-green" />
+                    <Clock className="w-6 h-6 text-neon-lime" />
                     Cronograma Estimado
                   </h2>
-                  <div className="space-y-6 relative pl-2">
-                    {/* Vertical Line */}
-                    <div className="absolute left-[11px] top-2 bottom-2 w-[2px] bg-white/10" />
-
-                    {proposal.timeline?.map((item: any, index: number) => (
-                      <div key={index} className="relative flex items-center gap-4 pl-6 group">
-                        <div className="absolute left-0 w-6 h-6 rounded-full bg-background border-2 border-white/20 flex items-center justify-center z-10 group-hover:border-neon-green transition-colors">
-                          <div className="w-2 h-2 rounded-full bg-white/50 group-hover:bg-neon-green transition-colors" />
-                        </div>
-                        <div className="flex-1">
-                          <h4 className="text-white font-medium group-hover:text-neon-green transition-colors">{item.step}</h4>
-                          <p className="text-sm text-gray-500">{item.period}</p>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="relative pl-6">
+                    {/* Linha vertical contínua e discreta */}
+                    <div className="absolute left-[11px] top-2 bottom-2 w-px bg-neon-lime" />
+                    
+                    <div className="space-y-8">
+                      {proposal.timeline?.map((item: any, index: number) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={isVisible ? { opacity: 1, x: 0 } : {}}
+                          transition={{ delay: index * 0.1 }}
+                          className="group relative"
+                        >
+                          <div className="flex items-start gap-4">
+                            {/* Ponto da timeline */}
+                            <div className="relative shrink-0">
+                              <div className="absolute left-[-18px] top-1.5 w-3 h-3 rounded-full bg-border border border-neon-green/40 group-hover:border-neon-green transition-all duration-300 flex items-center justify-center">
+                                <div className="w-1.5 h-1.5 rounded-full bg-neon-lime/50 group-hover:bg-neon-lime group-hover:scale-125 transition-all duration-300" />
+                              </div>
+                            </div>
+                            
+                            {/* Conteúdo */}
+                            <div className="flex-1 pt-0.5 space-y-1">
+                              <h4 className="text-white font-semibold text-base group-hover:text-neon-green transition-colors duration-300">
+                                {item.step}
+                              </h4>
+                              <p className="text-sm text-gray-400 font-light">{item.period}</p>
+                            </div>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </div>
                   </div>
                   {proposal.delivery_date && (
                     <div className="mt-4 pt-4 border-t border-white/10">
