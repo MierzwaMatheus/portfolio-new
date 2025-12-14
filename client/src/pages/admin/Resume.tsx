@@ -654,8 +654,8 @@ export default function AdminResume() {
 
         {/* Shared Modal */}
         <Dialog open={!!activeModal} onOpenChange={() => handleCloseModal()}>
-          <DialogContent className="bg-black border-white/10 max-w-2xl">
-            <DialogHeader>
+          <DialogContent className="bg-black border-white/10 max-w-2xl max-h-[85vh] flex flex-col p-0">
+            <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
               <DialogTitle className="text-white">
                 {editingItem ? "Editar" : "Adicionar"} {
                   activeModal === "experience" ? "Experiência" :
@@ -668,7 +668,8 @@ export default function AdminResume() {
                 <h2>Formulário de currículo</h2>
               </VisuallyHidden>
             </DialogHeader>
-            <form onSubmit={handleSave} className="space-y-4 mt-4">
+            <div className="flex-1 overflow-y-auto min-h-0 px-6">
+              <form onSubmit={handleSave} className="space-y-4 pb-4" id="resume-form">
               {activeModal === "experience" && (
                 <>
                   <div className="grid grid-cols-2 gap-4">
@@ -768,11 +769,12 @@ export default function AdminResume() {
                 </>
               )}
 
-              <div className="flex justify-end gap-2 pt-4">
-                <Button type="button" variant="ghost" onClick={handleCloseModal} className="text-gray-400">Cancelar</Button>
-                <Button type="submit" className="bg-neon-purple hover:bg-neon-purple/90 text-white">Salvar</Button>
-              </div>
-            </form>
+              </form>
+            </div>
+            <div className="flex justify-end gap-2 pt-4 pb-6 px-6 border-t border-white/10 flex-shrink-0">
+              <Button type="button" variant="ghost" onClick={handleCloseModal} className="text-gray-400">Cancelar</Button>
+              <Button type="submit" form="resume-form" className="bg-neon-purple hover:bg-neon-purple/90 text-white">Salvar</Button>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
