@@ -108,11 +108,14 @@ export default function AdminProposals() {
       .filter(c => c.checked)
       .map(c => c.text);
 
+    // Garantir que a data seja sempre enviada corretamente
+    const createdDate = createdAt ? new Date(createdAt + 'T00:00:00').toISOString() : new Date().toISOString();
+    
     const payload = {
       title: title || null,
       client_name: clientName,
       slug,
-      created_at: new Date(createdAt).toISOString(),
+      created_at: createdDate,
       objective,
       scope: scopeItems,
       timeline: timelineItems,
