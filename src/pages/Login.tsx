@@ -37,7 +37,26 @@ export default function Login() {
         setError("Credenciais inválidas. Verifique seu email e senha.");
       } else {
         // AuthContext will handle state update and redirection via useEffect
-        setLocation("/admin/dashboard");
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          // Check user roles
+          const { data: roles } = await supabase
+            .from("user_app_roles")
+            .select("role")
+            .eq("user_id", user.id)
+            .eq("app_key", "app_portfolio");
+
+          const userRoles = roles?.map(r => r.role) || [];
+
+          if (userRoles.includes("root") || userRoles.includes("admin")) {
+            setLocation("/admin/dashboard");
+          } else if (userRoles.includes("proposal-editor")) {
+            setLocation("/admin/proposals");
+          } else {
+            // Default fallback
+            setLocation("/admin/dashboard");
+          }
+        }
       }
     } catch (err) {
       setError("Ocorreu um erro ao tentar fazer login.");

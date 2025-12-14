@@ -30,15 +30,24 @@ import {
 import { toast } from "sonner";
 import { AdminLayout } from "./Dashboard";
 import { supabase } from "@/lib/supabase";
-import { Loader2, UserPlus, Users } from "lucide-react";
+import { Loader2, UserPlus, Users, Trash2, Eye, EyeOff } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const formSchema = z.object({
     email: z.string().email("Email inválido"),
     password: z.string().min(6, "A senha deve ter no mínimo 6 caracteres").optional().or(z.literal('')),
+    confirmPassword: z.string().optional().or(z.literal('')),
     name: z.string().min(2, "O nome deve ter no mínimo 2 caracteres"),
     role: z.enum(["root", "admin", "proposal-editor"]),
+}).refine((data) => {
+    if (data.password && data.password !== data.confirmPassword) {
+        return false;
+    }
+    return true;
+}, {
+    message: "As senhas não coincidem",
+    path: ["confirmPassword"],
 });
 
 interface User {
@@ -53,12 +62,14 @@ export default function CreateUser() {
     const [isLoading, setIsLoading] = useState(false);
     const [users, setUsers] = useState<User[]>([]);
     const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+    const [showPassword, setShowPassword] = useState(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             email: "",
             password: "",
+            confirmPassword: "",
             name: "",
             role: "proposal-editor",
         },
@@ -116,6 +127,26 @@ export default function CreateUser() {
         }
     }
 
+    const handleDelete = async (userId: string, userEmail: string) => {
+        if (!confirm(`Tem certeza que deseja remover o acesso do usuário ${userEmail}?`)) return;
+
+        try {
+            const { data, error } = await supabase.functions.invoke('create-user', {
+                body: { user_id: userId },
+                method: 'DELETE',
+            });
+
+            if (error) throw error;
+            if (data?.error) throw new Error(data.error);
+
+            toast.success("Acesso do usuário removido com sucesso");
+            fetchUsers();
+        } catch (error) {
+            console.error("Error deleting user:", error);
+            toast.error("Erro ao remover usuário");
+        }
+    };
+
     return (
         <AdminLayout>
             <div className="max-w-4xl mx-auto space-y-8">
@@ -167,19 +198,54 @@ export default function CreateUser() {
                                     )}
                                 />
 
-                                <FormField
-                                    control={form.control}
-                                    name="password"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel className="text-white">Senha <span className="text-xs text-gray-400 font-normal">(Opcional para usuários existentes)</span></FormLabel>
-                                            <FormControl>
-                                                <Input type="password" placeholder="******" {...field} className="bg-background/50 border-white/10 text-white" />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <FormField
+                                        control={form.control}
+                                        name="password"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-white">Senha</FormLabel>
+                                                <div className="relative">
+                                                    <FormControl>
+                                                        <Input
+                                                            type={showPassword ? "text" : "password"}
+                                                            placeholder="******"
+                                                            {...field}
+                                                            className="bg-background/50 border-white/10 text-white pr-10"
+                                                        />
+                                                    </FormControl>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setShowPassword(!showPassword)}
+                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                                                    >
+                                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                                    </button>
+                                                </div>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    <FormField
+                                        control={form.control}
+                                        name="confirmPassword"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel className="text-white">Confirmar Senha</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        type={showPassword ? "text" : "password"}
+                                                        placeholder="******"
+                                                        {...field}
+                                                        className="bg-background/50 border-white/10 text-white"
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </div>
 
                                 <FormField
                                     control={form.control}
@@ -236,12 +302,13 @@ export default function CreateUser() {
                                             <TableHead className="text-gray-400">Nome</TableHead>
                                             <TableHead className="text-gray-400">Função</TableHead>
                                             <TableHead className="text-gray-400">Data</TableHead>
+                                            <TableHead className="text-gray-400 w-[50px]"></TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
                                         {users.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={3} className="text-center text-gray-400 py-8">
+                                                <TableCell colSpan={4} className="text-center text-gray-400 py-8">
                                                     Nenhum usuário encontrado
                                                 </TableCell>
                                             </TableRow>
@@ -259,6 +326,16 @@ export default function CreateUser() {
                                                     </TableCell>
                                                     <TableCell className="text-gray-400 text-sm">
                                                         {format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                                                            onClick={() => handleDelete(user.id, user.email)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
                                                     </TableCell>
                                                 </TableRow>
                                             ))

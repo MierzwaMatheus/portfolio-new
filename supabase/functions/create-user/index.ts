@@ -135,6 +135,39 @@ serve(async (req) => {
             }
         }
 
+        // Handle DELETE request to remove user access
+        if (req.method === 'DELETE') {
+            const { user_id } = await req.json()
+
+            if (!user_id) {
+                return new Response(
+                    JSON.stringify({ error: 'User ID is required' }),
+                    {
+                        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                        status: 400,
+                    }
+                )
+            }
+
+            console.log(`Removing access for user ${user_id}...`)
+
+            const { error: deleteError } = await supabaseAdmin
+                .from('user_app_roles')
+                .delete()
+                .eq('user_id', user_id)
+                .eq('app_key', 'app_portfolio')
+
+            if (deleteError) throw deleteError
+
+            return new Response(
+                JSON.stringify({ message: 'User access removed successfully' }),
+                {
+                    headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                    status: 200,
+                }
+            )
+        }
+
         return new Response(
             JSON.stringify({ error: 'Method not allowed' }),
             {
