@@ -1,11 +1,13 @@
 import { Layout } from "@/components/Layout";
 import { PageSkeleton } from "@/components/PageSkeleton";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, ChevronRight, ChevronLeft, Clock } from "lucide-react";
+import { Search, Filter, ChevronRight, ChevronLeft, Clock, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/lib/supabase";
 import { Link } from "wouter";
 import {
@@ -19,6 +21,7 @@ import {
 export default function Blog() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [posts, setPosts] = useState<any[]>([]);
   const [featuredPosts, setFeaturedPosts] = useState<any[]>([]);
 
@@ -60,11 +63,40 @@ export default function Blog() {
     }
   };
 
-  const filteredPosts = posts.filter(post =>
-    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.subtitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  // Coletar todas as tags únicas dos posts
+  const allTags = useMemo(() => {
+    const tagsSet = new Set<string>();
+    posts.forEach(post => {
+      post.tags?.forEach((tag: string) => tagsSet.add(tag));
+    });
+    return Array.from(tagsSet).sort();
+  }, [posts]);
+
+  const filteredPosts = posts.filter(post => {
+    // Filtro por termo de busca
+    const matchesSearch = 
+      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.subtitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      post.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+
+    // Filtro por tags selecionadas
+    const matchesTags = selectedTags.length === 0 || 
+      selectedTags.some(tag => post.tags?.includes(tag));
+
+    return matchesSearch && matchesTags;
+  });
+
+  const handleTagToggle = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) 
+        ? prev.filter(t => t !== tag)
+        : [...prev, tag]
+    );
+  };
+
+  const clearTagFilters = () => {
+    setSelectedTags([]);
+  };
 
   if (isLoading) {
     return (
@@ -218,10 +250,64 @@ export default function Blog() {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="outline" className="border-white/10 text-gray-300 hover:text-white hover:bg-white/5">
-            <Filter className="mr-2 h-4 w-4" />
-            Filtrar por tags
-          </Button>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button 
+                variant="outline" 
+                className={`border-white/10 text-gray-300 hover:text-white hover:bg-white/5 ${
+                  selectedTags.length > 0 ? 'border-neon-purple/50 bg-neon-purple/10' : ''
+                }`}
+              >
+                <Filter className="mr-2 h-4 w-4" />
+                Filtrar por tags
+                {selectedTags.length > 0 && (
+                  <Badge className="ml-2 bg-neon-purple text-white border-none">
+                    {selectedTags.length}
+                  </Badge>
+                )}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 bg-black/95 border-white/10 backdrop-blur-sm">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-white">Filtrar por tags</h4>
+                  {selectedTags.length > 0 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={clearTagFilters}
+                      className="h-7 px-2 text-xs text-gray-400 hover:text-white"
+                    >
+                      <X className="h-3 w-3 mr-1" />
+                      Limpar
+                    </Button>
+                  )}
+                </div>
+                <div className="max-h-64 overflow-y-auto space-y-2">
+                  {allTags.length === 0 ? (
+                    <p className="text-sm text-gray-400">Nenhuma tag disponível</p>
+                  ) : (
+                    allTags.map((tag) => (
+                      <div
+                        key={tag}
+                        className="flex items-center space-x-2 cursor-pointer hover:bg-white/5 rounded-md p-2 transition-colors"
+                        onClick={() => handleTagToggle(tag)}
+                      >
+                        <Checkbox
+                          checked={selectedTags.includes(tag)}
+                          onCheckedChange={() => handleTagToggle(tag)}
+                          className="border-white/20 data-[state=checked]:bg-neon-purple data-[state=checked]:border-neon-purple"
+                        />
+                        <label className="text-sm text-gray-300 cursor-pointer flex-1">
+                          {tag}
+                        </label>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
         </motion.div>
 
         {/* Posts Grid */}
