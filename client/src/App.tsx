@@ -13,6 +13,7 @@ import AdminResume from "./pages/admin/Resume";
 import AdminHome from "./pages/admin/Home";
 import AdminContact from "./pages/admin/Contact";
 import AdminProposals from "./pages/admin/Proposals";
+import AdminCreateUser from "./pages/admin/CreateUser";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Resume from "./pages/Resume";
@@ -28,14 +29,15 @@ function Router() {
       <Route path={"/login"} component={Login} />
 
       {/* Admin Routes */}
-      <ProtectedRoute path="/admin/dashboard" component={Dashboard} />
-      <ProtectedRoute path="/admin" component={Dashboard} />
-      <ProtectedRoute path="/admin/projects" component={AdminProjects} />
-      <ProtectedRoute path="/admin/blog" component={AdminBlog} />
-      <ProtectedRoute path="/admin/resume" component={AdminResume} />
-      <ProtectedRoute path="/admin/home" component={AdminHome} />
-      <ProtectedRoute path="/admin/contact" component={AdminContact} />
-      <ProtectedRoute path="/admin/proposals" component={AdminProposals} />
+      <ProtectedRoute path="/admin/dashboard" component={Dashboard} allowedRoles={['root', 'admin']} />
+      <ProtectedRoute path="/admin" component={Dashboard} allowedRoles={['root', 'admin']} />
+      <ProtectedRoute path="/admin/projects" component={AdminProjects} allowedRoles={['root', 'admin']} />
+      <ProtectedRoute path="/admin/blog" component={AdminBlog} allowedRoles={['root', 'admin']} />
+      <ProtectedRoute path="/admin/resume" component={AdminResume} allowedRoles={['root', 'admin']} />
+      <ProtectedRoute path="/admin/home" component={AdminHome} allowedRoles={['root', 'admin']} />
+      <ProtectedRoute path="/admin/contact" component={AdminContact} allowedRoles={['root', 'admin']} />
+      <ProtectedRoute path="/admin/proposals" component={AdminProposals} allowedRoles={['root', 'admin', 'proposal-editor']} />
+      <ProtectedRoute path="/admin/users/new" component={AdminCreateUser} allowedRoles={['root']} />
 
       {/* Public Routes */}
       <Route path="/curriculo" component={Resume} />

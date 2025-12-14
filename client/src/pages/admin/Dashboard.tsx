@@ -1,17 +1,18 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
-import { 
-  LayoutDashboard, 
-  FolderKanban, 
-  FileText, 
-  User, 
-  Home, 
-  Mail, 
+import {
+  LayoutDashboard,
+  FolderKanban,
+  FileText,
+  User,
+  Home,
+  Mail,
   LogOut,
   Menu,
   X,
-  FileSignature
+  FileSignature,
+  UserPlus
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -19,25 +20,28 @@ import { cn } from "@/lib/utils";
 // Admin Sidebar Component
 function AdminSidebar() {
   const [location] = useLocation();
-  const { logout } = useAuth();
+  const { logout, checkRole } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard" },
-    { icon: FolderKanban, label: "Projetos", path: "/admin/projects" },
-    { icon: FileText, label: "Blog", path: "/admin/blog" },
-    { icon: User, label: "Currículo", path: "/admin/resume" },
-    { icon: FileSignature, label: "Propostas", path: "/admin/proposals" },
-    { icon: Home, label: "Home", path: "/admin/home" },
-    { icon: Mail, label: "Contato", path: "/admin/contact" },
+    { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard", roles: ["root", "admin"] },
+    { icon: FolderKanban, label: "Projetos", path: "/admin/projects", roles: ["root", "admin"] },
+    { icon: FileText, label: "Blog", path: "/admin/blog", roles: ["root", "admin"] },
+    { icon: User, label: "Currículo", path: "/admin/resume", roles: ["root", "admin"] },
+    { icon: FileSignature, label: "Propostas", path: "/admin/proposals", roles: ["root", "admin", "proposal-editor"] },
+    { icon: Home, label: "Home", path: "/admin/home", roles: ["root", "admin"] },
+    { icon: Mail, label: "Contato", path: "/admin/contact", roles: ["root", "admin"] },
+    { icon: UserPlus, label: "Criar Usuário", path: "/admin/users/new", roles: ["root"] },
   ];
+
+  const filteredNavItems = navItems.filter(item => checkRole(item.roles));
 
   return (
     <>
       {/* Mobile Toggle */}
-      <Button 
-        variant="ghost" 
-        size="icon" 
+      <Button
+        variant="ghost"
+        size="icon"
         className="fixed top-4 left-4 z-50 md:hidden text-white"
         onClick={() => setIsOpen(!isOpen)}
       >
@@ -58,14 +62,14 @@ function AdminSidebar() {
           </div>
 
           <nav className="flex-1 space-y-2">
-            {navItems.map((item) => {
+            {filteredNavItems.map((item) => {
               const isActive = location === item.path;
               return (
                 <Link key={item.path} href={item.path}>
                   <a className={cn(
                     "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors",
-                    isActive 
-                      ? "bg-neon-purple/10 text-neon-purple border border-neon-purple/20" 
+                    isActive
+                      ? "bg-neon-purple/10 text-neon-purple border border-neon-purple/20"
                       : "text-gray-400 hover:text-white hover:bg-white/5"
                   )}>
                     <item.icon className="w-5 h-5" />
@@ -77,8 +81,8 @@ function AdminSidebar() {
           </nav>
 
           <div className="pt-6 border-t border-white/10">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="w-full justify-start text-red-400 hover:text-red-300 hover:bg-red-500/10"
               onClick={logout}
             >

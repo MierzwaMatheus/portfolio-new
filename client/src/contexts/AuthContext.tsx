@@ -55,15 +55,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await supabase
         .from("user_app_roles")
-        .select("app_key")
+        .select("app_key, role")
         .eq("user_id", userId);
 
       if (error) {
         console.error("Error fetching user roles:", error);
         setRoles([]);
       } else {
-        const userRoles = data.map((row) => row.app_key);
-        setRoles(userRoles);
+        // Combine app_keys and roles into a single array for permission checking
+        const keys = data.map((row) => row.app_key);
+        const userRoles = data.map((row) => row.role).filter(Boolean); // Filter out null/undefined roles
+        setRoles(Array.from(new Set([...keys, ...userRoles]))); // Remove duplicates
       }
     } catch (error) {
       console.error("Unexpected error fetching roles:", error);
