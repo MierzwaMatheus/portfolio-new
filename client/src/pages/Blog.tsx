@@ -32,12 +32,14 @@ export default function Blog() {
       if (error) throw error;
 
       if (data && data.length > 0) {
-        // Find the first featured post, or default to the first post
-        const featured = data.find((p: any) => p.featured) || data[0];
-        setFeaturedPost(featured);
+        // Find the first featured post (only if it's actually featured)
+        const featured = data.find((p: any) => p.featured === true);
+        setFeaturedPost(featured || null);
 
         // Filter out the featured post from the main list if it was found
-        const otherPosts = data.filter((p: any) => p.id !== featured.id);
+        const otherPosts = featured 
+          ? data.filter((p: any) => p.id !== featured.id)
+          : data;
         setPosts(otherPosts);
       } else {
         setFeaturedPost(null);

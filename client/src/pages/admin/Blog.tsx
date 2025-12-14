@@ -22,6 +22,8 @@ export default function AdminBlog() {
   const [editingPost, setEditingPost] = useState<any>(null);
   const [content, setContent] = useState("");
   const [previewImage, setPreviewImage] = useState("");
+  const [isPublished, setIsPublished] = useState(false);
+  const [isFeatured, setIsFeatured] = useState(false);
 
   useEffect(() => {
     fetchPosts();
@@ -56,6 +58,8 @@ export default function AdminBlog() {
     setEditingPost(post);
     setPreviewImage(post ? post.image : "");
     setContent(post ? post.content : "");
+    setIsPublished(post ? post.status === "published" : false);
+    setIsFeatured(post ? post.featured : false);
     setIsDialogOpen(true);
   };
 
@@ -80,8 +84,7 @@ export default function AdminBlog() {
     const subtitle = formData.get("subtitle") as string;
     const date = formData.get("date") as string;
     const tagsStr = formData.get("tags") as string;
-    const featured = formData.get("featured") === "on"; // Checkbox returns "on" if checked
-    const status = (document.getElementById("status") as HTMLInputElement).checked ? "published" : "draft";
+    const status = isPublished ? "published" : "draft";
 
     const tags = tagsStr.split(",").map(t => t.trim()).filter(t => t);
     const slug = slugify(title);
@@ -91,7 +94,7 @@ export default function AdminBlog() {
       subtitle,
       content,
       image: previewImage,
-      featured,
+      featured: isFeatured,
       status,
       published_at: date || null,
       tags,
@@ -122,6 +125,8 @@ export default function AdminBlog() {
       setEditingPost(null);
       setContent("");
       setPreviewImage("");
+      setIsPublished(false);
+      setIsFeatured(false);
       fetchPosts();
     } catch (error) {
       console.error('Error saving post:', error);
@@ -249,11 +254,19 @@ export default function AdminBlog() {
 
                   <div className="flex gap-6 pt-4">
                     <div className="flex items-center space-x-2">
-                      <Input type="checkbox" name="featured" id="featured" defaultChecked={editingPost?.featured} className="w-4 h-4" />
+                      <Switch 
+                        id="featured" 
+                        checked={isFeatured} 
+                        onCheckedChange={setIsFeatured}
+                      />
                       <Label htmlFor="featured" className="text-white">Destacar Post</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Switch id="status" defaultChecked={editingPost?.status === "published"} />
+                      <Switch 
+                        id="status" 
+                        checked={isPublished} 
+                        onCheckedChange={setIsPublished}
+                      />
                       <Label htmlFor="status" className="text-white">Publicado</Label>
                     </div>
                   </div>
