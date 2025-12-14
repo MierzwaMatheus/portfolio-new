@@ -1,19 +1,48 @@
-import { Layout } from "@/components/Layout";
-import { PageSkeleton } from "@/components/PageSkeleton";
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Briefcase, GraduationCap, Code, Download } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { Briefcase, GraduationCap, Code, Languages, Award, Heart, Loader2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
+import { Layout } from "@/components/Layout";
+import { PageSkeleton } from "@/components/PageSkeleton";
+
+// Types
+interface ResumeItem {
+  id: string;
+  type: string;
+  content: any;
+  order_index: number;
+}
 
 export default function Resume() {
+  const [items, setItems] = useState<ResumeItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => setIsLoading(false), 600);
-    return () => clearTimeout(timer);
+    fetchItems();
   }, []);
+
+  const fetchItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .schema("app_portfolio")
+        .from("resume_items")
+        .select("*")
+        .order("order_index", { ascending: true });
+
+      if (error) throw error;
+      setItems(data || []);
+    } catch (error) {
+      console.error("Error fetching items:", error);
+      toast.error("Erro ao carregar dados do currículo");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getItemsByType = (type: string) => items.filter(i => i.type === type).sort((a, b) => a.order_index - b.order_index);
 
   if (isLoading) {
     return (
@@ -23,334 +52,226 @@ export default function Resume() {
     );
   }
 
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const item = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
-  };
+  const experience = getItemsByType("experience");
+  const education = getItemsByType("education");
+  const skills = getItemsByType("skill");
+  const courses = getItemsByType("course");
+  const languages = getItemsByType("language");
+  const volunteer = getItemsByType("volunteer");
+  const softSkills = getItemsByType("soft_skill");
 
   return (
     <Layout>
-      <motion.div 
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="space-y-12 pb-12"
-      >
-        <header className="mb-10 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-white">Currículo</h1>
-            <p className="text-gray-400 mt-2">Minha trajetória profissional e habilidades técnicas</p>
-          </div>
-          <a 
-            href="/archives/CV - Matheus Mierzwa.pdf" 
-            download="CV - Matheus Mierzwa.pdf" 
-            target="_blank" 
-            rel="noopener noreferrer"
-          >
-            <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white border-none">
-              <Download className="mr-2 h-4 w-4" />
-              Baixar PDF
-            </Button>
-          </a>
-        </header>
+      <div className="max-w-4xl mx-auto space-y-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+            Currículo
+          </h1>
+          <p className="text-xl text-gray-400">
+            Minha trajetória profissional, formação e habilidades.
+          </p>
+        </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="md:col-span-2 space-y-12">
             {/* Experience Section */}
-            <motion.section variants={item}>
-              <h2 className="text-2xl font-bold text-white mb-6 flex items-center flex-wrap font-mono">
-                <span className="text-neon-purple mr-2">/*</span>Experiência Profissional<span className="text-neon-purple ml-2">*/</span>
-              </h2>
-              
-              <div className="space-y-6">
-                <div className="rounded-lg bg-card text-card-foreground shadow-sm card-gradient overflow-hidden border border-white/5 group hover:border-neon-purple/30 transition-colors">
-                  <div className="p-6">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-white flex items-center">
-                        <Briefcase className="w-4 h-4 mr-2 text-neon-purple" />
-                        Líder Técnico de Front-End
-                      </h3>
-                      <span className="text-sm text-neon-lime font-mono bg-neon-lime/10 px-2 py-1 rounded">Jan-2025 - Atual</span>
-                    </div>
-                    <div className="text-sm text-gray-400 mb-4 font-medium">InBot</div>
-                    <div className="text-gray-300 space-y-2 text-sm leading-relaxed">
-                      <ul className="list-disc pl-5 space-y-2 marker:text-neon-purple">
-                        <li>Liderança técnica da equipe de front-end (2 colaboradores), definindo arquiteturas, padrões de código e melhores práticas, resultando em uma <strong className="text-white">redução de 25% no retrabalho</strong>.</li>
-                        <li>Implementação de fluxo de trabalho <strong className="text-white">100% integrado</strong> com a ferramenta Cursor, <strong className="text-white">aumentando a produtividade da equipe em 40%</strong> na entrega de novas features.</li>
-                        <li>Concepção e desenvolvimento da interface para um agente de IA que configura campanhas de WhatsApp via linguagem natural, <strong className="text-white">reduzindo em 80% o tempo de configuração</strong> manual.</li>
-                        <li>Criação de um sistema de BI com geração dinâmica de gráficos (baseado em <strong className="text-white">estrutura JSON proprietária</strong>), permitindo a visualização de dados em tempo real e <strong className="text-white">reduzindo em 40% o tempo para geração de relatórios</strong>.</li>
-                        <li>Gerenciamento do desenvolvimento da interface externa interativa ("cidade animada") com agentes de IA clicáveis, utilizando React e técnicas de animação CSS/JS.</li>
-                        <li>Colaboração direta com equipes de produto e back-end para definição de requisitos e integração de APIs.</li>
-                      </ul>
-                    </div>
-                  </div>
+            {experience.length > 0 && (
+              <section className="space-y-6">
+                <h2 className="text-2xl font-bold flex items-center gap-2 text-neon-purple">
+                  <Briefcase className="w-6 h-6" /> Experiência Profissional
+                </h2>
+                <div className="space-y-6">
+                  {experience.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <Card className="bg-card border-white/10 hover:border-neon-purple/50 transition-colors">
+                        <CardHeader>
+                          <CardTitle className="text-xl text-white">{item.content.role}</CardTitle>
+                          <p className="text-neon-green font-medium">{item.content.company}</p>
+                          <p className="text-sm text-gray-400">{item.content.period}</p>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-gray-300 leading-relaxed whitespace-pre-line">
+                            {item.content.description}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
                 </div>
-
-                <div className="rounded-lg bg-card text-card-foreground shadow-sm card-gradient overflow-hidden border border-white/5 group hover:border-neon-purple/30 transition-colors">
-                  <div className="p-6">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-white flex items-center">
-                        <Code className="w-4 h-4 mr-2 text-neon-purple" />
-                        Programador Front-End e UI Designer
-                      </h3>
-                      <span className="text-sm text-neon-lime font-mono bg-neon-lime/10 px-2 py-1 rounded">2024 - Jan-2025</span>
-                    </div>
-                    <div className="text-sm text-gray-400 mb-4 font-medium">InBot</div>
-                    <div className="text-gray-300 space-y-2 text-sm leading-relaxed">
-                      <ul className="list-disc pl-5 space-y-2 marker:text-neon-purple">
-                        <li>Revitalização completa das interfaces da plataforma administrativa e de clientes utilizando JS Puro (por solicitação), resultando em uma <strong className="text-white">melhoria de 30% na usabilidade percebida</strong> (feedback de usuários).</li>
-                        <li><strong className="text-white">Criação de um novo padrão visual</strong> e guia de estilo para a plataforma, garantindo consistência e escalabilidade do design.</li>
-                        <li>Implementação de soluções de programação utilizando IA para automação de tarefas internas de desenvolvimento, <strong className="text-white">otimizando o tempo de codificação em 40%</strong>.</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="rounded-lg bg-card text-card-foreground shadow-sm card-gradient overflow-hidden border border-white/5 group hover:border-neon-purple/30 transition-colors">
-                  <div className="p-6">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-white flex items-center">
-                        <Code className="w-4 h-4 mr-2 text-neon-purple" />
-                        Programador Front-End e UI/UX Designer
-                      </h3>
-                      <span className="text-sm text-neon-lime font-mono bg-neon-lime/10 px-2 py-1 rounded">2022 - 2024</span>
-                    </div>
-                    <div className="text-sm text-gray-400 mb-4 font-medium">Roxus Studio</div>
-                    <div className="text-gray-300 space-y-2 text-sm leading-relaxed">
-                      <ul className="list-disc pl-5 space-y-2 marker:text-neon-purple">
-                        <li>Desenvolvimento de diversas landing pages e plataformas corporativas, contribuindo para um <strong className="text-white">aumento médio de 20% na taxa de conversão</strong> dos clientes.</li>
-                        <li>Gerenciamento de projetos de front-end ponta a ponta, desde o briefing até a entrega final, mantendo um <strong className="text-white">índice de satisfação do cliente acima de 90%</strong>.</li>
-                        <li>Implementação de bibliotecas de componentes reutilizáveis em TypeScript, <strong className="text-white">acelerando o desenvolvimento de novos projetos em 25%</strong>.</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.section>
+              </section>
+            )}
 
             {/* Education Section */}
-            <motion.section variants={item}>
-              <h2 className="text-2xl font-bold text-white mb-6 flex items-center flex-wrap font-mono">
-                <span className="text-neon-purple mr-2">/*</span>Formação Acadêmica<span className="text-neon-purple ml-2">*/</span>
-              </h2>
-              
-              <div className="space-y-6">
-                <div className="rounded-lg bg-card text-card-foreground shadow-sm card-gradient overflow-hidden border border-white/5 group hover:border-neon-purple/30 transition-colors">
-                  <div className="p-6">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-white flex items-center">
-                        <GraduationCap className="w-4 h-4 mr-2 text-neon-purple" />
-                        Técnologo em Gestão de TI
-                      </h3>
-                      <span className="text-sm text-neon-lime font-mono bg-neon-lime/10 px-2 py-1 rounded">2020 - 2023</span>
-                    </div>
-                    <div className="text-sm text-gray-400 mb-2 font-medium">Fatec de Barueri</div>
-                    <div className="text-gray-300 space-y-2 text-sm leading-relaxed">
-                      <ul className="list-disc pl-5 space-y-2 marker:text-neon-purple">
-                        <li>Formação com foco em governança de TI, segurança da informação e alinhamento estratégico entre tecnologia e objetivos de negócios.</li>
-                        <li>Desenvolvimento de habilidades críticas para liderança técnica de equipes, gerenciamento de projetos de TI e integração de soluções inovadoras.</li>
-                        <li>Resultados relevantes:
-                          <ul className="list-circle pl-5 mt-1 space-y-1 text-gray-400">
-                            <li>Editor-chefe do blog de tecnologia Retec, liderando projetos de comunicação técnica.</li>
-                            <li>Nota máxima no TCC, com projeto para conectar ONGs de resgate animal a adotantes interessados.</li>
-                          </ul>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
+            {education.length > 0 && (
+              <section className="space-y-6">
+                <h2 className="text-2xl font-bold flex items-center gap-2 text-neon-purple">
+                  <GraduationCap className="w-6 h-6" /> Formação Acadêmica
+                </h2>
+                <div className="space-y-6">
+                  {education.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <Card className="bg-card border-white/10 hover:border-neon-purple/50 transition-colors">
+                        <CardHeader>
+                          <CardTitle className="text-xl text-white">{item.content.degree}</CardTitle>
+                          <p className="text-neon-green font-medium">{item.content.institution}</p>
+                          <p className="text-sm text-gray-400">{item.content.period}</p>
+                        </CardHeader>
+                        <CardContent>
+                          <p className="text-gray-300 leading-relaxed">
+                            {item.content.description}
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
                 </div>
+              </section>
+            )}
 
-                <div className="rounded-lg bg-card text-card-foreground shadow-sm card-gradient overflow-hidden border border-white/5 group hover:border-neon-purple/30 transition-colors">
-                  <div className="p-6">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-2">
-                      <h3 className="text-lg font-semibold text-white flex items-center">
-                        <GraduationCap className="w-4 h-4 mr-2 text-neon-purple" />
-                        Técnico em Administração
-                      </h3>
-                      <span className="text-sm text-neon-lime font-mono bg-neon-lime/10 px-2 py-1 rounded">2015 - 2017</span>
-                    </div>
-                    <div className="text-sm text-gray-400 mb-2 font-medium">Etec de Barueri</div>
-                    <div className="text-gray-300 space-y-2 text-sm leading-relaxed">
-                      <ul className="list-disc pl-5 space-y-2 marker:text-neon-purple">
-                        <li>Base sólida em princípios de gestão organizacional, planejamento estratégico, e gerenciamento de recursos e operações.</li>
-                        <li>Fortalecimento de capacidades analíticas e de organização de projetos, aplicáveis à gestão de times e desenvolvimento de produtos digitais.</li>
-                        <li>Destaques:
-                          <ul className="list-circle pl-5 mt-1 space-y-1 text-gray-400">
-                            <li>Aprofundamento em fundamentos de economia e mercado, com aplicação prática no suporte à tomada de decisões estratégicas.</li>
-                          </ul>
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
+            {/* Courses Section */}
+            {courses.length > 0 && (
+              <section className="space-y-6">
+                <h2 className="text-2xl font-bold flex items-center gap-2 text-neon-purple">
+                  <Award className="w-6 h-6" /> Cursos e Certificações
+                </h2>
+                <div className="grid gap-4">
+                  {courses.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="bg-card border border-white/10 p-4 rounded-lg hover:border-neon-green/50 transition-colors"
+                    >
+                      <p className="text-gray-300">{item.content.text}</p>
+                    </motion.div>
+                  ))}
                 </div>
-              </div>
-            </motion.section>
+              </section>
+            )}
+
+            {/* Volunteer Section */}
+            {volunteer.length > 0 && (
+              <section className="space-y-6">
+                <h2 className="text-2xl font-bold flex items-center gap-2 text-neon-purple">
+                  <Heart className="w-6 h-6" /> Voluntariado
+                </h2>
+                <div className="grid gap-4">
+                  {volunteer.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      className="bg-card border border-white/10 p-4 rounded-lg hover:border-neon-green/50 transition-colors"
+                    >
+                      <p className="text-gray-300">{item.content.text}</p>
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
 
-          {/* Sidebar Skills */}
-          <motion.div variants={item} className="space-y-8">
-            
-            {/* Habilidades */}
-            <section>
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center font-mono">
-                <span className="text-neon-purple mr-2">/*</span>
-                Habilidades
-                <span className="text-neon-purple ml-2">*/</span>
-              </h2>
-              
-              <div className="rounded-lg bg-card text-card-foreground shadow-sm card-gradient border border-white/5 p-6 space-y-6">
-                {[
-                  { name: "Cursor IDE", level: 90 },
-                  { name: "React.js", level: 90 },
-                  { name: "TypeScript", level: 90 },
-                  { name: "Tailwind CSS", level: 90 },
-                  { name: "Vite", level: 85 },
-                  { name: "Bootstrap", level: 90 },
-                  { name: "Git", level: 75 },
-                  { name: "Figma", level: 90 },
-                  { name: "React Native", level: 35 },
-                  { name: "Expo", level: 35 },
-                  { name: "DB NoSQL", level: 75 },
-                  { name: "HTML5", level: 95 },
-                  { name: "JavaScript (ES6+)", level: 85 },
-                  { name: "CSS3", level: 95 },
-                  { name: "Next.JS", level: 75 },
-                  { name: "Vercel", level: 85 },
-                ].map((skill) => (
-                  <div key={skill.name} className="space-y-2">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-gray-300">{skill.name}</span>
-                      <span className="text-gray-500 font-mono">{skill.level}%</span>
-                    </div>
-                    <Progress value={skill.level} className="h-1.5 bg-white/10" indicatorClassName="bg-gradient-to-r from-neon-purple to-neon-lime" />
-                  </div>
-                ))}
-              </div>
-            </section>
+          {/* Sidebar */}
+          <div className="space-y-12">
+            {/* Skills Section */}
+            {skills.length > 0 && (
+              <section className="space-y-6">
+                <h2 className="text-2xl font-bold flex items-center gap-2 text-neon-purple">
+                  <Code className="w-6 h-6" /> Habilidades
+                </h2>
+                <div className="space-y-4">
+                  {skills.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-300">{item.content.name}</span>
+                          <span className="text-neon-green">{item.content.level}%</span>
+                        </div>
+                        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${item.content.level}%` }}
+                            transition={{ duration: 1, delay: 0.5 }}
+                            className="h-full bg-gradient-to-r from-neon-purple to-neon-green"
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </section>
+            )}
 
-            {/* Soft Skills */}
-            <section>
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center font-mono">
-                <span className="text-neon-purple mr-2">/*</span>
-                Soft Skills
-                <span className="text-neon-purple ml-2">*/</span>
-              </h2>
-              
-              <div className="rounded-lg bg-card text-card-foreground shadow-sm card-gradient border border-white/5 p-6">
+            {/* Soft Skills Section */}
+            {softSkills.length > 0 && (
+              <section className="space-y-6">
+                <h2 className="text-2xl font-bold flex items-center gap-2 text-neon-purple">
+                  <Heart className="w-6 h-6" /> Soft Skills
+                </h2>
                 <div className="flex flex-wrap gap-2">
-                  {[
-                    "Liderança", "Comunicação", "Trabalho em Equipe", 
-                    "Solução de Problemas", "Rápido Aprendizado", 
-                    "Criatividade", "Autogestão", "Comprometimento"
-                  ].map((skill) => (
-                    <Badge key={skill} variant="outline" className="bg-neon-purple/10 text-neon-purple border-neon-purple/30 hover:bg-neon-purple/20 transition-colors">
-                      {skill}
-                    </Badge>
+                  {softSkills.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
+                      <Badge variant="outline" className="border-neon-purple/50 text-gray-300 hover:bg-neon-purple/10 transition-colors py-1 px-3">
+                        {item.content.text}
+                      </Badge>
+                    </motion.div>
                   ))}
                 </div>
-              </div>
-            </section>
+              </section>
+            )}
 
-            {/* Cursos */}
-            <section>
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center font-mono">
-                <span className="text-neon-purple mr-2">/*</span>
-                Cursos
-                <span className="text-neon-purple ml-2">*/</span>
-              </h2>
-              
-              <div className="rounded-lg bg-card text-card-foreground shadow-sm card-gradient border border-white/5 p-6">
-                <ul className="space-y-4">
-                  {[
-                    "RYLA (Treinamento de Liderança) - Rotary Club",
-                    "NLW Together - Trilha ReactJS - Rocketseat",
-                    "NLW Heat - Trilha Origin - Rocketseat",
-                    "NLW Return - Trilha Origin - Rocketseat",
-                    "Programação para internet com JS - DIO",
-                    "ChatGPT - Do Zero ao Avançado - Udemy",
-                    "IT Essentials",
-                    "Brandy - Design Academy",
-                    "Ilustrator PRO - Design Academy",
-                    "Branding - Construção de Marca - GINEAD",
-                    "Estratégia de Comercialização - GINEAD",
-                    "Prevenção a Fraude - Bradesco",
-                    "Atendimento ao cliente - Bradesco"
-                  ].map((course, index) => (
-                    <li key={index} className="flex items-start text-sm text-gray-300">
-                      <span className="mr-2 mt-1.5 h-1.5 w-1.5 rounded-full bg-neon-lime flex-shrink-0"></span>
-                      <span>{course}</span>
-                    </li>
+            {/* Languages Section */}
+            {languages.length > 0 && (
+              <section className="space-y-6">
+                <h2 className="text-2xl font-bold flex items-center gap-2 text-neon-purple">
+                  <Languages className="w-6 h-6" /> Idiomas
+                </h2>
+                <div className="space-y-4">
+                  {languages.map((item, index) => (
+                    <motion.div
+                      key={item.id}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="bg-card border border-white/10 p-4 rounded-lg"
+                    >
+                      <h3 className="text-white font-medium">{item.content.name}</h3>
+                      <p className="text-neon-green text-sm">{item.content.level}</p>
+                    </motion.div>
                   ))}
-                </ul>
-              </div>
-            </section>
-
-            {/* Idiomas */}
-            <section>
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center font-mono">
-                <span className="text-neon-purple mr-2">/*</span>
-                Idiomas
-                <span className="text-neon-purple ml-2">*/</span>
-              </h2>
-              
-              <div className="rounded-lg bg-card text-card-foreground shadow-sm card-gradient border border-white/5 p-6 space-y-4">
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-300">Português</span>
-                  <span className="text-neon-lime font-mono text-xs">Nativo</span>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-300">Inglês</span>
-                  <span className="text-neon-lime font-mono text-xs">Avançado</span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-gray-300">Espanhol</span>
-                  <span className="text-neon-lime font-mono text-xs">Intermediário</span>
-                </div>
-              </div>
-            </section>
-
-            {/* Voluntariado */}
-            <section>
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center font-mono">
-                <span className="text-neon-purple mr-2">/*</span>
-                Voluntariado
-                <span className="text-neon-purple ml-2">*/</span>
-              </h2>
-              
-              <div className="rounded-lg bg-card text-card-foreground shadow-sm card-gradient border border-white/5 p-6">
-                <ul className="space-y-4">
-                  <li className="flex items-start text-sm text-gray-300">
-                    <span className="mr-2 mt-1.5 h-1.5 w-1.5 rounded-full bg-neon-lime flex-shrink-0"></span>
-                    <div>
-                      <span className="block font-medium text-white">Diretor de Imagem Pública</span>
-                      <span className="text-xs text-gray-500">Rotaract Club Barueri • Gestão 2019-2020</span>
-                    </div>
-                  </li>
-                  <li className="flex items-start text-sm text-gray-300">
-                    <span className="mr-2 mt-1.5 h-1.5 w-1.5 rounded-full bg-neon-lime flex-shrink-0"></span>
-                    <span>Participação em projeto de plantio de mais de 1000 árvores na baixada santista</span>
-                  </li>
-                  <li className="flex items-start text-sm text-gray-300">
-                    <span className="mr-2 mt-1.5 h-1.5 w-1.5 rounded-full bg-neon-lime flex-shrink-0"></span>
-                    <span>Professor em projeto de inclusão digital para idosos</span>
-                  </li>
-                </ul>
-              </div>
-            </section>
-
-          </motion.div>
+              </section>
+            )}
+          </div>
         </div>
-      </motion.div>
+      </div>
     </Layout>
   );
 }
