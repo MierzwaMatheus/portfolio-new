@@ -17,60 +17,129 @@ serve(async (req) => {
             Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
         )
 
-        const { email, password, role, name } = await req.json()
+        // Handle GET request to list users
+        if (req.method === 'GET') {
+            // 1. Get all users from Auth
+            const { data: { users }, error: authError } = await supabaseAdmin.auth.admin.listUsers()
 
-        if (!email || !password || !role) {
+            if (authError) throw authError
+
+            // 2. Get all roles for this app
+            const { data: roles, error: rolesError } = await supabaseAdmin
+                .from('user_app_roles')
+                .select('*')
+                .eq('app_key', 'app_portfolio')
+
+            if (rolesError) throw rolesError
+
+            // 3. Combine data
+            // Filter users who have a role in this app
+            const appUsers = users
+                .filter(user => roles.some(role => role.user_id === user.id))
+                .map(user => {
+                    const userRole = roles.find(role => role.user_id === user.id)
+                    return {
+                        id: user.id,
+                        email: user.email,
+                        name: user.user_metadata?.name || 'N/A',
+                        role: userRole?.role || 'user',
+                        created_at: userRole?.created_at || user.created_at
+                    }
+                })
+
             return new Response(
-                JSON.stringify({ error: 'Email, password and role are required' }),
+                JSON.stringify({ users: appUsers }),
                 {
                     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                    status: 400,
+                    status: 200,
                 }
             )
         }
 
-        // 1. Create the user in Supabase Auth
-        const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
-            email,
-            password,
-            email_confirm: true,
-            user_metadata: { name }
-        })
+        // Handle POST request to create/add user
+        if (req.method === 'POST') {
+            const { email, password, role, name } = await req.json()
 
-        if (userError) {
-            throw userError
-        }
+            if (!email || !role) {
+                return new Response(
+                    JSON.stringify({ error: 'Email and role are required' }),
+                    {
+                        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                        status: 400,
+                    }
+                )
+            }
 
-        const userId = userData.user.id
+            // 1. Check if user exists
+            const { data: { users }, error: searchError } = await supabaseAdmin.auth.admin.listUsers()
+            const existingUser = users.find(u => u.email === email)
 
-        // 2. Assign the role in user_app_roles table
-        // First, delete any existing rows for this user to avoid duplicates (e.g. from triggers)
-        await supabaseAdmin
-            .from('user_app_roles')
-            .delete()
-            .eq('user_id', userId)
+            let userId = existingUser?.id
 
-        // Then insert the correct row
-        const { error: roleError } = await supabaseAdmin
-            .from('user_app_roles')
-            .insert({
-                user_id: userId,
-                app_key: 'app_portfolio', // Correct app_key
-                role: role // Correct role from request
-            })
+            if (existingUser) {
+                // User exists, just add/update role
+                console.log(`User ${email} exists, adding role...`)
 
-        if (roleError) {
-            // If role assignment fails, we should probably delete the user to maintain consistency
-            // or just return an error. For now, let's return an error.
-            await supabaseAdmin.auth.admin.deleteUser(userId)
-            throw roleError
+                const { error: roleError } = await supabaseAdmin
+                    .from('user_app_roles')
+                    .upsert({
+                        user_id: userId,
+                        app_key: 'app_portfolio',
+                        role: role
+                    }, { onConflict: 'user_id, app_key' })
+
+                if (roleError) throw roleError
+
+                return new Response(
+                    JSON.stringify({ message: 'User added to application successfully' }),
+                    {
+                        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                        status: 200,
+                    }
+                )
+            } else {
+                // User does not exist, create new
+                if (!password) {
+                    return new Response(
+                        JSON.stringify({ error: 'Password is required for new users' }),
+                        {
+                            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                            status: 400,
+                        }
+                    )
+                }
+
+                console.log(`Creating new user ${email}...`)
+
+                // Pass app_key and role in metadata so the trigger handles the insert
+                const { data: userData, error: userError } = await supabaseAdmin.auth.admin.createUser({
+                    email,
+                    password,
+                    email_confirm: true,
+                    user_metadata: {
+                        name,
+                        app_key: 'app_portfolio',
+                        role: role
+                    }
+                })
+
+                if (userError) throw userError
+
+                return new Response(
+                    JSON.stringify({ user: userData.user, message: 'User created successfully' }),
+                    {
+                        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                        status: 200,
+                    }
+                )
+            }
         }
 
         return new Response(
-            JSON.stringify({ user: userData.user, message: 'User created successfully' }),
+            JSON.stringify({ error: 'Method not allowed' }),
             {
                 headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                status: 200,
+                status: 405,
             }
         )
 
