@@ -1,6 +1,6 @@
 import { Layout } from "@/components/Layout";
 import { PageSkeleton } from "@/components/PageSkeleton";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FolderOpen, ExternalLink, Github, Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,10 +20,6 @@ interface Project {
   demo_link: string;
   github_link: string;
 }
-
-const FILTERS = [
-  "Todos", "React", "TypeScript", "Tailwind CSS", "Vite", "Firebase", "Next.js"
-];
 
 export default function Portfolio() {
   const [isLoading, setIsLoading] = useState(true);
@@ -52,9 +48,28 @@ export default function Portfolio() {
     }
   };
 
+  // Extrai todas as tags únicas dos projetos e ordena alfabeticamente
+  const availableTags = useMemo(() => {
+    const allTags = projects.flatMap(p => p.tags || []);
+    const uniqueTags = Array.from(new Set(allTags));
+    return uniqueTags.sort();
+  }, [projects]);
+
+  // Cria a lista de filtros com "Todos" sempre primeiro
+  const filters = useMemo(() => {
+    return ["Todos", ...availableTags];
+  }, [availableTags]);
+
   const filteredProjects = activeFilter === "Todos"
     ? projects
     : projects.filter(p => p.tags?.includes(activeFilter));
+
+  // Resetar filtro se a tag selecionada não existir mais
+  useEffect(() => {
+    if (activeFilter !== "Todos" && !availableTags.includes(activeFilter)) {
+      setActiveFilter("Todos");
+    }
+  }, [activeFilter, availableTags]);
 
   if (isLoading) {
     return (
@@ -77,22 +92,24 @@ export default function Portfolio() {
         </header>
 
         {/* Filters */}
-        <div className="flex flex-wrap gap-2 mb-8">
-          {FILTERS.map((filter) => (
-            <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
-              className={`
-                inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-300
-                ${activeFilter === filter
-                  ? "bg-neon-purple text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]"
-                  : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5"}
-              `}
-            >
-              {filter}
-            </button>
-          ))}
-        </div>
+        {filters.length > 1 && (
+          <div className="flex flex-wrap gap-2 mb-8">
+            {filters.map((filter) => (
+              <button
+                key={filter}
+                onClick={() => setActiveFilter(filter)}
+                className={`
+                  inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-300
+                  ${activeFilter === filter
+                    ? "bg-neon-purple text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]"
+                    : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5"}
+                `}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
