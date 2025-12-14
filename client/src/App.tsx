@@ -28,6 +28,7 @@ function Router() {
       
       {/* Admin Routes */}
       <ProtectedRoute path="/admin/dashboard" component={Dashboard} />
+      <ProtectedRoute path="/admin" component={Dashboard} />
       <ProtectedRoute path="/admin/projects" component={AdminProjects} />
       <ProtectedRoute path="/admin/blog" component={AdminBlog} />
       <ProtectedRoute path="/admin/resume" component={AdminResume} />
