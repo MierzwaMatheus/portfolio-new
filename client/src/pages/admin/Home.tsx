@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,74 +10,52 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Plus, Trash2, Pencil, Image as ImageIcon } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { ImagePicker } from "@/components/admin/ImagePicker";
+import { supabase } from "@/lib/supabase";
 
-// Mock Data
-const INITIAL_ABOUT = `Sou um entusiasta de Front-End com mais de 4 anos de experiência como Líder Técnico e Desenvolvedor. Minha paixão é transformar interfaces web complexas em experiências intuitivas e ágeis, utilizando tecnologias como React, TypeScript e Inteligência Artificial.
 
-Tenho um histórico sólido na revitalização de UI/UX, criação de dashboards dinâmicos e desenvolvimento de interfaces interativas para IAs e chatbots. Gosto de liderar equipes técnicas, promovendo inovações no desenvolvimento, como a integração de ferramentas de IA (por exemplo, Cursor).`;
-
-const INITIAL_SERVICES = [
-  { 
-    id: 1, 
-    title: "Desenvolvimento Front-end de Alta Performance", 
-    description: "Minha paixão é dar vida a interfaces web complexas e responsivas, utilizando o poder de tecnologias como React e TypeScript para criar experiências de usuário fluidas, interativas e com performance otimizada." 
-  },
-  { 
-    id: 2, 
-    title: "Liderança Técnica e Inovação em Front-end", 
-    description: "Adoro guiar equipes de front-end, definindo arquiteturas robustas, implementando padrões de código eficientes e introduzindo fluxos de trabalho inovadores (incluindo ferramentas de IA!) para turbinar a produtividade e a qualidade das entregas." 
-  },
-  { 
-    id: 3, 
-    title: "UI/UX Design Focado na Experiência", 
-    description: "Mergulho no universo do UI/UX para desenhar interfaces não apenas visualmente atraentes, mas incrivelmente intuitivas e eficientes, transformando requisitos de negócio em jornadas que os usuários realmente apreciam e entendem." 
-  },
-  { 
-    id: 4, 
-    title: "Interfaces Inteligentes com IA", 
-    description: "Sou um entusiasta da integração de Inteligência Artificial no front-end, criando desde interfaces interativas para chatbots e agentes de IA até utilizando ferramentas assistidas por IA para otimizar o desenvolvimento e entregar soluções mais espertas e dinâmicas." 
-  }
-];
-
-const INITIAL_TESTIMONIALS = [
-  {
-    id: 1,
-    name: "Lucas",
-    role: "CEO ForgeCode",
-    image: "https://i.pravatar.cc/150?u=lucas",
-    text: "Obrigado Matheus pela modernização da nossa marca. Foi essencial essa reformulação! Superou as expectativas, trabalho rápido e muito eficiente. Nós da Forge Code agradecemos muito a atenção e os serviços prestados!"
-  },
-  {
-    id: 2,
-    name: "Luiz Cossolin",
-    role: "CEO Paith",
-    image: "https://i.pravatar.cc/150?u=luiz",
-    text: "Valeu demais pelo trabalho! Desde o início, aprendi muito sobre identidade visual. A primeira chamada que tivemos esclareceu todas as dúvidas e permitiu explicar bem o que eu queria. O questionário é bastante completo, e o serviço de atendimento está em outro nível."
-  },
-  {
-    id: 3,
-    name: "Fabio Oliveira",
-    role: "CEO Sampa Invest Group",
-    image: "https://i.pravatar.cc/150?u=fabio",
-    text: "Cara, a minha marca ficou top demais! Sério, eu fiquei impressionado com o que a Roxus conseguiu fazer. Eu já esperava algo legal, mas isso foi muito além! Com certeza vou recomendar para todos os meus amigos e colegas de trabalho."
-  },
-  {
-    id: 4,
-    name: "Maria Cecilia",
-    role: "CEO Aroma & Latte",
-    image: "https://i.pravatar.cc/150?u=maria",
-    text: "Quando iniciei o projeto não tinha certeza se era um bom investimento, agora já passaram 3 meses e nós percebemos um aumento de 30% no marketing orgânico da marca. A forma que a Roxus encaminhou o projeto fez os clientes se sentirem muito mais próximos da nossa marca."
-  }
-];
 
 export default function AdminHome() {
-  const [aboutText, setAboutText] = useState(INITIAL_ABOUT);
-  const [services, setServices] = useState(INITIAL_SERVICES);
-  const [testimonials, setTestimonials] = useState(INITIAL_TESTIMONIALS);
-  
+  const [aboutText, setAboutText] = useState("");
+  const [services, setServices] = useState<any[]>([]);
+  const [testimonials, setTestimonials] = useState<any[]>([]);
+
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [selectedImage, setSelectedImage] = useState<string>("");
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      // Fetch About
+      const { data: aboutData, error: aboutError } = await supabase.schema('app_portfolio').from('content').select('value').eq('key', 'about_text').single();
+      if (aboutError) {
+        console.error('Error fetching about:', aboutError);
+      } else if (aboutData) {
+        setAboutText(aboutData.value);
+      }
+
+      // Fetch Services
+      const { data: servicesData, error: servicesError } = await supabase.schema('app_portfolio').from('services').select('*').order('created_at');
+      if (servicesError) {
+        console.error('Error fetching services:', servicesError);
+      } else if (servicesData) {
+        setServices(servicesData);
+      }
+
+      // Fetch Testimonials
+      const { data: testimonialsData, error: testimonialsError } = await supabase.schema('app_portfolio').from('testimonials').select('*').order('created_at');
+      if (testimonialsError) {
+        console.error('Error fetching testimonials:', testimonialsError);
+      } else if (testimonialsData) {
+        setTestimonials(testimonialsData);
+      }
+    } catch (error) {
+      console.error('Unexpected error fetching data:', error);
+    }
+  };
 
   const handleOpenModal = (type: string, item: any = null) => {
     setActiveModal(type);
@@ -95,16 +73,81 @@ export default function AdminHome() {
     setSelectedImage("");
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Logic to save would go here
-    handleCloseModal();
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+
+    try {
+      if (activeModal === "service") {
+        const data = {
+          title: formData.get("title"),
+          description: formData.get("description"),
+        };
+
+        if (editingItem) {
+          await supabase.schema('app_portfolio').from('services').update(data).eq('id', editingItem.id);
+        } else {
+          await supabase.schema('app_portfolio').from('services').insert(data);
+        }
+      } else if (activeModal === "testimonial") {
+        const data = {
+          name: formData.get("name"),
+          role: formData.get("role"),
+          text: formData.get("text"),
+          image_url: selectedImage,
+        };
+
+        if (editingItem) {
+          await supabase.schema('app_portfolio').from('testimonials').update(data).eq('id', editingItem.id);
+        } else {
+          await supabase.schema('app_portfolio').from('testimonials').insert(data);
+        }
+      }
+
+      await fetchData();
+      handleCloseModal();
+    } catch (error) {
+      console.error("Error saving:", error);
+      alert("Erro ao salvar. Verifique o console.");
+    }
   };
 
-  const handleDelete = (type: string, id: number) => {
+  const handleSaveAbout = async () => {
+    try {
+      const { error } = await supabase.schema('app_portfolio').from('content').upsert({
+        key: 'about_text',
+        value: aboutText
+      });
+
+      if (error) {
+        console.error("Error saving about:", error);
+        alert(`Erro ao salvar 'Sobre Mim': ${error.message}`);
+        throw error;
+      }
+      alert("Sobre mim salvo com sucesso!");
+    } catch (error: any) {
+      console.error("Error saving about:", error);
+      if (!error.message) {
+        alert("Erro ao salvar 'Sobre Mim'. Verifique o console.");
+      }
+    }
+  };
+
+  const handleDelete = async (type: string, id: number) => {
     if (confirm("Tem certeza que deseja excluir este item?")) {
-      if (type === "service") setServices(services.filter(i => i.id !== id));
-      if (type === "testimonial") setTestimonials(testimonials.filter(i => i.id !== id));
+      try {
+        if (type === "service") {
+          await supabase.schema('app_portfolio').from('services').delete().eq('id', id);
+        }
+        if (type === "testimonial") {
+          await supabase.schema('app_portfolio').from('testimonials').delete().eq('id', id);
+        }
+        await fetchData();
+      } catch (error) {
+        console.error("Error deleting:", error);
+        alert("Erro ao excluir.");
+      }
     }
   };
 
@@ -130,13 +173,13 @@ export default function AdminHome() {
                 <p className="text-gray-400 text-sm">Edite o texto de apresentação principal</p>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Textarea 
+                <Textarea
                   value={aboutText}
                   onChange={(e) => setAboutText(e.target.value)}
                   className="bg-white/5 border-white/10 text-white min-h-[150px]"
                 />
                 <div className="flex justify-end">
-                  <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white">
+                  <Button onClick={handleSaveAbout} className="bg-neon-purple hover:bg-neon-purple/90 text-white">
                     Salvar
                   </Button>
                 </div>
@@ -188,7 +231,7 @@ export default function AdminHome() {
                   <CardContent className="pt-6 space-y-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-white/10 overflow-hidden">
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                        <img src={item.image_url || item.image} alt={item.name} className="w-full h-full object-cover" />
                       </div>
                       <div>
                         <h4 className="text-white font-medium">{item.name}</h4>
@@ -227,11 +270,11 @@ export default function AdminHome() {
                 <>
                   <div className="space-y-2">
                     <Label className="text-white">Título</Label>
-                    <Input defaultValue={editingItem?.title} className="bg-white/5 border-white/10 text-white" />
+                    <Input name="title" defaultValue={editingItem?.title} className="bg-white/5 border-white/10 text-white" />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-white">Descrição</Label>
-                    <Textarea defaultValue={editingItem?.description} className="bg-white/5 border-white/10 text-white min-h-[100px]" />
+                    <Textarea name="description" defaultValue={editingItem?.description} className="bg-white/5 border-white/10 text-white min-h-[100px]" />
                   </div>
                 </>
               )}
@@ -241,11 +284,11 @@ export default function AdminHome() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-white">Nome</Label>
-                      <Input defaultValue={editingItem?.name} className="bg-white/5 border-white/10 text-white" />
+                      <Input name="name" defaultValue={editingItem?.name} className="bg-white/5 border-white/10 text-white" />
                     </div>
                     <div className="space-y-2">
                       <Label className="text-white">Cargo/Empresa</Label>
-                      <Input defaultValue={editingItem?.role} className="bg-white/5 border-white/10 text-white" />
+                      <Input name="role" defaultValue={editingItem?.role} className="bg-white/5 border-white/10 text-white" />
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -256,7 +299,7 @@ export default function AdminHome() {
                           <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" />
                         </div>
                       )}
-                      <ImagePicker 
+                      <ImagePicker
                         onSelect={setSelectedImage}
                         trigger={
                           <Button type="button" variant="outline" className="border-white/10 hover:bg-white/5 text-white">
@@ -269,7 +312,7 @@ export default function AdminHome() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-white">Depoimento</Label>
-                    <Textarea defaultValue={editingItem?.text} className="bg-white/5 border-white/10 text-white min-h-[100px]" />
+                    <Textarea name="text" defaultValue={editingItem?.text} className="bg-white/5 border-white/10 text-white min-h-[100px]" />
                   </div>
                 </>
               )}
