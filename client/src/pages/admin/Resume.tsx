@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { CSS } from '@dnd-kit/utilities';
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
+import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Types
 interface ResumeItem {
@@ -45,6 +47,154 @@ function SortableSimpleItem({ id, text, onDelete }: { id: string, text: string, 
   );
 }
 
+// Sortable Card Components
+function SortableExperienceCard({ item, onEdit, onDelete }: { item: ResumeItem, onEdit: (item: ResumeItem) => void, onDelete: (id: string) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className="bg-card border-white/10 group">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-lg font-medium text-white flex items-center gap-2">
+            <div {...attributes} {...listeners} className="cursor-move">
+              <GripVertical className="w-4 h-4 text-gray-500 hover:text-white" />
+            </div>
+            {item.content.role}
+          </CardTitle>
+          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
+              <Pencil className="w-4 h-4 text-blue-400" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => onDelete(item.id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-neon-green text-sm mb-2">{item.content.company} | {item.content.period}</p>
+          <p className="text-gray-400 text-sm line-clamp-2">{item.content.description}</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function SortableEducationCard({ item, onEdit, onDelete }: { item: ResumeItem, onEdit: (item: ResumeItem) => void, onDelete: (id: string) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className="bg-card border-white/10 group">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-lg font-medium text-white flex items-center gap-2">
+            <div {...attributes} {...listeners} className="cursor-move">
+              <GripVertical className="w-4 h-4 text-gray-500 hover:text-white" />
+            </div>
+            {item.content.degree}
+          </CardTitle>
+          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
+              <Pencil className="w-4 h-4 text-blue-400" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => onDelete(item.id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-neon-green text-sm mb-2">{item.content.institution} | {item.content.period}</p>
+          <p className="text-gray-400 text-sm line-clamp-2">{item.content.description}</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function SortableSkillCard({ item, onEdit, onDelete }: { item: ResumeItem, onEdit: (item: ResumeItem) => void, onDelete: (id: string) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className="bg-card border-white/10 group">
+        <CardContent className="pt-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div {...attributes} {...listeners} className="cursor-move">
+              <GripVertical className="w-4 h-4 text-gray-500 hover:text-white" />
+            </div>
+            <div>
+              <h4 className="text-white font-medium">{item.content.name}</h4>
+              <div className="flex items-center gap-2 mt-2">
+                <div className="w-32 h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-neon-green" style={{ width: `${item.content.level}%` }} />
+                </div>
+                <span className="text-neon-green text-sm font-medium">{item.content.level}%</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
+              <Pencil className="w-4 h-4 text-blue-400" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => onDelete(item.id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function SortableLanguageCard({ item, onEdit, onDelete }: { item: ResumeItem, onEdit: (item: ResumeItem) => void, onDelete: (id: string) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className="bg-card border-white/10 group">
+        <CardContent className="pt-6 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div {...attributes} {...listeners} className="cursor-move">
+              <GripVertical className="w-4 h-4 text-gray-500 hover:text-white" />
+            </div>
+            <div>
+              <h4 className="text-white font-medium">{item.content.name}</h4>
+              <p className="text-neon-green text-sm">{item.content.level}</p>
+            </div>
+          </div>
+          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
+              <Pencil className="w-4 h-4 text-blue-400" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => onDelete(item.id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 export default function AdminResume() {
   const [items, setItems] = useState<ResumeItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,6 +206,8 @@ export default function AdminResume() {
 
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<ResumeItem | null>(null);
+  const [skillLevel, setSkillLevel] = useState<number[]>([50]);
+  const [languageLevel, setLanguageLevel] = useState<string>("");
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -89,11 +241,23 @@ export default function AdminResume() {
   const handleOpenModal = (type: string, item: ResumeItem | null = null) => {
     setActiveModal(type);
     setEditingItem(item);
+    if (type === "skill" && item?.content.level) {
+      setSkillLevel([Number(item.content.level)]);
+    } else if (type === "skill") {
+      setSkillLevel([50]);
+    }
+    if (type === "language" && item?.content.level) {
+      setLanguageLevel(item.content.level);
+    } else if (type === "language") {
+      setLanguageLevel("");
+    }
   };
 
   const handleCloseModal = () => {
     setActiveModal(null);
     setEditingItem(null);
+    setSkillLevel([50]);
+    setLanguageLevel("");
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -106,6 +270,15 @@ export default function AdminResume() {
     formData.forEach((value, key) => {
       content[key] = value;
     });
+
+    // Adicionar valor do slider para habilidades
+    if (activeModal === "skill") {
+      content.level = skillLevel[0].toString();
+    }
+    // Adicionar valor do select para idiomas
+    if (activeModal === "language" && languageLevel) {
+      content.level = languageLevel;
+    }
 
     try {
       if (editingItem) {
@@ -196,32 +369,45 @@ export default function AdminResume() {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      const typeItems = items.filter(i => i.type === type);
+      const typeItems = items.filter(i => i.type === type).sort((a, b) => a.order_index - b.order_index);
       const oldIndex = typeItems.findIndex((item) => item.id === active.id);
       const newIndex = typeItems.findIndex((item) => item.id === over.id);
 
+      if (oldIndex === -1 || newIndex === -1) return;
+
       const newOrder = arrayMove(typeItems, oldIndex, newIndex);
 
-      // Optimistic update
+      // Update order_index in the items array
+      const updatedOrder = newOrder.map((item, index) => ({
+        ...item,
+        order_index: index
+      }));
+
+      // Optimistic update with correct order_index
       const otherItems = items.filter(i => i.type !== type);
-      setItems([...otherItems, ...newOrder]);
+      setItems([...otherItems, ...updatedOrder]);
 
       // Update in DB
       try {
-        const updates = newOrder.map((item, index) => ({
-          id: item.id,
-          type: item.type,
-          content: item.content,
-          order_index: index,
-          updated_at: new Date().toISOString()
-        }));
+        // Update each item individually to ensure order_index is set correctly
+        const updatePromises = updatedOrder.map((item, index) =>
+          supabase
+            .schema("app_portfolio")
+            .from("resume_items")
+            .update({ order_index: index })
+            .eq("id", item.id)
+        );
 
-        const { error } = await supabase
-          .schema("app_portfolio")
-          .from("resume_items")
-          .upsert(updates);
+        const results = await Promise.all(updatePromises);
+        const hasError = results.some(result => result.error);
 
-        if (error) throw error;
+        if (hasError) {
+          const errors = results.filter(r => r.error).map(r => r.error);
+          console.error("Error reordering items:", errors);
+          throw new Error("Erro ao atualizar ordem dos itens");
+        }
+
+        toast.success("Ordem atualizada com sucesso");
       } catch (error) {
         console.error("Error reordering items:", error);
         toast.error("Erro ao reordenar itens");
@@ -268,28 +454,20 @@ export default function AdminResume() {
                 <Plus className="w-4 h-4 mr-2" /> Adicionar Experiência
               </Button>
             </div>
-            {getItemsByType("experience").map(item => (
-              <Card key={item.id} className="bg-card border-white/10 group">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-lg font-medium text-white flex items-center gap-2">
-                    <GripVertical className="w-4 h-4 text-gray-500 cursor-move" />
-                    {item.content.role}
-                  </CardTitle>
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" onClick={() => handleOpenModal("experience", item)}>
-                      <Pencil className="w-4 h-4 text-blue-400" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-neon-green text-sm mb-2">{item.content.company} | {item.content.period}</p>
-                  <p className="text-gray-400 text-sm line-clamp-2">{item.content.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'experience')}>
+              <SortableContext items={getItemsByType("experience").map(i => i.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-4">
+                  {getItemsByType("experience").map(item => (
+                    <SortableExperienceCard
+                      key={item.id}
+                      item={item}
+                      onEdit={(item) => handleOpenModal("experience", item)}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           </TabsContent>
 
           {/* Education Tab */}
@@ -299,28 +477,20 @@ export default function AdminResume() {
                 <Plus className="w-4 h-4 mr-2" /> Adicionar Formação
               </Button>
             </div>
-            {getItemsByType("education").map(item => (
-              <Card key={item.id} className="bg-card border-white/10 group">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-lg font-medium text-white flex items-center gap-2">
-                    <GripVertical className="w-4 h-4 text-gray-500 cursor-move" />
-                    {item.content.degree}
-                  </CardTitle>
-                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="icon" onClick={() => handleOpenModal("education", item)}>
-                      <Pencil className="w-4 h-4 text-blue-400" />
-                    </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-neon-green text-sm mb-2">{item.content.institution} | {item.content.period}</p>
-                  <p className="text-gray-400 text-sm line-clamp-2">{item.content.description}</p>
-                </CardContent>
-              </Card>
-            ))}
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'education')}>
+              <SortableContext items={getItemsByType("education").map(i => i.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-4">
+                  {getItemsByType("education").map(item => (
+                    <SortableEducationCard
+                      key={item.id}
+                      item={item}
+                      onEdit={(item) => handleOpenModal("education", item)}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           </TabsContent>
 
           {/* Skills Tab */}
@@ -330,31 +500,20 @@ export default function AdminResume() {
                 <Plus className="w-4 h-4 mr-2" /> Adicionar Habilidade
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {getItemsByType("skill").map(item => (
-                <Card key={item.id} className="bg-card border-white/10 group">
-                  <CardContent className="pt-6 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <GripVertical className="w-4 h-4 text-gray-500 cursor-move" />
-                      <div>
-                        <h4 className="text-white font-medium">{item.content.name}</h4>
-                        <div className="w-32 h-2 bg-white/10 rounded-full mt-2 overflow-hidden">
-                          <div className="h-full bg-neon-green" style={{ width: `${item.content.level}%` }} />
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenModal("skill", item)}>
-                        <Pencil className="w-4 h-4 text-blue-400" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'skill')}>
+              <SortableContext items={getItemsByType("skill").map(i => i.id)} strategy={verticalListSortingStrategy}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {getItemsByType("skill").map(item => (
+                    <SortableSkillCard
+                      key={item.id}
+                      item={item}
+                      onEdit={(item) => handleOpenModal("skill", item)}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           </TabsContent>
 
           {/* Soft Skills Tab (Simple List) */}
@@ -373,7 +532,7 @@ export default function AdminResume() {
             </div>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'soft_skill')}>
-              <SortableContext items={getItemsByType("soft_skill")} strategy={verticalListSortingStrategy}>
+              <SortableContext items={getItemsByType("soft_skill").map(i => i.id)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-2">
                   {getItemsByType("soft_skill").map((item) => (
                     <SortableSimpleItem
@@ -404,7 +563,7 @@ export default function AdminResume() {
             </div>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'course')}>
-              <SortableContext items={getItemsByType("course")} strategy={verticalListSortingStrategy}>
+              <SortableContext items={getItemsByType("course").map(i => i.id)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-2">
                   {getItemsByType("course").map((item) => (
                     <SortableSimpleItem
@@ -426,29 +585,20 @@ export default function AdminResume() {
                 <Plus className="w-4 h-4 mr-2" /> Adicionar Idioma
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {getItemsByType("language").map(item => (
-                <Card key={item.id} className="bg-card border-white/10 group">
-                  <CardContent className="pt-6 flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <GripVertical className="w-4 h-4 text-gray-500 cursor-move" />
-                      <div>
-                        <h4 className="text-white font-medium">{item.content.name}</h4>
-                        <p className="text-neon-green text-sm">{item.content.level}</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" onClick={() => handleOpenModal("language", item)}>
-                        <Pencil className="w-4 h-4 text-blue-400" />
-                      </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'language')}>
+              <SortableContext items={getItemsByType("language").map(i => i.id)} strategy={verticalListSortingStrategy}>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {getItemsByType("language").map(item => (
+                    <SortableLanguageCard
+                      key={item.id}
+                      item={item}
+                      onEdit={(item) => handleOpenModal("language", item)}
+                      onDelete={handleDelete}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           </TabsContent>
 
           {/* Volunteer Tab (Simple List) */}
@@ -467,7 +617,7 @@ export default function AdminResume() {
             </div>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'volunteer')}>
-              <SortableContext items={getItemsByType("volunteer")} strategy={verticalListSortingStrategy}>
+              <SortableContext items={getItemsByType("volunteer").map(i => i.id)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-2">
                   {getItemsByType("volunteer").map((item) => (
                     <SortableSimpleItem
@@ -554,8 +704,18 @@ export default function AdminResume() {
                     <Input name="name" defaultValue={editingItem?.content.name} className="bg-white/5 border-white/10 text-white" required />
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-white">Nível de Domínio (0-100)</Label>
-                    <Input name="level" type="number" min="0" max="100" defaultValue={editingItem?.content.level} className="bg-white/5 border-white/10 text-white" required />
+                    <div className="flex items-center justify-between">
+                      <Label className="text-white">Nível de Domínio</Label>
+                      <span className="text-neon-green text-sm font-medium">{skillLevel[0]}%</span>
+                    </div>
+                    <Slider
+                      value={skillLevel}
+                      onValueChange={setSkillLevel}
+                      min={0}
+                      max={100}
+                      step={5}
+                      className="w-full"
+                    />
                   </div>
                 </>
               )}
@@ -568,7 +728,18 @@ export default function AdminResume() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-white">Nível</Label>
-                    <Input name="level" defaultValue={editingItem?.content.level} placeholder="Ex: Avançado, Nativo" className="bg-white/5 border-white/10 text-white" required />
+                    <Select value={languageLevel} onValueChange={setLanguageLevel} required>
+                      <SelectTrigger className="bg-white/5 border-white/10 text-white w-full">
+                        <SelectValue placeholder="Selecione o nível" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-black border-white/10">
+                        <SelectItem value="Básico" className="text-white focus:bg-white/10">Básico</SelectItem>
+                        <SelectItem value="Intermediário" className="text-white focus:bg-white/10">Intermediário</SelectItem>
+                        <SelectItem value="Avançado" className="text-white focus:bg-white/10">Avançado</SelectItem>
+                        <SelectItem value="Fluente" className="text-white focus:bg-white/10">Fluente</SelectItem>
+                        <SelectItem value="Nativo" className="text-white focus:bg-white/10">Nativo</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </>
               )}
