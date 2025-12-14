@@ -51,8 +51,8 @@
   --color-neon-purple: hsl(var(--neon-purple));
   --color-neon-lime: hsl(var(--neon-lime));
   
-  --font-sans: "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-sans: "Chakra Petch", sans-serif;
+  --font-mono: "Chakra Petch", monospace;
 }
 
 :root {
@@ -303,7 +303,7 @@
     background-color: hsla(0, 0%, 100%, 0.1) !important;
     padding: 0.125rem 0.25rem !important;
     border-radius: 0.25rem !important;
-    font-family: "JetBrains Mono", monospace !important;
+    font-family: "Chakra Petch", monospace !important;
     font-size: 0.875em !important;
   }
 
