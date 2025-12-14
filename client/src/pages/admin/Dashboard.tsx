@@ -12,11 +12,18 @@ import {
   Menu,
   X,
   FileSignature,
-  UserPlus
+  UserPlus,
+  Image as ImageIcon,
+  Briefcase,
+  Plus
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/lib/supabase";
+import { ProjectDialog } from "@/components/admin/ProjectDialog";
+import { ProposalDialog } from "@/components/admin/ProposalDialog";
+import { ResumeExperienceDialog } from "@/components/admin/ResumeExperienceDialog";
+import { ImagePicker } from "@/components/admin/ImagePicker";
 
 // Admin Sidebar Component
 function AdminSidebar() {
@@ -117,6 +124,9 @@ export default function Dashboard() {
     proposals: 0
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [isProjectOpen, setIsProjectOpen] = useState(false);
+  const [isProposalOpen, setIsProposalOpen] = useState(false);
+  const [isExperienceOpen, setIsExperienceOpen] = useState(false);
 
   useEffect(() => {
     fetchStats();
@@ -125,7 +135,7 @@ export default function Dashboard() {
   const fetchStats = async () => {
     try {
       setIsLoading(true);
-      
+
       // Buscar contagem de projetos
       const { count: projectsCount } = await supabase
         .schema('app_portfolio')
@@ -186,33 +196,63 @@ export default function Dashboard() {
 
         <div className="bg-card border border-white/10 rounded-xl p-6">
           <h2 className="text-xl font-bold text-white mb-4">Atalhos Rápidos</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <Link href="/admin/projects">
-              <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2 border-white/10 hover:bg-white/5 hover:border-neon-purple/50">
-                <FolderKanban className="w-6 h-6 text-neon-purple" />
-                Gerenciar Projetos
-              </Button>
-            </Link>
-            <Link href="/admin/proposals">
-              <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2 border-white/10 hover:bg-white/5 hover:border-neon-purple/50">
-                <FileSignature className="w-6 h-6 text-neon-purple" />
-                Criar Proposta
-              </Button>
-            </Link>
-            <Link href="/admin/resume">
-              <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2 border-white/10 hover:bg-white/5 hover:border-neon-purple/50">
-                <User className="w-6 h-6 text-neon-purple" />
-                Editar Currículo
-              </Button>
-            </Link>
-            <Link href="/admin/contact">
-              <Button variant="outline" className=" w-full h-24 flex flex-col items-center justify-center gap-2 border-white/10 hover:bg-white/5 hover:border-neon-purple/50 hidden">
-                <Mail className="w-6 h-6 text-neon-purple" />
-                Ver Mensagens
-              </Button>
-            </Link>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button
+              variant="outline"
+              className="w-full h-24 flex flex-col items-center justify-center gap-2 border-white/10 hover:bg-white/5 hover:border-neon-purple/50"
+              onClick={() => setIsProjectOpen(true)}
+            >
+              <FolderKanban className="w-6 h-6 text-neon-purple" />
+              Novo Projeto
+            </Button>
+
+            <Button
+              variant="outline"
+              className="w-full h-24 flex flex-col items-center justify-center gap-2 border-white/10 hover:bg-white/5 hover:border-neon-purple/50"
+              onClick={() => setIsProposalOpen(true)}
+            >
+              <FileSignature className="w-6 h-6 text-neon-purple" />
+              Nova Proposta
+            </Button>
+
+            <Button
+              variant="outline"
+              className="w-full h-24 flex flex-col items-center justify-center gap-2 border-white/10 hover:bg-white/5 hover:border-neon-purple/50"
+              onClick={() => setIsExperienceOpen(true)}
+            >
+              <Briefcase className="w-6 h-6 text-neon-purple" />
+              Nova Experiência
+            </Button>
+
+            <ImagePicker
+              onSelect={() => { }}
+              trigger={
+                <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2 border-white/10 hover:bg-white/5 hover:border-neon-purple/50">
+                  <ImageIcon className="w-6 h-6 text-neon-purple" />
+                  Galeria de Imagens
+                </Button>
+              }
+            />
           </div>
         </div>
+
+        <ProjectDialog
+          open={isProjectOpen}
+          onOpenChange={setIsProjectOpen}
+          onSave={fetchStats}
+        />
+
+        <ProposalDialog
+          open={isProposalOpen}
+          onOpenChange={setIsProposalOpen}
+          onSave={fetchStats}
+        />
+
+        <ResumeExperienceDialog
+          open={isExperienceOpen}
+          onOpenChange={setIsExperienceOpen}
+          onSave={() => { }}
+        />
       </div>
     </AdminLayout>
   );
