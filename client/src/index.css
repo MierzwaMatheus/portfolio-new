@@ -211,4 +211,150 @@
   .section-transition {
     @apply animate-in fade-in slide-in-from-bottom-4 duration-700;
   }
+
+  /* Blog Post Content Styles */
+  .blog-content {
+    max-width: none;
+    color: hsl(0, 0%, 90%);
+  }
+
+  .blog-content h1 {
+    font-size: 2.25rem !important;
+    line-height: 2.5rem !important;
+    font-weight: 700 !important;
+    margin-top: 2rem !important;
+    margin-bottom: 1rem !important;
+    color: white !important;
+  }
+
+  .blog-content h2 {
+    font-size: 1.875rem !important;
+    line-height: 2.25rem !important;
+    font-weight: 700 !important;
+    margin-top: 2rem !important;
+    margin-bottom: 1rem !important;
+    color: white !important;
+  }
+
+  .blog-content h3 {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+    font-weight: 600 !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 0.75rem !important;
+    color: white !important;
+  }
+
+  .blog-content h4 {
+    font-size: 1.25rem !important;
+    line-height: 1.75rem !important;
+    font-weight: 600 !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 0.75rem !important;
+    color: white !important;
+  }
+
+  .blog-content h5 {
+    font-size: 1.125rem !important;
+    line-height: 1.75rem !important;
+    font-weight: 500 !important;
+    margin-top: 1rem !important;
+    margin-bottom: 0.5rem !important;
+    color: white !important;
+  }
+
+  .blog-content h6 {
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+    font-weight: 500 !important;
+    margin-top: 1rem !important;
+    margin-bottom: 0.5rem !important;
+    color: white !important;
+  }
+
+  .blog-content p {
+    color: hsl(0, 0%, 70%) !important;
+    line-height: 1.75 !important;
+    margin-bottom: 1.5rem !important;
+    font-size: 1rem !important;
+    text-indent: 1rem !important;
+  }
+
+  .blog-content p:first-child {
+    text-indent: 0 !important;
+  }
+
+  .blog-content strong {
+    color: white !important;
+    font-weight: 700 !important;
+  }
+
+  .blog-content a {
+    color: hsl(271, 91%, 65%) !important;
+    text-decoration: none !important;
+  }
+
+  .blog-content a:hover {
+    text-decoration: underline !important;
+  }
+
+  .blog-content code {
+    color: hsl(187, 100%, 50%) !important;
+    background-color: hsla(0, 0%, 100%, 0.1) !important;
+    padding: 0.125rem 0.25rem !important;
+    border-radius: 0.25rem !important;
+    font-family: "JetBrains Mono", monospace !important;
+    font-size: 0.875em !important;
+  }
+
+  .blog-content ul {
+    color: hsl(0, 0%, 70%) !important;
+    list-style-type: disc !important;
+    margin-left: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+    padding-left: 0 !important;
+  }
+
+  .blog-content ul li {
+    margin-bottom: 0.5rem !important;
+  }
+
+  .blog-content ol {
+    color: hsl(0, 0%, 70%) !important;
+    list-style-type: decimal !important;
+    margin-left: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+    padding-left: 0 !important;
+  }
+
+  .blog-content ol li {
+    margin-bottom: 0.5rem !important;
+  }
+
+  .blog-content li {
+    color: hsl(0, 0%, 70%) !important;
+    line-height: 1.75 !important;
+    padding-left: 0.5rem !important;
+  }
+
+  .blog-content blockquote {
+    border-left: 4px solid hsl(271, 91%, 65%) !important;
+    padding-left: 1rem !important;
+    font-style: italic !important;
+    color: hsl(0, 0%, 64%) !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+  }
+
+  .blog-content hr {
+    border-color: hsla(0, 0%, 100%, 0.1) !important;
+    margin-top: 2rem !important;
+    margin-bottom: 2rem !important;
+  }
+
+  .blog-content img {
+    border-radius: 0.5rem !important;
+    margin-top: 1.5rem !important;
+    margin-bottom: 1.5rem !important;
+  }
 }

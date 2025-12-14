@@ -126,7 +126,7 @@ export default function BlogPost() {
                 )}
 
                 <div
-                    className="prose prose-invert max-w-none prose-lg prose-headings:text-white prose-p:text-gray-300 prose-a:text-neon-purple prose-strong:text-white prose-code:text-neon-cyan"
+                    className="blog-content"
                     dangerouslySetInnerHTML={{ __html: post.content }}
                 />
             </motion.article>
