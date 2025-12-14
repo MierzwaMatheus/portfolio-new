@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { motion } from "framer-motion";
-import { CheckCircle2, Clock, Calendar, DollarSign, ArrowRight, Download, Share2, AlertTriangle } from "lucide-react";
+import { CheckCircle2, Clock, Calendar, DollarSign, Download, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -59,6 +59,220 @@ export default function Proposal() {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
 
+  const handleDownloadPDF = () => {
+    // Encontrar o container principal
+    const content = document.querySelector('.relative.z-10') as HTMLElement;
+    if (!content) return;
+
+    // Salvar estilos originais para restaurar depois
+    const originalStyles: Map<HTMLElement, string> = new Map();
+
+    // Função para aplicar estilos inline diretamente nos elementos
+    const applyPrintStyles = (element: HTMLElement) => {
+      const tagName = element.tagName.toLowerCase();
+      const classList = Array.from(element.classList);
+      
+      // Salvar estilo original se existir
+      if (element.style.cssText) {
+        originalStyles.set(element, element.style.cssText);
+      }
+
+      // Ocultar elementos que não devem ser impressos
+      if (classList.some(c => c.includes('no-print'))) {
+        element.style.display = 'none';
+        return;
+      }
+
+      // Forçar fundo branco em containers
+      if (['div', 'section', 'article', 'header', 'footer', 'card'].includes(tagName) || 
+          classList.some(c => c.includes('Card') || c.includes('card'))) {
+        element.style.setProperty('background', '#ffffff', 'important');
+        element.style.setProperty('background-color', '#ffffff', 'important');
+      }
+
+      // Forçar cores de texto escuras - verificar cor computada
+      const computedStyle = window.getComputedStyle(element);
+      const computedColor = computedStyle.color;
+      const textElements = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'li', 'td', 'th', 'div', 'a', 'strong', 'b', 'em', 'i', 'label'];
+      
+      if (textElements.includes(tagName) || element.textContent?.trim()) {
+        // Se tem classe de texto branco ou cinza claro, forçar preto
+        if (classList.some(c => c.includes('text-white') || c.includes('text-gray-100') || 
+                                c.includes('text-gray-200') || c.includes('text-gray-300') || 
+                                c.includes('text-gray-400'))) {
+          element.style.setProperty('color', '#000000', 'important');
+        } 
+        // Se tem classe de texto cinza médio, usar cinza escuro
+        else if (classList.some(c => c.includes('text-gray-500'))) {
+          element.style.setProperty('color', '#333333', 'important');
+        }
+        // Se tem classe de texto cinza escuro
+        else if (classList.some(c => c.includes('text-gray-600'))) {
+          element.style.setProperty('color', '#555555', 'important');
+        }
+        // Verificar cor computada - se for muito clara, forçar escura
+        else if (computedColor) {
+          // Extrair valores RGB
+          const rgbMatch = computedColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+          if (rgbMatch) {
+            const r = parseInt(rgbMatch[1]);
+            const g = parseInt(rgbMatch[2]);
+            const b = parseInt(rgbMatch[3]);
+            // Se qualquer canal RGB for > 200, é muito claro - forçar escuro
+            if (r > 200 && g > 200 && b > 200) {
+              element.style.setProperty('color', '#000000', 'important');
+            }
+            // Se estiver entre 150-200, usar cinza escuro
+            else if (r > 150 && g > 150 && b > 150) {
+              element.style.setProperty('color', '#333333', 'important');
+            }
+          }
+        }
+      }
+
+      // SVGs - forçar cor escura
+      if (tagName === 'svg') {
+        element.style.setProperty('color', '#666666', 'important');
+        element.style.setProperty('fill', '#666666', 'important');
+        element.style.setProperty('stroke', '#666666', 'important');
+      }
+
+      // Badges
+      if (classList.some(c => c.includes('Badge') || c.includes('badge'))) {
+        element.style.setProperty('background', '#f5f5f5', 'important');
+        element.style.setProperty('border-color', '#cccccc', 'important');
+        element.style.setProperty('color', '#000000', 'important');
+      }
+
+      // Bordas - garantir que sejam visíveis
+      const borderColor = window.getComputedStyle(element).borderColor;
+      if (borderColor && (borderColor.includes('rgba(255') || borderColor.includes('rgb(255'))) {
+        element.style.setProperty('border-color', '#dddddd', 'important');
+      }
+
+      // Remover gradientes de texto
+      if (classList.some(c => c.includes('bg-clip-text') || c.includes('bg-gradient'))) {
+        element.style.setProperty('-webkit-background-clip', 'unset', 'important');
+        element.style.setProperty('background-clip', 'unset', 'important');
+        element.style.setProperty('background', 'transparent', 'important');
+        element.style.setProperty('color', '#000000', 'important');
+      }
+
+      // Processar filhos recursivamente
+      Array.from(element.children).forEach(child => {
+        applyPrintStyles(child as HTMLElement);
+      });
+    };
+
+    // Adicionar classe de print
+    content.classList.add('print-content');
+
+    // Aplicar estilos inline
+    applyPrintStyles(content);
+
+    // Adicionar estilos CSS de impressão
+    const style = document.createElement('style');
+    style.id = 'print-styles';
+    style.textContent = `
+      @media print {
+        @page {
+          margin: 2cm;
+          size: A4;
+        }
+        
+        body * {
+          visibility: hidden;
+        }
+        
+        .print-content,
+        .print-content * {
+          visibility: visible !important;
+        }
+        
+        .no-print,
+        .no-print * {
+          display: none !important;
+          visibility: hidden !important;
+        }
+        
+        .print-content {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          background: #ffffff !important;
+        }
+        
+        .print-content .fixed,
+        .print-content [class*="blur"],
+        .print-content [class*="shadow"],
+        .print-content [class*="gradient"],
+        .print-content [class*="from-"],
+        .print-content [class*="to-"],
+        .print-content [class*="absolute"][class*="inset"] {
+          display: none !important;
+        }
+        
+        .print-content .grid {
+          display: block !important;
+        }
+        
+        .print-content .grid > * {
+          margin-bottom: 1.5rem !important;
+        }
+        
+        .print-content h1,
+        .print-content h2,
+        .print-content h3 {
+          page-break-after: avoid !important;
+        }
+        
+        .print-content section,
+        .print-content [class*="Card"] {
+          page-break-inside: avoid !important;
+        }
+        
+        .print-content * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    `;
+    
+    const existingStyle = document.getElementById('print-styles');
+    if (existingStyle) {
+      existingStyle.remove();
+    }
+    
+    document.head.appendChild(style);
+
+    // Aguardar antes de imprimir
+    setTimeout(() => {
+      window.print();
+    }, 100);
+
+    // Cleanup após impressão
+    const cleanup = () => {
+      // Remover estilos inline aplicados
+      originalStyles.forEach((originalStyle, element) => {
+        element.style.cssText = originalStyle;
+      });
+      originalStyles.clear();
+
+      // Remover estilos CSS
+      const styleEl = document.getElementById('print-styles');
+      if (styleEl) {
+        styleEl.remove();
+      }
+      
+      // Remover classe
+      content.classList.remove('print-content');
+    };
+
+    window.addEventListener('afterprint', cleanup, { once: true });
+    setTimeout(cleanup, 2000);
+  };
+
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -72,7 +286,7 @@ export default function Proposal() {
     visible: {
       y: 0,
       opacity: 1,
-      transition: { type: "spring", stiffness: 50 }
+      transition: { type: "spring" as const, stiffness: 50 }
     }
   };
 
@@ -87,7 +301,7 @@ export default function Proposal() {
   return (
     <div className="min-h-screen bg-black text-white font-sans selection:bg-neon-purple selection:text-white overflow-x-hidden">
       {/* Background Elements */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
+      <div className="fixed inset-0 z-0 pointer-events-none no-print">
         <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-neon-purple/20 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-neon-green/10 rounded-full blur-[120px]" />
         <div className="absolute top-[40%] left-[20%] w-[300px] h-[300px] bg-blue-500/10 rounded-full blur-[100px]" />
@@ -265,17 +479,14 @@ export default function Proposal() {
 
           {/* CTA Actions */}
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4 pb-12">
-            <Button size="lg" className="bg-neon-purple hover:bg-neon-purple/90 text-white px-8 h-14 text-lg shadow-lg shadow-neon-purple/20 w-full sm:w-auto group" disabled={isExpired}>
-              {isExpired ? "Proposta Expirada" : "Aceitar Proposta"}
-              {!isExpired && <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />}
-            </Button>
-            <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/5 h-14 px-8 w-full sm:w-auto">
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className=" hidden border-white/20 text-white hover:bg-white/5 h-14 px-8 w-full sm:w-auto no-print"
+              onClick={handleDownloadPDF}
+            >
               <Download className="mr-2 w-5 h-5" />
               Baixar PDF
-            </Button>
-            <Button size="lg" variant="ghost" className="text-gray-400 hover:text-white h-14 px-8 w-full sm:w-auto">
-              <Share2 className="mr-2 w-5 h-5" />
-              Compartilhar
             </Button>
           </motion.div>
 
