@@ -1,10 +1,27 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import Link from '@tiptap/extension-link';
+import Image from '@tiptap/extension-image';
+import Underline from '@tiptap/extension-underline';
+import TextAlign from '@tiptap/extension-text-align';
+import Color from '@tiptap/extension-color';
+import { TextStyle } from '@tiptap/extension-text-style';
+import Typography from '@tiptap/extension-typography';
 import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { 
   Bold, 
   Italic, 
+  Underline as UnderlineIcon,
   List, 
   ListOrdered, 
   Quote, 
@@ -12,7 +29,17 @@ import {
   Redo, 
   Code,
   Code2,
-  Eye
+  Eye,
+  Link as LinkIcon,
+  Image as ImageIcon,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  Type,
+  Minus,
+  Heading1,
+  Heading2,
+  Heading3
 } from "lucide-react";
 
 interface RichTextEditorProps {
@@ -23,9 +50,39 @@ interface RichTextEditorProps {
 export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
   const [showCodeView, setShowCodeView] = useState(false);
   const [codeContent, setCodeContent] = useState(content);
+  const [linkDialogOpen, setLinkDialogOpen] = useState(false);
+  const [imageDialogOpen, setImageDialogOpen] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [linkText, setLinkText] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3],
+        },
+      }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-neon-purple underline cursor-pointer',
+        },
+      }),
+      Image.configure({
+        inline: true,
+        HTMLAttributes: {
+          class: 'max-w-full h-auto rounded-lg',
+        },
+      }),
+      Underline,
+      TextAlign.configure({
+        types: ['heading', 'paragraph'],
+      }),
+      Color,
+      TextStyle,
+      Typography,
+    ],
     content,
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
@@ -67,6 +124,55 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
     setShowCodeView(!showCodeView);
   };
 
+  const handleSetLink = () => {
+    if (!editor) return;
+    
+    if (linkUrl) {
+      if (linkText) {
+        // Se há texto selecionado, substituir por link
+        editor.chain().focus().insertContent(`<a href="${linkUrl}">${linkText}</a>`).run();
+      } else {
+        // Usar texto selecionado ou criar link
+        const { from, to } = editor.state.selection;
+        const selectedText = editor.state.doc.textBetween(from, to);
+        if (selectedText) {
+          editor.chain().focus().setLink({ href: linkUrl }).run();
+        } else {
+          editor.chain().focus().insertContent(`<a href="${linkUrl}">${linkUrl}</a>`).run();
+        }
+      }
+    } else {
+      editor.chain().focus().unsetLink().run();
+    }
+    
+    setLinkDialogOpen(false);
+    setLinkUrl('');
+    setLinkText('');
+  };
+
+  const handleSetImage = () => {
+    if (!editor || !imageUrl) return;
+    editor.chain().focus().setImage({ src: imageUrl }).run();
+    setImageDialogOpen(false);
+    setImageUrl('');
+  };
+
+  const openLinkDialog = () => {
+    if (!editor) return;
+    const { from, to } = editor.state.selection;
+    const selectedText = editor.state.doc.textBetween(from, to);
+    const linkAttrs = editor.getAttributes('link');
+    
+    setLinkText(selectedText || '');
+    setLinkUrl(linkAttrs.href || '');
+    setLinkDialogOpen(true);
+  };
+
+  const openImageDialog = () => {
+    setImageUrl('');
+    setImageDialogOpen(true);
+  };
+
   if (!editor) {
     return null;
   }
@@ -96,14 +202,82 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           margin-left: 0;
           display: list-item;
         }
+        .tiptap h1 {
+          font-size: 2em;
+          font-weight: bold;
+          margin-top: 0.67em;
+          margin-bottom: 0.67em;
+        }
+        .tiptap h2 {
+          font-size: 1.5em;
+          font-weight: bold;
+          margin-top: 0.83em;
+          margin-bottom: 0.83em;
+        }
+        .tiptap h3 {
+          font-size: 1.17em;
+          font-weight: bold;
+          margin-top: 1em;
+          margin-bottom: 1em;
+        }
+        .tiptap img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 0.5rem;
+          margin: 1rem 0;
+        }
+        .tiptap a {
+          color: rgb(168, 85, 247);
+          text-decoration: underline;
+          cursor: pointer;
+        }
+        .tiptap a:hover {
+          opacity: 0.8;
+        }
       `}</style>
       <div className="flex flex-wrap gap-1 p-2 border-b border-white/10 bg-white/5">
+        {/* Cabeçalhos */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          className={editor.isActive('heading', { level: 1 }) ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
+          title="Título 1"
+        >
+          <Heading1 className="w-4 h-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          className={editor.isActive('heading', { level: 2 }) ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
+          title="Título 2"
+        >
+          <Heading2 className="w-4 h-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          className={editor.isActive('heading', { level: 3 }) ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
+          title="Título 3"
+        >
+          <Heading3 className="w-4 h-4" />
+        </Button>
+        
+        <div className="w-px h-6 bg-white/10 mx-1" />
+        
+        {/* Formatação de texto */}
         <Button
           type="button"
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleBold().run()}
           className={editor.isActive('bold') ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
+          title="Negrito"
         >
           <Bold className="w-4 h-4" />
         </Button>
@@ -113,6 +287,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           size="sm"
           onClick={() => editor.chain().focus().toggleItalic().run()}
           className={editor.isActive('italic') ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
+          title="Itálico"
         >
           <Italic className="w-4 h-4" />
         </Button>
@@ -120,8 +295,23 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          className={editor.isActive('underline') ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
+          title="Sublinhado"
+        >
+          <UnderlineIcon className="w-4 h-4" />
+        </Button>
+        
+        <div className="w-px h-6 bg-white/10 mx-1" />
+        
+        {/* Listas */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
           className={editor.isActive('bulletList') ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
+          title="Lista com marcadores"
         >
           <List className="w-4 h-4" />
         </Button>
@@ -131,6 +321,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           size="sm"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
           className={editor.isActive('orderedList') ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
+          title="Lista numerada"
         >
           <ListOrdered className="w-4 h-4" />
         </Button>
@@ -140,6 +331,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           size="sm"
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
           className={editor.isActive('blockquote') ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
+          title="Citação"
         >
           <Quote className="w-4 h-4" />
         </Button>
@@ -149,10 +341,80 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           size="sm"
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
           className={editor.isActive('codeBlock') ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
+          title="Bloco de código"
         >
           <Code className="w-4 h-4" />
         </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          title="Linha horizontal"
+        >
+          <Minus className="w-4 h-4" />
+        </Button>
+        
+        <div className="w-px h-6 bg-white/10 mx-1" />
+        
+        {/* Links e imagens */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={openLinkDialog}
+          className={editor.isActive('link') ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
+          title="Inserir link"
+        >
+          <LinkIcon className="w-4 h-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={openImageDialog}
+          title="Inserir imagem"
+        >
+          <ImageIcon className="w-4 h-4" />
+        </Button>
+        
+        <div className="w-px h-6 bg-white/10 mx-1" />
+        
+        {/* Alinhamento */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().setTextAlign('left').run()}
+          className={editor.isActive({ textAlign: 'left' }) ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
+          title="Alinhar à esquerda"
+        >
+          <AlignLeft className="w-4 h-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().setTextAlign('center').run()}
+          className={editor.isActive({ textAlign: 'center' }) ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
+          title="Centralizar"
+        >
+          <AlignCenter className="w-4 h-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => editor.chain().focus().setTextAlign('right').run()}
+          className={editor.isActive({ textAlign: 'right' }) ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
+          title="Alinhar à direita"
+        >
+          <AlignRight className="w-4 h-4" />
+        </Button>
+        
         <div className="flex-1" />
+        
+        {/* Outros */}
         <Button
           type="button"
           variant="ghost"
@@ -170,6 +432,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editor.can().undo()}
           className="text-gray-400"
+          title="Desfazer"
         >
           <Undo className="w-4 h-4" />
         </Button>
@@ -180,6 +443,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editor.can().redo()}
           className="text-gray-400"
+          title="Refazer"
         >
           <Redo className="w-4 h-4" />
         </Button>
@@ -195,6 +459,93 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
       ) : (
         <EditorContent editor={editor} />
       )}
+      
+      {/* Dialog para inserir link */}
+      <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
+        <DialogContent className="bg-background border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-white">Inserir Link</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="link-text" className="text-white">Texto do Link (opcional)</Label>
+              <Input
+                id="link-text"
+                value={linkText}
+                onChange={(e) => setLinkText(e.target.value)}
+                placeholder="Digite o texto do link"
+                className="bg-white/5 border-white/10 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="link-url" className="text-white">URL *</Label>
+              <Input
+                id="link-url"
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                placeholder="https://exemplo.com"
+                className="bg-white/5 border-white/10 text-white"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSetLink();
+                  }
+                }}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setLinkDialogOpen(false)} className="text-gray-400">
+              Cancelar
+            </Button>
+            <Button type="button" onClick={handleSetLink} className="bg-neon-purple hover:bg-neon-purple/90 text-white">
+              Inserir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para inserir imagem */}
+      <Dialog open={imageDialogOpen} onOpenChange={setImageDialogOpen}>
+        <DialogContent className="bg-background border-white/10">
+          <DialogHeader>
+            <DialogTitle className="text-white">Inserir Imagem</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="image-url" className="text-white">URL da Imagem *</Label>
+              <Input
+                id="image-url"
+                value={imageUrl}
+                onChange={(e) => setImageUrl(e.target.value)}
+                placeholder="https://exemplo.com/imagem.jpg"
+                className="bg-white/5 border-white/10 text-white"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSetImage();
+                  }
+                }}
+              />
+            </div>
+            {imageUrl && (
+              <div className="mt-4">
+                <img src={imageUrl} alt="Preview" className="max-w-full h-auto rounded-lg border border-white/10" onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                }} />
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setImageDialogOpen(false)} className="text-gray-400">
+              Cancelar
+            </Button>
+            <Button type="button" onClick={handleSetImage} className="bg-neon-purple hover:bg-neon-purple/90 text-white" disabled={!imageUrl}>
+              Inserir
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
