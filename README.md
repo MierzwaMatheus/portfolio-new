@@ -434,7 +434,7 @@ O projeto utiliza componentes do shadcn/ui, uma coleção de componentes React r
 
 ## 📄 Licença
 
-MIT
+GNU General Public License v3.0
 
 ---
 
