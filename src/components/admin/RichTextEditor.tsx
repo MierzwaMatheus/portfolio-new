@@ -1,6 +1,6 @@
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { 
   Bold, 
@@ -10,7 +10,9 @@ import {
   Quote, 
   Undo, 
   Redo, 
-  Code 
+  Code,
+  Code2,
+  Eye
 } from "lucide-react";
 
 interface RichTextEditorProps {
@@ -19,11 +21,18 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
+  const [showCodeView, setShowCodeView] = useState(false);
+  const [codeContent, setCodeContent] = useState(content);
+  
   const editor = useEditor({
     extensions: [StarterKit],
     content,
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML());
+      const html = editor.getHTML();
+      onChange(html);
+      if (!showCodeView) {
+        setCodeContent(html);
+      }
     },
     editorProps: {
       attributes: {
@@ -33,10 +42,30 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
   });
 
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content);
+    if (editor) {
+      const currentHtml = editor.getHTML();
+      if (content !== currentHtml) {
+        editor.commands.setContent(content);
+        setCodeContent(content);
+      }
     }
   }, [content, editor]);
+
+  const toggleCodeView = () => {
+    if (showCodeView) {
+      // Sair do modo código - atualizar o editor com o conteúdo do textarea
+      if (editor) {
+        editor.commands.setContent(codeContent);
+        onChange(codeContent);
+      }
+    } else {
+      // Entrar no modo código - atualizar o textarea com o HTML atual
+      if (editor) {
+        setCodeContent(editor.getHTML());
+      }
+    }
+    setShowCodeView(!showCodeView);
+  };
 
   if (!editor) {
     return null;
@@ -70,6 +99,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
       `}</style>
       <div className="flex flex-wrap gap-1 p-2 border-b border-white/10 bg-white/5">
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleBold().run()}
@@ -78,6 +108,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           <Bold className="w-4 h-4" />
         </Button>
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleItalic().run()}
@@ -86,6 +117,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           <Italic className="w-4 h-4" />
         </Button>
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -94,6 +126,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           <List className="w-4 h-4" />
         </Button>
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
@@ -102,6 +135,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           <ListOrdered className="w-4 h-4" />
         </Button>
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
@@ -110,6 +144,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           <Quote className="w-4 h-4" />
         </Button>
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
@@ -119,6 +154,17 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
         </Button>
         <div className="flex-1" />
         <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={toggleCodeView}
+          className={showCodeView ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
+          title={showCodeView ? 'Ver visualização' : 'Ver código HTML'}
+        >
+          {showCodeView ? <Eye className="w-4 h-4" /> : <Code2 className="w-4 h-4" />}
+        </Button>
+        <Button
+          type="button"
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().undo().run()}
@@ -128,6 +174,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           <Undo className="w-4 h-4" />
         </Button>
         <Button
+          type="button"
           variant="ghost"
           size="sm"
           onClick={() => editor.chain().focus().redo().run()}
@@ -137,7 +184,17 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           <Redo className="w-4 h-4" />
         </Button>
       </div>
-      <EditorContent editor={editor} />
+      {showCodeView ? (
+        <textarea
+          value={codeContent}
+          onChange={(e) => setCodeContent(e.target.value)}
+          className="w-full min-h-[150px] p-4 bg-black/20 text-gray-300 font-mono text-sm border-0 focus:outline-none focus:ring-2 focus:ring-neon-purple/50 resize-y"
+          style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}
+          placeholder="Edite o HTML aqui..."
+        />
+      ) : (
+        <EditorContent editor={editor} />
+      )}
     </div>
   );
 }
