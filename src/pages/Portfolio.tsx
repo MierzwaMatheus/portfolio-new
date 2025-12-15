@@ -2,7 +2,7 @@ import { Layout } from "@/components/Layout";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FolderOpen, ExternalLink, Github, Layers } from "lucide-react";
+import { FolderOpen, ExternalLink, Github, Layers, ZoomIn, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
@@ -26,6 +26,7 @@ export default function Portfolio() {
   const [activeFilter, setActiveFilter] = useState("Todos");
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [expandedImage, setExpandedImage] = useState<{ url: string; index: number; images: string[] } | null>(null);
 
   useEffect(() => {
     fetchProjects();
@@ -183,6 +184,18 @@ export default function Portfolio() {
                                   <CarouselItem key={idx}>
                                     <div className="aspect-video rounded-lg overflow-hidden border border-white/10 relative group/carousel">
                                       <img src={img} alt={`${project.title} - ${idx + 1}`} className="w-full h-full object-cover" />
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setExpandedImage({ url: img, index: idx, images: project.images });
+                                        }}
+                                        className="absolute inset-0 bg-black/40 opacity-0 group-hover/carousel:opacity-100 transition-opacity flex items-center justify-center hover:bg-black/50"
+                                        aria-label="Expandir imagem"
+                                      >
+                                        <div className="bg-background/80 backdrop-blur-sm p-3 rounded-full border border-white/20 hover:border-neon-purple transition-colors">
+                                          <ZoomIn className="w-5 h-5 text-white" />
+                                        </div>
+                                      </button>
                                     </div>
                                   </CarouselItem>
                                 ))}
@@ -242,6 +255,94 @@ export default function Portfolio() {
             ))}
           </AnimatePresence>
         </div>
+
+        {/* Dialog para imagem expandida */}
+        <Dialog open={!!expandedImage} onOpenChange={(open) => !open && setExpandedImage(null)}>
+          <DialogContent 
+            className="!max-w-[98vw] !w-[98vw] !h-[98vh] !max-h-[98vh] bg-[#0a0a0a] border-white/10 p-0 overflow-hidden flex flex-col !translate-x-[-50%] !translate-y-[-50%] !top-[50%] !left-[50%]"
+            showCloseButton={false}
+          >
+            {expandedImage && (
+              <>
+                <DialogHeader className="p-4 border-b border-white/10 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <DialogTitle className="text-white">
+                      Imagem {expandedImage.index + 1} de {expandedImage.images.length}
+                    </DialogTitle>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setExpandedImage(null)}
+                      className="text-white hover:bg-white/10"
+                      aria-label="Fechar"
+                    >
+                      <X className="w-5 h-5" />
+                    </Button>
+                  </div>
+                </DialogHeader>
+                <div className="relative flex-1 flex items-center justify-center bg-background/50 overflow-hidden min-h-0">
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={expandedImage.url}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.3, ease: "easeInOut" }}
+                      className="w-full h-full flex items-center justify-center p-4"
+                    >
+                      <img
+                        src={expandedImage.url}
+                        alt={`Imagem expandida ${expandedImage.index + 1}`}
+                        className="w-auto h-auto max-w-full max-h-full object-contain rounded-lg"
+                        style={{ maxHeight: 'calc(98vh - 100px)' }}
+                      />
+                    </motion.div>
+                  </AnimatePresence>
+                  {expandedImage.images.length > 1 && (
+                    <>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/80 border-white/20 text-white hover:bg-neon-purple hover:border-neon-purple z-10"
+                        onClick={() => {
+                          const prevIndex = expandedImage.index > 0 
+                            ? expandedImage.index - 1 
+                            : expandedImage.images.length - 1;
+                          setExpandedImage({
+                            ...expandedImage,
+                            url: expandedImage.images[prevIndex],
+                            index: prevIndex
+                          });
+                        }}
+                        aria-label="Imagem anterior"
+                      >
+                        <ChevronLeft className="w-6 h-6" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/80 border-white/20 text-white hover:bg-neon-purple hover:border-neon-purple z-10"
+                        onClick={() => {
+                          const nextIndex = expandedImage.index < expandedImage.images.length - 1
+                            ? expandedImage.index + 1
+                            : 0;
+                          setExpandedImage({
+                            ...expandedImage,
+                            url: expandedImage.images[nextIndex],
+                            index: nextIndex
+                          });
+                        }}
+                        aria-label="Próxima imagem"
+                      >
+                        <ChevronRight className="w-6 h-6" />
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </motion.div>
     </Layout>
   );
