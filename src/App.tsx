@@ -21,6 +21,7 @@ import Portfolio from "./pages/Portfolio";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Proposal from "./pages/Proposal";
+import { Analytics } from "@vercel/analytics/react";
 
 function Router() {
   return (
@@ -61,6 +62,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
+            <Analytics />
           </TooltipProvider>
         </ThemeProvider>
       </AuthProvider>
