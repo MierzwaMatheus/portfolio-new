@@ -363,10 +363,13 @@ export default function Proposal() {
                     Olá, tudo bem?
                   </p>
                   <p>
-                    Antes de tudo, agradeço o interesse no meu trabalho! Sou Matheus Mierzwa, desenvolvedor front-end com foco em React, TypeScript, interfaces modernas e experiências digitais que encantam. Tenho mais de 4 anos de experiência com projetos que envolvem interfaces interativas, dados dinâmicos e integração com inteligência artificial.
+                  Antes de tudo, agradeço o interesse! Sou Matheus Mierzwa, Arquiteto de Soluções Digitais e Tech Lead Frontend com mais de 4 anos de experiência transformando desafios complexos em ecossistemas digitais robustos.
                   </p>
                   <p>
-                    Meu objetivo é transformar ideias em soluções funcionais, visuais e inteligentes. Vamos conversar sobre como isso pode funcionar no seu projeto?
+                  Minha expertise vai além de código. Desenho arquiteturas escaláveis,lidero equipes técnicas, defino padrões de excelência e conduzo decisões estratégicas que impactam produtos inteiros. Especializado em React, TypeScript, infraestrutura moderna e integração inteligente de IA.
+                  </p>
+                  <p>
+                  Meu objetivo é simples: transformar sua visão em uma solução que seja simultaneamente elegante, escalável e inteligente. Vamos onversar sobre como isso pode funcionar no seu projeto?
                   </p>
                 </div>
               </CardContent>

@@ -106,11 +106,11 @@ export default function Home() {
             </h1>
 
             <h2 className="text-2xl md:text-3xl mt-4 text-gray-400 font-light">
-              Front-end Developer <span className="text-neon-purple">&</span> UI Designer
+            Tech Lead Frontend <span className="text-neon-purple">&</span> Engenheiro Full-Stack
             </h2>
 
             <p className="max-w-2xl mt-8 text-gray-300 text-lg leading-relaxed border-l-2 border-neon-purple/50 pl-6">
-              Apaixonado por construir experiências digitais elegantes que combinam código limpo e design excepcional.
+            Transformo desafios complexos em ecossistemas digitais robustos, liderando arquitetura, inovação e excelência técnica.
             </p>
           </div>
 
@@ -118,8 +118,8 @@ export default function Home() {
             {[
               { name: "React", color: "bg-neon-lime" },
               { name: "TypeScript", color: "bg-neon-lime" },
-              { name: "Tailwind CSS", color: "bg-neon-purple" },
-              { name: "UI Design", color: "bg-neon-purple" }
+              { name: "Arquitetura de Sistemas", color: "bg-neon-purple" },
+              { name: "DevOps & Infraestrutura", color: "bg-neon-purple" }
             ].map((tech) => (
               <div key={tech.name} className="flex items-center px-5 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-colors group cursor-default">
                 <span className={`inline-block w-2 h-2 rounded-full ${tech.color} mr-3 shadow-[0_0_8px_rgba(255,255,255,0.3)] group-hover:scale-125 transition-transform`}></span>
