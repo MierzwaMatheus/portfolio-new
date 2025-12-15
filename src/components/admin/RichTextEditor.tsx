@@ -7,7 +7,7 @@ import TextAlign from '@tiptap/extension-text-align';
 import Color from '@tiptap/extension-color';
 import { TextStyle } from '@tiptap/extension-text-style';
 import Typography from '@tiptap/extension-typography';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -56,6 +56,25 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
   const [linkText, setLinkText] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   
+  const onChangeRef = useRef(onChange);
+  const isUpdatingFromProps = useRef(false);
+  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Atualizar ref quando onChange mudar
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  // Função debounced para onChange
+  const debouncedOnChange = useCallback((html: string) => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    debounceTimerRef.current = setTimeout(() => {
+      onChangeRef.current(html);
+    }, 150); // Debounce de 150ms
+  }, []);
+  
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -85,8 +104,11 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
     ],
     content,
     onUpdate: ({ editor }) => {
+      if (isUpdatingFromProps.current) {
+        return; // Ignorar updates que vêm de setContent
+      }
       const html = editor.getHTML();
-      onChange(html);
+      debouncedOnChange(html);
       if (!showCodeView) {
         setCodeContent(html);
       }
@@ -99,32 +121,49 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
   });
 
   useEffect(() => {
-    if (editor) {
-      const currentHtml = editor.getHTML();
-      if (content !== currentHtml) {
-        editor.commands.setContent(content);
-        setCodeContent(content);
-      }
+    if (!editor) return;
+    
+    const currentHtml = editor.getHTML();
+    // Só atualizar se o conteúdo realmente mudou e não foi uma mudança interna
+    if (content !== currentHtml && !isUpdatingFromProps.current) {
+      isUpdatingFromProps.current = true;
+      editor.commands.setContent(content);
+      setCodeContent(content);
+      // Reset flag após um pequeno delay
+      setTimeout(() => {
+        isUpdatingFromProps.current = false;
+      }, 0);
     }
   }, [content, editor]);
 
-  const toggleCodeView = () => {
+  // Cleanup do debounce timer
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
+
+  const toggleCodeView = useCallback(() => {
+    if (!editor) return;
+    
     if (showCodeView) {
       // Sair do modo código - atualizar o editor com o conteúdo do textarea
-      if (editor) {
-        editor.commands.setContent(codeContent);
-        onChange(codeContent);
-      }
+      isUpdatingFromProps.current = true;
+      editor.commands.setContent(codeContent);
+      onChangeRef.current(codeContent);
+      setTimeout(() => {
+        isUpdatingFromProps.current = false;
+      }, 0);
     } else {
       // Entrar no modo código - atualizar o textarea com o HTML atual
-      if (editor) {
-        setCodeContent(editor.getHTML());
-      }
+      setCodeContent(editor.getHTML());
     }
     setShowCodeView(!showCodeView);
-  };
+  }, [editor, showCodeView, codeContent]);
 
-  const handleSetLink = () => {
+  const handleSetLink = useCallback(() => {
     if (!editor) return;
     
     if (linkUrl) {
@@ -148,16 +187,16 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
     setLinkDialogOpen(false);
     setLinkUrl('');
     setLinkText('');
-  };
+  }, [editor, linkUrl, linkText]);
 
-  const handleSetImage = () => {
+  const handleSetImage = useCallback(() => {
     if (!editor || !imageUrl) return;
     editor.chain().focus().setImage({ src: imageUrl }).run();
     setImageDialogOpen(false);
     setImageUrl('');
-  };
+  }, [editor, imageUrl]);
 
-  const openLinkDialog = () => {
+  const openLinkDialog = useCallback(() => {
     if (!editor) return;
     const { from, to } = editor.state.selection;
     const selectedText = editor.state.doc.textBetween(from, to);
@@ -166,12 +205,30 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
     setLinkText(selectedText || '');
     setLinkUrl(linkAttrs.href || '');
     setLinkDialogOpen(true);
-  };
+  }, [editor]);
 
-  const openImageDialog = () => {
+  const openImageDialog = useCallback(() => {
     setImageUrl('');
     setImageDialogOpen(true);
-  };
+  }, []);
+
+  // Handlers memoizados para toolbar
+  const handleHeading1 = useCallback(() => editor?.chain().focus().toggleHeading({ level: 1 }).run(), [editor]);
+  const handleHeading2 = useCallback(() => editor?.chain().focus().toggleHeading({ level: 2 }).run(), [editor]);
+  const handleHeading3 = useCallback(() => editor?.chain().focus().toggleHeading({ level: 3 }).run(), [editor]);
+  const handleBold = useCallback(() => editor?.chain().focus().toggleBold().run(), [editor]);
+  const handleItalic = useCallback(() => editor?.chain().focus().toggleItalic().run(), [editor]);
+  const handleUnderline = useCallback(() => editor?.chain().focus().toggleUnderline().run(), [editor]);
+  const handleBulletList = useCallback(() => editor?.chain().focus().toggleBulletList().run(), [editor]);
+  const handleOrderedList = useCallback(() => editor?.chain().focus().toggleOrderedList().run(), [editor]);
+  const handleBlockquote = useCallback(() => editor?.chain().focus().toggleBlockquote().run(), [editor]);
+  const handleCodeBlock = useCallback(() => editor?.chain().focus().toggleCodeBlock().run(), [editor]);
+  const handleHorizontalRule = useCallback(() => editor?.chain().focus().setHorizontalRule().run(), [editor]);
+  const handleAlignLeft = useCallback(() => editor?.chain().focus().setTextAlign('left').run(), [editor]);
+  const handleAlignCenter = useCallback(() => editor?.chain().focus().setTextAlign('center').run(), [editor]);
+  const handleAlignRight = useCallback(() => editor?.chain().focus().setTextAlign('right').run(), [editor]);
+  const handleUndo = useCallback(() => editor?.chain().focus().undo().run(), [editor]);
+  const handleRedo = useCallback(() => editor?.chain().focus().redo().run(), [editor]);
 
   if (!editor) {
     return null;
@@ -241,7 +298,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          onClick={handleHeading1}
           className={editor.isActive('heading', { level: 1 }) ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
           title="Título 1"
         >
@@ -251,7 +308,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          onClick={handleHeading2}
           className={editor.isActive('heading', { level: 2 }) ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
           title="Título 2"
         >
@@ -261,7 +318,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          onClick={handleHeading3}
           className={editor.isActive('heading', { level: 3 }) ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
           title="Título 3"
         >
@@ -275,7 +332,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleBold().run()}
+          onClick={handleBold}
           className={editor.isActive('bold') ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
           title="Negrito"
         >
@@ -285,7 +342,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleItalic().run()}
+          onClick={handleItalic}
           className={editor.isActive('italic') ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
           title="Itálico"
         >
@@ -295,7 +352,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          onClick={handleUnderline}
           className={editor.isActive('underline') ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
           title="Sublinhado"
         >
@@ -309,7 +366,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          onClick={handleBulletList}
           className={editor.isActive('bulletList') ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
           title="Lista com marcadores"
         >
@@ -319,7 +376,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+          onClick={handleOrderedList}
           className={editor.isActive('orderedList') ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
           title="Lista numerada"
         >
@@ -329,7 +386,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          onClick={handleBlockquote}
           className={editor.isActive('blockquote') ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
           title="Citação"
         >
@@ -339,7 +396,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+          onClick={handleCodeBlock}
           className={editor.isActive('codeBlock') ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
           title="Bloco de código"
         >
@@ -349,7 +406,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().setHorizontalRule().run()}
+          onClick={handleHorizontalRule}
           title="Linha horizontal"
         >
           <Minus className="w-4 h-4" />
@@ -385,7 +442,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('left').run()}
+          onClick={handleAlignLeft}
           className={editor.isActive({ textAlign: 'left' }) ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
           title="Alinhar à esquerda"
         >
@@ -395,7 +452,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('center').run()}
+          onClick={handleAlignCenter}
           className={editor.isActive({ textAlign: 'center' }) ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
           title="Centralizar"
         >
@@ -405,7 +462,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().setTextAlign('right').run()}
+          onClick={handleAlignRight}
           className={editor.isActive({ textAlign: 'right' }) ? 'bg-neon-purple/20 text-neon-purple' : 'text-gray-400'}
           title="Alinhar à direita"
         >
@@ -429,7 +486,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().undo().run()}
+          onClick={handleUndo}
           disabled={!editor.can().undo()}
           className="text-gray-400"
           title="Desfazer"
@@ -440,7 +497,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => editor.chain().focus().redo().run()}
+          onClick={handleRedo}
           disabled={!editor.can().redo()}
           className="text-gray-400"
           title="Refazer"
