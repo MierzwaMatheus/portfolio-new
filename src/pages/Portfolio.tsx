@@ -32,6 +32,42 @@ export default function Portfolio() {
     fetchProjects();
   }, []);
 
+  // Navegação por teclado para as imagens expandidas
+  useEffect(() => {
+    if (!expandedImage || expandedImage.images.length <= 1) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        const prevIndex = expandedImage.index > 0 
+          ? expandedImage.index - 1 
+          : expandedImage.images.length - 1;
+        setExpandedImage({
+          ...expandedImage,
+          url: expandedImage.images[prevIndex],
+          index: prevIndex
+        });
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        const nextIndex = expandedImage.index < expandedImage.images.length - 1
+          ? expandedImage.index + 1
+          : 0;
+        setExpandedImage({
+          ...expandedImage,
+          url: expandedImage.images[nextIndex],
+          index: nextIndex
+        });
+      } else if (e.key === 'Escape') {
+        setExpandedImage(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [expandedImage]);
+
   const fetchProjects = async () => {
     try {
       const { data, error } = await supabase
@@ -169,7 +205,7 @@ export default function Portfolio() {
                         Ver Detalhes
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-2xl bg-[#0a0a0a] border-white/10 text-white p-0 overflow-hidden max-h-[90vh] flex flex-col">
+                    <DialogContent className="max-w-2xl bg-background border-white/10 text-white p-0 overflow-hidden max-h-[90vh] flex flex-col">
                       <VisuallyHidden>
                         <DialogTitle>{project.title}</DialogTitle>
                       </VisuallyHidden>
