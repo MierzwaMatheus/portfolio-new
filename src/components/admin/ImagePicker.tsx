@@ -8,7 +8,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface ImagePickerProps {
-  onSelect: (url: string) => void;
+  onSelect: (url: string | string[]) => void;
   trigger?: React.ReactNode;
   multiple?: boolean;
 }
@@ -17,6 +17,7 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [images, setImages] = useState<{ name: string; url: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -58,13 +59,31 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
   useEffect(() => {
     if (isOpen) {
       fetchImages();
+      setSelectedImages([]);
+      setSelectedImage(null);
     }
   }, [isOpen]);
 
   const handleSelect = (url: string) => {
-    setSelectedImage(url);
-    if (!multiple) {
+    if (multiple) {
+      setSelectedImages(prev => {
+        if (prev.includes(url)) {
+          return prev.filter(img => img !== url);
+        } else {
+          return [...prev, url];
+        }
+      });
+    } else {
+      setSelectedImage(url);
       onSelect(url);
+      setIsOpen(false);
+    }
+  };
+
+  const handleConfirmSelection = () => {
+    if (multiple) {
+      // @ts-ignore - onSelect expects string | string[] but TS might infer just string based on usage elsewhere
+      onSelect(selectedImages);
       setIsOpen(false);
     }
   };
@@ -74,58 +93,45 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
   };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
 
     if (!user) {
       alert("Você precisa estar autenticado para fazer upload de imagens.");
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) { // 2MB
-      alert("A imagem deve ter no máximo 2MB.");
-      return;
-    }
-
-    // Validar tipo de arquivo
-    if (!file.type.startsWith('image/')) {
-      alert("Por favor, selecione um arquivo de imagem válido.");
-      return;
-    }
-
     setIsUploading(true);
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      
-      // Garantir que o contentType está correto
-      const contentType = file.type || `image/${fileExt?.toLowerCase()}`;
-      
-      const { error } = await supabase.storage
-        .from("portfolio-images")
-        .upload(fileName, file, {
-          contentType: contentType,
-          upsert: false,
-          cacheControl: '3600'
-        });
-
-      if (error) {
-        // Mensagem de erro mais específica
-        if (error.message.includes('mime type') || error.message.includes('not supported')) {
-          alert(`Erro: O tipo de arquivo ${contentType} não é suportado pelo bucket.\n\nVerifique as configurações do bucket "portfolio-images" no Supabase Dashboard:\n1. Vá em Storage > Policies\n2. Certifique-se de que a política permite uploads de imagens (image/* ou tipos específicos como image/png, image/jpeg)\n3. Verifique se você está autenticado e tem permissão para fazer upload.`);
-        } else {
-          alert(`Erro ao fazer upload: ${error.message}`);
+      const uploadPromises = Array.from(files).map(async (file) => {
+        if (file.size > 2 * 1024 * 1024) { // 2MB
+          throw new Error(`A imagem ${file.name} deve ter no máximo 2MB.`);
         }
-        throw error;
-      }
 
+        if (!file.type.startsWith('image/')) {
+          throw new Error(`O arquivo ${file.name} não é uma imagem válida.`);
+        }
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const contentType = file.type || `image/${fileExt?.toLowerCase()}`;
+
+        const { error } = await supabase.storage
+          .from("portfolio-images")
+          .upload(fileName, file, {
+            contentType: contentType,
+            upsert: false,
+            cacheControl: '3600'
+          });
+
+        if (error) throw error;
+      });
+
+      await Promise.all(uploadPromises);
       await fetchImages();
     } catch (error: any) {
-      console.error("Error uploading image:", error);
-      // Não mostrar alerta duplicado se já foi mostrado acima
-      if (!error.message?.includes('mime type') && !error.message?.includes('not supported')) {
-        alert("Erro ao fazer upload da imagem. Verifique o console para mais detalhes.");
-      }
+      console.error("Error uploading images:", error);
+      alert(`Erro ao fazer upload: ${error.message}`);
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) {
@@ -150,6 +156,9 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
       await fetchImages();
       if (selectedImage && selectedImage.includes(imageName)) {
         setSelectedImage(null);
+      }
+      if (multiple) {
+        setSelectedImages(prev => prev.filter(url => !url.includes(imageName)));
       }
     } catch (error) {
       console.error("Error deleting image:", error);
@@ -176,26 +185,43 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="flex justify-end">
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              accept="image/*"
-              onChange={handleFileChange}
-            />
-            <Button
-              className="bg-neon-purple hover:bg-neon-purple/90 text-white"
-              onClick={handleUploadClick}
-              disabled={isUploading}
-            >
-              {isUploading ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              ) : (
-                <Upload className="w-4 h-4 mr-2" />
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-400">
+              {multiple && (
+                <span>{selectedImages.length} imagem(ns) selecionada(s)</span>
               )}
-              {isUploading ? "Enviando..." : "Upload Nova Imagem"}
-            </Button>
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                multiple
+                onChange={handleFileChange}
+              />
+              <Button
+                className="bg-neon-purple hover:bg-neon-purple/90 text-white"
+                onClick={handleUploadClick}
+                disabled={isUploading}
+              >
+                {isUploading ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Upload className="w-4 h-4 mr-2" />
+                )}
+                {isUploading ? "Enviando..." : "Upload"}
+              </Button>
+              {multiple && selectedImages.length > 0 && (
+                <Button
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  onClick={handleConfirmSelection}
+                >
+                  <Check className="w-4 h-4 mr-2" />
+                  Confirmar
+                </Button>
+              )}
+            </div>
           </div>
 
           {isLoading ? (
@@ -209,31 +235,37 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
                   Nenhuma imagem encontrada.
                 </div>
               ) : (
-                images.map((img, index) => (
-                  <div
-                    key={index}
-                    className={cn(
-                      "relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 transition-all group",
-                      selectedImage === img.url ? "border-neon-purple" : "border-transparent hover:border-white/20"
-                    )}
-                    onClick={() => handleSelect(img.url)}
-                  >
-                    <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
-                    {selectedImage === img.url && (
-                      <div className="absolute inset-0 bg-neon-purple/20 flex items-center justify-center">
-                        <div className="bg-neon-purple rounded-full p-1">
-                          <Check className="w-4 h-4 text-white" />
-                        </div>
-                      </div>
-                    )}
-                    <button
-                      className="absolute top-1 right-1 p-1 bg-red-500/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                      onClick={(e) => handleDelete(e, img.name)}
+                images.map((img, index) => {
+                  const isSelected = multiple
+                    ? selectedImages.includes(img.url)
+                    : selectedImage === img.url;
+
+                  return (
+                    <div
+                      key={index}
+                      className={cn(
+                        "relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 transition-all group",
+                        isSelected ? "border-neon-purple" : "border-transparent hover:border-white/20"
+                      )}
+                      onClick={() => handleSelect(img.url)}
                     >
-                      <Trash2 className="w-3 h-3 text-white" />
-                    </button>
-                  </div>
-                ))
+                      <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+                      {isSelected && (
+                        <div className="absolute inset-0 bg-neon-purple/20 flex items-center justify-center">
+                          <div className="bg-neon-purple rounded-full p-1">
+                            <Check className="w-4 h-4 text-white" />
+                          </div>
+                        </div>
+                      )}
+                      <button
+                        className="absolute top-1 right-1 p-1 bg-red-500/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                        onClick={(e) => handleDelete(e, img.name)}
+                      >
+                        <Trash2 className="w-3 h-3 text-white" />
+                      </button>
+                    </div>
+                  );
+                })
               )}
             </div>
           )}

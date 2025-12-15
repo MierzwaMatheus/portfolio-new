@@ -30,13 +30,13 @@ interface Project {
 }
 
 // Sortable Project Card Component
-function SortableProjectCard({ 
-  project, 
-  onEdit, 
-  onDelete 
-}: { 
-  project: Project; 
-  onEdit: (project: Project) => void; 
+function SortableProjectCard({
+  project,
+  onEdit,
+  onDelete
+}: {
+  project: Project;
+  onEdit: (project: Project) => void;
   onDelete: (id: number) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: project.id });
@@ -109,13 +109,13 @@ export default function AdminProjects() {
         .order('order_index', { ascending: true, nullsFirst: false });
 
       if (error) throw error;
-      
+
       // Se não houver order_index, inicializar com base no id
       const projectsWithOrder = (data || []).map((project, index) => ({
         ...project,
         order_index: project.order_index ?? index
       }));
-      
+
       setProjects(projectsWithOrder);
     } catch (error) {
       console.error('Error fetching projects:', error);
@@ -156,11 +156,11 @@ export default function AdminProjects() {
         if (error) throw error;
       } else {
         // Ao criar novo projeto, adicionar no final da lista
-        const maxOrder = projects.length > 0 
-          ? Math.max(...projects.map(p => p.order_index ?? 0)) 
+        const maxOrder = projects.length > 0
+          ? Math.max(...projects.map(p => p.order_index ?? 0))
           : -1;
         projectData.order_index = maxOrder + 1;
-        
+
         const { error } = await supabase
           .schema('app_portfolio')
           .from('projects')
@@ -198,8 +198,12 @@ export default function AdminProjects() {
     }
   };
 
-  const addImage = (url: string) => {
-    setProjectImages([...projectImages, url]);
+  const addImage = (url: string | string[]) => {
+    if (Array.isArray(url)) {
+      setProjectImages([...projectImages, ...url]);
+    } else {
+      setProjectImages([...projectImages, url]);
+    }
   };
 
   const removeImage = (index: number) => {
@@ -322,7 +326,7 @@ export default function AdminProjects() {
                     </div>
                   ))}
                   <div className="aspect-video flex items-center justify-center border border-dashed border-white/20 rounded-md bg-white/5">
-                    <ImagePicker onSelect={addImage} />
+                    <ImagePicker onSelect={addImage} multiple />
                   </div>
                 </div>
                 <p className="text-xs text-gray-500">A primeira imagem será usada como capa do projeto.</p>

@@ -93,8 +93,12 @@ export function ProjectDialog({ open, onOpenChange, project, onSave }: ProjectDi
         }
     };
 
-    const addImage = (url: string) => {
-        setProjectImages([...projectImages, url]);
+    const addImage = (url: string | string[]) => {
+        if (Array.isArray(url)) {
+            setProjectImages([...projectImages, ...url]);
+        } else {
+            setProjectImages([...projectImages, url]);
+        }
     };
 
     const removeImage = (index: number) => {
@@ -149,7 +153,7 @@ export function ProjectDialog({ open, onOpenChange, project, onSave }: ProjectDi
                                 </div>
                             ))}
                             <div className="aspect-video flex items-center justify-center border border-dashed border-white/20 rounded-md bg-white/5">
-                                <ImagePicker onSelect={addImage} />
+                                <ImagePicker onSelect={addImage} multiple />
                             </div>
                         </div>
                         <p className="text-xs text-gray-500">A primeira imagem será usada como capa do projeto.</p>

@@ -42,7 +42,7 @@ export default function AdminBlog() {
         console.error('Supabase error:', error);
         throw error;
       }
-      
+
       console.log('Posts fetched:', data?.length || 0);
       setPosts(data || []);
     } catch (error: any) {
@@ -241,12 +241,12 @@ export default function AdminBlog() {
                         <>
                           <img src={previewImage} alt="Preview" className="max-h-[180px] rounded object-cover w-full" />
                           <div className="absolute bottom-2 right-2">
-                            <ImagePicker onSelect={setPreviewImage} />
+                            <ImagePicker onSelect={(url) => setPreviewImage(Array.isArray(url) ? url[0] : url)} />
                           </div>
                         </>
                       ) : (
                         <div className="text-center">
-                          <ImagePicker onSelect={setPreviewImage} />
+                          <ImagePicker onSelect={(url) => setPreviewImage(Array.isArray(url) ? url[0] : url)} />
                         </div>
                       )}
                     </div>
@@ -254,17 +254,17 @@ export default function AdminBlog() {
 
                   <div className="flex gap-6 pt-4">
                     <div className="flex items-center space-x-2">
-                      <Switch 
-                        id="featured" 
-                        checked={isFeatured} 
+                      <Switch
+                        id="featured"
+                        checked={isFeatured}
                         onCheckedChange={setIsFeatured}
                       />
                       <Label htmlFor="featured" className="text-white">Destacar Post</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Switch 
-                        id="status" 
-                        checked={isPublished} 
+                      <Switch
+                        id="status"
+                        checked={isPublished}
                         onCheckedChange={setIsPublished}
                       />
                       <Label htmlFor="status" className="text-white">Publicado</Label>

@@ -180,7 +180,7 @@ export default function AdminContact() {
                   )}
                   <div className="flex-1">
                     <ImagePicker
-                      onSelect={(url) => handlePersonalChange("avatarUrl", url)}
+                      onSelect={(url) => handlePersonalChange("avatarUrl", Array.isArray(url) ? url[0] : url)}
                       trigger={
                         <Button type="button" variant="outline" className="border-white/10 hover:bg-white/5 text-white">
                           <ImageIcon className="w-4 h-4 mr-2" />

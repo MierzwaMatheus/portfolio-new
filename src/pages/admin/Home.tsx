@@ -300,7 +300,7 @@ export default function AdminHome() {
                         </div>
                       )}
                       <ImagePicker
-                        onSelect={setSelectedImage}
+                        onSelect={(url) => setSelectedImage(Array.isArray(url) ? url[0] : url)}
                         trigger={
                           <Button type="button" variant="outline" className="border-white/10 hover:bg-white/5 text-white">
                             <ImageIcon className="w-4 h-4 mr-2" />
