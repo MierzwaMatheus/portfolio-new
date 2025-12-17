@@ -11,6 +11,7 @@ import { Plus, Pencil, Trash2, RefreshCw, Link as LinkIcon, X } from "lucide-rea
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 import { supabase } from "@/lib/supabase";
+import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 
 export default function AdminProposals() {
   const [proposals, setProposals] = useState<any[]>([]);
@@ -47,6 +48,10 @@ export default function AdminProposals() {
     { text: "Suporte: incluso durante o projeto. Após entrega, sob contratação extra.", checked: true },
     { text: "Prazos: contagem começa após pagamento e recebimento dos materiais.", checked: true }
   ]);
+
+  // Legal fields
+  const [password, setPassword] = useState("");
+  const [rescisionPolicy, setRescisionPolicy] = useState(DEFAULT_RESCISION_POLICY);
 
   useEffect(() => {
     fetchProposals();
@@ -94,6 +99,11 @@ export default function AdminProposals() {
     if (slugError) return alert("Corrija o erro do slug antes de continuar.");
     if (!clientName || !slug) return alert("Preencha os campos obrigatórios.");
 
+    // Verificar se proposta já foi aceita
+    if (editingProposal?.is_accepted) {
+      return alert("Esta proposta já foi aceita e não pode ser editada. Crie uma nova proposta.");
+    }
+
     // Construir array de métodos de pagamento baseado nos checkboxes
     const selectedPaymentMethods: string[] = [];
     if (payment50_50) selectedPaymentMethods.push("50% no início / 50% na entrega");
@@ -122,22 +132,53 @@ export default function AdminProposals() {
       delivery_date: deliveryDate || null,
       investment_value: parseFloat(investmentValue.replace(',', '.')) || 0,
       payment_methods: selectedPaymentMethods,
-      conditions: selectedConditions
+      conditions: selectedConditions,
+      password: password || null,
+      rescision_policy: rescisionPolicy || null
     };
 
     if (editingProposal) {
-      // Update existing proposal
+      // Criar snapshot da versão anterior antes de atualizar
+      const currentVersion = editingProposal.version || 1;
+      
+      // Criar snapshot do conteúdo atual
+      const { data: snapshotData, error: snapshotError } = await supabase.rpc('create_proposal_snapshot', {
+        p_proposal_id: editingProposal.id
+      });
+
+      if (snapshotError) {
+        console.error("Error creating snapshot:", snapshotError);
+      } else {
+        // Salvar versão anterior
+        const { error: versionError } = await supabase
+          .schema('app_portfolio')
+          .from('proposal_versions')
+          .insert({
+            proposal_id: editingProposal.id,
+            version: currentVersion,
+            content_snapshot: snapshotData
+          });
+
+        if (versionError) {
+          console.error("Error saving version:", versionError);
+        }
+      }
+
+      // Incrementar versão e atualizar proposta
       const { error } = await supabase
         .schema('app_portfolio')
         .from('proposals')
-        .update(payload)
+        .update({
+          ...payload,
+          version: currentVersion + 1
+        })
         .eq('id', editingProposal.id);
 
       if (error) {
         console.error("Error updating proposal:", error);
         alert("Erro ao atualizar proposta.");
       } else {
-        alert("Proposta atualizada com sucesso!");
+        alert("Proposta atualizada com sucesso! Uma nova versão foi criada.");
         setIsModalOpen(false);
         setEditingProposal(null);
         fetchProposals();
@@ -185,6 +226,8 @@ export default function AdminProposals() {
       { text: "Suporte: incluso durante o projeto. Após entrega, sob contratação extra.", checked: true },
       { text: "Prazos: contagem começa após pagamento e recebimento dos materiais.", checked: true }
     ]);
+    setPassword("");
+    setRescisionPolicy(DEFAULT_RESCISION_POLICY);
   };
 
   const calculateValidUntil = (dateString: string) => {
@@ -302,6 +345,10 @@ export default function AdminProposals() {
           checked: true
         }))
     ));
+    
+    // Carregar campos jurídicos
+    setPassword(proposal.password || "");
+    setRescisionPolicy(proposal.rescision_policy || DEFAULT_RESCISION_POLICY);
     
     setIsModalOpen(true);
   };
@@ -568,6 +615,34 @@ export default function AdminProposals() {
                   </div>
                 </div>
 
+                <div>
+                  <Label className="block text-sm mb-1">Senha de Acesso (Opcional)</Label>
+                  <Input
+                    type="password"
+                    className="bg-background border-input"
+                    placeholder="Deixe em branco para acesso público"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Se definida, o cliente precisará informar esta senha para acessar a proposta.
+                  </p>
+                </div>
+
+                <div>
+                  <Label className="block text-sm mb-1">Política de Rescisão</Label>
+                  <Textarea
+                    className="bg-background border-input min-h-[120px]"
+                    rows={5}
+                    placeholder="Descreva as hipóteses de rescisão, multas ou proporcionalidades, procedimentos e prazos..."
+                    value={rescisionPolicy}
+                    onChange={(e) => setRescisionPolicy(e.target.value)}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Esta política será exibida na proposta e deve incluir hipóteses de rescisão, multas ou proporcionalidades, procedimentos e prazos.
+                  </p>
+                </div>
+
                 <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4">
                   <Button variant="ghost" onClick={() => {
                     setIsModalOpen(false);
@@ -599,19 +674,31 @@ export default function AdminProposals() {
             <TableBody>
               {proposals.map((proposal) => (
                 <TableRow key={proposal.id} className="border-white/10 hover:bg-white/5">
-                  <TableCell className="font-medium text-white">{proposal.client_name}</TableCell>
+                  <TableCell className="font-medium text-white">
+                    {proposal.client_name}
+                    {proposal.is_accepted && (
+                      <Badge variant="outline" className="ml-2 bg-green-500/10 text-green-500 border-green-500/20 text-xs">
+                        Aceita
+                      </Badge>
+                    )}
+                  </TableCell>
                   <TableCell className="text-gray-400">{new Date(proposal.created_at).toLocaleDateString('pt-BR')}</TableCell>
                   <TableCell className="text-gray-400">{calculateValidUntil(proposal.created_at)}</TableCell>
                   <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={`${getStatus(proposal.created_at) === "Ativo"
-                          ? "bg-green-500/10 text-green-500 border-green-500/20"
-                          : "bg-gray-500/10 text-gray-500 border-gray-500/20"
-                        }`}
-                    >
-                      {getStatus(proposal.created_at)}
-                    </Badge>
+                    <div className="flex flex-col gap-1">
+                      <Badge
+                        variant="outline"
+                        className={`${getStatus(proposal.created_at) === "Ativo"
+                            ? "bg-green-500/10 text-green-500 border-green-500/20"
+                            : "bg-gray-500/10 text-gray-500 border-gray-500/20"
+                          }`}
+                      >
+                        {getStatus(proposal.created_at)}
+                      </Badge>
+                      {proposal.version > 1 && (
+                        <span className="text-xs text-gray-500">v{proposal.version}</span>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-2">

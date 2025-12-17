@@ -21,6 +21,7 @@ import Portfolio from "./pages/Portfolio";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Proposal from "./pages/Proposal";
+import ProposalAccept from "./pages/ProposalAccept";
 import { Analytics } from "@vercel/analytics/react";
 
 function Router() {
@@ -46,6 +47,7 @@ function Router() {
       <Route path="/blog" component={Blog} />
       <Route path="/blog/:slug" component={BlogPost} />
       <Route path="/proposta/:id" component={Proposal} />
+      <Route path="/proposta/:slug/aceitar" component={ProposalAccept} />
 
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}

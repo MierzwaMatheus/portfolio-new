@@ -1,18 +1,29 @@
 import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { motion } from "framer-motion";
-import { CheckCircle2, Clock, Calendar, DollarSign, Download, AlertTriangle } from "lucide-react";
+import { CheckCircle2, Clock, Calendar, DollarSign, Download, AlertTriangle, FileCheck, Lock, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { supabase } from "@/lib/supabase";
+import { useLocation } from "wouter";
+import { toast } from "sonner";
+import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
+import ReactMarkdown from "react-markdown";
 
 export default function Proposal() {
   const { id } = useParams(); // This is the slug
+  const [location, setLocation] = useLocation();
   const [isVisible, setIsVisible] = useState(false);
   const [proposal, setProposal] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isExpired, setIsExpired] = useState(false);
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+  const [password, setPassword] = useState("");
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
 
   useEffect(() => {
     setIsVisible(true);
@@ -35,8 +46,97 @@ export default function Proposal() {
     } else if (data) {
       setProposal(data);
       checkExpiration(data.created_at);
+      
+      // Se tem senha, mostrar formulário de senha
+      if (data.password) {
+        setShowPasswordForm(true);
+      } else {
+        // Se não tem senha, criar sessão automaticamente
+        await createSession(data.id);
+      }
     }
     setIsLoading(false);
+  };
+
+  const createSession = async (proposalId: string) => {
+    try {
+      // Obter IP e User-Agent do cliente
+      const ipAddress = await fetch('https://api.ipify.org?format=json')
+        .then(res => res.json())
+        .then(data => data.ip)
+        .catch(() => null);
+      
+      const userAgent = navigator.userAgent;
+
+      // Chamar função RPC usando SQL direto já que está em schema diferente
+      const { data, error } = await supabase.rpc('create_proposal_session', {
+        p_proposal_id: proposalId,
+        p_password: password || null,
+        p_ip_address: ipAddress || null,
+        p_user_agent: userAgent || null
+      });
+
+      if (error) {
+        if (error.message.includes('Senha incorreta') || error.message.includes('incorreta')) {
+          toast.error("Senha incorreta");
+        } else {
+          console.error("Error creating session:", error);
+          // Se não conseguir criar sessão, ainda permite visualizar (modo leitura)
+        }
+      } else {
+        setSessionToken(data);
+        setShowPasswordForm(false);
+        // Armazenar token na sessionStorage para usar na página de aceite
+        if (data) {
+          sessionStorage.setItem(`proposal_session_${proposalId}`, data);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error creating session:", error);
+      // Em caso de erro, ainda permite visualizar a proposta
+    }
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!proposal) return;
+    
+    try {
+      // Obter IP e User-Agent do cliente
+      const ipAddress = await fetch('https://api.ipify.org?format=json')
+        .then(res => res.json())
+        .then(data => data.ip)
+        .catch(() => null);
+      
+      const userAgent = navigator.userAgent;
+
+      const { data, error } = await supabase.rpc('create_proposal_session', {
+        p_proposal_id: proposal.id,
+        p_password: password,
+        p_ip_address: ipAddress || null,
+        p_user_agent: userAgent || null
+      });
+
+      if (error) {
+        if (error.message.includes('Senha incorreta') || error.message.includes('incorreta')) {
+          toast.error("Senha incorreta");
+        } else {
+          console.error("Error creating session:", error);
+          toast.error("Erro ao criar sessão");
+        }
+      } else {
+        setSessionToken(data);
+        setShowPasswordForm(false);
+        // Armazenar token na sessionStorage para usar na página de aceite
+        if (data) {
+          sessionStorage.setItem(`proposal_session_${proposal.id}`, data);
+        }
+        toast.success("Acesso autorizado");
+      }
+    } catch (error: any) {
+      console.error("Error creating session:", error);
+      toast.error(error.message || "Erro ao criar sessão");
+    }
   };
 
   const checkExpiration = (createdAt: string) => {
@@ -298,6 +398,40 @@ export default function Proposal() {
     return <div className="min-h-screen bg-background text-white flex items-center justify-center">Proposta não encontrada.</div>;
   }
 
+  // Se precisa de senha e ainda não tem sessão válida
+  if (showPasswordForm && !sessionToken) {
+    return (
+      <div className="min-h-screen bg-background text-white flex items-center justify-center p-4">
+        <Card className="bg-card/50 backdrop-blur-sm border-white/10 max-w-md w-full">
+          <CardContent className="p-8">
+            <div className="text-center mb-6">
+              <Lock className="w-12 h-12 text-neon-purple mx-auto mb-4" />
+              <h1 className="text-2xl font-bold mb-2">Acesso Protegido</h1>
+              <p className="text-gray-400">Esta proposta está protegida por senha. Informe a senha para continuar.</p>
+            </div>
+            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+              <div>
+                <Label htmlFor="password">Senha</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  className="bg-background border-input mt-1"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
+              <Button type="submit" className="w-full bg-neon-purple hover:bg-neon-purple/90">
+                Acessar Proposta
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background text-white font-sans selection:bg-neon-purple selection:text-white overflow-x-hidden">
       {/* Background Elements */}
@@ -521,12 +655,59 @@ export default function Proposal() {
             </Card>
           </motion.section>
 
+          {/* Política de Rescisão */}
+          <motion.section variants={itemVariants}>
+            <Card className="bg-card/50 backdrop-blur-sm border-white/10 overflow-hidden relative group">
+              <div className="absolute inset-0 bg-gradient-to-r from-neon-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <CardContent className="p-8 md:p-10">
+                <Collapsible defaultOpen={false}>
+                  <CollapsibleTrigger className="w-full flex items-center justify-between text-left group [&[data-state=open]>svg]:rotate-180">
+                    <h2 className="text-2xl font-bold text-white flex items-center gap-3">
+                      <span className="w-1 h-8 bg-neon-purple rounded-full" />
+                      Política de Rescisão
+                    </h2>
+                    <ChevronDown className="w-5 h-5 text-gray-400 transition-transform duration-200" />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="mt-4">
+                    <div className="prose prose-invert prose-headings:text-white prose-p:text-gray-300 prose-strong:text-white prose-ul:text-gray-300 prose-li:text-gray-300 prose-hr:border-white/10 max-w-none">
+                      <ReactMarkdown>
+                        {proposal.rescision_policy || DEFAULT_RESCISION_POLICY}
+                      </ReactMarkdown>
+                    </div>
+                  </CollapsibleContent>
+                </Collapsible>
+              </CardContent>
+            </Card>
+          </motion.section>
+
           {/* CTA Actions */}
           <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4 pb-12">
+            {!proposal.is_accepted && (
+              <Button 
+                size="lg" 
+                className="bg-neon-purple hover:bg-neon-purple/90 text-white h-14 px-8 w-full sm:w-auto"
+                onClick={() => {
+                  // Passar o token da sessão via URL ou sessionStorage
+                  if (sessionToken) {
+                    sessionStorage.setItem(`proposal_session_${proposal.id}`, sessionToken);
+                  }
+                  setLocation(`/proposta/${id}/aceitar`);
+                }}
+              >
+                <FileCheck className="mr-2 w-5 h-5" />
+                Aceitar Proposta Eletronicamente
+              </Button>
+            )}
+            {proposal.is_accepted && (
+              <div className="bg-green-500/10 border border-green-500/20 text-green-400 p-4 rounded-lg flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5" />
+                <span className="font-medium">Esta proposta já foi aceita eletronicamente.</span>
+              </div>
+            )}
             <Button 
               size="lg" 
               variant="outline" 
-              className=" hidden border-white/20 text-white hover:bg-white/5 h-14 px-8 w-full sm:w-auto no-print"
+              className="hidden border-white/20 text-white hover:bg-white/5 h-14 px-8 w-full sm:w-auto no-print"
               onClick={handleDownloadPDF}
             >
               <Download className="mr-2 w-5 h-5" />
