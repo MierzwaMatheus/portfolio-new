@@ -88,6 +88,50 @@ function SortableProjectCard({
   );
 }
 
+// Sortable Image Item Component
+function SortableImageItem({
+  img,
+  index,
+  onRemove
+}: {
+  img: string;
+  index: number;
+  onRemove: (index: number) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: index });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="relative group aspect-video rounded-md overflow-hidden border border-white/10">
+      <img src={img} alt={`Project ${index + 1}`} className="w-full h-full object-cover" />
+      <button
+        type="button"
+        onClick={() => onRemove(index)}
+        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity z-10"
+      >
+        <X className="w-3 h-3" />
+      </button>
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute top-1 left-1 bg-background/60 text-white p-1 rounded cursor-move opacity-0 group-hover:opacity-100 transition-opacity z-10"
+      >
+        <GripVertical className="w-3 h-3" />
+      </div>
+      {index === 0 && (
+        <div className="absolute bottom-0 left-0 right-0 bg-background/60 text-white text-xs py-1 text-center">
+          Capa
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AdminProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -210,6 +254,24 @@ export default function AdminProjects() {
     setProjectImages(projectImages.filter((_, i) => i !== index));
   };
 
+  const handleImageDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = active.id as number;
+      const newIndex = over.id as number;
+
+      setProjectImages(arrayMove(projectImages, oldIndex, newIndex));
+    }
+  };
+
+  const imageSensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -307,29 +369,31 @@ export default function AdminProjects() {
 
               <div className="space-y-2">
                 <Label className="text-white">Galeria de Imagens</Label>
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                  {projectImages.map((img, index) => (
-                    <div key={index} className="relative group aspect-video rounded-md overflow-hidden border border-white/10">
-                      <img src={img} alt={`Project ${index + 1}`} className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                      {index === 0 && (
-                        <div className="absolute bottom-0 left-0 right-0 bg-background/60 text-white text-xs py-1 text-center">
-                          Capa
-                        </div>
-                      )}
+                <DndContext
+                  sensors={imageSensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleImageDragEnd}
+                >
+                  <SortableContext
+                    items={projectImages.map((_, index) => index)}
+                    strategy={rectSortingStrategy}
+                  >
+                    <div className="grid grid-cols-3 gap-4 mb-4">
+                      {projectImages.map((img, index) => (
+                        <SortableImageItem
+                          key={img}
+                          img={img}
+                          index={index}
+                          onRemove={removeImage}
+                        />
+                      ))}
+                      <div className="aspect-video flex items-center justify-center border border-dashed border-white/20 rounded-md bg-white/5">
+                        <ImagePicker onSelect={addImage} multiple />
+                      </div>
                     </div>
-                  ))}
-                  <div className="aspect-video flex items-center justify-center border border-dashed border-white/20 rounded-md bg-white/5">
-                    <ImagePicker onSelect={addImage} multiple />
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500">A primeira imagem será usada como capa do projeto.</p>
+                  </SortableContext>
+                </DndContext>
+                <p className="text-xs text-gray-500">A primeira imagem será usada como capa do projeto. Arraste as imagens para reordená-las.</p>
               </div>
 
               <div className="space-y-2">
