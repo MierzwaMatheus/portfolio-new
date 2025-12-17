@@ -14,6 +14,7 @@ import AdminHome from "./pages/admin/Home";
 import AdminContact from "./pages/admin/Contact";
 import AdminProposals from "./pages/admin/Proposals";
 import AdminCreateUser from "./pages/admin/CreateUser";
+import AdminPaymentLinks from "./pages/admin/PaymentLinks";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Resume from "./pages/Resume";
@@ -39,6 +40,7 @@ function Router() {
       <ProtectedRoute path="/admin/home" component={AdminHome} allowedRoles={['root', 'admin']} />
       <ProtectedRoute path="/admin/contact" component={AdminContact} allowedRoles={['root', 'admin']} />
       <ProtectedRoute path="/admin/proposals" component={AdminProposals} allowedRoles={['root', 'admin', 'proposal-editor']} />
+      <ProtectedRoute path="/admin/payment-links" component={AdminPaymentLinks} allowedRoles={['root', 'admin']} />
       <ProtectedRoute path="/admin/users/new" component={AdminCreateUser} allowedRoles={['root']} />
 
       {/* Public Routes */}

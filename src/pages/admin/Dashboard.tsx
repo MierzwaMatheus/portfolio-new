@@ -15,7 +15,8 @@ import {
   UserPlus,
   Image as ImageIcon,
   Briefcase,
-  Plus
+  Plus,
+  CreditCard
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -39,6 +40,7 @@ function AdminSidebar() {
     { icon: FileSignature, label: "Propostas", path: "/admin/proposals", roles: ["root", "admin", "proposal-editor"] },
     { icon: Home, label: "Home", path: "/admin/home", roles: ["root", "admin"] },
     { icon: Mail, label: "Contato", path: "/admin/contact", roles: ["root", "admin"] },
+    { icon: CreditCard, label: "Links de Pagamento", path: "/admin/payment-links", roles: ["root", "admin"] },
     { icon: UserPlus, label: "Criar Usuário", path: "/admin/users/new", roles: ["root"] },
   ];
 
