@@ -37,7 +37,9 @@ serve(async (req) => {
       case 'list_products':
         result = await stripe.products.list({ limit: 100 })
         return new Response(
-          JSON.stringify({ data: result.data }),
+          JSON.stringify({ 
+            data: result.data.filter(product => product.active) // Filtrar apenas produtos ativos
+          }),
           {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 200,
@@ -58,20 +60,42 @@ serve(async (req) => {
           }
         )
 
+      case 'delete_product':
+        const { product_id } = params
+        if (!product_id) {
+          return new Response(
+            JSON.stringify({ error: 'ID do produto é obrigatório' }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 400,
+            }
+          )
+        }
+        result = await stripe.products.update(product_id, { active: false })
+        return new Response(
+          JSON.stringify({ data: result, message: 'Produto desativado com sucesso' }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        )
+
       case 'list_prices':
         result = await stripe.prices.list({ limit: 100, expand: ['data.product'] })
         return new Response(
           JSON.stringify({ 
-            data: result.data.map(price => ({
-              id: price.id,
-              product: typeof price.product === 'string' ? price.product : price.product.id,
-              unit_amount: price.unit_amount,
-              currency: price.currency,
-              recurring: price.recurring ? {
-                interval: price.recurring.interval,
-                interval_count: price.recurring.interval_count,
-              } : null,
-            }))
+            data: result.data
+              .filter(price => price.active) // Filtrar apenas preços ativos
+              .map(price => ({
+                id: price.id,
+                product: typeof price.product === 'string' ? price.product : price.product.id,
+                unit_amount: price.unit_amount,
+                currency: price.currency,
+                recurring: price.recurring ? {
+                  interval: price.recurring.interval,
+                  interval_count: price.recurring.interval_count,
+                } : null,
+              }))
           }),
           {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -92,6 +116,26 @@ serve(async (req) => {
         })
         return new Response(
           JSON.stringify({ data: result }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        )
+
+      case 'delete_price':
+        const { price_id } = params
+        if (!price_id) {
+          return new Response(
+            JSON.stringify({ error: 'ID do preço é obrigatório' }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 400,
+            }
+          )
+        }
+        result = await stripe.prices.update(price_id, { active: false })
+        return new Response(
+          JSON.stringify({ data: result, message: 'Preço desativado com sucesso' }),
           {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 200,

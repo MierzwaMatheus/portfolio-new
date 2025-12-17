@@ -282,6 +282,70 @@ export default function PaymentLinks() {
     }
   };
 
+  const handleDeleteProduct = async (productId: string) => {
+    // Verificar se há preços associados
+    const associatedPrices = prices.filter(p => p.product === productId);
+    if (associatedPrices.length > 0) {
+      const confirmMessage = `Este produto possui ${associatedPrices.length} preço(s) associado(s). Deseja realmente excluir? Os preços associados também precisarão ser excluídos separadamente.`;
+      if (!confirm(confirmMessage)) {
+        return;
+      }
+    } else {
+      if (!confirm("Tem certeza que deseja excluir este produto?")) {
+        return;
+      }
+    }
+
+    try {
+      const { error } = await supabase.functions.invoke("stripe-api", {
+        body: {
+          action: "delete_product",
+          product_id: productId
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success("Produto excluído com sucesso!");
+      await Promise.all([fetchProducts(), fetchPrices()]);
+    } catch (error: any) {
+      console.error("Error deleting product:", error);
+      toast.error(error.message || "Erro ao excluir produto");
+    }
+  };
+
+  const handleDeletePrice = async (priceId: string) => {
+    // Verificar se há links de pagamento associados
+    const associatedLinks = paymentLinks.filter(link => link.price === priceId);
+    if (associatedLinks.length > 0) {
+      const confirmMessage = `Este preço possui ${associatedLinks.length} link(s) de pagamento associado(s). Deseja realmente excluir? Os links associados também precisarão ser excluídos separadamente.`;
+      if (!confirm(confirmMessage)) {
+        return;
+      }
+    } else {
+      if (!confirm("Tem certeza que deseja excluir este preço?")) {
+        return;
+      }
+    }
+
+    try {
+      const { error } = await supabase.functions.invoke("stripe-api", {
+        body: {
+          action: "delete_price",
+          price_id: priceId
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success("Preço excluído com sucesso!");
+      await fetchPrices();
+    } catch (error: any) {
+      console.error("Error deleting price:", error);
+      toast.error(error.message || "Erro ao excluir preço");
+    }
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("Copiado para a área de transferência!");
@@ -429,13 +493,24 @@ export default function PaymentLinks() {
                     {products.map((product) => (
                       <div
                         key={product.id}
-                        className="p-4 bg-white/5 rounded-lg border border-white/10"
+                        className="p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors relative group"
                       >
                         <div className="flex items-start justify-between mb-2">
                           <Package className="w-5 h-5 text-neon-purple" />
-                          <Badge variant="outline" className="border-white/20 text-xs">
-                            {product.id}
-                          </Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="border-white/20 text-xs">
+                              {product.id}
+                            </Badge>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeleteProduct(product.id)}
+                              className="text-red-400 hover:text-red-300 hover:bg-red-500/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Excluir produto"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </div>
                         <h3 className="font-medium text-white mb-1">{product.name}</h3>
                         {product.description && (
@@ -466,14 +541,14 @@ export default function PaymentLinks() {
                     {prices.map((price) => (
                       <div
                         key={price.id}
-                        className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10"
+                        className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors"
                       >
-                        <div>
-                          <div className="flex items-center gap-2 mb-1">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <span className="font-medium text-white">
                               {getProductName(price.product)}
                             </span>
-                            <Badge variant="outline" className="border-white/20">
+                            <Badge variant="outline" className="border-neon-purple/50 text-neon-purple bg-neon-purple/10">
                               {formatCurrency(price.unit_amount, price.currency)}
                             </Badge>
                             {price.recurring && (
@@ -482,7 +557,18 @@ export default function PaymentLinks() {
                               </Badge>
                             )}
                           </div>
-                          <p className="text-xs text-gray-400">{price.id}</p>
+                          <p className="text-xs text-gray-400 font-mono">{price.id}</p>
+                        </div>
+                        <div className="ml-4 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeletePrice(price.id)}
+                            className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                            title="Excluir preço"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
                     ))}
