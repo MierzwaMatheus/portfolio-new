@@ -259,6 +259,29 @@ export default function PaymentLinks() {
     });
   };
 
+  const handleDeletePaymentLink = async (linkId: string) => {
+    if (!confirm("Tem certeza que deseja excluir este link de pagamento?")) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase.functions.invoke("stripe-api", {
+        body: {
+          action: "delete_payment_link",
+          payment_link_id: linkId
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success("Link de pagamento excluído com sucesso!");
+      await fetchPaymentLinks();
+    } catch (error: any) {
+      console.error("Error deleting payment link:", error);
+      toast.error(error.message || "Erro ao excluir link de pagamento");
+    }
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success("Copiado para a área de transferência!");
@@ -329,30 +352,38 @@ export default function PaymentLinks() {
                   <div className="space-y-3">
                     {paymentLinks.map((link) => {
                       const price = prices.find(p => p.id === link.price);
+                      const totalAmount = price ? price.unit_amount : 0;
                       return (
                         <div
                           key={link.id}
-                          className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10"
+                          className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors"
                         >
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-2 flex-wrap">
                               <span className="font-medium text-white">
                                 {getProductName(link.product)}
                               </span>
                               {price && (
-                                <Badge variant="outline" className="border-white/20">
-                                  {formatCurrency(price.unit_amount, price.currency)}
-                                  {price.recurring && ` / ${price.recurring.interval}`}
-                                </Badge>
+                                <>
+                                  <Badge variant="outline" className="border-neon-purple/50 text-neon-purple bg-neon-purple/10">
+                                    {formatCurrency(totalAmount, price.currency)}
+                                  </Badge>
+                                  {price.recurring && (
+                                    <Badge variant="outline" className="border-white/20">
+                                      Recorrente: {price.recurring.interval_count} {price.recurring.interval}
+                                    </Badge>
+                                  )}
+                                </>
                               )}
                             </div>
-                            <p className="text-sm text-gray-400 break-all">{link.url}</p>
+                            <p className="text-sm text-gray-400 break-all font-mono">{link.url}</p>
                           </div>
-                          <div className="flex gap-2 ml-4">
+                          <div className="flex gap-2 ml-4 shrink-0">
                             <Button
                               size="sm"
                               variant="ghost"
                               onClick={() => copyToClipboard(link.url)}
+                              title="Copiar link"
                             >
                               <Copy className="w-4 h-4" />
                             </Button>
@@ -360,8 +391,18 @@ export default function PaymentLinks() {
                               size="sm"
                               variant="ghost"
                               onClick={() => window.open(link.url, "_blank")}
+                              title="Abrir link"
                             >
                               <ExternalLink className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleDeletePaymentLink(link.id)}
+                              className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                              title="Excluir link"
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </div>

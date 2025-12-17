@@ -128,14 +128,36 @@ serve(async (req) => {
         result = await stripe.paymentLinks.list({ limit: 100 })
         return new Response(
           JSON.stringify({ 
-            data: result.data.map(link => ({
-              id: link.id,
-              url: link.url,
-              price: link.line_items?.data[0]?.price?.id || '',
-              product: link.line_items?.data[0]?.price?.product || '',
-              created: link.created,
-            }))
+            data: result.data
+              .filter(link => link.active) // Filtrar apenas links ativos
+              .map(link => ({
+                id: link.id,
+                url: link.url,
+                price: link.line_items?.data[0]?.price?.id || '',
+                product: link.line_items?.data[0]?.price?.product || '',
+                created: link.created,
+              }))
           }),
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        )
+
+      case 'delete_payment_link':
+        const { payment_link_id } = params
+        if (!payment_link_id) {
+          return new Response(
+            JSON.stringify({ error: 'ID do link de pagamento é obrigatório' }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 400,
+            }
+          )
+        }
+        result = await stripe.paymentLinks.update(payment_link_id, { active: false })
+        return new Response(
+          JSON.stringify({ data: result, message: 'Link de pagamento desativado com sucesso' }),
           {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
             status: 200,
