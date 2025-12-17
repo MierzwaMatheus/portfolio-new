@@ -69,6 +69,8 @@ Este é um portfólio profissional full-stack que combina uma interface pública
 - **Sonner 2.0.7** - Sistema de notificações toast
 - **nanoid 5.1.5** - Geração de IDs únicos
 - **@dnd-kit** - Drag and drop para ordenação de itens
+- **jsPDF** - Geração de PDFs no cliente
+- **react-markdown** - Renderização de conteúdo markdown
 
 ## ✨ Funcionalidades
 
@@ -111,9 +113,14 @@ Este é um portfólio profissional full-stack que combina uma interface pública
 #### 💼 Propostas (`/proposta/:id`)
 - Visualização de propostas comerciais
 - Sistema de validação de expiração (10 dias)
-- Download de proposta em PDF
+- **Sistema de proteção por senha** (opcional)
+- **Aceite eletrônico de propostas** (`/proposta/:id/aceitar`)
+- **Geração de PDF do contrato** com assinatura digital
 - Status visual (aprovada, pendente, expirada)
+- **Banner de aceite** quando proposta foi aceita
+- **Política de rescisão** expansível com renderização markdown
 - Informações detalhadas do projeto
+- **Sistema de sessões** para acesso seguro
 
 ### Área Administrativa
 
@@ -153,9 +160,16 @@ Este é um portfólio profissional full-stack que combina uma interface pública
 
 #### 📋 Gerenciamento de Propostas (`/admin/proposals`)
 - CRUD de propostas comerciais
+- **Sistema de abas**: Todas / Aceitas
+- **Proteção de propostas aceitas**: Não podem ser editadas ou excluídas
 - Geração automática de slugs
 - Validação de expiração
 - Status de aprovação
+- **Sistema de senha opcional** para acesso às propostas
+- **Geração de senha aleatória** (8 caracteres A-Z, a-z, 0-9)
+- **Botão de copiar senha** para área de transferência
+- **Política de rescisão** editável com valor padrão
+- **Versionamento automático**: Cria versão ao editar proposta não aceita
 - Campos detalhados do projeto
 
 #### 🏡 Gerenciamento de Home (`/admin/home`)
@@ -232,9 +246,12 @@ portfolio/
 │   │   ├── NotFound.tsx
 │   │   ├── Portfolio.tsx
 │   │   ├── Proposal.tsx
+│   │   ├── ProposalAccept.tsx
 │   │   └── Resume.tsx
 │   ├── App.tsx                # Componente raiz e rotas
 │   ├── main.tsx               # Entry point
+│   ├── constants/
+│   │   └── rescisionPolicy.ts  # Política de rescisão padrão
 │   ├── const.ts               # Constantes
 │   └── index.css              # Estilos globais
 ├── supabase/
@@ -293,12 +310,20 @@ O projeto utiliza Supabase como backend. Certifique-se de configurar:
    - `projects` - Projetos do portfólio
    - `posts` - Posts do blog
    - `resume_items` - Itens do currículo
-   - `proposals` - Propostas comerciais
+   - `proposals` - Propostas comerciais (com campos de aceite e senha)
+   - `proposal_versions` - Versões históricas das propostas
+   - `proposal_sessions` - Sessões temporárias de acesso
+   - `proposal_acceptances` - Registros de aceites eletrônicos
    - `services` - Serviços/habilidades
    - `testimonials` - Depoimentos
    - `content` - Conteúdo geral (chave-valor)
    - `contact_info` - Informações de contato
    - `user_app_roles` - Roles de usuários
+   
+2. **Funções RPC** no schema `public`:
+   - `create_proposal_session` - Wrapper para criação de sessão
+   - `register_proposal_acceptance` - Wrapper para registro de aceite
+   - `get_proposal_acceptance` - Busca dados do aceite
 
 2. **Storage Bucket** para upload de imagens
 
@@ -341,6 +366,7 @@ npm run format       # Formata código com Prettier
 - `/blog` - Lista de posts
 - `/blog/:slug` - Post individual
 - `/proposta/:id` - Visualização de proposta
+- `/proposta/:id/aceitar` - Página de aceite eletrônico da proposta
 
 ### Rotas Administrativas
 
@@ -423,6 +449,76 @@ O projeto utiliza componentes do shadcn/ui, uma coleção de componentes React r
 - Tailwind CSS com configuração customizada
 - Sistema de temas preparado (dark mode implementado)
 
+## 🆕 Funcionalidades Recentes
+
+### Sistema de Aceite Eletrônico de Propostas
+
+O sistema implementa um **sistema completo de aceite eletrônico** com validade jurídica, incluindo:
+
+#### Características Principais
+
+- **Proteção por Senha**: Propostas podem ser protegidas com senha opcional
+- **Sistema de Sessões**: Criação de sessões temporárias para acesso seguro
+- **Aceite Eletrônico**: Página dedicada para aceite com coleta de dados do cliente
+- **Assinatura Digital**: Registro completo do aceite com:
+  - Nome completo do cliente
+  - CPF/CNPJ
+  - E-mail
+  - Cargo/Função (opcional)
+  - Declaração de poderes (para PJ)
+  - Data e hora do aceite
+- **Evidências Técnicas**: Registro de:
+  - Hash SHA-256 do conteúdo da proposta
+  - IP de origem
+  - User-Agent
+  - Versão da proposta aceita
+- **Geração de PDF**: Contrato completo em PDF incluindo:
+  - Todas as informações da proposta
+  - Prazos e condições
+  - Política de rescisão
+  - Assinatura digital com evidências técnicas
+  - Cláusula de foro
+
+#### Versionamento
+
+- **Criação automática de versões**: Ao editar uma proposta não aceita, uma nova versão é criada
+- **Imutabilidade**: Propostas aceitas não podem ser editadas ou excluídas
+- **Histórico completo**: Todas as versões são mantidas no banco de dados
+
+#### Área Administrativa
+
+- **Abas de organização**: Separação entre propostas "Todas" e "Aceitas"
+- **Geração de senha**: Botão para gerar senha aleatória de 8 caracteres
+- **Cópia de senha**: Botão para copiar senha para área de transferência
+- **Campo de senha visível**: Senha exibida como texto normal (não oculto) na área admin
+- **Política de rescisão**: Campo editável com valor padrão e renderização markdown
+
+#### Segurança e Validade Jurídica
+
+- **Cláusulas obrigatórias**: 
+  - Cláusula de aceite eletrônico
+  - Consentimento para tratamento de dados
+  - Política de rescisão
+  - Cláusula de foro
+- **Integridade de dados**: Hash SHA-256 garante que o conteúdo não foi alterado
+- **Rastreabilidade**: IP e User-Agent registrados para evidência técnica
+- **Timestamp preciso**: Data e hora exatas do aceite
+
+### Estrutura de Dados
+
+O sistema utiliza as seguintes tabelas no schema `app_portfolio`:
+
+- `proposals` - Propostas comerciais (com campos: `password`, `rescision_policy`, `version`, `is_accepted`, `accepted_at`)
+- `proposal_versions` - Histórico de versões das propostas
+- `proposal_sessions` - Sessões temporárias para acesso às propostas
+- `proposal_acceptances` - Registros de aceites eletrônicos
+
+### Funções RPC (Remote Procedure Calls)
+
+- `create_proposal_session` - Cria sessão temporária para acesso à proposta
+- `register_proposal_acceptance` - Registra aceite eletrônico da proposta
+- `get_proposal_acceptance` - Busca dados do aceite de uma proposta
+
 ## 🔄 Próximas Melhorias
 
 - [ ] Internacionalização (i18n)
@@ -431,6 +527,8 @@ O projeto utiliza componentes do shadcn/ui, uma coleção de componentes React r
 - [ ] Otimizações de SEO adicionais
 - [ ] Testes automatizados
 - [ ] PWA (Progressive Web App)
+- [ ] Notificações por e-mail ao aceitar proposta
+- [ ] Dashboard de estatísticas de aceites
 
 ## 📄 Licença
 
@@ -439,6 +537,8 @@ GNU General Public License v3.0
 ---
 
 Desenvolvido com ❤️ por Matheus Mierzwa
+
+
 
 
 
