@@ -15,7 +15,8 @@ import {
   Tag,
   X,
   ChevronRight,
-  Home
+  Home,
+  Move
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -67,6 +68,9 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [editingImage, setEditingImage] = useState<ImageMetadata | null>(null);
+  const [movingImage, setMovingImage] = useState<ImageMetadata | null>(null);
+  const [allFolders, setAllFolders] = useState<ImageFolder[]>([]);
+  const [isLoadingFolders, setIsLoadingFolders] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Buscar imagens e pastas
@@ -159,6 +163,30 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
       setSearchQuery("");
     }
   }, [isOpen, currentFolderId]);
+
+  // Buscar todas as pastas para o seletor de mover
+  const fetchAllFolders = async () => {
+    setIsLoadingFolders(true);
+    try {
+      const { data, error } = await supabase
+        .from("image_folders")
+        .select("*")
+        .order("path");
+
+      if (error) throw error;
+      setAllFolders(data || []);
+    } catch (error) {
+      console.error("Error fetching folders:", error);
+    } finally {
+      setIsLoadingFolders(false);
+    }
+  };
+
+  useEffect(() => {
+    if (movingImage) {
+      fetchAllFolders();
+    }
+  }, [movingImage]);
 
   // Debounce para busca
   useEffect(() => {
@@ -363,6 +391,91 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
     }
   };
 
+  const handleMoveImage = async (targetFolderId: string | null) => {
+    if (!movingImage) return;
+
+    try {
+      // Buscar path da pasta de destino
+      let newStoragePath = movingImage.storage_path.split('/').pop() || movingImage.storage_path;
+      
+      if (targetFolderId) {
+        const { data: folderData } = await supabase
+          .from("image_folders")
+          .select("path")
+          .eq("id", targetFolderId)
+          .single();
+
+        if (folderData?.path) {
+          const fileName = movingImage.storage_path.split('/').pop() || movingImage.storage_path;
+          newStoragePath = `${folderData.path}/${fileName}`;
+        }
+      }
+
+      // Mover arquivo no storage (usando copy + remove, já que move() pode não estar disponível)
+      // 1. Baixar o arquivo
+      const { data: fileData, error: downloadError } = await supabase.storage
+        .from("portfolio-images")
+        .download(movingImage.storage_path);
+
+      if (downloadError) throw downloadError;
+
+      // 2. Fazer upload no novo local
+      const { error: uploadError } = await supabase.storage
+        .from("portfolio-images")
+        .upload(newStoragePath, fileData, {
+          contentType: movingImage.mime_type || 'image/jpeg',
+          upsert: false
+        });
+
+      if (uploadError) {
+        // Se já existe no destino, tentar remover primeiro
+        if (uploadError.message.includes('already exists')) {
+          await supabase.storage
+            .from("portfolio-images")
+            .remove([newStoragePath]);
+          
+          const { error: retryError } = await supabase.storage
+            .from("portfolio-images")
+            .upload(newStoragePath, fileData, {
+              contentType: movingImage.mime_type || 'image/jpeg',
+              upsert: false
+            });
+          
+          if (retryError) throw retryError;
+        } else {
+          throw uploadError;
+        }
+      }
+
+      // 3. Remover arquivo antigo
+      const { error: removeError } = await supabase.storage
+        .from("portfolio-images")
+        .remove([movingImage.storage_path]);
+
+      if (removeError) {
+        console.warn("Arquivo movido mas não foi possível remover o original:", removeError);
+        // Continuar mesmo se não conseguir remover o original
+      }
+
+      // Atualizar metadados
+      const { error: updateError } = await supabase
+        .from("image_metadata")
+        .update({
+          storage_path: newStoragePath,
+          folder_id: targetFolderId
+        })
+        .eq("id", movingImage.id);
+
+      if (updateError) throw updateError;
+
+      setMovingImage(null);
+      await fetchData(currentFolderId);
+    } catch (error: any) {
+      console.error("Error moving image:", error);
+      alert(`Erro ao mover imagem: ${error.message}`);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
@@ -533,12 +646,24 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
                             e.stopPropagation();
                             setEditingImage(img);
                           }}
+                          title="Editar"
                         >
                           <Edit2 className="w-3 h-3 text-white" />
                         </button>
                         <button
+                          className="p-1 bg-purple-500/80 rounded-full hover:bg-purple-600"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMovingImage(img);
+                          }}
+                          title="Mover"
+                        >
+                          <Move className="w-3 h-3 text-white" />
+                        </button>
+                        <button
                           className="p-1 bg-red-500/80 rounded-full hover:bg-red-600"
                           onClick={(e) => handleDelete(e, img)}
+                          title="Excluir"
                         >
                           <Trash2 className="w-3 h-3 text-white" />
                         </button>
@@ -605,6 +730,76 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
                 <div className="flex gap-2 justify-end">
                   <Button variant="outline" onClick={() => setEditingImage(null)}>Cancelar</Button>
                   <Button onClick={() => handleUpdateImageMetadata(editingImage)}>Salvar</Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Dialog de mover imagem */}
+        {movingImage && (
+          <Dialog open={!!movingImage} onOpenChange={() => setMovingImage(null)}>
+            <DialogContent className="bg-background border-white/10 max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Mover Imagem</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="text-sm text-gray-400">
+                  Movendo: <span className="text-white font-medium">{movingImage.display_name || movingImage.storage_path.split('/').pop()}</span>
+                </div>
+                
+                {isLoadingFolders ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-6 h-6 text-neon-purple animate-spin" />
+                  </div>
+                ) : (
+                  <div className="max-h-[400px] overflow-y-auto space-y-2">
+                    <button
+                      onClick={() => handleMoveImage(null)}
+                      className={cn(
+                        "w-full text-left p-3 rounded-lg border-2 transition-all",
+                        movingImage.folder_id === null
+                          ? "border-neon-purple bg-neon-purple/10"
+                          : "border-white/10 hover:border-white/20 bg-white/5"
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Home className="w-4 h-4 text-neon-purple" />
+                        <span className="font-medium">Raiz (pasta principal)</span>
+                      </div>
+                    </button>
+                    
+                    {allFolders.map((folder) => (
+                      <button
+                        key={folder.id}
+                        onClick={() => handleMoveImage(folder.id)}
+                        className={cn(
+                          "w-full text-left p-3 rounded-lg border-2 transition-all",
+                          movingImage.folder_id === folder.id
+                            ? "border-neon-purple bg-neon-purple/10"
+                            : "border-white/10 hover:border-white/20 bg-white/5"
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Folder className="w-4 h-4 text-neon-purple" />
+                          <div className="flex-1">
+                            <div className="font-medium">{folder.name}</div>
+                            <div className="text-xs text-gray-400 truncate">{folder.path}</div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                    
+                    {allFolders.length === 0 && (
+                      <div className="text-center text-gray-400 py-8">
+                        Nenhuma pasta disponível. Crie uma pasta primeiro.
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                <div className="flex gap-2 justify-end pt-4 border-t border-white/10">
+                  <Button variant="outline" onClick={() => setMovingImage(null)}>Cancelar</Button>
                 </div>
               </div>
             </DialogContent>
