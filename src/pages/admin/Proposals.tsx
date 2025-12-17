@@ -8,11 +8,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Pencil, Trash2, RefreshCw, Link as LinkIcon, X } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Link as LinkIcon, X, Copy, KeyRound } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 import { supabase } from "@/lib/supabase";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
+import { toast } from "sonner";
 
 export default function AdminProposals() {
   const [proposals, setProposals] = useState<any[]>([]);
@@ -619,13 +620,49 @@ export default function AdminProposals() {
 
                 <div>
                   <Label className="block text-sm mb-1">Senha de Acesso (Opcional)</Label>
-                  <Input
-                    type="password"
-                    className="bg-background border-input"
-                    placeholder="Deixe em branco para acesso público"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
+                  <div className="flex gap-2">
+                    <Input
+                      type="text"
+                      className="bg-background border-input"
+                      placeholder="Deixe em branco para acesso público"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="icon"
+                      className="shrink-0"
+                      onClick={() => {
+                        // Gerar senha aleatória de 8 caracteres (A-Z, a-z, 0-9)
+                        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                        let randomPassword = '';
+                        for (let i = 0; i < 8; i++) {
+                          randomPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+                        }
+                        setPassword(randomPassword);
+                        toast.success("Senha gerada com sucesso!");
+                      }}
+                      title="Gerar senha aleatória"
+                    >
+                      <KeyRound className="h-4 w-4" />
+                    </Button>
+                    {password && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className="shrink-0"
+                        onClick={() => {
+                          navigator.clipboard.writeText(password);
+                          toast.success("Senha copiada para a área de transferência!");
+                        }}
+                        title="Copiar senha"
+                      >
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                   <p className="text-xs text-gray-500 mt-1">
                     Se definida, o cliente precisará informar esta senha para acessar a proposta.
                   </p>
