@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { 
   Image as ImageIcon, 
   Upload, 
@@ -16,7 +17,9 @@ import {
   X,
   ChevronRight,
   Home,
-  Move
+  Move,
+  Maximize2,
+  Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -51,16 +54,19 @@ interface ImageMetadata {
   folder_path: string | null;
   tags: string[];
   url: string;
+  created_at?: string;
 }
 
-export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePickerProps) {
+export function ImagePicker({ onSelect, trigger, multiple: initialMultiple = false }: ImagePickerProps) {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [multipleMode, setMultipleMode] = useState(initialMultiple);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [images, setImages] = useState<ImageMetadata[]>([]);
   const [folders, setFolders] = useState<ImageFolder[]>([]);
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
+  const [currentFolder, setCurrentFolder] = useState<ImageFolder | null>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<ImageFolder[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -68,10 +74,18 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
   const [showCreateFolder, setShowCreateFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [editingImage, setEditingImage] = useState<ImageMetadata | null>(null);
+  const [viewingImage, setViewingImage] = useState<ImageMetadata | null>(null);
   const [movingImage, setMovingImage] = useState<ImageMetadata | null>(null);
+  const [movingImages, setMovingImages] = useState<ImageMetadata[]>([]);
   const [allFolders, setAllFolders] = useState<ImageFolder[]>([]);
   const [isLoadingFolders, setIsLoadingFolders] = useState(false);
+  const [isMoving, setIsMoving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Atualizar modo multiple quando a prop mudar
+  useEffect(() => {
+    setMultipleMode(initialMultiple);
+  }, [initialMultiple]);
 
   // Buscar imagens e pastas
   const fetchData = async (folderId: string | null = null) => {
@@ -115,7 +129,7 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
           });
 
         if (searchError) throw searchError;
-        setImages((searchData || []).map(img => ({
+        setImages((searchData || []).map((img: any) => ({
           ...img,
           url: supabase.storage.from("portfolio-images").getPublicUrl(img.storage_path).data.publicUrl
         })));
@@ -136,15 +150,46 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
         })));
       }
 
-      // Buscar breadcrumbs se houver pasta atual
+      // Buscar pasta atual e construir breadcrumbs
       if (folderId) {
-        const { data: breadcrumbsData, error: breadcrumbsError } = await supabase
-          .rpc("get_folder_breadcrumbs", { folder_id: folderId });
+        const { data: folderData, error: folderError } = await supabase
+          .from("image_folders")
+          .select("*")
+          .eq("id", folderId)
+          .single();
 
-        if (!breadcrumbsError && breadcrumbsData) {
-          setBreadcrumbs(breadcrumbsData.reverse());
+        if (!folderError && folderData) {
+          setCurrentFolder(folderData);
+          
+          // Construir breadcrumbs a partir do path
+          if (folderData.path) {
+            const pathParts = folderData.path.split('/');
+            const breadcrumbsList: ImageFolder[] = [];
+            
+            // Buscar cada pasta no caminho
+            let currentPath = '';
+            for (const part of pathParts) {
+              currentPath = currentPath ? `${currentPath}/${part}` : part;
+              
+              // Buscar pasta pelo path
+              const { data: pathFolder } = await supabase
+                .from("image_folders")
+                .select("*")
+                .eq("path", currentPath)
+                .single();
+              
+              if (pathFolder) {
+                breadcrumbsList.push(pathFolder);
+              }
+            }
+            
+            setBreadcrumbs(breadcrumbsList);
+          } else {
+            setBreadcrumbs([]);
+          }
         }
       } else {
+        setCurrentFolder(null);
         setBreadcrumbs([]);
       }
     } catch (error) {
@@ -183,10 +228,10 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
   };
 
   useEffect(() => {
-    if (movingImage) {
+    if (movingImage || movingImages.length > 0) {
       fetchAllFolders();
     }
-  }, [movingImage]);
+  }, [movingImage, movingImages]);
 
   // Debounce para busca
   useEffect(() => {
@@ -200,7 +245,7 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
   }, [searchQuery]);
 
   const handleSelect = (image: ImageMetadata) => {
-    if (multiple) {
+    if (multipleMode) {
       setSelectedImages(prev => {
         if (prev.includes(image.url)) {
           return prev.filter(url => url !== image.url);
@@ -216,10 +261,17 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
   };
 
   const handleConfirmSelection = () => {
-    if (multiple && selectedImages.length > 0) {
+    if (multipleMode && selectedImages.length > 0) {
       onSelect(selectedImages);
       setIsOpen(false);
     }
+  };
+
+  const formatFileSize = (bytes: number | null) => {
+    if (!bytes) return "N/A";
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   const handleUploadClick = () => {
@@ -327,7 +379,7 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
       if (selectedImage === image.url) {
         setSelectedImage(null);
       }
-      if (multiple) {
+      if (multipleMode) {
         setSelectedImages(prev => prev.filter(url => url !== image.url));
       }
     } catch (error) {
@@ -363,6 +415,88 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
     setSearchQuery(""); // Limpar busca ao navegar
   };
 
+  const handleDeleteFolder = async (e: React.MouseEvent, folder: ImageFolder) => {
+    e.stopPropagation();
+    if (!confirm(`Tem certeza que deseja excluir a pasta "${folder.name}"?\n\nTodas as imagens dentro dela serão movidas para a raiz.`)) return;
+
+    try {
+      setIsLoading(true);
+      
+      // Buscar todas as imagens na pasta
+      const { data: imagesInFolder, error: imagesError } = await supabase
+        .from("image_metadata")
+        .select("id, storage_path, mime_type")
+        .eq("folder_id", folder.id);
+
+      if (imagesError) throw imagesError;
+
+      // Mover todas as imagens para a raiz
+      if (imagesInFolder && imagesInFolder.length > 0) {
+        const movePromises = imagesInFolder.map(async (img) => {
+          const fileName = img.storage_path.split('/').pop() || img.storage_path;
+          const newStoragePath = fileName;
+
+          // Baixar arquivo
+          const { data: fileData, error: downloadError } = await supabase.storage
+            .from("portfolio-images")
+            .download(img.storage_path);
+
+          if (downloadError) throw downloadError;
+
+          // Upload no novo local (raiz)
+          const { error: uploadError } = await supabase.storage
+            .from("portfolio-images")
+            .upload(newStoragePath, fileData, {
+              contentType: img.mime_type || 'image/jpeg',
+              upsert: false
+            });
+
+          if (uploadError && !uploadError.message.includes('already exists')) {
+            throw uploadError;
+          }
+
+          // Remover arquivo antigo
+          await supabase.storage
+            .from("portfolio-images")
+            .remove([img.storage_path]);
+
+          // Atualizar metadados
+          const { error: updateError } = await supabase
+            .from("image_metadata")
+            .update({
+              storage_path: newStoragePath,
+              folder_id: null
+            })
+            .eq("id", img.id);
+
+          if (updateError) throw updateError;
+        });
+
+        await Promise.all(movePromises);
+      }
+
+      // Excluir a pasta
+      const { error: deleteError } = await supabase
+        .from("image_folders")
+        .delete()
+        .eq("id", folder.id);
+
+      if (deleteError) throw deleteError;
+
+      // Se estávamos dentro da pasta excluída, voltar para a raiz
+      if (currentFolderId === folder.id) {
+        setCurrentFolderId(null);
+      }
+
+      await fetchData(currentFolderId);
+    } catch (error: any) {
+      console.error("Error deleting folder:", error);
+      alert(`Erro ao excluir pasta: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleBreadcrumbClick = (folder: ImageFolder | null) => {
     setCurrentFolderId(folder?.id || null);
     setSearchQuery("");
@@ -391,88 +525,113 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
     }
   };
 
+  const moveSingleImage = async (image: ImageMetadata, targetFolderId: string | null) => {
+    // Buscar path da pasta de destino
+    let newStoragePath = image.storage_path.split('/').pop() || image.storage_path;
+    
+    if (targetFolderId) {
+      const { data: folderData } = await supabase
+        .from("image_folders")
+        .select("path")
+        .eq("id", targetFolderId)
+        .single();
+
+      if (folderData?.path) {
+        const fileName = image.storage_path.split('/').pop() || image.storage_path;
+        newStoragePath = `${folderData.path}/${fileName}`;
+      }
+    }
+
+    // Mover arquivo no storage (usando copy + remove)
+    // 1. Baixar o arquivo
+    const { data: fileData, error: downloadError } = await supabase.storage
+      .from("portfolio-images")
+      .download(image.storage_path);
+
+    if (downloadError) throw downloadError;
+
+    // 2. Fazer upload no novo local
+    const { error: uploadError } = await supabase.storage
+      .from("portfolio-images")
+      .upload(newStoragePath, fileData, {
+        contentType: image.mime_type || 'image/jpeg',
+        upsert: false
+      });
+
+    if (uploadError) {
+      // Se já existe no destino, tentar remover primeiro
+      if (uploadError.message.includes('already exists')) {
+        await supabase.storage
+          .from("portfolio-images")
+          .remove([newStoragePath]);
+        
+        const { error: retryError } = await supabase.storage
+          .from("portfolio-images")
+          .upload(newStoragePath, fileData, {
+            contentType: image.mime_type || 'image/jpeg',
+            upsert: false
+          });
+        
+        if (retryError) throw retryError;
+      } else {
+        throw uploadError;
+      }
+    }
+
+    // 3. Remover arquivo antigo
+    const { error: removeError } = await supabase.storage
+      .from("portfolio-images")
+      .remove([image.storage_path]);
+
+    if (removeError) {
+      console.warn("Arquivo movido mas não foi possível remover o original:", removeError);
+    }
+
+    // 4. Atualizar metadados
+    const { error: updateError } = await supabase
+      .from("image_metadata")
+      .update({
+        storage_path: newStoragePath,
+        folder_id: targetFolderId
+      })
+      .eq("id", image.id);
+
+    if (updateError) throw updateError;
+  };
+
   const handleMoveImage = async (targetFolderId: string | null) => {
     if (!movingImage) return;
 
     try {
-      // Buscar path da pasta de destino
-      let newStoragePath = movingImage.storage_path.split('/').pop() || movingImage.storage_path;
-      
-      if (targetFolderId) {
-        const { data: folderData } = await supabase
-          .from("image_folders")
-          .select("path")
-          .eq("id", targetFolderId)
-          .single();
-
-        if (folderData?.path) {
-          const fileName = movingImage.storage_path.split('/').pop() || movingImage.storage_path;
-          newStoragePath = `${folderData.path}/${fileName}`;
-        }
-      }
-
-      // Mover arquivo no storage (usando copy + remove, já que move() pode não estar disponível)
-      // 1. Baixar o arquivo
-      const { data: fileData, error: downloadError } = await supabase.storage
-        .from("portfolio-images")
-        .download(movingImage.storage_path);
-
-      if (downloadError) throw downloadError;
-
-      // 2. Fazer upload no novo local
-      const { error: uploadError } = await supabase.storage
-        .from("portfolio-images")
-        .upload(newStoragePath, fileData, {
-          contentType: movingImage.mime_type || 'image/jpeg',
-          upsert: false
-        });
-
-      if (uploadError) {
-        // Se já existe no destino, tentar remover primeiro
-        if (uploadError.message.includes('already exists')) {
-          await supabase.storage
-            .from("portfolio-images")
-            .remove([newStoragePath]);
-          
-          const { error: retryError } = await supabase.storage
-            .from("portfolio-images")
-            .upload(newStoragePath, fileData, {
-              contentType: movingImage.mime_type || 'image/jpeg',
-              upsert: false
-            });
-          
-          if (retryError) throw retryError;
-        } else {
-          throw uploadError;
-        }
-      }
-
-      // 3. Remover arquivo antigo
-      const { error: removeError } = await supabase.storage
-        .from("portfolio-images")
-        .remove([movingImage.storage_path]);
-
-      if (removeError) {
-        console.warn("Arquivo movido mas não foi possível remover o original:", removeError);
-        // Continuar mesmo se não conseguir remover o original
-      }
-
-      // Atualizar metadados
-      const { error: updateError } = await supabase
-        .from("image_metadata")
-        .update({
-          storage_path: newStoragePath,
-          folder_id: targetFolderId
-        })
-        .eq("id", movingImage.id);
-
-      if (updateError) throw updateError;
-
+      setIsMoving(true);
+      await moveSingleImage(movingImage, targetFolderId);
       setMovingImage(null);
       await fetchData(currentFolderId);
     } catch (error: any) {
       console.error("Error moving image:", error);
       alert(`Erro ao mover imagem: ${error.message}`);
+    } finally {
+      setIsMoving(false);
+    }
+  };
+
+  const handleMoveMultipleImages = async (targetFolderId: string | null) => {
+    if (movingImages.length === 0) return;
+
+    try {
+      setIsMoving(true);
+      
+      // Mover todas as imagens
+      const movePromises = movingImages.map(img => moveSingleImage(img, targetFolderId));
+      await Promise.all(movePromises);
+
+      setMovingImages([]);
+      await fetchData(currentFolderId);
+    } catch (error: any) {
+      console.error("Error moving images:", error);
+      alert(`Erro ao mover imagens: ${error.message}`);
+    } finally {
+      setIsMoving(false);
     }
   };
 
@@ -486,7 +645,7 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="bg-background border-white/10 max-w-4xl max-h-[90vh] flex flex-col">
+      <DialogContent className="bg-background border-white/10 max-w-7xl max-h-[95vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="text-white">Galeria de Imagens</DialogTitle>
           <VisuallyHidden>
@@ -496,8 +655,8 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
 
         <div className="flex flex-col gap-4 flex-1 min-h-0">
           {/* Barra de busca e ações */}
-          <div className="flex gap-2 items-center">
-            <div className="relative flex-1">
+          <div className="flex gap-2 items-center flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 type="text"
@@ -507,6 +666,24 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
                 className="pl-10 bg-background/50 border-white/10"
               />
             </div>
+            
+            {/* Toggle modo múltiplo */}
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10">
+              <Switch
+                checked={multipleMode}
+                onCheckedChange={(checked) => {
+                  setMultipleMode(checked);
+                  if (!checked) {
+                    setSelectedImages([]);
+                  }
+                }}
+                id="multiple-mode"
+              />
+              <label htmlFor="multiple-mode" className="text-sm text-gray-300 cursor-pointer">
+                Seleção Múltipla
+              </label>
+            </div>
+
             <Button
               variant="outline"
               size="sm"
@@ -537,15 +714,68 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
               )}
               {isUploading ? "Enviando..." : "Upload"}
             </Button>
-            {multiple && selectedImages.length > 0 && (
-              <Button
-                className="bg-green-600 hover:bg-green-700 text-white"
-                onClick={handleConfirmSelection}
-                size="sm"
-              >
-                <Check className="w-4 h-4 mr-2" />
-                Confirmar ({selectedImages.length})
-              </Button>
+            {multipleMode && selectedImages.length > 0 && (
+              <>
+                <Button
+                  className="bg-purple-600 hover:bg-purple-700 text-white"
+                  onClick={() => {
+                    const selectedImageObjects = images.filter(img => selectedImages.includes(img.url));
+                    setMovingImages(selectedImageObjects);
+                  }}
+                  size="sm"
+                >
+                  <Move className="w-4 h-4 mr-2" />
+                  Mover ({selectedImages.length})
+                </Button>
+                <Button
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                  onClick={async () => {
+                    if (!confirm(`Tem certeza que deseja excluir ${selectedImages.length} imagem(ns)?`)) return;
+                    
+                    const selectedImageObjects = images.filter(img => selectedImages.includes(img.url));
+                    setIsLoading(true);
+                    try {
+                      const deletePromises = selectedImageObjects.map(async (img) => {
+                        // Remover do storage
+                        const { error: storageError } = await supabase.storage
+                          .from("portfolio-images")
+                          .remove([img.storage_path]);
+
+                        if (storageError) throw storageError;
+
+                        // Remover metadados
+                        const { error: metadataError } = await supabase
+                          .from("image_metadata")
+                          .delete()
+                          .eq("id", img.id);
+
+                        if (metadataError) throw metadataError;
+                      });
+
+                      await Promise.all(deletePromises);
+                      setSelectedImages([]);
+                      await fetchData(currentFolderId);
+                    } catch (error: any) {
+                      console.error("Error deleting images:", error);
+                      alert(`Erro ao excluir imagens: ${error.message}`);
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  size="sm"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Excluir ({selectedImages.length})
+                </Button>
+                <Button
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                  onClick={handleConfirmSelection}
+                  size="sm"
+                >
+                  <Check className="w-4 h-4 mr-2" />
+                  Confirmar ({selectedImages.length})
+                </Button>
+              </>
             )}
           </div>
 
@@ -569,7 +799,7 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
           )}
 
           {/* Breadcrumbs */}
-          {breadcrumbs.length > 0 && (
+          {currentFolder && currentFolder.path && (
             <div className="flex items-center gap-1 text-sm text-gray-400 flex-wrap">
               <button
                 onClick={() => handleBreadcrumbClick(null)}
@@ -599,7 +829,7 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
                 <Loader2 className="w-8 h-8 text-neon-purple animate-spin" />
               </div>
             ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {/* Pastas */}
                 {!searchQuery && folders.map((folder) => (
                   <div
@@ -609,12 +839,19 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
                   >
                     <Folder className="w-12 h-12 text-neon-purple mb-2" />
                     <span className="text-sm text-center px-2 truncate w-full">{folder.name}</span>
+                    <button
+                      className="absolute top-1 right-1 p-1 bg-red-500/80 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                      onClick={(e) => handleDeleteFolder(e, folder)}
+                      title="Excluir pasta (imagens serão movidas para a raiz)"
+                    >
+                      <Trash2 className="w-3 h-3 text-white" />
+                    </button>
                   </div>
                 ))}
 
                 {/* Imagens */}
                 {images.map((img) => {
-                  const isSelected = multiple
+                  const isSelected = multipleMode
                     ? selectedImages.includes(img.url)
                     : selectedImage === img.url;
 
@@ -622,64 +859,106 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
                     <div
                       key={img.id}
                       className={cn(
-                        "relative aspect-square rounded-lg overflow-hidden cursor-pointer border-2 transition-all group",
+                        "relative rounded-lg overflow-hidden cursor-pointer border-2 transition-all group bg-white/5",
                         isSelected ? "border-neon-purple" : "border-transparent hover:border-white/20"
                       )}
                       onClick={() => handleSelect(img)}
                     >
-                      <img 
-                        src={img.url} 
-                        alt={img.display_name || img.storage_path} 
-                        className="w-full h-full object-cover" 
-                      />
-                      {isSelected && (
-                        <div className="absolute inset-0 bg-neon-purple/20 flex items-center justify-center">
-                          <div className="bg-neon-purple rounded-full p-1">
-                            <Check className="w-4 h-4 text-white" />
+                      {/* Imagem */}
+                      <div className="aspect-square relative">
+                        <img 
+                          src={img.url} 
+                          alt={img.display_name || img.storage_path} 
+                          className="w-full h-full object-cover" 
+                        />
+                        {isSelected && (
+                          <div className="absolute inset-0 bg-neon-purple/30 flex items-center justify-center">
+                            <div className="bg-neon-purple rounded-full p-2 shadow-lg">
+                              <Check className="w-5 h-5 text-white" />
+                            </div>
                           </div>
+                        )}
+                        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            className="p-2 bg-blue-500/90 rounded-full hover:bg-blue-600 shadow-lg"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setViewingImage(img);
+                            }}
+                            title="Ver detalhes"
+                          >
+                            <Maximize2 className="w-4 h-4 text-white" />
+                          </button>
+                          <button
+                            className="p-2 bg-blue-500/90 rounded-full hover:bg-blue-600 shadow-lg"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingImage(img);
+                            }}
+                            title="Editar"
+                          >
+                            <Edit2 className="w-4 h-4 text-white" />
+                          </button>
+                          <button
+                            className="p-2 bg-purple-500/90 rounded-full hover:bg-purple-600 shadow-lg"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setMovingImage(img);
+                            }}
+                            title="Mover"
+                          >
+                            <Move className="w-4 h-4 text-white" />
+                          </button>
+                          <button
+                            className="p-2 bg-red-500/90 rounded-full hover:bg-red-600 shadow-lg"
+                            onClick={(e) => handleDelete(e, img)}
+                            title="Excluir"
+                          >
+                            <Trash2 className="w-4 h-4 text-white" />
+                          </button>
                         </div>
-                      )}
-                      <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          className="p-1 bg-blue-500/80 rounded-full hover:bg-blue-600"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setEditingImage(img);
-                          }}
-                          title="Editar"
-                        >
-                          <Edit2 className="w-3 h-3 text-white" />
-                        </button>
-                        <button
-                          className="p-1 bg-purple-500/80 rounded-full hover:bg-purple-600"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setMovingImage(img);
-                          }}
-                          title="Mover"
-                        >
-                          <Move className="w-3 h-3 text-white" />
-                        </button>
-                        <button
-                          className="p-1 bg-red-500/80 rounded-full hover:bg-red-600"
-                          onClick={(e) => handleDelete(e, img)}
-                          title="Excluir"
-                        >
-                          <Trash2 className="w-3 h-3 text-white" />
-                        </button>
+                        {img.tags && img.tags.length > 0 && (
+                          <div className="absolute bottom-2 left-2 flex gap-1 flex-wrap">
+                            {img.tags.slice(0, 3).map((tag, idx) => (
+                              <span
+                                key={idx}
+                                className="text-xs bg-black/80 text-white px-2 py-1 rounded-md font-medium"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      {img.tags && img.tags.length > 0 && (
-                        <div className="absolute bottom-1 left-1 flex gap-1 flex-wrap">
-                          {img.tags.slice(0, 2).map((tag, idx) => (
-                            <span
-                              key={idx}
-                              className="text-xs bg-black/60 text-white px-1.5 py-0.5 rounded"
-                            >
-                              {tag}
-                            </span>
-                          ))}
+                      
+                      {/* Informações */}
+                      <div className="p-4 space-y-2 bg-white/5">
+                        <div className="text-base font-semibold text-white truncate">
+                          {img.display_name || img.storage_path.split('/').pop()}
                         </div>
-                      )}
+                        <div className="flex items-center justify-between text-sm text-gray-300">
+                          {img.width && img.height && (
+                            <span className="flex items-center gap-1">
+                              <Info className="w-4 h-4" />
+                              {img.width} × {img.height} px
+                            </span>
+                          )}
+                          {img.file_size && (
+                            <span className="font-medium">{formatFileSize(img.file_size)}</span>
+                          )}
+                        </div>
+                        {img.folder_name && (
+                          <div className="flex items-center gap-2 text-sm text-gray-400">
+                            <Folder className="w-4 h-4" />
+                            <span className="truncate">{img.folder_name}</span>
+                          </div>
+                        )}
+                        {img.description && (
+                          <div className="text-sm text-gray-400 line-clamp-2">
+                            {img.description}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -694,6 +973,168 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
             )}
           </div>
         </div>
+
+        {/* Dialog de visualização detalhada */}
+        {viewingImage && (
+          <Dialog open={!!viewingImage} onOpenChange={() => setViewingImage(null)}>
+            <DialogContent className="bg-background border-white/10 max-w-6xl max-h-[95vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle className="text-white text-xl">
+                  {viewingImage.display_name || viewingImage.storage_path.split('/').pop()}
+                </DialogTitle>
+              </DialogHeader>
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Preview da imagem */}
+                <div className="space-y-4">
+                  <div className="relative aspect-square rounded-lg overflow-hidden border border-white/10">
+                    <img 
+                      src={viewingImage.url} 
+                      alt={viewingImage.display_name || viewingImage.storage_path}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  
+                  {/* Ações rápidas */}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-white/10"
+                      onClick={() => {
+                        setViewingImage(null);
+                        setEditingImage(viewingImage);
+                      }}
+                    >
+                      <Edit2 className="w-4 h-4 mr-2" />
+                      Editar
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-white/10"
+                      onClick={() => {
+                        setViewingImage(null);
+                        setMovingImage(viewingImage);
+                      }}
+                    >
+                      <Move className="w-4 h-4 mr-2" />
+                      Mover
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="flex-1 border-red-500/50 text-red-400 hover:bg-red-500/10"
+                      onClick={() => {
+                        if (confirm("Tem certeza que deseja excluir esta imagem?")) {
+                          handleDelete({ stopPropagation: () => {} } as any, viewingImage);
+                          setViewingImage(null);
+                        }
+                      }}
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Excluir
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Informações detalhadas */}
+                <div className="space-y-4">
+                  <div className="space-y-3">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                      <Info className="w-5 h-5" />
+                      Informações
+                    </h3>
+                    
+                    <div className="space-y-2 text-sm">
+                      <div className="flex justify-between py-2 border-b border-white/10">
+                        <span className="text-gray-400">Nome de Exibição:</span>
+                        <span className="text-white font-medium">
+                          {viewingImage.display_name || "Não definido"}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between py-2 border-b border-white/10">
+                        <span className="text-gray-400">Caminho:</span>
+                        <span className="text-white text-right break-all max-w-[60%]">
+                          {viewingImage.storage_path}
+                        </span>
+                      </div>
+                      
+                      {viewingImage.folder_name && (
+                        <div className="flex justify-between py-2 border-b border-white/10">
+                          <span className="text-gray-400">Pasta:</span>
+                          <span className="text-white flex items-center gap-1">
+                            <Folder className="w-4 h-4" />
+                            {viewingImage.folder_name}
+                          </span>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between py-2 border-b border-white/10">
+                        <span className="text-gray-400">Dimensões:</span>
+                        <span className="text-white">
+                          {viewingImage.width && viewingImage.height 
+                            ? `${viewingImage.width} × ${viewingImage.height} px`
+                            : "N/A"}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between py-2 border-b border-white/10">
+                        <span className="text-gray-400">Tamanho do Arquivo:</span>
+                        <span className="text-white">
+                          {formatFileSize(viewingImage.file_size)}
+                        </span>
+                      </div>
+                      
+                      <div className="flex justify-between py-2 border-b border-white/10">
+                        <span className="text-gray-400">Tipo MIME:</span>
+                        <span className="text-white">
+                          {viewingImage.mime_type || "N/A"}
+                        </span>
+                      </div>
+                      
+                      {viewingImage.description && (
+                        <div className="py-2 border-b border-white/10">
+                          <span className="text-gray-400 block mb-1">Descrição:</span>
+                          <span className="text-white">{viewingImage.description}</span>
+                        </div>
+                      )}
+                      
+                      {viewingImage.alt_text && (
+                        <div className="py-2 border-b border-white/10">
+                          <span className="text-gray-400 block mb-1">Texto Alternativo:</span>
+                          <span className="text-white">{viewingImage.alt_text}</span>
+                        </div>
+                      )}
+                      
+                      {viewingImage.tags && viewingImage.tags.length > 0 && (
+                        <div className="py-2">
+                          <span className="text-gray-400 block mb-2">Tags:</span>
+                          <div className="flex flex-wrap gap-2">
+                            {viewingImage.tags.map((tag, idx) => (
+                              <span
+                                key={idx}
+                                className="px-2 py-1 bg-neon-purple/20 text-neon-purple rounded text-xs"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      <div className="flex justify-between py-2 text-xs text-gray-500">
+                        <span>Data de Criação:</span>
+                        <span>
+                          {viewingImage.created_at 
+                            ? new Date(viewingImage.created_at).toLocaleString('pt-BR')
+                            : "N/A"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
 
         {/* Dialog de edição de imagem */}
         {editingImage && (
@@ -736,7 +1177,7 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
           </Dialog>
         )}
 
-        {/* Dialog de mover imagem */}
+        {/* Dialog de mover imagem única */}
         {movingImage && (
           <Dialog open={!!movingImage} onOpenChange={() => setMovingImage(null)}>
             <DialogContent className="bg-background border-white/10 max-w-2xl">
@@ -756,11 +1197,13 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
                   <div className="max-h-[400px] overflow-y-auto space-y-2">
                     <button
                       onClick={() => handleMoveImage(null)}
+                      disabled={isMoving}
                       className={cn(
                         "w-full text-left p-3 rounded-lg border-2 transition-all",
                         movingImage.folder_id === null
                           ? "border-neon-purple bg-neon-purple/10"
-                          : "border-white/10 hover:border-white/20 bg-white/5"
+                          : "border-white/10 hover:border-white/20 bg-white/5",
+                        isMoving && "opacity-50 cursor-not-allowed"
                       )}
                     >
                       <div className="flex items-center gap-2">
@@ -773,11 +1216,13 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
                       <button
                         key={folder.id}
                         onClick={() => handleMoveImage(folder.id)}
+                        disabled={isMoving}
                         className={cn(
                           "w-full text-left p-3 rounded-lg border-2 transition-all",
                           movingImage.folder_id === folder.id
                             ? "border-neon-purple bg-neon-purple/10"
-                            : "border-white/10 hover:border-white/20 bg-white/5"
+                            : "border-white/10 hover:border-white/20 bg-white/5",
+                          isMoving && "opacity-50 cursor-not-allowed"
                         )}
                       >
                         <div className="flex items-center gap-2">
@@ -799,7 +1244,88 @@ export function ImagePicker({ onSelect, trigger, multiple = false }: ImagePicker
                 )}
                 
                 <div className="flex gap-2 justify-end pt-4 border-t border-white/10">
-                  <Button variant="outline" onClick={() => setMovingImage(null)}>Cancelar</Button>
+                  <Button variant="outline" onClick={() => setMovingImage(null)} disabled={isMoving}>
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {/* Dialog de mover múltiplas imagens */}
+        {movingImages.length > 0 && (
+          <Dialog open={movingImages.length > 0} onOpenChange={() => setMovingImages([])}>
+            <DialogContent className="bg-background border-white/10 max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Mover {movingImages.length} Imagem(ns)</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="text-sm text-gray-400">
+                  Movendo <span className="text-white font-medium">{movingImages.length}</span> imagem(ns) selecionada(s)
+                </div>
+                
+                {isLoadingFolders ? (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-6 h-6 text-neon-purple animate-spin" />
+                  </div>
+                ) : (
+                  <div className="max-h-[400px] overflow-y-auto space-y-2">
+                    <button
+                      onClick={() => handleMoveMultipleImages(null)}
+                      disabled={isMoving}
+                      className={cn(
+                        "w-full text-left p-3 rounded-lg border-2 transition-all",
+                        "border-white/10 hover:border-white/20 bg-white/5",
+                        isMoving && "opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Home className="w-4 h-4 text-neon-purple" />
+                        <span className="font-medium">Raiz (pasta principal)</span>
+                      </div>
+                    </button>
+                    
+                    {allFolders.map((folder) => (
+                      <button
+                        key={folder.id}
+                        onClick={() => handleMoveMultipleImages(folder.id)}
+                        disabled={isMoving}
+                        className={cn(
+                          "w-full text-left p-3 rounded-lg border-2 transition-all",
+                          "border-white/10 hover:border-white/20 bg-white/5",
+                          isMoving && "opacity-50 cursor-not-allowed"
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Folder className="w-4 h-4 text-neon-purple" />
+                          <div className="flex-1">
+                            <div className="font-medium">{folder.name}</div>
+                            <div className="text-xs text-gray-400 truncate">{folder.path}</div>
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                    
+                    {allFolders.length === 0 && (
+                      <div className="text-center text-gray-400 py-8">
+                        Nenhuma pasta disponível. Crie uma pasta primeiro.
+                      </div>
+                    )}
+                  </div>
+                )}
+                
+                {isMoving && (
+                  <div className="flex items-center justify-center gap-2 text-sm text-gray-400">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Movendo imagens...</span>
+                  </div>
+                )}
+                
+                <div className="flex gap-2 justify-end pt-4 border-t border-white/10">
+                  <Button variant="outline" onClick={() => setMovingImages([])} disabled={isMoving}>
+                    Cancelar
+                  </Button>
                 </div>
               </div>
             </DialogContent>
