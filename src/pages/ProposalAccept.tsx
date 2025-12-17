@@ -28,6 +28,7 @@ export default function ProposalAccept() {
   const [clientRole, setClientRole] = useState("");
   const [clientDeclaration, setClientDeclaration] = useState("");
   const [hasConsent, setHasConsent] = useState(false);
+  const [isRescisionOpen, setIsRescisionOpen] = useState(false);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -383,10 +384,10 @@ export default function ProposalAccept() {
           {/* Política de Rescisão */}
           <Card className="bg-card/50 backdrop-blur-sm border-white/10">
             <CardContent className="p-6">
-              <Collapsible defaultOpen={false}>
-                <CollapsibleTrigger className="w-full flex items-center justify-between text-left group [&[data-state=open]>svg]:rotate-180">
+              <Collapsible open={isRescisionOpen} onOpenChange={setIsRescisionOpen}>
+                <CollapsibleTrigger className="w-full flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer outline-none">
                   <h2 className="text-xl font-bold">Política de Rescisão</h2>
-                  <ChevronDown className="w-5 h-5 text-gray-400 transition-transform duration-200" />
+                  <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 shrink-0 ${isRescisionOpen ? 'rotate-180' : ''}`} />
                 </CollapsibleTrigger>
                 <CollapsibleContent className="mt-4">
                   <div className="prose prose-invert prose-headings:text-white prose-p:text-gray-300 prose-strong:text-white prose-ul:text-gray-300 prose-li:text-gray-300 prose-hr:border-white/10 max-w-none">

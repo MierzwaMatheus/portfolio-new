@@ -24,6 +24,7 @@ export default function Proposal() {
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [password, setPassword] = useState("");
   const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [isRescisionOpen, setIsRescisionOpen] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
@@ -658,15 +659,15 @@ export default function Proposal() {
           {/* Política de Rescisão */}
           <motion.section variants={itemVariants}>
             <Card className="bg-card/50 backdrop-blur-sm border-white/10 overflow-hidden relative group">
-              <div className="absolute inset-0 bg-gradient-to-r from-neon-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <CardContent className="p-8 md:p-10">
-                <Collapsible defaultOpen={false}>
-                  <CollapsibleTrigger className="w-full flex items-center justify-between text-left group [&[data-state=open]>svg]:rotate-180">
+              <div className="absolute inset-0 bg-gradient-to-r from-neon-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+              <CardContent className="p-8 md:p-10 relative z-10">
+                <Collapsible open={isRescisionOpen} onOpenChange={setIsRescisionOpen}>
+                  <CollapsibleTrigger className="w-full flex items-center justify-between text-left hover:opacity-80 transition-opacity cursor-pointer outline-none relative z-10">
                     <h2 className="text-2xl font-bold text-white flex items-center gap-3">
                       <span className="w-1 h-8 bg-neon-purple rounded-full" />
                       Política de Rescisão
                     </h2>
-                    <ChevronDown className="w-5 h-5 text-gray-400 transition-transform duration-200" />
+                    <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-200 shrink-0 ${isRescisionOpen ? 'rotate-180' : ''}`} />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="mt-4">
                     <div className="prose prose-invert prose-headings:text-white prose-p:text-gray-300 prose-strong:text-white prose-ul:text-gray-300 prose-li:text-gray-300 prose-hr:border-white/10 max-w-none">
