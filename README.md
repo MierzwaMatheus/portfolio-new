@@ -50,6 +50,15 @@ Este é um portfólio profissional full-stack que combina uma interface pública
   - Autenticação
   - Banco de dados PostgreSQL
   - Storage para imagens
+  - Edge Functions
+
+### Pagamentos
+
+- **Stripe** - Plataforma de pagamentos
+  - Payment Links API
+  - Produtos e Preços
+  - Suporte a parcelamento
+  - Integração via Edge Function
 
 ### Formulários e Validação
 
@@ -182,6 +191,17 @@ Este é um portfólio profissional full-stack que combina uma interface pública
 - Links de redes sociais
 - Configuração de visibilidade de dados
 
+#### 💳 Links de Pagamento (`/admin/payment-links`)
+- **Gerenciamento completo de pagamentos via Stripe**
+- CRUD de produtos no Stripe
+- CRUD de preços (únicos e recorrentes)
+- Criação de links de pagamento compartilháveis
+- **Suporte a parcelamento** (com ou sem juros)
+- Exclusão de produtos, preços e links
+- Visualização de valores formatados
+- Cópia rápida de links para área de transferência
+- Integração com Edge Function do Supabase
+
 #### 👥 Usuários (`/admin/users/new`)
 - Criação de novos usuários (apenas root)
 - Atribuição de roles
@@ -238,6 +258,7 @@ portfolio/
 │   │   │   ├── Home.tsx
 │   │   │   ├── Projects.tsx
 │   │   │   ├── Proposals.tsx
+│   │   │   ├── PaymentLinks.tsx
 │   │   │   └── Resume.tsx
 │   │   ├── Blog.tsx
 │   │   ├── BlogPost.tsx
@@ -256,8 +277,10 @@ portfolio/
 │   └── index.css              # Estilos globais
 ├── supabase/
 │   └── functions/             # Edge Functions
-│       └── create-user/
-│           └── index.ts
+│       ├── create-user/
+│       │   └── index.ts
+│       └── stripe-api/
+│           └── index.ts      # API para integração com Stripe
 ├── package.json
 ├── tsconfig.json
 ├── vite.config.ts
@@ -295,6 +318,8 @@ VITE_SUPABASE_ANON_KEY=sua_chave_anonima
 VITE_APP_ID=id_do_app
 ```
 
+**Nota**: Para usar a funcionalidade de Links de Pagamento, você também precisará configurar a variável de ambiente `STRIPE_SECRET_KEY` no Supabase (veja seção [Configuração do Stripe](#configuração-do-stripe)).
+
 4. Execute o servidor de desenvolvimento:
 ```bash
 npm run dev
@@ -330,6 +355,45 @@ O projeto utiliza Supabase como backend. Certifique-se de configurar:
 3. **Autenticação** configurada
 
 4. **Row Level Security (RLS)** configurado adequadamente
+
+### Stripe (Links de Pagamento)
+
+Para utilizar a funcionalidade de Links de Pagamento, você precisa:
+
+1. **Criar uma conta no Stripe**: Acesse [stripe.com](https://stripe.com) e crie sua conta
+
+2. **Obter a chave secreta**: 
+   - Acesse o [Dashboard do Stripe](https://dashboard.stripe.com/apikeys)
+   - Copie sua chave secreta (começa com `sk_`)
+
+3. **Configurar variável de ambiente no Supabase**:
+   - Acesse o Dashboard do Supabase
+   - Vá em **Edge Functions** → **stripe-api** → **Settings**
+   - Adicione a variável de ambiente:
+     - Nome: `STRIPE_SECRET_KEY`
+     - Valor: sua chave secreta do Stripe
+
+4. **Habilitar parcelamento (opcional)**:
+   - No Dashboard do Stripe, acesse **Settings** → **Payment methods**
+   - Vá em **Card installments**
+   - Habilite para Brasil
+   - Configure os planos de parcelamento desejados (2x, 3x, 4x, etc.)
+
+5. **Deploy da Edge Function**:
+   - A Edge Function `stripe-api` já está configurada no projeto
+   - Faça o deploy usando o MCP do Supabase ou CLI:
+   ```bash
+   supabase functions deploy stripe-api
+   ```
+
+#### Funcionalidades da Integração Stripe
+
+- **Produtos**: Crie e gerencie produtos no Stripe
+- **Preços**: Configure preços únicos ou recorrentes (assinaturas)
+- **Links de Pagamento**: Gere links compartilháveis para pagamento
+- **Parcelamento**: Suporte a parcelamento com ou sem juros (configurado no Dashboard do Stripe)
+- **Moedas**: Suporte para BRL (Real) e USD (Dólar)
+- **Exclusão**: Desativa produtos, preços e links (não é possível deletar permanentemente no Stripe)
 
 ### Vercel (Deploy)
 
@@ -380,6 +444,7 @@ Todas as rotas administrativas são protegidas e requerem autenticação:
 - `/admin/proposals` - Gerenciamento de propostas (root, admin, proposal-editor)
 - `/admin/home` - Gerenciamento da home (root, admin)
 - `/admin/contact` - Gerenciamento de contato (root, admin)
+- `/admin/payment-links` - Links de pagamento Stripe (root, admin)
 - `/admin/users/new` - Criar usuário (apenas root)
 
 ## 🔒 Sistema de Autenticação
@@ -450,6 +515,62 @@ O projeto utiliza componentes do shadcn/ui, uma coleção de componentes React r
 - Sistema de temas preparado (dark mode implementado)
 
 ## 🆕 Funcionalidades Recentes
+
+### Sistema de Links de Pagamento com Stripe
+
+O sistema implementa uma **integração completa com Stripe** para gerenciamento de pagamentos através de links compartilháveis.
+
+#### Características Principais
+
+- **Gerenciamento de Produtos**: Crie e gerencie produtos diretamente pela interface administrativa
+- **Configuração de Preços**: 
+  - Preços únicos (pagamento único)
+  - Preços recorrentes (assinaturas mensais, anuais, etc.)
+  - Suporte para múltiplas moedas (BRL, USD)
+- **Links de Pagamento**: 
+  - Gere links compartilháveis para cada produto/preço
+  - Copie links para área de transferência
+  - Abra links em nova aba
+  - Exclua links quando necessário
+- **Parcelamento**: 
+  - Suporte a parcelamento com ou sem juros
+  - Configuração através do Dashboard do Stripe
+  - Disponibilidade automática baseada no cartão do cliente
+  - Planos de 2x a 12x configuráveis
+
+#### Interface Administrativa
+
+A página `/admin/payment-links` oferece:
+
+- **Visualização organizada**: Cards separados para Links, Produtos e Preços
+- **Criação rápida**: Botões de ação rápida para criar novos itens
+- **Valores destacados**: Badges coloridos mostrando valores formatados
+- **Exclusão segura**: 
+  - Confirmação antes de excluir
+  - Avisos sobre dependências (preços associados a produtos, links associados a preços)
+  - Desativação em vez de exclusão permanente (padrão do Stripe)
+- **Filtros automáticos**: Apenas itens ativos são exibidos
+
+#### Edge Function
+
+A Edge Function `stripe-api` no Supabase fornece:
+
+- `list_products` - Lista produtos ativos
+- `create_product` - Cria novo produto
+- `delete_product` - Desativa produto
+- `list_prices` - Lista preços ativos
+- `create_price` - Cria novo preço
+- `delete_price` - Desativa preço
+- `create_payment_link` - Cria link de pagamento
+- `list_payment_links` - Lista links ativos
+- `delete_payment_link` - Desativa link
+
+#### Segurança
+
+- Chave secreta do Stripe armazenada como variável de ambiente no Supabase
+- Validação de parâmetros obrigatórios
+- Tratamento de erros robusto
+- CORS configurado adequadamente
 
 ### Sistema de Aceite Eletrônico de Propostas
 
