@@ -107,12 +107,12 @@ export function ImagePicker({ onSelect, trigger, multiple: initialMultiple = fal
       // Buscar imagens
       let imagesQuery = folderId
         ? supabase
-            .from("image_metadata_view")
+            .from("image_metadata")
             .select("*")
             .eq("folder_id", folderId)
             .order("created_at", { ascending: false })
         : supabase
-            .from("image_metadata_view")
+            .from("image_metadata")
             .select("*")
             .is("folder_id", null)
             .order("created_at", { ascending: false });
@@ -123,7 +123,6 @@ export function ImagePicker({ onSelect, trigger, multiple: initialMultiple = fal
           .rpc("search_images", {
             search_query: searchQuery.trim() || null,
             folder_id_filter: folderId,
-            tag_ids_filter: null,
             limit_count: 100,
             offset_count: 0
           });
@@ -144,10 +143,36 @@ export function ImagePicker({ onSelect, trigger, multiple: initialMultiple = fal
         if (imagesResult.error) throw imagesResult.error;
 
         setFolders(foldersResult.data || []);
-        setImages((imagesResult.data || []).map(img => ({
-          ...img,
-          url: supabase.storage.from("portfolio-images").getPublicUrl(img.storage_path).data.publicUrl
-        })));
+        
+        // Buscar informações das pastas para as imagens
+        const folderIdsSet = new Set((imagesResult.data || []).map((img: any) => img.folder_id).filter(Boolean));
+        const folderIds = Array.from(folderIdsSet) as string[];
+        let foldersMap: Record<string, ImageFolder> = {};
+        
+        if (folderIds.length > 0) {
+          const { data: foldersData } = await supabase
+            .from("image_folders")
+            .select("*")
+            .in("id", folderIds);
+          
+          if (foldersData) {
+            foldersMap = foldersData.reduce((acc, folder) => {
+              acc[folder.id] = folder;
+              return acc;
+            }, {} as Record<string, ImageFolder>);
+          }
+        }
+        
+        setImages((imagesResult.data || []).map((img: any) => {
+          const folder = img.folder_id ? foldersMap[img.folder_id] : null;
+          return {
+            ...img,
+            folder_name: folder?.name || null,
+            folder_path: folder?.path || null,
+            tags: [], // Tags removidas - sempre array vazio
+            url: supabase.storage.from("portfolio-images").getPublicUrl(img.storage_path).data.publicUrl
+          };
+        }));
       }
 
       // Buscar pasta atual e construir breadcrumbs
@@ -878,44 +903,46 @@ export function ImagePicker({ onSelect, trigger, multiple: initialMultiple = fal
                             </div>
                           </div>
                         )}
-                        <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            className="p-2 bg-blue-500/90 rounded-full hover:bg-blue-600 shadow-lg"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setViewingImage(img);
-                            }}
-                            title="Ver detalhes"
-                          >
-                            <Maximize2 className="w-4 h-4 text-white" />
-                          </button>
-                          <button
-                            className="p-2 bg-blue-500/90 rounded-full hover:bg-blue-600 shadow-lg"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingImage(img);
-                            }}
-                            title="Editar"
-                          >
-                            <Edit2 className="w-4 h-4 text-white" />
-                          </button>
-                          <button
-                            className="p-2 bg-purple-500/90 rounded-full hover:bg-purple-600 shadow-lg"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setMovingImage(img);
-                            }}
-                            title="Mover"
-                          >
-                            <Move className="w-4 h-4 text-white" />
-                          </button>
-                          <button
-                            className="p-2 bg-red-500/90 rounded-full hover:bg-red-600 shadow-lg"
-                            onClick={(e) => handleDelete(e, img)}
-                            title="Excluir"
-                          >
-                            <Trash2 className="w-4 h-4 text-white" />
-                          </button>
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              className="p-1.5 bg-blue-500/90 rounded hover:bg-blue-600 shadow-lg flex items-center justify-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setViewingImage(img);
+                              }}
+                              title="Ver detalhes"
+                            >
+                              <Maximize2 className="w-3.5 h-3.5 text-white" />
+                            </button>
+                            <button
+                              className="p-1.5 bg-blue-500/90 rounded hover:bg-blue-600 shadow-lg flex items-center justify-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingImage(img);
+                              }}
+                              title="Editar"
+                            >
+                              <Edit2 className="w-3.5 h-3.5 text-white" />
+                            </button>
+                            <button
+                              className="p-1.5 bg-purple-500/90 rounded hover:bg-purple-600 shadow-lg flex items-center justify-center"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMovingImage(img);
+                              }}
+                              title="Mover"
+                            >
+                              <Move className="w-3.5 h-3.5 text-white" />
+                            </button>
+                            <button
+                              className="p-1.5 bg-red-500/90 rounded hover:bg-red-600 shadow-lg flex items-center justify-center"
+                              onClick={(e) => handleDelete(e, img)}
+                              title="Excluir"
+                            >
+                              <Trash2 className="w-3.5 h-3.5 text-white" />
+                            </button>
+                          </div>
                         </div>
                         {img.tags && img.tags.length > 0 && (
                           <div className="absolute bottom-2 left-2 flex gap-1 flex-wrap">
@@ -977,115 +1004,117 @@ export function ImagePicker({ onSelect, trigger, multiple: initialMultiple = fal
         {/* Dialog de visualização detalhada */}
         {viewingImage && (
           <Dialog open={!!viewingImage} onOpenChange={() => setViewingImage(null)}>
-            <DialogContent className="bg-background border-white/10 max-w-6xl max-h-[95vh] overflow-y-auto">
-              <DialogHeader>
+            <DialogContent className="bg-background border-white/10 max-w-6xl max-h-[95vh] flex flex-col">
+              <DialogHeader className="flex-shrink-0">
                 <DialogTitle className="text-white text-xl">
                   {viewingImage.display_name || viewingImage.storage_path.split('/').pop()}
                 </DialogTitle>
               </DialogHeader>
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Preview da imagem */}
-                <div className="space-y-4">
-                  <div className="relative aspect-square rounded-lg overflow-hidden border border-white/10">
-                    <img 
-                      src={viewingImage.url} 
-                      alt={viewingImage.display_name || viewingImage.storage_path}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  
-                  {/* Ações rápidas */}
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      className="flex-1 border-white/10"
-                      onClick={() => {
-                        setViewingImage(null);
-                        setEditingImage(viewingImage);
-                      }}
-                    >
-                      <Edit2 className="w-4 h-4 mr-2" />
-                      Editar
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1 border-white/10"
-                      onClick={() => {
-                        setViewingImage(null);
-                        setMovingImage(viewingImage);
-                      }}
-                    >
-                      <Move className="w-4 h-4 mr-2" />
-                      Mover
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="flex-1 border-red-500/50 text-red-400 hover:bg-red-500/10"
-                      onClick={() => {
-                        if (confirm("Tem certeza que deseja excluir esta imagem?")) {
-                          handleDelete({ stopPropagation: () => {} } as any, viewingImage);
-                          setViewingImage(null);
-                        }
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Excluir
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Informações detalhadas */}
-                <div className="space-y-4">
-                  <div className="space-y-3">
-                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                      <Info className="w-5 h-5" />
-                      Informações
-                    </h3>
+              <div className="flex-1 overflow-y-auto min-h-0">
+                <div className="grid md:grid-cols-2 gap-6 py-4">
+                  {/* Preview da imagem */}
+                  <div className="space-y-4 flex flex-col">
+                    <div className="relative aspect-square rounded-lg overflow-hidden border border-white/10 bg-black/20 flex-shrink-0">
+                      <img 
+                        src={viewingImage.url} 
+                        alt={viewingImage.display_name || viewingImage.storage_path}
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
                     
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-gray-400">Nome de Exibição:</span>
-                        <span className="text-white font-medium">
+                    {/* Ações rápidas */}
+                    <div className="flex flex-col gap-2 flex-shrink-0">
+                      <Button
+                        variant="outline"
+                        className="w-full border-white/10 justify-start"
+                        onClick={() => {
+                          setViewingImage(null);
+                          setEditingImage(viewingImage);
+                        }}
+                      >
+                        <Edit2 className="w-4 h-4 mr-2" />
+                        Editar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full border-white/10 justify-start"
+                        onClick={() => {
+                          setViewingImage(null);
+                          setMovingImage(viewingImage);
+                        }}
+                      >
+                        <Move className="w-4 h-4 mr-2" />
+                        Mover
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full border-red-500/50 text-red-400 hover:bg-red-500/10 justify-start"
+                        onClick={() => {
+                          if (confirm("Tem certeza que deseja excluir esta imagem?")) {
+                            handleDelete({ stopPropagation: () => {} } as any, viewingImage);
+                            setViewingImage(null);
+                          }
+                        }}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Excluir
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Informações detalhadas */}
+                  <div className="space-y-4 flex flex-col min-h-0">
+                    <div className="space-y-3 flex-shrink-0">
+                      <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                        <Info className="w-5 h-5" />
+                        Informações
+                      </h3>
+                    </div>
+                    
+                    <div className="space-y-2 text-sm overflow-y-auto flex-1 min-h-0">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2 py-2 border-b border-white/10">
+                        <span className="text-gray-400 flex-shrink-0">Nome de Exibição:</span>
+                        <span className="text-white font-medium break-words text-right">
                           {viewingImage.display_name || "Não definido"}
                         </span>
                       </div>
                       
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-gray-400">Caminho:</span>
-                        <span className="text-white text-right break-all max-w-[60%]">
+                      <div className="flex flex-col sm:flex-row sm:justify-between gap-1 sm:gap-2 py-2 border-b border-white/10">
+                        <span className="text-gray-400 flex-shrink-0">Caminho:</span>
+                        <span className="text-white break-all text-right text-xs">
                           {viewingImage.storage_path}
                         </span>
                       </div>
                       
                       {viewingImage.folder_name && (
-                        <div className="flex justify-between py-2 border-b border-white/10">
-                          <span className="text-gray-400">Pasta:</span>
-                          <span className="text-white flex items-center gap-1">
+                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2 py-2 border-b border-white/10">
+                          <span className="text-gray-400 flex-shrink-0">Pasta:</span>
+                          <span className="text-white flex items-center gap-1 justify-end">
                             <Folder className="w-4 h-4" />
                             {viewingImage.folder_name}
                           </span>
                         </div>
                       )}
                       
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-gray-400">Dimensões:</span>
-                        <span className="text-white">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2 py-2 border-b border-white/10">
+                        <span className="text-gray-400 flex-shrink-0">Dimensões:</span>
+                        <span className="text-white text-right">
                           {viewingImage.width && viewingImage.height 
                             ? `${viewingImage.width} × ${viewingImage.height} px`
                             : "N/A"}
                         </span>
                       </div>
                       
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-gray-400">Tamanho do Arquivo:</span>
-                        <span className="text-white">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2 py-2 border-b border-white/10">
+                        <span className="text-gray-400 flex-shrink-0">Tamanho do Arquivo:</span>
+                        <span className="text-white text-right">
                           {formatFileSize(viewingImage.file_size)}
                         </span>
                       </div>
                       
-                      <div className="flex justify-between py-2 border-b border-white/10">
-                        <span className="text-gray-400">Tipo MIME:</span>
-                        <span className="text-white">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2 py-2 border-b border-white/10">
+                        <span className="text-gray-400 flex-shrink-0">Tipo MIME:</span>
+                        <span className="text-white text-right">
                           {viewingImage.mime_type || "N/A"}
                         </span>
                       </div>
@@ -1093,14 +1122,14 @@ export function ImagePicker({ onSelect, trigger, multiple: initialMultiple = fal
                       {viewingImage.description && (
                         <div className="py-2 border-b border-white/10">
                           <span className="text-gray-400 block mb-1">Descrição:</span>
-                          <span className="text-white">{viewingImage.description}</span>
+                          <span className="text-white break-words">{viewingImage.description}</span>
                         </div>
                       )}
                       
                       {viewingImage.alt_text && (
                         <div className="py-2 border-b border-white/10">
                           <span className="text-gray-400 block mb-1">Texto Alternativo:</span>
-                          <span className="text-white">{viewingImage.alt_text}</span>
+                          <span className="text-white break-words">{viewingImage.alt_text}</span>
                         </div>
                       )}
                       
@@ -1120,9 +1149,9 @@ export function ImagePicker({ onSelect, trigger, multiple: initialMultiple = fal
                         </div>
                       )}
                       
-                      <div className="flex justify-between py-2 text-xs text-gray-500">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-1 sm:gap-2 py-2 text-xs text-gray-500">
                         <span>Data de Criação:</span>
-                        <span>
+                        <span className="text-right">
                           {viewingImage.created_at 
                             ? new Date(viewingImage.created_at).toLocaleString('pt-BR')
                             : "N/A"}
