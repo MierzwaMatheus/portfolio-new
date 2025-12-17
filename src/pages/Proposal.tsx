@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { motion } from "framer-motion";
-import { CheckCircle2, Clock, Calendar, DollarSign, Download, AlertTriangle, FileCheck, Lock, ChevronDown } from "lucide-react";
+import { CheckCircle2, Clock, Calendar, DollarSign, Download, AlertTriangle, FileCheck, Lock, ChevronDown, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 import ReactMarkdown from "react-markdown";
+import jsPDF from "jspdf";
 
 export default function Proposal() {
   const { id } = useParams(); // This is the slug
@@ -25,6 +26,7 @@ export default function Proposal() {
   const [password, setPassword] = useState("");
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [isRescisionOpen, setIsRescisionOpen] = useState(false);
+  const [acceptanceData, setAcceptanceData] = useState<any>(null);
 
   useEffect(() => {
     setIsVisible(true);
@@ -48,6 +50,14 @@ export default function Proposal() {
       setProposal(data);
       checkExpiration(data.created_at);
       
+      // Se proposta foi aceita, buscar dados do aceite
+      if (data.is_accepted) {
+        console.log("Proposta aceita detectada, buscando dados do aceite...", data.id);
+        await fetchAcceptanceData(data.id);
+      } else {
+        console.log("Proposta não aceita", data.is_accepted);
+      }
+      
       // Se tem senha, mostrar formulário de senha
       if (data.password) {
         setShowPasswordForm(true);
@@ -57,6 +67,24 @@ export default function Proposal() {
       }
     }
     setIsLoading(false);
+  };
+
+  const fetchAcceptanceData = async (proposalId: string | undefined) => {
+    if (!proposalId) return;
+    try {
+      // Usar função RPC para evitar problemas de RLS
+      const { data, error } = await supabase.rpc('get_proposal_acceptance', {
+        p_proposal_id: proposalId
+      });
+
+      if (error) {
+        console.error("Error fetching acceptance data:", error);
+      } else if (data && data.length > 0) {
+        setAcceptanceData(data[0]);
+      }
+    } catch (error) {
+      console.error("Error fetching acceptance data:", error);
+    }
   };
 
   const createSession = async (proposalId: string) => {
@@ -161,6 +189,176 @@ export default function Proposal() {
   };
 
   const handleDownloadPDF = () => {
+    if (!proposal || !acceptanceData) return;
+
+    const doc = new jsPDF();
+    let yPos = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const maxWidth = pageWidth - (margin * 2);
+
+    // Função auxiliar para verificar se precisa de nova página
+    const checkPageBreak = (requiredSpace: number = 10) => {
+      if (yPos + requiredSpace > 270) {
+        doc.addPage();
+        yPos = 20;
+        return true;
+      }
+      return false;
+    };
+
+    // Função auxiliar para adicionar texto com quebra de linha
+    const addText = (text: string, fontSize: number = 12, isBold: boolean = false, color: [number, number, number] = [0, 0, 0], lineHeight: number = 0.6) => {
+      if (!text || String(text).trim() === '') return;
+      
+      doc.setFontSize(fontSize);
+      doc.setTextColor(color[0], color[1], color[2]);
+      doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+      
+      // Converter para string e limpar caracteres problemáticos
+      const cleanText = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      const lines = doc.splitTextToSize(cleanText, maxWidth);
+      
+      lines.forEach((line: string) => {
+        checkPageBreak(fontSize * lineHeight + 2);
+        doc.text(line, margin, yPos);
+        yPos += fontSize * lineHeight;
+      });
+      yPos += 2;
+    };
+
+    // Título
+    addText('CONTRATO ELETRÔNICO', 18, true, [0, 0, 0]);
+    yPos += 5;
+
+    // Informações da Proposta
+    addText(`Proposta: ${proposal.title || `Projeto para ${proposal.client_name}`}`, 14, true);
+    addText(`Cliente: ${acceptanceData.client_name}`, 12);
+    addText(`CPF/CNPJ: ${acceptanceData.client_document}`, 12);
+    addText(`E-mail: ${acceptanceData.client_email}`, 12);
+    if (acceptanceData.client_role) {
+      addText(`Cargo/Função: ${acceptanceData.client_role}`, 12);
+    }
+    yPos += 5;
+
+    // Objetivo
+    addText('OBJETIVO DO PROJETO', 14, true);
+    if (proposal.objective) {
+      // Se objective é uma string, adicionar diretamente
+      if (typeof proposal.objective === 'string') {
+        addText(proposal.objective, 11, false, [0, 0, 0], 0.6);
+      } else if (Array.isArray(proposal.objective)) {
+        // Se é um array, processar cada item
+        proposal.objective.forEach((item: any) => {
+          if (typeof item === 'string') {
+            addText(`• ${item}`, 11, false, [0, 0, 0], 0.6);
+          } else if (item && typeof item === 'object') {
+            // Se é um objeto, tentar extrair texto
+            const text = item.text || item.label || JSON.stringify(item);
+            addText(`• ${text}`, 11, false, [0, 0, 0], 0.6);
+          }
+        });
+      }
+    }
+    yPos += 3;
+
+    // Escopo
+    if (proposal.scope) {
+      addText('ESCOPO DOS SERVIÇOS', 14, true);
+      
+      // Se scope é uma string, tratar como texto único
+      if (typeof proposal.scope === 'string') {
+        addText(proposal.scope, 11, false, [0, 0, 0], 0.6);
+      } else if (Array.isArray(proposal.scope) && proposal.scope.length > 0) {
+        // Se é um array, processar cada item
+        proposal.scope.forEach((item: any) => {
+          if (typeof item === 'string') {
+            addText(`• ${item}`, 11, false, [0, 0, 0], 0.6);
+          } else if (item && typeof item === 'object') {
+            // Se é um objeto, tentar extrair texto
+            const text = item.text || item.label || item.description || JSON.stringify(item);
+            addText(`• ${text}`, 11, false, [0, 0, 0], 0.6);
+          }
+        });
+      }
+      yPos += 3;
+    }
+
+    // Cronograma
+    if (proposal.timeline && proposal.timeline.length > 0) {
+      addText('CRONOGRAMA', 14, true);
+      proposal.timeline.forEach((item: any) => {
+        addText(`${item.step} - ${item.period}`, 11);
+      });
+      if (proposal.delivery_date) {
+        addText(`Entrega prevista: ${new Date(proposal.delivery_date).toLocaleDateString('pt-BR')}`, 11);
+      }
+      yPos += 5;
+    }
+
+    // Valor
+    addText('INVESTIMENTO', 14, true);
+    addText(`Valor Total: ${formatCurrency(proposal.investment_value)}`, 12, true);
+    yPos += 5;
+
+    // Formas de Pagamento
+    if (proposal.payment_methods && proposal.payment_methods.length > 0) {
+      addText('FORMAS DE PAGAMENTO', 14, true);
+      proposal.payment_methods.forEach((method: string) => {
+        addText(`• ${method}`, 11);
+      });
+      yPos += 5;
+    }
+
+    // Condições Gerais
+    if (proposal.conditions && proposal.conditions.length > 0) {
+      addText('CONDIÇÕES GERAIS', 14, true);
+      proposal.conditions.forEach((condition: string) => {
+        addText(`• ${condition}`, 11);
+      });
+      yPos += 5;
+    }
+
+    // Política de Rescisão
+    const rescisionPolicy = proposal.rescision_policy || DEFAULT_RESCISION_POLICY;
+    addText('POLÍTICA DE RESCISÃO', 14, true);
+    // Remover markdown básico para texto simples
+    const cleanPolicy = rescisionPolicy
+      .replace(/#{1,6}\s/g, '')
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1');
+    addText(cleanPolicy, 10);
+    yPos += 10;
+
+    // Assinatura Digital
+    addText('ASSINATURA DIGITAL', 14, true);
+    addText(`Esta proposta foi aceita eletronicamente em ${new Date(acceptanceData.accepted_at).toLocaleString('pt-BR')}`, 11);
+    addText(`Nome: ${acceptanceData.client_name}`, 11);
+    addText(`Documento: ${acceptanceData.client_document}`, 11);
+    addText(`E-mail: ${acceptanceData.client_email}`, 11);
+    if (acceptanceData.client_declaration) {
+      addText(`Declaração: ${acceptanceData.client_declaration}`, 10);
+    }
+    yPos += 5;
+
+    // Evidências Técnicas
+    addText('EVIDÊNCIAS TÉCNICAS', 12, true);
+    addText(`Hash SHA-256: ${acceptanceData.content_hash}`, 9);
+    addText(`IP de Origem: ${acceptanceData.ip_address || 'N/A'}`, 9);
+    addText(`User-Agent: ${acceptanceData.user_agent || 'N/A'}`, 9);
+    addText(`Versão da Proposta: ${acceptanceData.proposal_version}`, 9);
+    yPos += 5;
+
+    // Foro
+    addText('FORO', 12, true);
+    addText('Fica eleito o foro da comarca de Itapevi – SP para dirimir quaisquer controvérsias oriundas deste contrato, com renúncia a qualquer outro, por mais privilegiado que seja.', 10);
+
+    // Salvar PDF
+    const fileName = `Contrato_${proposal.client_name.replace(/\s+/g, '_')}_${new Date(acceptanceData.accepted_at).toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+  };
+
+  const handleDownloadPDFOld = () => {
     // Encontrar o container principal
     const content = document.querySelector('.relative.z-10') as HTMLElement;
     if (!content) return;
@@ -443,6 +641,37 @@ export default function Proposal() {
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-20">
+        {(proposal.is_accepted === true || proposal.is_accepted) && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-green-500/10 border border-green-500/20 text-green-400 p-4 rounded-lg mb-8"
+          >
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5" />
+                <div>
+                  <p className="font-medium">Esta proposta foi aceita eletronicamente</p>
+                  {acceptanceData ? (
+                    <p className="text-sm text-green-300/80">
+                      Aceita em {new Date(acceptanceData.accepted_at).toLocaleString('pt-BR')} por {acceptanceData.client_name}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-green-300/80">Carregando informações do aceite...</p>
+                  )}
+                </div>
+              </div>
+              <Button
+                onClick={handleDownloadPDF}
+                className="bg-green-500 hover:bg-green-600 text-white"
+                disabled={!acceptanceData}
+              >
+                <FileText className="w-4 h-4 mr-2" />
+                Baixar PDF do Contrato
+              </Button>
+            </div>
+          </motion.div>
+        )}
         {isExpired && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
@@ -682,8 +911,8 @@ export default function Proposal() {
           </motion.section>
 
           {/* CTA Actions */}
-          <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4 pb-12">
-            {!proposal.is_accepted && (
+          {!proposal.is_accepted && (
+            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4 pb-12">
               <Button 
                 size="lg" 
                 className="bg-neon-purple hover:bg-neon-purple/90 text-white h-14 px-8 w-full sm:w-auto"
@@ -698,23 +927,8 @@ export default function Proposal() {
                 <FileCheck className="mr-2 w-5 h-5" />
                 Aceitar Proposta Eletronicamente
               </Button>
-            )}
-            {proposal.is_accepted && (
-              <div className="bg-green-500/10 border border-green-500/20 text-green-400 p-4 rounded-lg flex items-center gap-3">
-                <CheckCircle2 className="w-5 h-5" />
-                <span className="font-medium">Esta proposta já foi aceita eletronicamente.</span>
-              </div>
-            )}
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="hidden border-white/20 text-white hover:bg-white/5 h-14 px-8 w-full sm:w-auto no-print"
-              onClick={handleDownloadPDF}
-            >
-              <Download className="mr-2 w-5 h-5" />
-              Baixar PDF
-            </Button>
-          </motion.div>
+            </motion.div>
+          )}
 
           {/* Footer */}
           <motion.footer variants={itemVariants} className="text-center border-t border-white/10 pt-8 pb-4">

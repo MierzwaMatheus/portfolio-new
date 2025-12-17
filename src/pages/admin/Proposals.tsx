@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Plus, Pencil, Trash2, RefreshCw, Link as LinkIcon, X } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
@@ -18,6 +19,7 @@ export default function AdminProposals() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProposal, setEditingProposal] = useState<any | null>(null);
+  const [activeTab, setActiveTab] = useState("all");
 
   // Form State
   const [title, setTitle] = useState("");
@@ -660,87 +662,156 @@ export default function AdminProposals() {
           </Dialog>
         </div>
 
-        <div className="rounded-md border border-white/10 overflow-hidden">
-          <Table>
-            <TableHeader className="bg-white/5">
-              <TableRow className="border-white/10 hover:bg-white/5">
-                <TableHead className="text-gray-300">Cliente</TableHead>
-                <TableHead className="text-gray-300">Data de Criação</TableHead>
-                <TableHead className="text-gray-300">Validade</TableHead>
-                <TableHead className="text-gray-300">Status</TableHead>
-                <TableHead className="text-gray-300 text-right">Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {proposals.map((proposal) => (
-                <TableRow key={proposal.id} className="border-white/10 hover:bg-white/5">
-                  <TableCell className="font-medium text-white">
-                    {proposal.client_name}
-                    {proposal.is_accepted && (
-                      <Badge variant="outline" className="ml-2 bg-green-500/10 text-green-500 border-green-500/20 text-xs">
-                        Aceita
-                      </Badge>
-                    )}
-                  </TableCell>
-                  <TableCell className="text-gray-400">{new Date(proposal.created_at).toLocaleDateString('pt-BR')}</TableCell>
-                  <TableCell className="text-gray-400">{calculateValidUntil(proposal.created_at)}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <Badge
-                        variant="outline"
-                        className={`${getStatus(proposal.created_at) === "Ativo"
-                            ? "bg-green-500/10 text-green-500 border-green-500/20"
-                            : "bg-gray-500/10 text-gray-500 border-gray-500/20"
-                          }`}
-                      >
-                        {getStatus(proposal.created_at)}
-                      </Badge>
-                      {proposal.version > 1 && (
-                        <span className="text-xs text-gray-500">v{proposal.version}</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
-                        onClick={() => handleEdit(proposal)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
-                        onClick={() => handleDelete(proposal.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
-                        onClick={() => handleReload(proposal.id)}
-                      >
-                        <RefreshCw className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
-                        onClick={() => handleCopyLink(proposal.slug)}
-                      >
-                        <LinkIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="all">Todas</TabsTrigger>
+            <TabsTrigger value="accepted">Aceitas</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="mt-6">
+            <div className="rounded-md border border-white/10 overflow-hidden">
+              <Table>
+                <TableHeader className="bg-white/5">
+                  <TableRow className="border-white/10 hover:bg-white/5">
+                    <TableHead className="text-gray-300">Cliente</TableHead>
+                    <TableHead className="text-gray-300">Data de Criação</TableHead>
+                    <TableHead className="text-gray-300">Validade</TableHead>
+                    <TableHead className="text-gray-300">Status</TableHead>
+                    <TableHead className="text-gray-300 text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {proposals.filter(p => !p.is_accepted).map((proposal) => (
+                    <TableRow key={proposal.id} className="border-white/10 hover:bg-white/5">
+                      <TableCell className="font-medium text-white">
+                        {proposal.client_name}
+                      </TableCell>
+                      <TableCell className="text-gray-400">{new Date(proposal.created_at).toLocaleDateString('pt-BR')}</TableCell>
+                      <TableCell className="text-gray-400">{calculateValidUntil(proposal.created_at)}</TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <Badge
+                            variant="outline"
+                            className={`${getStatus(proposal.created_at) === "Ativo"
+                                ? "bg-green-500/10 text-green-500 border-green-500/20"
+                                : "bg-gray-500/10 text-gray-500 border-gray-500/20"
+                              }`}
+                          >
+                            {getStatus(proposal.created_at)}
+                          </Badge>
+                          {proposal.version > 1 && (
+                            <span className="text-xs text-gray-500">v{proposal.version}</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
+                            onClick={() => handleEdit(proposal)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
+                            onClick={() => handleDelete(proposal.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
+                            onClick={() => handleReload(proposal.id)}
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
+                            onClick={() => handleCopyLink(proposal.slug)}
+                          >
+                            <LinkIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="accepted" className="mt-6">
+            <div className="rounded-md border border-white/10 overflow-hidden">
+              <Table>
+                <TableHeader className="bg-white/5">
+                  <TableRow className="border-white/10 hover:bg-white/5">
+                    <TableHead className="text-gray-300">Cliente</TableHead>
+                    <TableHead className="text-gray-300">Data de Criação</TableHead>
+                    <TableHead className="text-gray-300">Data de Aceite</TableHead>
+                    <TableHead className="text-gray-300">Status</TableHead>
+                    <TableHead className="text-gray-300 text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {proposals.filter(p => p.is_accepted).map((proposal) => (
+                    <TableRow key={proposal.id} className="border-white/10 hover:bg-white/5">
+                      <TableCell className="font-medium text-white">
+                        {proposal.client_name}
+                        <Badge variant="outline" className="ml-2 bg-green-500/10 text-green-500 border-green-500/20 text-xs">
+                          Aceita
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-gray-400">{new Date(proposal.created_at).toLocaleDateString('pt-BR')}</TableCell>
+                      <TableCell className="text-gray-400">
+                        {proposal.accepted_at ? new Date(proposal.accepted_at).toLocaleDateString('pt-BR') : '-'}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <Badge
+                            variant="outline"
+                            className="bg-green-500/10 text-green-500 border-green-500/20"
+                          >
+                            Aceita
+                          </Badge>
+                          {proposal.version > 1 && (
+                            <span className="text-xs text-gray-500">v{proposal.version}</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
+                            onClick={() => handleReload(proposal.id)}
+                          >
+                            <RefreshCw className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
+                            onClick={() => handleCopyLink(proposal.slug)}
+                          >
+                            <LinkIcon className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </AdminLayout>
   );
