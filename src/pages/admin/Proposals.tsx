@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Pencil, Trash2, RefreshCw, Link as LinkIcon, X, Copy, KeyRound } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Link as LinkIcon, X, Copy, KeyRound, Upload } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 import { supabase } from "@/lib/supabase";
@@ -19,8 +19,10 @@ export default function AdminProposals() {
   const [proposals, setProposals] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isJsonImportModalOpen, setIsJsonImportModalOpen] = useState(false);
   const [editingProposal, setEditingProposal] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState("all");
+  const [jsonPasteContent, setJsonPasteContent] = useState("");
 
   // Form State
   const [title, setTitle] = useState("");
@@ -373,6 +375,140 @@ export default function AdminProposals() {
     }
   };
 
+  const processJsonData = async (jsonData: any): Promise<boolean> => {
+    // Validar campos obrigatórios
+    if (!jsonData.client_name || !jsonData.slug) {
+      toast.error("Erro: O JSON deve conter 'client_name' e 'slug' como campos obrigatórios.");
+      return false;
+    }
+
+    // Verificar disponibilidade do slug
+    const { data: existingProposal } = await supabase
+      .schema('app_portfolio')
+      .from('proposals')
+      .select('id')
+      .eq('slug', jsonData.slug)
+      .maybeSingle();
+
+    if (existingProposal) {
+      toast.error(`Erro: O slug "${jsonData.slug}" já está em uso.`);
+      return false;
+    }
+
+    // Processar dados do JSON
+    const createdDate = jsonData.created_at 
+      ? new Date(jsonData.created_at).toISOString() 
+      : new Date().toISOString();
+
+    // Validar e processar timeline
+    let timelineItems: { step: string; period: string }[] = [];
+    if (Array.isArray(jsonData.timeline)) {
+      timelineItems = jsonData.timeline.map((item: any) => {
+        if (typeof item === 'object' && item.step && item.period) {
+          return { step: String(item.step), period: String(item.period) };
+        }
+        return null;
+      }).filter((item: any) => item !== null);
+    }
+
+    // Validar e processar scope
+    const scopeItems: string[] = Array.isArray(jsonData.scope) 
+      ? jsonData.scope.map((item: any) => String(item))
+      : [];
+
+    // Validar e processar payment_methods
+    const paymentMethods: string[] = Array.isArray(jsonData.payment_methods)
+      ? jsonData.payment_methods.map((item: any) => String(item))
+      : [];
+
+    // Validar e processar conditions
+    const conditions: string[] = Array.isArray(jsonData.conditions)
+      ? jsonData.conditions.map((item: any) => String(item))
+      : [];
+
+    // Processar rescision_policy: usar padrão se vazio/null/undefined
+    const rescisionPolicy = jsonData.rescision_policy?.trim() 
+      ? String(jsonData.rescision_policy)
+      : DEFAULT_RESCISION_POLICY;
+
+    // Criar payload
+    const payload = {
+      title: jsonData.title?.trim() || null,
+      client_name: String(jsonData.client_name),
+      slug: String(jsonData.slug),
+      created_at: createdDate,
+      objective: jsonData.objective?.trim() || '',
+      scope: scopeItems,
+      timeline: timelineItems,
+      delivery_date: jsonData.delivery_date?.trim() || null,
+      investment_value: typeof jsonData.investment_value === 'number' 
+        ? jsonData.investment_value 
+        : parseFloat(String(jsonData.investment_value || 0).replace(',', '.')) || 0,
+      payment_methods: paymentMethods,
+      conditions: conditions,
+      password: jsonData.password?.trim() || null,
+      rescision_policy: rescisionPolicy
+    };
+
+    // Inserir no banco
+    const { error } = await supabase
+      .schema('app_portfolio')
+      .from('proposals')
+      .insert(payload);
+
+    if (error) {
+      console.error("Error creating proposal from JSON:", error);
+      toast.error(`Erro ao criar proposta: ${error.message}`);
+      return false;
+    } else {
+      toast.success("Proposta criada com sucesso a partir do JSON!");
+      setIsJsonImportModalOpen(false);
+      setJsonPasteContent("");
+      fetchProposals();
+      return true;
+    }
+  };
+
+  const handleJsonUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Resetar o input
+    event.target.value = '';
+
+    try {
+      const text = await file.text();
+      const jsonData = JSON.parse(text);
+      await processJsonData(jsonData);
+    } catch (error) {
+      console.error("Error processing JSON file:", error);
+      if (error instanceof SyntaxError) {
+        toast.error("Erro: O arquivo JSON está mal formatado. Verifique a sintaxe.");
+      } else {
+        toast.error(`Erro ao processar arquivo JSON: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      }
+    }
+  };
+
+  const handleJsonPaste = async () => {
+    if (!jsonPasteContent.trim()) {
+      toast.error("Por favor, cole o conteúdo JSON antes de importar.");
+      return;
+    }
+
+    try {
+      const jsonData = JSON.parse(jsonPasteContent);
+      await processJsonData(jsonData);
+    } catch (error) {
+      console.error("Error processing pasted JSON:", error);
+      if (error instanceof SyntaxError) {
+        toast.error("Erro: O JSON colado está mal formatado. Verifique a sintaxe.");
+      } else {
+        toast.error(`Erro ao processar JSON: ${error instanceof Error ? error.message : 'Erro desconhecido'}`);
+      }
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -380,12 +516,95 @@ export default function AdminProposals() {
           <h1 className="text-3xl font-bold text-white flex items-center gap-2">
             <span className="text-neon-purple">📄</span> Propostas Comerciais
           </h1>
-          <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white">
-                <Plus className="w-4 h-4 mr-2" /> Nova Proposta
-              </Button>
-            </DialogTrigger>
+          <div className="flex gap-2">
+            <Dialog open={isJsonImportModalOpen} onOpenChange={setIsJsonImportModalOpen}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline"
+                  className="bg-background hover:bg-background/90 text-white border-white/20"
+                >
+                  <Upload className="w-4 h-4 mr-2" /> Importar JSON
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="bg-card border-white/10 max-w-2xl w-full max-h-[85vh] overflow-y-scroll text-white">
+                <DialogHeader>
+                  <DialogTitle className="text-xl font-bold">
+                    Importar Proposta via JSON
+                  </DialogTitle>
+                  <VisuallyHidden>
+                    <h2>Dialog para importação de proposta via JSON</h2>
+                  </VisuallyHidden>
+                </DialogHeader>
+
+                <Tabs defaultValue="upload" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="upload">Upload de Arquivo</TabsTrigger>
+                    <TabsTrigger value="paste">Colar JSON</TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="upload" className="space-y-4 mt-4">
+                    <div>
+                      <Label className="block text-sm mb-2">Selecione um arquivo JSON</Label>
+                      <input
+                        id="json-upload"
+                        type="file"
+                        accept=".json"
+                        className="hidden"
+                        onChange={handleJsonUpload}
+                      />
+                      <Button
+                        variant="outline"
+                        className="w-full bg-background hover:bg-background/90 text-white border-white/20"
+                        onClick={() => document.getElementById('json-upload')?.click()}
+                      >
+                        <Upload className="w-4 h-4 mr-2" /> Escolher Arquivo JSON
+                      </Button>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Selecione um arquivo JSON válido com a estrutura da proposta
+                      </p>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="paste" className="space-y-4 mt-4">
+                    <div>
+                      <Label className="block text-sm mb-2">Cole o conteúdo JSON aqui</Label>
+                      <Textarea
+                        className="bg-background border-input min-h-[400px] font-mono text-sm"
+                        placeholder='Cole o JSON aqui, por exemplo:&#10;{&#10;  "client_name": "Nome do Cliente",&#10;  "slug": "slug-da-proposta"&#10;  ...&#10;}'
+                        value={jsonPasteContent}
+                        onChange={(e) => setJsonPasteContent(e.target.value)}
+                      />
+                      <p className="text-xs text-gray-500 mt-2">
+                        Cole o conteúdo completo do JSON no campo acima
+                      </p>
+                    </div>
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Button
+                        variant="ghost"
+                        onClick={() => {
+                          setIsJsonImportModalOpen(false);
+                          setJsonPasteContent("");
+                        }}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        className="bg-primary text-primary-foreground hover:bg-primary/90"
+                        onClick={handleJsonPaste}
+                      >
+                        Importar JSON
+                      </Button>
+                    </div>
+                  </TabsContent>
+                </Tabs>
+              </DialogContent>
+            </Dialog>
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+              <DialogTrigger asChild>
+                <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white">
+                  <Plus className="w-4 h-4 mr-2" /> Nova Proposta
+                </Button>
+              </DialogTrigger>
             <DialogContent className="bg-card border-white/10 max-w-2xl w-full max-h-[85vh] overflow-y-scroll text-white">
               <DialogHeader>
                 <DialogTitle className="text-xl font-bold">
@@ -697,6 +916,7 @@ export default function AdminProposals() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
