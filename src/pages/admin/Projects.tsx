@@ -205,10 +205,13 @@ export default function AdminProjects() {
           : -1;
         projectData.order_index = maxOrder + 1;
 
+        // Garantir que o id não seja incluído para que o banco gere automaticamente
+        const { id, ...insertData } = projectData;
+        
         const { error } = await supabase
           .schema('app_portfolio')
           .from('projects')
-          .insert([projectData]);
+          .insert([insertData]);
         if (error) throw error;
       }
 
@@ -218,9 +221,19 @@ export default function AdminProjects() {
       setProjectImages([]);
       setSelectedTags([]);
       toast.success(editingProject ? 'Projeto atualizado com sucesso' : 'Projeto criado com sucesso');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving project:', error);
-      toast.error('Erro ao salvar projeto');
+      
+      // Verificar se é erro de chave duplicada (sequência desincronizada)
+      if (error?.code === '23505' || error?.message?.includes('duplicate key')) {
+        toast.error(
+          'Erro: ID duplicado. A sequência do banco de dados precisa ser sincronizada. ' +
+          'Execute no SQL Editor do Supabase: SELECT setval(\'app_portfolio.projects_id_seq\', (SELECT COALESCE(MAX(id), 0) + 1 FROM app_portfolio.projects));',
+          { duration: 10000 }
+        );
+      } else {
+        toast.error(error?.message || 'Erro ao salvar projeto');
+      }
     }
   };
 

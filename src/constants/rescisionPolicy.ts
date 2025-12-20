@@ -104,3 +104,4 @@ Esta Política de Rescisão integra o contrato eletrônico firmado entre as part
 Qualquer tolerância quanto ao descumprimento de obrigações não constitui novação ou renúncia de direitos.`;
 
 
+
