@@ -24,6 +24,7 @@ import BlogPost from "./pages/BlogPost";
 import Proposal from "./pages/Proposal";
 import ProposalAccept from "./pages/ProposalAccept";
 import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 function Router() {
   return (
@@ -67,6 +68,7 @@ function App() {
             <Toaster />
             <Router />
             <Analytics />
+            <SpeedInsights />
           </TooltipProvider>
         </ThemeProvider>
       </AuthProvider>
