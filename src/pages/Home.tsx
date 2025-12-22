@@ -14,15 +14,32 @@ import {
 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
+interface ContactInfo {
+  role: string;
+}
+
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [aboutText, setAboutText] = useState("");
   const [services, setServices] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Fetch Contact Info
+        const { data: contactData, error: contactError } = await supabase
+          .schema('app_portfolio')
+          .from('contact_info')
+          .select('role')
+          .single();
+        if (contactError) {
+          console.error("Error fetching contact info:", contactError);
+        } else if (contactData) {
+          setContactInfo(contactData);
+        }
+
         // Fetch About
         const { data: aboutData, error: aboutError } = await supabase.schema('app_portfolio').from('content').select('value').eq('key', 'about_text').single();
         if (aboutError) {
@@ -106,7 +123,7 @@ export default function Home() {
             </h1>
 
             <h2 className="text-2xl md:text-3xl mt-4 text-gray-400 font-light">
-            Tech Lead Frontend <span className="text-neon-purple">&</span> Engenheiro Full-Stack
+              {contactInfo?.role || "Tech Lead Frontend & Engenheiro Full-Stack"}
             </h2>
 
             <p className="max-w-2xl mt-8 text-gray-300 text-lg leading-relaxed border-l-2 border-neon-purple/50 pl-6">
