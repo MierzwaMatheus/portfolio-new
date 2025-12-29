@@ -257,7 +257,7 @@ export default function Portfolio() {
                             </div>
                           </div>
 
-                          <DialogDescription className="text-gray-300 text-base leading-relaxed">
+                          <DialogDescription className="text-gray-300 text-base leading-relaxed whitespace-pre-line">
                             {project.long_description || project.description}
                           </DialogDescription>
 
