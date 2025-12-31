@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Trash2, GripVertical, Pencil, Loader2 } from "lucide-react";
+import { Plus, Trash2, GripVertical, Pencil, Loader2, Check, X } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -26,13 +26,59 @@ interface ResumeItem {
 }
 
 // Sortable Item Component for Simple Lists
-function SortableSimpleItem({ id, text, onDelete }: { id: string, text: string, onDelete: (id: string) => void }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id });
+function SortableSimpleItem({ 
+  id, 
+  text, 
+  isEditing, 
+  editingText, 
+  onEdit, 
+  onSave, 
+  onCancel, 
+  onTextChange, 
+  onDelete 
+}: { 
+  id: string, 
+  text: string,
+  isEditing: boolean,
+  editingText: string,
+  onEdit: (id: string) => void,
+  onSave: (id: string) => void,
+  onCancel: () => void,
+  onTextChange: (text: string) => void,
+  onDelete: (id: string) => void 
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id, disabled: isEditing });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
+
+  if (isEditing) {
+    return (
+      <div ref={setNodeRef} style={style} className="flex items-center gap-2 bg-card border border-white/10 p-3 rounded-md">
+        <Input
+          value={editingText}
+          onChange={(e) => onTextChange(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              onSave(id);
+            } else if (e.key === 'Escape') {
+              onCancel();
+            }
+          }}
+          className="flex-1 bg-white/5 border-white/10 text-white"
+          autoFocus
+        />
+        <Button variant="ghost" size="icon" onClick={() => onSave(id)} className="text-green-400 hover:text-green-300 hover:bg-green-400/10">
+          <Check className="w-4 h-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={onCancel} className="text-gray-400 hover:text-gray-300 hover:bg-gray-400/10">
+          <X className="w-4 h-4" />
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div ref={setNodeRef} style={style} className="flex items-center gap-2 bg-card border border-white/10 p-3 rounded-md group">
@@ -40,6 +86,9 @@ function SortableSimpleItem({ id, text, onDelete }: { id: string, text: string, 
         <GripVertical className="w-4 h-4" />
       </div>
       <span className="flex-1 text-white">{text}</span>
+      <Button variant="ghost" size="icon" onClick={() => onEdit(id)} className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Pencil className="w-4 h-4" />
+      </Button>
       <Button variant="ghost" size="icon" onClick={() => onDelete(id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-opacity">
         <Trash2 className="w-4 h-4" />
       </Button>
@@ -203,6 +252,11 @@ export default function AdminResume() {
   const [newCourse, setNewCourse] = useState("");
   const [newVolunteer, setNewVolunteer] = useState("");
   const [newSoftSkill, setNewSoftSkill] = useState("");
+  
+  // Simple item editing state
+  const [editingSimpleItemId, setEditingSimpleItemId] = useState<string | null>(null);
+  const [editingSimpleText, setEditingSimpleText] = useState("");
+  const [editingSimpleType, setEditingSimpleType] = useState<string | null>(null);
 
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<ResumeItem | null>(null);
@@ -486,6 +540,52 @@ export default function AdminResume() {
     }
   };
 
+  const handleEditSimpleItem = (id: string, type: string, currentText: string) => {
+    setEditingSimpleItemId(id);
+    setEditingSimpleText(currentText);
+    setEditingSimpleType(type);
+  };
+
+  const handleCancelSimpleEdit = () => {
+    setEditingSimpleItemId(null);
+    setEditingSimpleText("");
+    setEditingSimpleType(null);
+  };
+
+  const handleSaveSimpleItem = async (id: string) => {
+    if (!editingSimpleType || !editingSimpleText.trim()) {
+      handleCancelSimpleEdit();
+      return;
+    }
+
+    try {
+      const content = { text: editingSimpleText.trim() };
+      
+      // Traduz o conteúdo
+      const contentTranslations = await translateContent(content, editingSimpleType);
+
+      const { error } = await supabase
+        .schema("app_portfolio")
+        .from("resume_items")
+        .update({
+          content,
+          content_translations: {
+            'pt-BR': content,
+            'en-US': contentTranslations,
+          },
+        })
+        .eq("id", id);
+
+      if (error) throw error;
+      toast.success("Item atualizado com sucesso");
+      handleCancelSimpleEdit();
+      fetchItems();
+    } catch (error) {
+      console.error("Error updating item:", error);
+      toast.error("Erro ao atualizar item");
+    }
+  };
+
   const handleDragEnd = async (event: DragEndEvent, type: string) => {
     const { active, over } = event;
 
@@ -660,6 +760,12 @@ export default function AdminResume() {
                       key={item.id}
                       id={item.id}
                       text={item.content.text}
+                      isEditing={editingSimpleItemId === item.id}
+                      editingText={editingSimpleText}
+                      onEdit={(id) => handleEditSimpleItem(id, "soft_skill", item.content.text)}
+                      onSave={handleSaveSimpleItem}
+                      onCancel={handleCancelSimpleEdit}
+                      onTextChange={setEditingSimpleText}
                       onDelete={(id) => handleDelete(id)}
                     />
                   ))}
@@ -691,6 +797,12 @@ export default function AdminResume() {
                       key={item.id}
                       id={item.id}
                       text={item.content.text}
+                      isEditing={editingSimpleItemId === item.id}
+                      editingText={editingSimpleText}
+                      onEdit={(id) => handleEditSimpleItem(id, "course", item.content.text)}
+                      onSave={handleSaveSimpleItem}
+                      onCancel={handleCancelSimpleEdit}
+                      onTextChange={setEditingSimpleText}
                       onDelete={(id) => handleDelete(id)}
                     />
                   ))}
@@ -745,6 +857,12 @@ export default function AdminResume() {
                       key={item.id}
                       id={item.id}
                       text={item.content.text}
+                      isEditing={editingSimpleItemId === item.id}
+                      editingText={editingSimpleText}
+                      onEdit={(id) => handleEditSimpleItem(id, "volunteer", item.content.text)}
+                      onSave={handleSaveSimpleItem}
+                      onCancel={handleCancelSimpleEdit}
+                      onTextChange={setEditingSimpleText}
                       onDelete={(id) => handleDelete(id)}
                     />
                   ))}
