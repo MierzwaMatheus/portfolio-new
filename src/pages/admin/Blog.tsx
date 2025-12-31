@@ -57,10 +57,21 @@ export default function AdminBlog() {
   const handleOpenDialog = (post: any = null) => {
     setEditingPost(post);
     setPreviewImage(post ? post.image : "");
-    setContent(post ? post.content : "");
+    // Extrai conteúdo do JSONB ou fallback para campo direto
+    const contentPT = post?.content_translations?.['pt-BR'] || post?.content || "";
+    setContent(contentPT);
     setIsPublished(post ? post.status === "published" : false);
     setIsFeatured(post ? post.featured : false);
     setIsDialogOpen(true);
+  };
+
+  // Helper para extrair valor do JSONB ou valor direto (fallback para compatibilidade)
+  const getPostField = (post: any, field: string): string => {
+    const translationsField = `${field}_translations`;
+    if (post[translationsField] && post[translationsField]['pt-BR']) {
+      return post[translationsField]['pt-BR'];
+    }
+    return post[field] || '';
   };
 
   const slugify = (text: string) => {
@@ -80,28 +91,68 @@ export default function AdminBlog() {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
 
-    const title = formData.get("title") as string;
-    const subtitle = formData.get("subtitle") as string;
+    const titlePT = formData.get("title") as string;
+    const subtitlePT = formData.get("subtitle") as string || '';
     const date = formData.get("date") as string;
     const tagsStr = formData.get("tags") as string;
     const status = isPublished ? "published" : "draft";
+    const contentPT = content || '';
 
     const tags = tagsStr.split(",").map(t => t.trim()).filter(t => t);
-    const slug = slugify(title);
-
-    const postData = {
-      title,
-      subtitle,
-      content,
-      image: previewImage,
-      featured: isFeatured,
-      status,
-      published_at: date || null,
-      tags,
-      slug
-    };
+    const slug = slugify(titlePT);
 
     try {
+      // Traduz para inglês usando a Edge Function
+      const textsToTranslate = [titlePT];
+      if (subtitlePT) {
+        textsToTranslate.push(subtitlePT);
+      }
+      if (contentPT) {
+        textsToTranslate.push(contentPT);
+      }
+
+      const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
+        body: {
+          texts: textsToTranslate,
+          source: 'pt',
+          target: 'en',
+        },
+      });
+
+      if (translateError) {
+        console.error('Translation error:', translateError);
+        toast.error('Erro ao traduzir. Salvando apenas em português.');
+      }
+
+      const translatedTexts = translateData?.translatedTexts || textsToTranslate;
+      const titleEN = translatedTexts[0] || titlePT;
+      const subtitleEN = subtitlePT ? (translatedTexts[1] || subtitlePT) : '';
+      const contentEN = contentPT ? (translatedTexts[subtitlePT ? 2 : 1] || contentPT) : '';
+
+      const postData = {
+        title: titlePT,
+        subtitle: subtitlePT || null,
+        content: contentPT || null,
+        title_translations: {
+          'pt-BR': titlePT,
+          'en-US': titleEN,
+        },
+        subtitle_translations: subtitlePT ? {
+          'pt-BR': subtitlePT,
+          'en-US': subtitleEN,
+        } : null,
+        content_translations: contentPT ? {
+          'pt-BR': contentPT,
+          'en-US': contentEN,
+        } : null,
+        image: previewImage,
+        featured: isFeatured,
+        status,
+        published_at: date || null,
+        tags,
+        slug
+      };
+
       if (editingPost) {
         const { error } = await supabase
           .schema('app_portfolio')
@@ -217,11 +268,11 @@ export default function AdminBlog() {
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="title" className="text-white">Título</Label>
-                    <Input name="title" id="title" defaultValue={editingPost?.title} className="bg-white/5 border-white/10 text-white" required />
+                    <Input name="title" id="title" defaultValue={editingPost ? getPostField(editingPost, 'title') : ''} className="bg-white/5 border-white/10 text-white" required />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="subtitle" className="text-white">Subtítulo</Label>
-                    <Input name="subtitle" id="subtitle" defaultValue={editingPost?.subtitle} className="bg-white/5 border-white/10 text-white" />
+                    <Input name="subtitle" id="subtitle" defaultValue={editingPost ? getPostField(editingPost, 'subtitle') : ''} className="bg-white/5 border-white/10 text-white" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="date" className="text-white">Data de Publicação</Label>

@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { supabase } from "@/lib/supabase";
 import { Link } from "wouter";
+import { useI18n } from "@/i18n/context/I18nContext";
 import {
   Carousel,
   CarouselContent,
@@ -19,15 +20,37 @@ import {
 } from "@/components/ui/carousel";
 
 export default function Blog() {
+  const { locale, isLoading: i18nLoading } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [posts, setPosts] = useState<any[]>([]);
-  const [featuredPosts, setFeaturedPosts] = useState<any[]>([]);
+  const [postsRaw, setPostsRaw] = useState<any[]>([]); // Dados brutos com JSONB
+  const [featuredPostsRaw, setFeaturedPostsRaw] = useState<any[]>([]); // Dados brutos com JSONB
+
+  // Deriva posts traduzidos baseados no locale atual (sem refetch)
+  const posts = useMemo(() => {
+    return postsRaw.map((post) => ({
+      ...post,
+      title: post.title_translations?.[locale] || post.title_translations?.['pt-BR'] || post.title || '',
+      subtitle: post.subtitle_translations?.[locale] || post.subtitle_translations?.['pt-BR'] || post.subtitle || '',
+      content: post.content_translations?.[locale] || post.content_translations?.['pt-BR'] || post.content || '',
+    }));
+  }, [postsRaw, locale]);
+
+  const featuredPosts = useMemo(() => {
+    return featuredPostsRaw.map((post) => ({
+      ...post,
+      title: post.title_translations?.[locale] || post.title_translations?.['pt-BR'] || post.title || '',
+      subtitle: post.subtitle_translations?.[locale] || post.subtitle_translations?.['pt-BR'] || post.subtitle || '',
+      content: post.content_translations?.[locale] || post.content_translations?.['pt-BR'] || post.content || '',
+    }));
+  }, [featuredPostsRaw, locale]);
 
   useEffect(() => {
-    fetchPosts();
-  }, []);
+    if (!i18nLoading) {
+      fetchPosts();
+    }
+  }, [i18nLoading]); // Removido locale das dependências - dados já vêm com JSONB completo
 
   const fetchPosts = async () => {
     try {
@@ -35,7 +58,7 @@ export default function Blog() {
       const { data, error } = await supabase
         .schema('app_portfolio')
         .from('posts')
-        .select('*')
+        .select('id, title, subtitle, content, title_translations, subtitle_translations, content_translations, image, featured, status, created_at, published_at, tags, slug')
         .eq('status', 'published')
         .order('created_at', { ascending: false });
 
@@ -44,20 +67,20 @@ export default function Blog() {
       if (data && data.length > 0) {
         // Find all featured posts
         const featured = data.filter((p: any) => p.featured === true);
-        setFeaturedPosts(featured || []);
+        setFeaturedPostsRaw(featured || []);
 
         // Filter out all featured posts from the main list
         const featuredIds = featured.map((p: any) => p.id);
         const otherPosts = data.filter((p: any) => !featuredIds.includes(p.id));
-        setPosts(otherPosts);
+        setPostsRaw(otherPosts);
       } else {
-        setFeaturedPosts([]);
-        setPosts([]);
+        setFeaturedPostsRaw([]);
+        setPostsRaw([]);
       }
     } catch (error: any) {
       console.error('Error fetching posts:', error);
-      setFeaturedPosts([]);
-      setPosts([]);
+      setFeaturedPostsRaw([]);
+      setPostsRaw([]);
     } finally {
       setIsLoading(false);
     }
