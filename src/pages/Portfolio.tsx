@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { supabase } from "@/lib/supabase";
+import { useI18n } from "@/i18n/context/I18nContext";
+import { useTranslation } from "@/i18n/hooks/useTranslation";
 
 interface Project {
   id: number;
@@ -22,15 +23,13 @@ interface Project {
 }
 
 export default function Portfolio() {
+  const { t } = useTranslation();
+  const { dbRepository, locale, isLoading: i18nLoading } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
-  const [activeFilter, setActiveFilter] = useState("Todos");
+  const [activeFilter, setActiveFilter] = useState(t('portfolio.all'));
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [projects, setProjects] = useState<Project[]>([]);
   const [expandedImage, setExpandedImage] = useState<{ url: string; index: number; images: string[] } | null>(null);
-
-  useEffect(() => {
-    fetchProjects();
-  }, []);
 
   // Navegação por teclado para as imagens expandidas
   useEffect(() => {
@@ -68,16 +67,16 @@ export default function Portfolio() {
     };
   }, [expandedImage]);
 
+  useEffect(() => {
+    if (!i18nLoading) {
+      fetchProjects();
+    }
+  }, [locale, i18nLoading]);
+
   const fetchProjects = async () => {
     try {
-      const { data, error } = await supabase
-        .schema('app_portfolio')
-        .from('projects')
-        .select('*')
-        .order('order_index', { ascending: true, nullsFirst: false });
-
-      if (error) throw error;
-      setProjects(data || []);
+      const projectsData = await dbRepository.getProjects(locale);
+      setProjects(projectsData || []);
     } catch (error) {
       console.error('Error fetching projects:', error);
     } finally {
@@ -94,21 +93,21 @@ export default function Portfolio() {
 
   // Cria a lista de filtros com "Todos" sempre primeiro
   const filters = useMemo(() => {
-    return ["Todos", ...availableTags];
-  }, [availableTags]);
+    return [t('portfolio.all'), ...availableTags];
+  }, [availableTags, t]);
 
-  const filteredProjects = activeFilter === "Todos"
+  const filteredProjects = activeFilter === t('portfolio.all')
     ? projects
     : projects.filter(p => p.tags?.includes(activeFilter));
 
   // Resetar filtro se a tag selecionada não existir mais
   useEffect(() => {
-    if (activeFilter !== "Todos" && !availableTags.includes(activeFilter)) {
-      setActiveFilter("Todos");
+    if (activeFilter !== t('portfolio.all') && !availableTags.includes(activeFilter)) {
+      setActiveFilter(t('portfolio.all'));
     }
-  }, [activeFilter, availableTags]);
+  }, [activeFilter, availableTags, t]);
 
-  if (isLoading) {
+  if (isLoading || i18nLoading) {
     return (
       <Layout>
         <PageSkeleton />
@@ -124,8 +123,8 @@ export default function Portfolio() {
         className="space-y-8 pb-12"
       >
         <header className="mb-10">
-          <h1 className="text-3xl font-bold text-white">Portfólio</h1>
-          <p className="text-gray-400 mt-2">Uma seleção dos meus trabalhos recentes</p>
+          <h1 className="text-3xl font-bold text-white">{t('portfolio.title')}</h1>
+          <p className="text-gray-400 mt-2">{t('portfolio.subtitle')}</p>
         </header>
 
         {/* Filters */}
@@ -170,7 +169,7 @@ export default function Portfolio() {
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   ) : (
-                    <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">Sem imagem</div>
+                    <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">{t('portfolio.noImage')}</div>
                   )}
                   <div className="absolute top-3 right-3 z-20 flex gap-2">
                     <div className="bg-background/60 backdrop-blur-md p-2 rounded-full border border-white/10 text-white opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300">
@@ -202,7 +201,7 @@ export default function Portfolio() {
                         className="w-full bg-white/5 hover:bg-neon-purple hover:text-white text-white border border-white/10 transition-all duration-300 group-hover:border-neon-purple/50"
                         onClick={() => setSelectedProject(project)}
                       >
-                        Ver Detalhes
+                        {t('portfolio.details')}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl bg-background border-white/10 text-white p-0 overflow-hidden max-h-[90vh] flex flex-col">
@@ -226,7 +225,7 @@ export default function Portfolio() {
                                           setExpandedImage({ url: img, index: idx, images: project.images });
                                         }}
                                         className="absolute inset-0 bg-black/40 opacity-0 group-hover/carousel:opacity-100 transition-opacity flex items-center justify-center hover:bg-black/50"
-                                        aria-label="Expandir imagem"
+                                        aria-label={t('portfolio.expandImage')}
                                       >
                                         <div className="bg-background/80 backdrop-blur-sm p-3 rounded-full border border-white/20 hover:border-neon-purple transition-colors">
                                           <ZoomIn className="w-5 h-5 text-white" />
@@ -240,7 +239,7 @@ export default function Portfolio() {
                               <CarouselNext className="right-2 bg-background/50 border-white/10 text-white hover:bg-neon-purple hover:border-neon-purple" />
                             </Carousel>
                           ) : (
-                            <div className="text-gray-500">Sem imagens disponíveis</div>
+                            <div className="text-gray-500">{t('portfolio.noImages')}</div>
                           )}
                         </div>
 
@@ -303,17 +302,17 @@ export default function Portfolio() {
                 <DialogHeader className="p-4 border-b border-white/10 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <DialogTitle className="text-white">
-                      Imagem {expandedImage.index + 1} de {expandedImage.images.length}
+                      {t('portfolio.image')} {expandedImage.index + 1} {t('portfolio.of')} {expandedImage.images.length}
                     </DialogTitle>
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => setExpandedImage(null)}
-                      className="text-white hover:bg-white/10"
-                      aria-label="Fechar"
-                    >
-                      <X className="w-5 h-5" />
-                    </Button>
+                        onClick={() => setExpandedImage(null)}
+                        className="text-white hover:bg-white/10"
+                        aria-label={t('common.close')}
+                      >
+                        <X className="w-5 h-5" />
+                      </Button>
                   </div>
                 </DialogHeader>
                 <div className="relative flex-1 flex items-center justify-center bg-background/50 overflow-hidden min-h-0">
@@ -350,7 +349,7 @@ export default function Portfolio() {
                             index: prevIndex
                           });
                         }}
-                        aria-label="Imagem anterior"
+                        aria-label={t('portfolio.previousImage')}
                       >
                         <ChevronLeft className="w-6 h-6" />
                       </Button>
@@ -368,7 +367,7 @@ export default function Portfolio() {
                             index: nextIndex
                           });
                         }}
-                        aria-label="Próxima imagem"
+                        aria-label={t('portfolio.nextImage')}
                       >
                         <ChevronRight className="w-6 h-6" />
                       </Button>

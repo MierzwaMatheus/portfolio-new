@@ -12,17 +12,20 @@ import {
   Menu
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from "@/i18n/hooks/useTranslation";
+import { useI18n } from "@/i18n/context/I18nContext";
 
-const NAV_ITEMS = [
-  { label: "Início", href: "/", icon: Home },
-  { label: "Currículo", href: "/curriculo", icon: Briefcase },
-  { label: "Portfólio", href: "/portfolio", icon: FolderOpen },
-  { label: "Blog", href: "/blog", icon: PenTool },
+const NAV_ITEMS_KEYS = [
+  { key: "home", href: "/", icon: Home },
+  { key: "resume", href: "/curriculo", icon: Briefcase },
+  { key: "portfolio", href: "/portfolio", icon: FolderOpen },
+  { key: "blog", href: "/blog", icon: PenTool },
 ];
 
 const SOCIAL_CONFIG = [
@@ -71,9 +74,20 @@ interface ContactInfo {
 }
 
 export function Sidebar() {
+  const { t } = useTranslation();
+  const { locale, setLocale } = useI18n();
   const [location] = useLocation();
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  const NAV_ITEMS = NAV_ITEMS_KEYS.map(item => ({
+    ...item,
+    label: t(`navigation.${item.key}`)
+  }));
+
+  const handleLanguageChange = (checked: boolean) => {
+    setLocale(checked ? 'en-US' : 'pt-BR');
+  };
 
   useEffect(() => {
     fetchContactInfo();
@@ -180,7 +194,7 @@ export function Sidebar() {
         {/* Footer Info */}
         <div className="mt-auto px-6 py-6 border-t border-white/10 bg-background/50">
           <div className="mb-6 space-y-3">
-            <p className="text-[10px] uppercase tracking-wider text-gray-600 font-bold mb-2">Contato</p>
+            <p className="text-[10px] uppercase tracking-wider text-gray-600 font-bold mb-2">{t('sidebar.contact')}</p>
 
             {loading ? (
               <>
@@ -246,6 +260,31 @@ export function Sidebar() {
             )}
           </div>
 
+          {/* Language Selector */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between px-1">
+              <span className={cn(
+                "text-xs font-medium transition-colors",
+                locale === 'pt-BR' ? "text-neon-lime" : "text-gray-400"
+              )}>
+                PT
+              </span>
+              <div className="flex items-center gap-2">
+                <Switch
+                  checked={locale === 'en-US'}
+                  onCheckedChange={handleLanguageChange}
+                  className="data-[state=checked]:bg-neon-purple"
+                />
+              </div>
+              <span className={cn(
+                "text-xs font-medium transition-colors",
+                locale === 'en-US' ? "text-neon-lime" : "text-gray-400"
+              )}>
+                EN
+              </span>
+            </div>
+          </div>
+
           <a
             href="/archives/CV - Matheus Mierzwa.pdf"
             download="CV - Matheus Mierzwa.pdf"
@@ -258,7 +297,7 @@ export function Sidebar() {
               className="w-full border-neon-lime/50 text-neon-lime hover:bg-neon-lime/10 hover:text-neon-lime h-9 text-xs uppercase tracking-wider"
             >
               <FileText className="mr-2 h-3 w-3" />
-              Baixar CV
+              {t('sidebar.downloadCV')}
             </Button>
           </a>
         </div>
@@ -289,7 +328,7 @@ export function Sidebar() {
           </SheetTrigger>
           <SheetContent side="left" className="p-0 w-72 border-r border-white/10 bg-background">
             <VisuallyHidden>
-              <SheetTitle>Menu de Navegação</SheetTitle>
+              <SheetTitle>{t('sidebar.menu')}</SheetTitle>
             </VisuallyHidden>
             <SidebarContent />
           </SheetContent>

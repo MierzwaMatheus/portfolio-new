@@ -12,6 +12,8 @@ import {
   MessageSquare,
   Quote
 } from "lucide-react";
+import { useI18n } from "@/i18n/context/I18nContext";
+import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { supabase } from "@/lib/supabase";
 
 interface ContactInfo {
@@ -19,6 +21,8 @@ interface ContactInfo {
 }
 
 export default function Home() {
+  const { t } = useTranslation();
+  const { dbRepository, locale, isLoading: i18nLoading } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
   const [aboutText, setAboutText] = useState("");
   const [services, setServices] = useState<any[]>([]);
@@ -40,29 +44,17 @@ export default function Home() {
           setContactInfo(contactData);
         }
 
-        // Fetch About
-        const { data: aboutData, error: aboutError } = await supabase.schema('app_portfolio').from('content').select('value').eq('key', 'about_text').single();
-        if (aboutError) {
-          console.error("Error fetching about:", aboutError);
-        } else if (aboutData) {
-          setAboutText(aboutData.value);
-        }
+        // Fetch About (traduzido automaticamente)
+        const about = await dbRepository.getContent('about_text', locale);
+        setAboutText(about || '');
 
-        // Fetch Services
-        const { data: servicesData, error: servicesError } = await supabase.schema('app_portfolio').from('services').select('*').order('created_at');
-        if (servicesError) {
-          console.error("Error fetching services:", servicesError);
-        } else if (servicesData) {
-          setServices(servicesData);
-        }
+        // Fetch Services (traduzidos automaticamente)
+        const servicesData = await dbRepository.getServices(locale);
+        setServices(servicesData);
 
-        // Fetch Testimonials
-        const { data: testimonialsData, error: testimonialsError } = await supabase.schema('app_portfolio').from('testimonials').select('*').order('created_at');
-        if (testimonialsError) {
-          console.error("Error fetching testimonials:", testimonialsError);
-        } else if (testimonialsData) {
-          setTestimonials(testimonialsData);
-        }
+        // Fetch Testimonials (traduzidos automaticamente)
+        const testimonialsData = await dbRepository.getTestimonials(locale);
+        setTestimonials(testimonialsData);
       } catch (error) {
         console.error("Unexpected error fetching data:", error);
       } finally {
@@ -70,10 +62,12 @@ export default function Home() {
       }
     };
 
-    fetchData();
-  }, []);
+    if (!i18nLoading) {
+      fetchData();
+    }
+  }, [locale, dbRepository, i18nLoading]);
 
-  if (isLoading) {
+  if (isLoading || i18nLoading) {
     return (
       <Layout>
         <PageSkeleton />
@@ -110,12 +104,12 @@ export default function Home() {
             <div className="inline-flex items-center px-4 py-1.5 mb-6 bg-white/5 border border-white/10 rounded-full backdrop-blur-sm">
               <Terminal className="w-3 h-3 text-neon-purple mr-2" />
               <p className="text-sm font-medium text-neon-purple font-mono">
-                <span className="text-white mr-2">$</span>echo "Olá, Mundo!"
+                <span className="text-white mr-2">$</span>echo "{t('home.greeting')}"
               </p>
             </div>
 
             <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-4">
-              <span className="text-neon-purple">Oi!</span> Eu sou o <br />
+              <span className="text-neon-purple">{t('home.title')}</span> <br />
               <span className="relative inline-block">
                 Matheus
                 <span className="absolute -bottom-2 left-0 w-full h-1.5 bg-neon-lime rounded-full"></span>
@@ -123,11 +117,11 @@ export default function Home() {
             </h1>
 
             <h2 className="text-2xl md:text-3xl mt-4 text-gray-400 font-light">
-              {contactInfo?.role || "Tech Lead Frontend & Engenheiro Full-Stack"}
+              {contactInfo?.role || t('home.subtitle')}
             </h2>
 
             <p className="max-w-2xl mt-8 text-gray-300 text-lg leading-relaxed border-l-2 border-neon-purple/50 pl-6">
-            Transformo desafios complexos em ecossistemas digitais robustos, liderando arquitetura, inovação e excelência técnica.
+              {t('home.hero.description')}
             </p>
           </div>
 
@@ -149,7 +143,7 @@ export default function Home() {
         {/* About Section */}
         <motion.section variants={item}>
           <h2 className="text-2xl font-bold text-white mb-8 flex items-center font-mono">
-            <span className="text-neon-purple mr-2">/*</span> Sobre mim <span className="text-neon-purple ml-2">*/</span>
+            <span className="text-neon-purple mr-2">/*</span> {t('home.about.title')} <span className="text-neon-purple ml-2">*/</span>
           </h2>
 
           <div className="rounded-xl border border-white/10 bg-card/50 backdrop-blur-sm p-8 relative overflow-hidden group">
@@ -159,7 +153,7 @@ export default function Home() {
 
             <div className="relative z-10 space-y-6 text-gray-300 leading-relaxed text-lg">
               <p className="whitespace-pre-wrap">
-                {aboutText || "Carregando sobre mim..."}
+                {aboutText || t('home.about.loading')}
               </p>
             </div>
           </div>
@@ -195,7 +189,7 @@ export default function Home() {
         <motion.section variants={item}>
           <h3 className="text-xl font-bold text-white mb-8 flex items-center">
             <MessageSquare className="w-5 h-5 text-neon-purple mr-3" />
-            O que falam sobre mim
+            {t('home.testimonials.title')}
           </h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

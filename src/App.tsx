@@ -17,6 +17,7 @@ import AdminCreateUser from "./pages/admin/CreateUser";
 import AdminPaymentLinks from "./pages/admin/PaymentLinks";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { I18nProvider } from "./i18n/context/I18nContext";
 import Resume from "./pages/Resume";
 import Portfolio from "./pages/Portfolio";
 import Blog from "./pages/Blog";
@@ -63,14 +64,16 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <ThemeProvider defaultTheme="dark">
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-            <Analytics />
-            <SpeedInsights />
-          </TooltipProvider>
-        </ThemeProvider>
+        <I18nProvider>
+          <ThemeProvider defaultTheme="dark">
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+              <Analytics />
+              <SpeedInsights />
+            </TooltipProvider>
+          </ThemeProvider>
+        </I18nProvider>
       </AuthProvider>
     </ErrorBoundary>
   );
