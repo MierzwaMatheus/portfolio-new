@@ -12,8 +12,8 @@ import {
   MessageSquare,
   Quote
 } from "lucide-react";
-import { useI18n } from "@/i18n/context/I18nContext";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
+import { useI18n } from "@/i18n/context/I18nContext";
 import { supabase } from "@/lib/supabase";
 
 interface ContactInfo {
@@ -44,40 +44,64 @@ export default function Home() {
           setContactInfo(contactData);
         }
 
-        // Buscar dados traduzidos via Edge Function (tradução no backend)
-        const { data, error } = await supabase.functions.invoke('get-home-data', {
-          body: { locale },
-        });
+        // Fetch About - value é JSONB
+        const { data: aboutData, error: aboutError } = await supabase
+          .schema('app_portfolio')
+          .from('content')
+          .select('value')
+          .eq('key', 'about_text')
+          .single();
+        
+        if (aboutError) {
+          console.error("Error fetching about:", aboutError);
+        } else if (aboutData) {
+          const value = aboutData.value;
+          // Se for JSONB, pega pela locale, senão usa direto (legacy)
+          if (typeof value === 'object' && value !== null) {
+            setAboutText(value[locale] || value['pt-BR'] || '');
+          } else {
+            setAboutText(typeof value === 'string' ? value : '');
+          }
+        }
 
-        if (error) {
-          console.error("Error fetching home data:", error);
-          // Fallback: buscar sem tradução
-          const { data: aboutData } = await supabase
-            .schema('app_portfolio')
-            .from('content')
-            .select('value')
-            .eq('key', 'about_text')
-            .single();
-          setAboutText(aboutData?.value || '');
-          
-          const { data: servicesData } = await supabase
-            .schema('app_portfolio')
-            .from('services')
-            .select('*')
-            .order('created_at');
-          setServices(servicesData || []);
-          
-          const { data: testimonialsData } = await supabase
-            .schema('app_portfolio')
-            .from('testimonials')
-            .select('*')
-            .order('created_at');
-          setTestimonials(testimonialsData || []);
-        } else if (data) {
-          // Dados já vêm traduzidos do backend
-          setAboutText(data.aboutText || '');
-          setServices(data.services || []);
-          setTestimonials(data.testimonials || []);
+        // Fetch Services - usa JSONB baseado no locale
+        const { data: servicesData, error: servicesError } = await supabase
+          .schema('app_portfolio')
+          .from('services')
+          .select('id, title, description, title_translations, description_translations, created_at')
+          .order('created_at');
+        
+        if (servicesError) {
+          console.error("Error fetching services:", servicesError);
+        } else if (servicesData) {
+          const translatedServices = servicesData.map(service => ({
+            id: service.id,
+            title: service.title_translations?.[locale] || service.title_translations?.['pt-BR'] || service.title || '',
+            description: service.description_translations?.[locale] || service.description_translations?.['pt-BR'] || service.description || '',
+            created_at: service.created_at,
+          }));
+          setServices(translatedServices);
+        }
+
+        // Fetch Testimonials - usa JSONB baseado no locale
+        const { data: testimonialsData, error: testimonialsError } = await supabase
+          .schema('app_portfolio')
+          .from('testimonials')
+          .select('id, name, role, text, text_translations, image_url, created_at')
+          .order('created_at');
+        
+        if (testimonialsError) {
+          console.error("Error fetching testimonials:", testimonialsError);
+        } else if (testimonialsData) {
+          const translatedTestimonials = testimonialsData.map(testimonial => ({
+            id: testimonial.id,
+            name: testimonial.name,
+            role: testimonial.role,
+            text: testimonial.text_translations?.[locale] || testimonial.text_translations?.['pt-BR'] || testimonial.text || '',
+            image_url: testimonial.image_url,
+            created_at: testimonial.created_at,
+          }));
+          setTestimonials(translatedTestimonials);
         }
       } catch (error) {
         console.error("Unexpected error fetching data:", error);

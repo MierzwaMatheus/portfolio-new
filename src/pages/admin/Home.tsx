@@ -12,8 +12,6 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { supabase } from "@/lib/supabase";
 
-
-
 export default function AdminHome() {
   const [aboutText, setAboutText] = useState("");
   const [services, setServices] = useState<any[]>([]);
@@ -29,15 +27,19 @@ export default function AdminHome() {
 
   const fetchData = async () => {
     try {
-      // Fetch About
+      // Fetch About - value é JSONB
       const { data: aboutData, error: aboutError } = await supabase.schema('app_portfolio').from('content').select('value').eq('key', 'about_text').single();
       if (aboutError) {
         console.error('Error fetching about:', aboutError);
       } else if (aboutData) {
-        setAboutText(aboutData.value);
+        const value = aboutData.value;
+        if (typeof value === 'object' && value !== null && 'pt-BR' in value) {
+          setAboutText(value['pt-BR'] || '');
+        } else {
+          setAboutText(typeof value === 'string' ? value : '');
+        }
       }
 
-      // Fetch Services
       const { data: servicesData, error: servicesError } = await supabase.schema('app_portfolio').from('services').select('*').order('created_at');
       if (servicesError) {
         console.error('Error fetching services:', servicesError);
@@ -45,7 +47,6 @@ export default function AdminHome() {
         setServices(servicesData);
       }
 
-      // Fetch Testimonials
       const { data: testimonialsData, error: testimonialsError } = await supabase.schema('app_portfolio').from('testimonials').select('*').order('created_at');
       if (testimonialsError) {
         console.error('Error fetching testimonials:', testimonialsError);
@@ -61,7 +62,7 @@ export default function AdminHome() {
     setActiveModal(type);
     setEditingItem(item);
     if (type === "testimonial" && item) {
-      setSelectedImage(item.image);
+      setSelectedImage(item.image_url || item.image || "");
     } else {
       setSelectedImage("");
     }
@@ -80,9 +81,38 @@ export default function AdminHome() {
 
     try {
       if (activeModal === "service") {
+        const titlePT = formData.get("title") as string;
+        const descriptionPT = formData.get("description") as string;
+
+        // Traduz para inglês usando a Edge Function
+        const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
+          body: {
+            texts: [titlePT, descriptionPT],
+            source: 'pt',
+            target: 'en',
+          },
+        });
+
+        if (translateError) {
+          console.error('Translation error:', translateError);
+          alert('Erro ao traduzir. Salvando apenas em português.');
+        }
+
+        const translatedTexts = translateData?.translatedTexts || [titlePT, descriptionPT];
+        const titleEN = translatedTexts[0] || titlePT;
+        const descriptionEN = translatedTexts[1] || descriptionPT;
+
         const data = {
-          title: formData.get("title"),
-          description: formData.get("description"),
+          title: titlePT,
+          description: descriptionPT,
+          title_translations: {
+            'pt-BR': titlePT,
+            'en-US': titleEN,
+          },
+          description_translations: {
+            'pt-BR': descriptionPT,
+            'en-US': descriptionEN,
+          },
         };
 
         if (editingItem) {
@@ -91,11 +121,34 @@ export default function AdminHome() {
           await supabase.schema('app_portfolio').from('services').insert(data);
         }
       } else if (activeModal === "testimonial") {
+        const textPT = formData.get("text") as string;
+
+        // Traduz apenas o texto do depoimento usando a Edge Function
+        const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
+          body: {
+            texts: [textPT],
+            source: 'pt',
+            target: 'en',
+          },
+        });
+
+        if (translateError) {
+          console.error('Translation error:', translateError);
+          alert('Erro ao traduzir. Salvando apenas em português.');
+        }
+
+        const translatedTexts = translateData?.translatedTexts || [textPT];
+        const textEN = translatedTexts[0] || textPT;
+
         const data = {
           name: formData.get("name"),
           role: formData.get("role"),
-          text: formData.get("text"),
+          text: textPT,
           image_url: selectedImage,
+          text_translations: {
+            'pt-BR': textPT,
+            'en-US': textEN,
+          },
         };
 
         if (editingItem) {
@@ -115,9 +168,30 @@ export default function AdminHome() {
 
   const handleSaveAbout = async () => {
     try {
+      // Traduz para inglês usando a Edge Function
+      const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
+        body: {
+          texts: [aboutText],
+          source: 'pt',
+          target: 'en',
+        },
+      });
+
+      if (translateError) {
+        console.error('Translation error:', translateError);
+        alert('Erro ao traduzir. Salvando apenas em português.');
+      }
+
+      const translatedTexts = translateData?.translatedTexts || [aboutText];
+      const aboutEN = translatedTexts[0] || aboutText;
+
+      // Salva em JSONB
       const { error } = await supabase.schema('app_portfolio').from('content').upsert({
         key: 'about_text',
-        value: aboutText
+        value: {
+          'pt-BR': aboutText,
+          'en-US': aboutEN,
+        }
       });
 
       if (error) {
@@ -134,7 +208,7 @@ export default function AdminHome() {
     }
   };
 
-  const handleDelete = async (type: string, id: number) => {
+  const handleDelete = async (type: string, id: string) => {
     if (confirm("Tem certeza que deseja excluir este item?")) {
       try {
         if (type === "service") {
@@ -164,9 +238,7 @@ export default function AdminHome() {
             <TabsTrigger value="testimonials">Depoimentos</TabsTrigger>
           </TabsList>
 
-          {/* About Tab */}
           <TabsContent value="about" className="space-y-8 mt-6">
-            {/* Sobre Mim Section */}
             <Card className="bg-card border-white/10">
               <CardHeader>
                 <CardTitle className="text-white">Sobre Mim</CardTitle>
@@ -186,7 +258,6 @@ export default function AdminHome() {
               </CardContent>
             </Card>
 
-            {/* O que eu faço Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-white">O que eu faço</h2>
@@ -199,8 +270,12 @@ export default function AdminHome() {
                 {services.map(item => (
                   <Card key={item.id} className="bg-card border-white/10 group">
                     <CardContent className="pt-6 space-y-4">
-                      <h3 className="text-lg font-semibold text-white">{item.title}</h3>
-                      <p className="text-gray-400 text-sm leading-relaxed">{item.description}</p>
+                      <h3 className="text-lg font-semibold text-white">
+                        {item.title_translations?.['pt-BR'] || item.title}
+                      </h3>
+                      <p className="text-gray-400 text-sm leading-relaxed">
+                        {item.description_translations?.['pt-BR'] || item.description}
+                      </p>
                       <div className="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="sm" onClick={() => handleOpenModal("service", item)} className="text-white hover:text-neon-purple">
                           <Pencil className="w-4 h-4 mr-2" /> Editar
@@ -216,7 +291,6 @@ export default function AdminHome() {
             </div>
           </TabsContent>
 
-          {/* Testimonials Tab */}
           <TabsContent value="testimonials" className="space-y-6 mt-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">Depoimentos</h2>
@@ -238,7 +312,7 @@ export default function AdminHome() {
                         <p className="text-gray-400 text-xs">{item.role}</p>
                       </div>
                     </div>
-                    <p className="text-gray-300 text-sm italic">"{item.text}"</p>
+                    <p className="text-gray-300 text-sm italic">"{item.text_translations?.['pt-BR'] || item.text}"</p>
                     <div className="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="sm" onClick={() => handleOpenModal("testimonial", item)} className="text-white hover:text-neon-purple">
                         <Pencil className="w-4 h-4 mr-2" /> Editar
@@ -254,7 +328,6 @@ export default function AdminHome() {
           </TabsContent>
         </Tabs>
 
-        {/* Shared Modal */}
         <Dialog open={!!activeModal} onOpenChange={() => handleCloseModal()}>
           <DialogContent className="bg-background border-white/10 max-w-2xl">
             <DialogHeader>
@@ -270,11 +343,19 @@ export default function AdminHome() {
                 <>
                   <div className="space-y-2">
                     <Label className="text-white">Título</Label>
-                    <Input name="title" defaultValue={editingItem?.title} className="bg-white/5 border-white/10 text-white" />
+                    <Input 
+                      name="title" 
+                      defaultValue={editingItem?.title_translations?.['pt-BR'] || editingItem?.title} 
+                      className="bg-white/5 border-white/10 text-white" 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-white">Descrição</Label>
-                    <Textarea name="description" defaultValue={editingItem?.description} className="bg-white/5 border-white/10 text-white min-h-[100px]" />
+                    <Textarea 
+                      name="description" 
+                      defaultValue={editingItem?.description_translations?.['pt-BR'] || editingItem?.description} 
+                      className="bg-white/5 border-white/10 text-white min-h-[100px]" 
+                    />
                   </div>
                 </>
               )}
@@ -312,7 +393,11 @@ export default function AdminHome() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-white">Depoimento</Label>
-                    <Textarea name="text" defaultValue={editingItem?.text} className="bg-white/5 border-white/10 text-white min-h-[100px]" />
+                    <Textarea 
+                      name="text" 
+                      defaultValue={editingItem?.text_translations?.['pt-BR'] || editingItem?.text} 
+                      className="bg-white/5 border-white/10 text-white min-h-[100px]" 
+                    />
                   </div>
                 </>
               )}
