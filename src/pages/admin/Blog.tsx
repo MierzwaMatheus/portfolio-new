@@ -254,8 +254,8 @@ export default function AdminBlog() {
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="bg-background border-white/10 max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
+          <DialogContent className="bg-background border-white/10 max-w-4xl max-h-[90vh] flex flex-col overflow-hidden p-0">
+            <DialogHeader className="px-6 pt-6 pb-4 shrink-0">
               <DialogTitle className="text-white">
                 {editingPost ? "Editar Artigo" : "Novo Artigo"}
               </DialogTitle>
@@ -263,73 +263,77 @@ export default function AdminBlog() {
                 <h2>Formulário de artigo</h2>
               </VisuallyHidden>
             </DialogHeader>
-            <form onSubmit={handleSave} className="space-y-6 mt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title" className="text-white">Título</Label>
-                    <Input name="title" id="title" defaultValue={editingPost ? getPostField(editingPost, 'title') : ''} className="bg-white/5 border-white/10 text-white" required />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="subtitle" className="text-white">Subtítulo</Label>
-                    <Input name="subtitle" id="subtitle" defaultValue={editingPost ? getPostField(editingPost, 'subtitle') : ''} className="bg-white/5 border-white/10 text-white" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="date" className="text-white">Data de Publicação</Label>
-                    <Input name="date" id="date" type="date" defaultValue={editingPost?.published_at} className="bg-white/5 border-white/10 text-white" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="tags" className="text-white">Tags (separadas por vírgula)</Label>
-                    <Input name="tags" id="tags" defaultValue={editingPost?.tags?.join(", ")} className="bg-white/5 border-white/10 text-white" />
-                  </div>
-                </div>
+            <form onSubmit={handleSave} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden px-6 pb-4">
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="title" className="text-white">Título</Label>
+                        <Input name="title" id="title" defaultValue={editingPost ? getPostField(editingPost, 'title') : ''} className="bg-white/5 border-white/10 text-white" style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }} required />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="subtitle" className="text-white">Subtítulo</Label>
+                        <Input name="subtitle" id="subtitle" defaultValue={editingPost ? getPostField(editingPost, 'subtitle') : ''} className="bg-white/5 border-white/10 text-white" style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }} />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="date" className="text-white">Data de Publicação</Label>
+                        <Input name="date" id="date" type="date" defaultValue={editingPost?.published_at} className="bg-white/5 border-white/10 text-white" />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="tags" className="text-white">Tags (separadas por vírgula)</Label>
+                        <Input name="tags" id="tags" defaultValue={editingPost?.tags?.join(", ")} className="bg-white/5 border-white/10 text-white" style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }} />
+                      </div>
+                    </div>
 
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label className="text-white">Imagem de Destaque</Label>
-                    <div className="border border-white/10 rounded-lg p-4 bg-white/5 flex flex-col items-center justify-center min-h-[200px] relative">
-                      {previewImage ? (
-                        <>
-                          <img src={previewImage} alt="Preview" className="max-h-[180px] rounded object-cover w-full" />
-                          <div className="absolute bottom-2 right-2">
-                            <ImagePicker onSelect={(url) => setPreviewImage(Array.isArray(url) ? url[0] : url)} />
-                          </div>
-                        </>
-                      ) : (
-                        <div className="text-center">
-                          <ImagePicker onSelect={(url) => setPreviewImage(Array.isArray(url) ? url[0] : url)} />
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label className="text-white">Imagem de Destaque</Label>
+                        <div className="border border-white/10 rounded-lg p-4 bg-white/5 flex flex-col items-center justify-center min-h-[200px] relative overflow-hidden">
+                          {previewImage ? (
+                            <>
+                              <img src={previewImage} alt="Preview" className="max-h-[180px] rounded object-cover w-full" style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }} />
+                              <div className="absolute bottom-2 right-2">
+                                <ImagePicker onSelect={(url) => setPreviewImage(Array.isArray(url) ? url[0] : url)} />
+                              </div>
+                            </>
+                          ) : (
+                            <div className="text-center">
+                              <ImagePicker onSelect={(url) => setPreviewImage(Array.isArray(url) ? url[0] : url)} />
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
+
+                      <div className="flex gap-6 pt-4">
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="featured"
+                            checked={isFeatured}
+                            onCheckedChange={setIsFeatured}
+                          />
+                          <Label htmlFor="featured" className="text-white">Destacar Post</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Switch
+                            id="status"
+                            checked={isPublished}
+                            onCheckedChange={setIsPublished}
+                          />
+                          <Label htmlFor="status" className="text-white">Publicado</Label>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex gap-6 pt-4">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="featured"
-                        checked={isFeatured}
-                        onCheckedChange={setIsFeatured}
-                      />
-                      <Label htmlFor="featured" className="text-white">Destacar Post</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="status"
-                        checked={isPublished}
-                        onCheckedChange={setIsPublished}
-                      />
-                      <Label htmlFor="status" className="text-white">Publicado</Label>
-                    </div>
+                  <div className="space-y-2">
+                    <Label className="text-white">Conteúdo</Label>
+                    <RichTextEditor content={content} onChange={setContent} />
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-white">Conteúdo</Label>
-                <RichTextEditor content={content} onChange={setContent} />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-4">
+              <div className="flex justify-end gap-2 pt-4 pb-6 px-6 border-t border-white/10 shrink-0 mt-auto">
                 <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="text-gray-400">Cancelar</Button>
                 <Button type="submit" className="bg-neon-purple hover:bg-neon-purple/90 text-white">Salvar Artigo</Button>
               </div>

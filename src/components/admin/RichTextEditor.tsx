@@ -235,7 +235,7 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
   }
 
   return (
-    <div className="border border-white/10 rounded-md overflow-hidden bg-white/5">
+    <div className="border border-white/10 rounded-md bg-white/5 flex flex-col">
       <style>{`
         .tiptap ul {
           list-style-type: disc;
@@ -287,12 +287,21 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           color: rgb(168, 85, 247);
           text-decoration: underline;
           cursor: pointer;
+          word-break: break-all;
+          overflow-wrap: break-word;
         }
         .tiptap a:hover {
           opacity: 0.8;
         }
+        .tiptap {
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+        }
+        .tiptap * {
+          max-width: 100%;
+        }
       `}</style>
-      <div className="flex flex-wrap gap-1 p-2 border-b border-white/10 bg-white/5">
+      <div className="flex flex-wrap gap-1 p-2 border-b border-white/10 bg-background sticky top-0 z-20 shrink-0">
         {/* Cabeçalhos */}
         <Button
           type="button"
@@ -505,17 +514,19 @@ export function RichTextEditor({ content, onChange }: RichTextEditorProps) {
           <Redo className="w-4 h-4" />
         </Button>
       </div>
-      {showCodeView ? (
-        <textarea
-          value={codeContent}
-          onChange={(e) => setCodeContent(e.target.value)}
-          className="w-full min-h-[150px] p-4 bg-black/20 text-gray-300 font-mono text-sm border-0 focus:outline-none focus:ring-2 focus:ring-neon-purple/50 resize-y"
-          style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}
-          placeholder="Edite o HTML aqui..."
-        />
-      ) : (
-        <EditorContent editor={editor} />
-      )}
+      <div className="overflow-y-auto max-h-[400px] flex-1">
+        {showCodeView ? (
+          <textarea
+            value={codeContent}
+            onChange={(e) => setCodeContent(e.target.value)}
+            className="w-full min-h-[150px] p-4 bg-black/20 text-gray-300 font-mono text-sm border-0 focus:outline-none focus:ring-2 focus:ring-neon-purple/50"
+            style={{ fontFamily: 'monospace', whiteSpace: 'pre-wrap' }}
+            placeholder="Edite o HTML aqui..."
+          />
+        ) : (
+          <EditorContent editor={editor} />
+        )}
+      </div>
       
       {/* Dialog para inserir link */}
       <Dialog open={linkDialogOpen} onOpenChange={setLinkDialogOpen}>
