@@ -118,7 +118,7 @@ export function Sidebar() {
 
   const SidebarContent = () => {
     return (
-      <div className="flex flex-col h-full bg-background border-r border-white/10 w-full">
+      <div className="flex flex-col h-full bg-background border-r border-white/10 w-full overflow-y-auto">
         {/* Profile Section */}
         <div className="flex flex-col items-center pt-8 pb-6 px-6">
           {loading ? (
