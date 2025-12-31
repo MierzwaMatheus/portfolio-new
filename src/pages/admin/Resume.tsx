@@ -271,6 +271,7 @@ export default function AdminResume() {
   };
 
   // Helper function to translate content fields based on type
+  // A LLM agora preserva HTML automaticamente, então enviamos o texto completo
   const translateContent = async (content: any, type: string): Promise<any> => {
     const textsToTranslate: string[] = [];
     const fieldMap: { [key: number]: string } = {};
@@ -320,7 +321,7 @@ export default function AdminResume() {
     }
 
     try {
-      // Traduz todos os textos de uma vez
+      // Envia todos os textos de uma vez para a LLM (que preserva HTML automaticamente)
       const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
         body: {
           texts: textsToTranslate,
