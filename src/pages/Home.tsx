@@ -167,7 +167,7 @@ export default function Home() {
         className="space-y-16 pb-12"
       >
         {/* Hero Section */}
-        <motion.section variants={item} className="pt-8 md:pt-16">
+        <motion.section variants={item}>
           <div className="mb-8">
             <div className="inline-flex items-center px-4 py-1.5 mb-6 bg-white/5 border border-white/10 rounded-full backdrop-blur-sm">
               <Terminal className="w-3 h-3 text-neon-purple mr-2" />
