@@ -22,7 +22,7 @@ interface ContactInfo {
 
 export default function Home() {
   const { t } = useTranslation();
-  const { dbRepository, locale, isLoading: i18nLoading } = useI18n();
+  const { locale, isLoading: i18nLoading } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
   const [aboutText, setAboutText] = useState("");
   const [services, setServices] = useState<any[]>([]);
@@ -44,17 +44,41 @@ export default function Home() {
           setContactInfo(contactData);
         }
 
-        // Fetch About (traduzido automaticamente)
-        const about = await dbRepository.getContent('about_text', locale);
-        setAboutText(about || '');
+        // Buscar dados traduzidos via Edge Function (tradução no backend)
+        const { data, error } = await supabase.functions.invoke('get-home-data', {
+          body: { locale },
+        });
 
-        // Fetch Services (traduzidos automaticamente)
-        const servicesData = await dbRepository.getServices(locale);
-        setServices(servicesData);
-
-        // Fetch Testimonials (traduzidos automaticamente)
-        const testimonialsData = await dbRepository.getTestimonials(locale);
-        setTestimonials(testimonialsData);
+        if (error) {
+          console.error("Error fetching home data:", error);
+          // Fallback: buscar sem tradução
+          const { data: aboutData } = await supabase
+            .schema('app_portfolio')
+            .from('content')
+            .select('value')
+            .eq('key', 'about_text')
+            .single();
+          setAboutText(aboutData?.value || '');
+          
+          const { data: servicesData } = await supabase
+            .schema('app_portfolio')
+            .from('services')
+            .select('*')
+            .order('created_at');
+          setServices(servicesData || []);
+          
+          const { data: testimonialsData } = await supabase
+            .schema('app_portfolio')
+            .from('testimonials')
+            .select('*')
+            .order('created_at');
+          setTestimonials(testimonialsData || []);
+        } else if (data) {
+          // Dados já vêm traduzidos do backend
+          setAboutText(data.aboutText || '');
+          setServices(data.services || []);
+          setTestimonials(data.testimonials || []);
+        }
       } catch (error) {
         console.error("Unexpected error fetching data:", error);
       } finally {
@@ -65,7 +89,7 @@ export default function Home() {
     if (!i18nLoading) {
       fetchData();
     }
-  }, [locale, dbRepository, i18nLoading]);
+  }, [locale, i18nLoading]);
 
   if (isLoading || i18nLoading) {
     return (
