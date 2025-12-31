@@ -9,6 +9,11 @@ export class StaticTranslationsRepository implements TranslationsRepository {
   };
   
   getStaticTranslation(key: string, locale: string): string | undefined {
+    const value = this.getStaticValue(key, locale);
+    return typeof value === 'string' ? value : undefined;
+  }
+
+  getStaticValue(key: string, locale: string): any {
     const keys = key.split('.');
     let value: any = this.translations[locale as keyof typeof this.translations];
     
@@ -24,7 +29,7 @@ export class StaticTranslationsRepository implements TranslationsRepository {
       value = value[k];
     }
     
-    return typeof value === 'string' ? value : undefined;
+    return value;
   }
   
   getAllStaticTranslations(locale: string): Record<string, string> {

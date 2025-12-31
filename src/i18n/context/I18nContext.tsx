@@ -15,6 +15,7 @@ interface I18nContextType {
   locale: Locale;
   setLocale: (locale: Locale) => void;
   t: (key: string) => string;
+  tValue: (key: string) => any; // Para arrays, objetos, etc
   dbRepository: DatabaseTranslationsRepository;
   isLoading: boolean;
 }
@@ -83,8 +84,12 @@ export function I18nProvider({
     return translation || key;
   };
 
+  const tValue = (key: string): any => {
+    return translationsRepository.getStaticValue(key, locale);
+  };
+
   return (
-    <I18nContext.Provider value={{ locale, setLocale, t, dbRepository, isLoading }}>
+    <I18nContext.Provider value={{ locale, setLocale, t, tValue, dbRepository, isLoading }}>
       {children}
     </I18nContext.Provider>
   );

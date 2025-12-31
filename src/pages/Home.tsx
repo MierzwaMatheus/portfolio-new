@@ -1,6 +1,6 @@
 import { Layout } from "@/components/Layout";
 import { PageSkeleton } from "@/components/PageSkeleton";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Code,
@@ -18,10 +18,14 @@ import { supabase } from "@/lib/supabase";
 
 interface ContactInfo {
   role: string;
+  role_translations?: {
+    'pt-BR'?: string;
+    'en-US'?: string;
+  };
 }
 
 export default function Home() {
-  const { t } = useTranslation();
+  const { t, tValue } = useTranslation();
   const { locale, isLoading: i18nLoading } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
   const [aboutDataRaw, setAboutDataRaw] = useState<any>(null); // Dados brutos do JSONB
@@ -29,20 +33,28 @@ export default function Home() {
   const [testimonialsRaw, setTestimonialsRaw] = useState<any[]>([]); // Dados brutos com JSONB completo
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
 
+  // Deriva role traduzido baseado no locale atual (sem refetch)
+  const contactRole = useMemo(() => {
+    if (!contactInfo) return t('home.subtitle');
+    // Extrai role traduzido baseado no locale atual
+    const translatedRole = contactInfo.role_translations?.[locale] || contactInfo.role_translations?.['pt-BR'] || contactInfo.role || '';
+    return translatedRole || t('home.subtitle');
+  }, [contactInfo, locale, t]);
+
   // Busca dados apenas uma vez na montagem do componente
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch Contact Info
+        // Fetch Contact Info - busca role_translations também
         const { data: contactData, error: contactError } = await supabase
           .schema('app_portfolio')
           .from('contact_info')
-          .select('role')
+          .select('role, role_translations')
           .single();
         if (contactError) {
           console.error("Error fetching contact info:", contactError);
         } else if (contactData) {
-          setContactInfo(contactData);
+          setContactInfo(contactData as any);
         }
 
         // Fetch About - mantém o JSONB completo
@@ -173,7 +185,7 @@ export default function Home() {
             </h1>
 
             <h2 className="text-2xl md:text-3xl mt-4 text-gray-400 font-light">
-              {contactInfo?.role || t('home.subtitle')}
+              {contactRole}
             </h2>
 
             <p className="max-w-2xl mt-8 text-gray-300 text-lg leading-relaxed border-l-2 border-neon-purple/50 pl-6">
@@ -182,12 +194,7 @@ export default function Home() {
           </div>
 
           <div className="flex flex-wrap gap-4 mt-10">
-            {[
-              { name: "React", color: "bg-neon-lime" },
-              { name: "TypeScript", color: "bg-neon-lime" },
-              { name: "Arquitetura de Sistemas", color: "bg-neon-purple" },
-              { name: "DevOps & Infraestrutura", color: "bg-neon-purple" }
-            ].map((tech) => (
+            {(tValue('home.hero.technologies') || []).map((tech: { name: string; color: string }) => (
               <div key={tech.name} className="flex items-center px-5 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-colors group cursor-default">
                 <span className={`inline-block w-2 h-2 rounded-full ${tech.color} mr-3 shadow-[0_0_8px_rgba(255,255,255,0.3)] group-hover:scale-125 transition-transform`}></span>
                 <span className="text-sm font-medium text-gray-200">{tech.name}</span>
@@ -275,7 +282,7 @@ export default function Home() {
                 <Quote className="absolute top-6 right-6 w-8 h-8 text-white/5" />
                 <div className="flex items-center mb-4">
                   <div className="w-12 h-12 rounded-full overflow-hidden border border-white/10 mr-4">
-                    <img src={testimonial.image_url || testimonial.image} alt={testimonial.name} className="w-full h-full object-cover" />
+                    <img src={testimonial.image_url} alt={testimonial.name} className="w-full h-full object-cover" />
                   </div>
                   <div>
                     <p className="font-semibold text-white">{testimonial.name}</p>

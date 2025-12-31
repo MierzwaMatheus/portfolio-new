@@ -35,6 +35,12 @@ export const ptBR = {
     },
     hero: {
       description: "Transformo desafios complexos em ecossistemas digitais robustos, liderando arquitetura, inovação e excelência técnica.",
+      technologies: [
+        { name: "React", color: "bg-neon-lime" },
+        { name: "TypeScript", color: "bg-neon-lime" },
+        { name: "Arquitetura de Sistemas", color: "bg-neon-purple" },
+        { name: "DevOps & Infraestrutura", color: "bg-neon-purple" }
+      ],
     },
     skills: {
       title: "O que eu faço",
