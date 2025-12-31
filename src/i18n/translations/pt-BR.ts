@@ -23,7 +23,7 @@ export const ptBR = {
     contact: "Contato",
   },
   home: {
-    greeting: "Olá, Mundo!",
+    greeting: "Hello, World!",
     title: "Oi! Eu sou o",
     subtitle: "Tech Lead Frontend & Engenheiro Full-Stack",
     about: {
