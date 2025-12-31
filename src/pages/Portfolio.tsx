@@ -10,6 +10,7 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useI18n } from "@/i18n/context/I18nContext";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
+import { supabase } from "@/lib/supabase";
 
 interface Project {
   id: number;
@@ -24,12 +25,22 @@ interface Project {
 
 export default function Portfolio() {
   const { t } = useTranslation();
-  const { dbRepository, locale, isLoading: i18nLoading } = useI18n();
+  const { locale, isLoading: i18nLoading } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState(t('portfolio.all'));
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projectsRaw, setProjectsRaw] = useState<any[]>([]); // Dados brutos com JSONB
   const [expandedImage, setExpandedImage] = useState<{ url: string; index: number; images: string[] } | null>(null);
+
+  // Deriva projetos traduzidos baseados no locale atual (sem refetch)
+  const projects = useMemo(() => {
+    return projectsRaw.map((project) => ({
+      ...project,
+      title: project.title_translations?.[locale] || project.title_translations?.['pt-BR'] || project.title || '',
+      description: project.description_translations?.[locale] || project.description_translations?.['pt-BR'] || project.description || '',
+      long_description: project.long_description_translations?.[locale] || project.long_description_translations?.['pt-BR'] || project.long_description || '',
+    }));
+  }, [projectsRaw, locale]);
 
   // Navegação por teclado para as imagens expandidas
   useEffect(() => {
@@ -67,22 +78,30 @@ export default function Portfolio() {
     };
   }, [expandedImage]);
 
-  useEffect(() => {
-    if (!i18nLoading) {
-      fetchProjects();
-    }
-  }, [locale, i18nLoading]);
-
   const fetchProjects = async () => {
     try {
-      const projectsData = await dbRepository.getProjects(locale);
-      setProjects(projectsData || []);
+      // Busca dados brutos com JSONB completo
+      const { data, error } = await supabase
+        .schema('app_portfolio')
+        .from('projects')
+        .select('id, title, description, long_description, title_translations, description_translations, long_description_translations, tags, images, demo_link, github_link, order_index')
+        .order('order_index', { ascending: true, nullsFirst: false });
+
+      if (error) throw error;
+
+      setProjectsRaw(data || []);
     } catch (error) {
       console.error('Error fetching projects:', error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!i18nLoading) {
+      fetchProjects();
+    }
+  }, [i18nLoading]); // Removido locale das dependências - dados já vêm com JSONB completo
 
   // Extrai todas as tags únicas dos projetos e ordena alfabeticamente
   const availableTags = useMemo(() => {
@@ -183,7 +202,7 @@ export default function Portfolio() {
                   <p className="text-gray-400 text-sm mb-4 line-clamp-2 flex-grow">{project.description}</p>
 
                   <div className="flex flex-wrap gap-2 mb-6">
-                    {project.tags?.slice(0, 3).map(tag => (
+                    {project.tags?.slice(0, 3).map((tag: string) => (
                       <span key={tag} className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-white/5 text-gray-300 border border-white/5">
                         {tag}
                       </span>
@@ -215,7 +234,7 @@ export default function Portfolio() {
                           {project.images && project.images.length > 0 ? (
                             <Carousel className="w-full max-w-md mx-auto">
                               <CarouselContent>
-                                {project.images.map((img, idx) => (
+                                {project.images.map((img: string, idx: number) => (
                                   <CarouselItem key={idx}>
                                     <div className="aspect-video rounded-lg overflow-hidden border border-white/10 relative group/carousel">
                                       <img src={img} alt={`${project.title} - ${idx + 1}`} className="w-full h-full object-cover" />
@@ -248,7 +267,7 @@ export default function Portfolio() {
                           <div>
                             <div className="text-2xl font-bold text-white mb-2">{project.title}</div>
                             <div className="flex flex-wrap gap-2 mt-2">
-                              {project.tags?.map(tag => (
+                              {project.tags?.map((tag: string) => (
                                 <Badge key={tag} variant="outline" className="bg-neon-purple/10 text-neon-purple border-neon-purple/20 hover:bg-neon-purple/20">
                                   {tag}
                                 </Badge>
@@ -261,13 +280,13 @@ export default function Portfolio() {
                           </DialogDescription>
 
                           <div className="space-y-3 pt-4 border-t border-white/5">
-                            <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">Links do Projeto</h4>
+                            <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">{t('portfolio.projectLinks')}</h4>
                             <div className="grid grid-cols-2 gap-3">
                               {project.demo_link && (
                                 <a href={project.demo_link} target="_blank" rel="noopener noreferrer" className="w-full">
                                   <Button className="w-full bg-neon-purple hover:bg-neon-purple/80 text-white">
                                     <ExternalLink className="mr-2 h-4 w-4" />
-                                    Live Demo
+                                    {t('portfolio.liveDemo')}
                                   </Button>
                                 </a>
                               )}
@@ -275,7 +294,7 @@ export default function Portfolio() {
                                 <a href={project.github_link} target="_blank" rel="noopener noreferrer" className="w-full">
                                   <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10 hover:text-white">
                                     <Github className="mr-2 h-4 w-4" />
-                                    Código
+                                    {t('portfolio.code')}
                                   </Button>
                                 </a>
                               )}

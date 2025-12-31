@@ -46,17 +46,57 @@ export function ProjectDialog({ open, onOpenChange, project, onSave }: ProjectDi
         const form = e.target as HTMLFormElement;
         const formData = new FormData(form);
 
-        const projectData: any = {
-            title: formData.get('title') as string,
-            description: formData.get('description') as string,
-            long_description: formData.get('long_description') as string,
-            tags: selectedTags,
-            images: projectImages,
-            demo_link: formData.get('demo') as string,
-            github_link: formData.get('github') as string,
-        };
+        const titlePT = formData.get('title') as string;
+        const descriptionPT = formData.get('description') as string;
+        const longDescriptionPT = formData.get('long_description') as string || '';
 
         try {
+            // Traduz para inglês usando a Edge Function
+            const textsToTranslate = [titlePT, descriptionPT];
+            if (longDescriptionPT) {
+                textsToTranslate.push(longDescriptionPT);
+            }
+
+            const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
+                body: {
+                    texts: textsToTranslate,
+                    source: 'pt',
+                    target: 'en',
+                },
+            });
+
+            if (translateError) {
+                console.error('Translation error:', translateError);
+                toast.error('Erro ao traduzir. Salvando apenas em português.');
+            }
+
+            const translatedTexts = translateData?.translatedTexts || textsToTranslate;
+            const titleEN = translatedTexts[0] || titlePT;
+            const descriptionEN = translatedTexts[1] || descriptionPT;
+            const longDescriptionEN = longDescriptionPT ? (translatedTexts[2] || longDescriptionPT) : '';
+
+            const projectData: any = {
+                title: titlePT,
+                description: descriptionPT,
+                long_description: longDescriptionPT || null,
+                title_translations: {
+                    'pt-BR': titlePT,
+                    'en-US': titleEN,
+                },
+                description_translations: {
+                    'pt-BR': descriptionPT,
+                    'en-US': descriptionEN,
+                },
+                long_description_translations: longDescriptionPT ? {
+                    'pt-BR': longDescriptionPT,
+                    'en-US': longDescriptionEN,
+                } : null,
+                tags: selectedTags,
+                images: projectImages,
+                demo_link: formData.get('demo') as string || null,
+                github_link: formData.get('github') as string || null,
+            };
+
             if (project) {
                 const { error } = await supabase
                     .schema('app_portfolio')
@@ -132,17 +172,34 @@ export function ProjectDialog({ open, onOpenChange, project, onSave }: ProjectDi
                 <form onSubmit={handleSave} className="space-y-6 mt-4">
                     <div className="space-y-2">
                         <Label htmlFor="title" className="text-white">Título</Label>
-                        <Input name="title" id="title" defaultValue={project?.title} className="bg-white/5 border-white/10 text-white" required />
+                        <Input 
+                            name="title" 
+                            id="title" 
+                            defaultValue={project ? (project.title_translations?.['pt-BR'] || project.title || '') : ''} 
+                            className="bg-white/5 border-white/10 text-white" 
+                            required 
+                        />
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="description" className="text-white">Descrição Curta</Label>
-                        <Textarea name="description" id="description" defaultValue={project?.description} className="bg-white/5 border-white/10 text-white" required />
+                        <Textarea 
+                            name="description" 
+                            id="description" 
+                            defaultValue={project ? (project.description_translations?.['pt-BR'] || project.description || '') : ''} 
+                            className="bg-white/5 border-white/10 text-white" 
+                            required 
+                        />
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="long_description" className="text-white">Descrição Longa</Label>
-                        <Textarea name="long_description" id="long_description" defaultValue={project?.long_description} className="bg-white/5 border-white/10 text-white h-32" />
+                        <Textarea 
+                            name="long_description" 
+                            id="long_description" 
+                            defaultValue={project ? (project.long_description_translations?.['pt-BR'] || project.long_description || '') : ''} 
+                            className="bg-white/5 border-white/10 text-white h-32" 
+                        />
                     </div>
 
                     <div className="space-y-2">

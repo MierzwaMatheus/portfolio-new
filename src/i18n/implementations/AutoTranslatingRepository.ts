@@ -85,32 +85,17 @@ export class AutoTranslatingRepository implements DatabaseTranslationsRepository
     const { data, error } = await supabase
       .schema('app_portfolio')
       .from('projects')
-      .select('id, title, description, long_description, tags, images, demo_link, github_link, order_index')
+      .select('id, title, description, long_description, title_translations, description_translations, long_description_translations, tags, images, demo_link, github_link, order_index')
       .order('order_index', { ascending: true, nullsFirst: false });
       
     if (error || !data) return [];
     
-    // Se for pt-BR, retorna direto
-    if (locale === this.sourceLocale) {
-      return data;
-    }
-    
-    // Traduz campos de texto
-    const titles = data.map(p => p.title || '');
-    const descriptions = data.map(p => p.description || '');
-    const longDescriptions = data.map(p => p.long_description || '');
-    
-    const [translatedTitles, translatedDescriptions, translatedLongDescriptions] = await Promise.all([
-      this.translationService.translateBatch(titles, locale),
-      this.translationService.translateBatch(descriptions, locale),
-      this.translationService.translateBatch(longDescriptions, locale),
-    ]);
-    
-    return data.map((project, index) => ({
+    // Retorna projetos com traduções baseadas no locale
+    return data.map((project) => ({
       ...project,
-      title: translatedTitles[index] || project.title,
-      description: translatedDescriptions[index] || project.description,
-      long_description: translatedLongDescriptions[index] || project.long_description,
+      title: project.title_translations?.[locale] || project.title_translations?.['pt-BR'] || project.title || '',
+      description: project.description_translations?.[locale] || project.description_translations?.['pt-BR'] || project.description || '',
+      long_description: project.long_description_translations?.[locale] || project.long_description_translations?.['pt-BR'] || project.long_description || '',
     }));
   }
 }
