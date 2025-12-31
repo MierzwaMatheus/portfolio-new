@@ -24,20 +24,13 @@ export default function Home() {
   const { t } = useTranslation();
   const { locale, isLoading: i18nLoading } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
-  const [aboutText, setAboutText] = useState("");
-  const [services, setServices] = useState<any[]>([]);
-  const [testimonials, setTestimonials] = useState<any[]>([]);
+  const [aboutDataRaw, setAboutDataRaw] = useState<any>(null); // Dados brutos do JSONB
+  const [servicesRaw, setServicesRaw] = useState<any[]>([]); // Dados brutos com JSONB completo
+  const [testimonialsRaw, setTestimonialsRaw] = useState<any[]>([]); // Dados brutos com JSONB completo
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
-  const [isLoadingAbout, setIsLoadingAbout] = useState(true);
-  const [isLoadingServices, setIsLoadingServices] = useState(true);
-  const [isLoadingTestimonials, setIsLoadingTestimonials] = useState(true);
 
+  // Busca dados apenas uma vez na montagem do componente
   useEffect(() => {
-    // Reseta estados de loading quando locale muda
-    setIsLoadingAbout(true);
-    setIsLoadingServices(true);
-    setIsLoadingTestimonials(true);
-
     const fetchData = async () => {
       try {
         // Fetch Contact Info
@@ -52,8 +45,7 @@ export default function Home() {
           setContactInfo(contactData);
         }
 
-        // Fetch About - value é JSONB
-        setIsLoadingAbout(true);
+        // Fetch About - mantém o JSONB completo
         const { data: aboutData, error: aboutError } = await supabase
           .schema('app_portfolio')
           .from('content')
@@ -64,18 +56,10 @@ export default function Home() {
         if (aboutError) {
           console.error("Error fetching about:", aboutError);
         } else if (aboutData) {
-          const value = aboutData.value;
-          // Se for JSONB, pega pela locale, senão usa direto (legacy)
-          if (typeof value === 'object' && value !== null) {
-            setAboutText(value[locale] || value['pt-BR'] || '');
-          } else {
-            setAboutText(typeof value === 'string' ? value : '');
-          }
+          setAboutDataRaw(aboutData.value);
         }
-        setIsLoadingAbout(false);
 
-        // Fetch Services - usa JSONB baseado no locale
-        setIsLoadingServices(true);
+        // Fetch Services - mantém dados brutos com JSONB completo
         const { data: servicesData, error: servicesError } = await supabase
           .schema('app_portfolio')
           .from('services')
@@ -85,18 +69,10 @@ export default function Home() {
         if (servicesError) {
           console.error("Error fetching services:", servicesError);
         } else if (servicesData) {
-          const translatedServices = servicesData.map(service => ({
-            id: service.id,
-            title: service.title_translations?.[locale] || service.title_translations?.['pt-BR'] || service.title || '',
-            description: service.description_translations?.[locale] || service.description_translations?.['pt-BR'] || service.description || '',
-            created_at: service.created_at,
-          }));
-          setServices(translatedServices);
+          setServicesRaw(servicesData);
         }
-        setIsLoadingServices(false);
 
-        // Fetch Testimonials - usa JSONB baseado no locale
-        setIsLoadingTestimonials(true);
+        // Fetch Testimonials - mantém dados brutos com JSONB completo
         const { data: testimonialsData, error: testimonialsError } = await supabase
           .schema('app_portfolio')
           .from('testimonials')
@@ -106,17 +82,8 @@ export default function Home() {
         if (testimonialsError) {
           console.error("Error fetching testimonials:", testimonialsError);
         } else if (testimonialsData) {
-          const translatedTestimonials = testimonialsData.map(testimonial => ({
-            id: testimonial.id,
-            name: testimonial.name,
-            role: testimonial.role,
-            text: testimonial.text_translations?.[locale] || testimonial.text_translations?.['pt-BR'] || testimonial.text || '',
-            image_url: testimonial.image_url,
-            created_at: testimonial.created_at,
-          }));
-          setTestimonials(translatedTestimonials);
+          setTestimonialsRaw(testimonialsData);
         }
-        setIsLoadingTestimonials(false);
       } catch (error) {
         console.error("Unexpected error fetching data:", error);
       } finally {
@@ -127,7 +94,34 @@ export default function Home() {
     if (!i18nLoading) {
       fetchData();
     }
-  }, [locale, i18nLoading]);
+  }, [i18nLoading]); // Removido locale das dependências
+
+  // Deriva aboutText baseado no locale atual (sem fazer fetch)
+  const aboutText = (() => {
+    if (!aboutDataRaw) return '';
+    if (typeof aboutDataRaw === 'object' && aboutDataRaw !== null) {
+      return aboutDataRaw[locale] || aboutDataRaw['pt-BR'] || '';
+    }
+    return typeof aboutDataRaw === 'string' ? aboutDataRaw : '';
+  })();
+
+  // Deriva services traduzidos baseado no locale atual (sem fazer fetch)
+  const services = servicesRaw.map(service => ({
+    id: service.id,
+    title: service.title_translations?.[locale] || service.title_translations?.['pt-BR'] || service.title || '',
+    description: service.description_translations?.[locale] || service.description_translations?.['pt-BR'] || service.description || '',
+    created_at: service.created_at,
+  }));
+
+  // Deriva testimonials traduzidos baseado no locale atual (sem fazer fetch)
+  const testimonials = testimonialsRaw.map(testimonial => ({
+    id: testimonial.id,
+    name: testimonial.name,
+    role: testimonial.role,
+    text: testimonial.text_translations?.[locale] || testimonial.text_translations?.['pt-BR'] || testimonial.text || '',
+    image_url: testimonial.image_url,
+    created_at: testimonial.created_at,
+  }));
 
   if (isLoading || i18nLoading) {
     return (
@@ -214,7 +208,7 @@ export default function Home() {
             </div>
 
             <div className="relative z-10 space-y-6 text-gray-300 leading-relaxed text-lg">
-              {isLoadingAbout ? (
+              {isLoading ? (
                 <div className="space-y-3 animate-pulse">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <div key={i} className="h-4 bg-gray-600/30 rounded w-full"></div>
@@ -247,7 +241,7 @@ export default function Home() {
                   <div className="mb-4 p-3 bg-white/5 rounded-lg w-fit group-hover:bg-neon-purple/10 transition-colors">
                     <Icon className="w-6 h-6 text-neon-lime" />
                   </div>
-                  {isLoadingServices ? (
+                  {isLoading ? (
                     <>
                       <div className="h-6 w-3/4 bg-gray-600/30 rounded mb-3 animate-pulse"></div>
                       <div className="space-y-2 animate-pulse">
@@ -288,7 +282,7 @@ export default function Home() {
                     <p className="text-xs text-neon-purple">{testimonial.role}</p>
                   </div>
                 </div>
-                {isLoadingTestimonials ? (
+                {isLoading ? (
                   <div className="space-y-2 animate-pulse">
                     {Array.from({ length: 4 }).map((_, i) => (
                       <div key={i} className="h-3 bg-gray-600/30 rounded w-full"></div>

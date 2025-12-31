@@ -64,6 +64,17 @@ export const ptBR = {
     languagePT: "Português",
     languageEN: "English",
   },
+  resume: {
+    title: "Currículo",
+    subtitle: "Minha trajetória profissional, formação e habilidades.",
+    experience: "Experiência Profissional",
+    education: "Formação Acadêmica",
+    courses: "Cursos e Certificações",
+    volunteer: "Voluntariado",
+    skills: "Habilidades",
+    softSkills: "Soft Skills",
+    languages: "Idiomas",
+  },
   admin: {
     home: {
       title: "Edição da Página Inicial",

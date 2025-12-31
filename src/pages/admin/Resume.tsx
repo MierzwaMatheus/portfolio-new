@@ -270,6 +270,88 @@ export default function AdminResume() {
     setEducationDescription("");
   };
 
+  // Helper function to translate content fields based on type
+  const translateContent = async (content: any, type: string): Promise<any> => {
+    const textsToTranslate: string[] = [];
+    const fieldMap: { [key: number]: string } = {};
+
+    // Identifica campos de texto para traduzir baseado no tipo
+    if (type === "experience") {
+      if (content.role) {
+        fieldMap[textsToTranslate.length] = 'role';
+        textsToTranslate.push(content.role);
+      }
+      if (content.description) {
+        fieldMap[textsToTranslate.length] = 'description';
+        textsToTranslate.push(content.description);
+      }
+    } else if (type === "education") {
+      if (content.degree) {
+        fieldMap[textsToTranslate.length] = 'degree';
+        textsToTranslate.push(content.degree);
+      }
+      if (content.description) {
+        fieldMap[textsToTranslate.length] = 'description';
+        textsToTranslate.push(content.description);
+      }
+    } else if (type === "skill") {
+      if (content.name) {
+        fieldMap[textsToTranslate.length] = 'name';
+        textsToTranslate.push(content.name);
+      }
+    } else if (type === "language") {
+      if (content.name) {
+        fieldMap[textsToTranslate.length] = 'name';
+        textsToTranslate.push(content.name);
+      }
+      if (content.level) {
+        fieldMap[textsToTranslate.length] = 'level';
+        textsToTranslate.push(content.level);
+      }
+    } else if (type === "course" || type === "volunteer" || type === "soft_skill") {
+      if (content.text) {
+        fieldMap[textsToTranslate.length] = 'text';
+        textsToTranslate.push(content.text);
+      }
+    }
+
+    if (textsToTranslate.length === 0) {
+      return content; // Nada para traduzir
+    }
+
+    try {
+      // Traduz todos os textos de uma vez
+      const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
+        body: {
+          texts: textsToTranslate,
+          source: 'pt',
+          target: 'en',
+        },
+      });
+
+      if (translateError) {
+        console.error('Translation error:', translateError);
+        toast.error('Erro ao traduzir. Salvando apenas em português.');
+        return content;
+      }
+
+      const translatedTexts = translateData?.translatedTexts || textsToTranslate;
+      
+      // Cria content_translations com a mesma estrutura mas com campos traduzidos
+      const contentTranslations = { ...content };
+      Object.keys(fieldMap).forEach((indexStr) => {
+        const index = parseInt(indexStr);
+        const field = fieldMap[index];
+        contentTranslations[field] = translatedTexts[index] || content[field];
+      });
+
+      return contentTranslations;
+    } catch (error) {
+      console.error('Translation error:', error);
+      return content; // Fallback para original
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeModal) return;
@@ -299,11 +381,22 @@ export default function AdminResume() {
     }
 
     try {
+      // Traduz o conteúdo
+      const contentTranslations = await translateContent(content, activeModal);
+
+      const dataToSave: any = {
+        content,
+        content_translations: {
+          'pt-BR': content,
+          'en-US': contentTranslations,
+        }
+      };
+
       if (editingItem) {
         const { error } = await supabase
           .schema("app_portfolio")
           .from("resume_items")
-          .update({ content })
+          .update(dataToSave)
           .eq("id", editingItem.id);
 
         if (error) throw error;
@@ -314,7 +407,7 @@ export default function AdminResume() {
           .from("resume_items")
           .insert([{
             type: activeModal,
-            content,
+            ...dataToSave,
             order_index: items.filter(i => i.type === activeModal).length
           }]);
 
@@ -365,12 +458,21 @@ export default function AdminResume() {
     if (!text.trim()) return;
 
     try {
+      const content = { text };
+      
+      // Traduz o conteúdo
+      const contentTranslations = await translateContent(content, type);
+
       const { error } = await supabase
         .schema("app_portfolio")
         .from("resume_items")
         .insert([{
           type,
-          content: { text },
+          content,
+          content_translations: {
+            'pt-BR': content,
+            'en-US': contentTranslations,
+          },
           order_index: items.filter(i => i.type === type).length
         }]);
 
@@ -655,7 +757,7 @@ export default function AdminResume() {
         {/* Shared Modal */}
         <Dialog open={!!activeModal} onOpenChange={() => handleCloseModal()}>
           <DialogContent className="bg-background border-white/10 max-w-2xl max-h-[85vh] flex flex-col p-0">
-            <DialogHeader className="flex-shrink-0 px-6 pt-6 pb-4">
+            <DialogHeader className="shrink-0 px-6 pt-6 pb-4">
               <DialogTitle className="text-white">
                 {editingItem ? "Editar" : "Adicionar"} {
                   activeModal === "experience" ? "Experiência" :
@@ -771,7 +873,7 @@ export default function AdminResume() {
 
               </form>
             </div>
-            <div className="flex justify-end gap-2 pt-4 pb-6 px-6 border-t border-white/10 flex-shrink-0">
+            <div className="flex justify-end gap-2 pt-4 pb-6 px-6 border-t border-white/10 shrink-0">
               <Button type="button" variant="ghost" onClick={handleCloseModal} className="text-gray-400">Cancelar</Button>
               <Button type="submit" form="resume-form" className="bg-neon-purple hover:bg-neon-purple/90 text-white">Salvar</Button>
             </div>

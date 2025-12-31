@@ -64,6 +64,17 @@ export const enUS = {
     languagePT: "Português",
     languageEN: "English",
   },
+  resume: {
+    title: "Resume",
+    subtitle: "My professional trajectory, education and skills.",
+    experience: "Professional Experience",
+    education: "Academic Education",
+    courses: "Courses and Certifications",
+    volunteer: "Volunteer Work",
+    skills: "Skills",
+    softSkills: "Soft Skills",
+    languages: "Languages",
+  },
   admin: {
     home: {
       title: "Home Page Editing",
