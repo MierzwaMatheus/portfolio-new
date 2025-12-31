@@ -27,7 +27,7 @@ export const ptBR = {
     title: "Oi! Eu sou o",
     subtitle: "Tech Lead Frontend & Engenheiro Full-Stack",
     about: {
-      title: "/* Sobre mim */",
+      title: " Sobre mim ",
       loading: "Carregando sobre mim...",
     },
     testimonials: {

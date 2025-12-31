@@ -27,7 +27,7 @@ export const enUS = {
     title: "Hi! I'm",
     subtitle: "Tech Lead Frontend & Full-Stack Engineer",
     about: {
-      title: "/* About me */",
+      title: " About me ",
       loading: "Loading about me...",
     },
     testimonials: {
