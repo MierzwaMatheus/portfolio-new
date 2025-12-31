@@ -3,3 +3,4 @@ export interface TranslationService {
   translateBatch(texts: string[], targetLocale: string, sourceLocale?: string): Promise<string[]>;
 }
 
+

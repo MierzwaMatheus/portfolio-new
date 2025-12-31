@@ -5,3 +5,4 @@ export interface DatabaseTranslationsRepository {
   getProjects(locale: string): Promise<any[]>;
 }
 
+

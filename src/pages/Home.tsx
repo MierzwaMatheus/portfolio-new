@@ -28,8 +28,16 @@ export default function Home() {
   const [services, setServices] = useState<any[]>([]);
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
+  const [isLoadingAbout, setIsLoadingAbout] = useState(true);
+  const [isLoadingServices, setIsLoadingServices] = useState(true);
+  const [isLoadingTestimonials, setIsLoadingTestimonials] = useState(true);
 
   useEffect(() => {
+    // Reseta estados de loading quando locale muda
+    setIsLoadingAbout(true);
+    setIsLoadingServices(true);
+    setIsLoadingTestimonials(true);
+
     const fetchData = async () => {
       try {
         // Fetch Contact Info
@@ -45,6 +53,7 @@ export default function Home() {
         }
 
         // Fetch About - value é JSONB
+        setIsLoadingAbout(true);
         const { data: aboutData, error: aboutError } = await supabase
           .schema('app_portfolio')
           .from('content')
@@ -63,8 +72,10 @@ export default function Home() {
             setAboutText(typeof value === 'string' ? value : '');
           }
         }
+        setIsLoadingAbout(false);
 
         // Fetch Services - usa JSONB baseado no locale
+        setIsLoadingServices(true);
         const { data: servicesData, error: servicesError } = await supabase
           .schema('app_portfolio')
           .from('services')
@@ -82,8 +93,10 @@ export default function Home() {
           }));
           setServices(translatedServices);
         }
+        setIsLoadingServices(false);
 
         // Fetch Testimonials - usa JSONB baseado no locale
+        setIsLoadingTestimonials(true);
         const { data: testimonialsData, error: testimonialsError } = await supabase
           .schema('app_portfolio')
           .from('testimonials')
@@ -103,6 +116,7 @@ export default function Home() {
           }));
           setTestimonials(translatedTestimonials);
         }
+        setIsLoadingTestimonials(false);
       } catch (error) {
         console.error("Unexpected error fetching data:", error);
       } finally {
@@ -200,9 +214,17 @@ export default function Home() {
             </div>
 
             <div className="relative z-10 space-y-6 text-gray-300 leading-relaxed text-lg">
-              <p className="whitespace-pre-wrap">
-                {aboutText || t('home.about.loading')}
-              </p>
+              {isLoadingAbout ? (
+                <div className="space-y-3 animate-pulse">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="h-4 bg-gray-600/30 rounded w-full"></div>
+                  ))}
+                </div>
+              ) : (
+                <p className="whitespace-pre-wrap">
+                  {aboutText || t('home.about.loading')}
+                </p>
+              )}
             </div>
           </div>
         </motion.section>
@@ -225,8 +247,21 @@ export default function Home() {
                   <div className="mb-4 p-3 bg-white/5 rounded-lg w-fit group-hover:bg-neon-purple/10 transition-colors">
                     <Icon className="w-6 h-6 text-neon-lime" />
                   </div>
-                  <h3 className="font-bold text-lg text-neon-lime mb-3 group-hover:text-white transition-colors">{skill.title}</h3>
-                  <p className="text-sm text-gray-400 leading-relaxed">{skill.description}</p>
+                  {isLoadingServices ? (
+                    <>
+                      <div className="h-6 w-3/4 bg-gray-600/30 rounded mb-3 animate-pulse"></div>
+                      <div className="space-y-2 animate-pulse">
+                        {Array.from({ length: 3 }).map((_, i) => (
+                          <div key={i} className="h-3 bg-gray-600/30 rounded w-full"></div>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="font-bold text-lg text-neon-lime mb-3 group-hover:text-white transition-colors">{skill.title}</h3>
+                      <p className="text-sm text-gray-400 leading-relaxed">{skill.description}</p>
+                    </>
+                  )}
                 </div>
               );
             })}
@@ -253,7 +288,15 @@ export default function Home() {
                     <p className="text-xs text-neon-purple">{testimonial.role}</p>
                   </div>
                 </div>
-                <p className="text-gray-400 text-sm italic leading-relaxed">"{testimonial.text}"</p>
+                {isLoadingTestimonials ? (
+                  <div className="space-y-2 animate-pulse">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="h-3 bg-gray-600/30 rounded w-full"></div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-sm italic leading-relaxed">"{testimonial.text}"</p>
+                )}
               </div>
             ))}
           </div>

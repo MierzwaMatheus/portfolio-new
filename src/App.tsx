@@ -65,14 +65,14 @@ function App() {
     <ErrorBoundary>
       <AuthProvider>
         <I18nProvider>
-          <ThemeProvider defaultTheme="dark">
-            <TooltipProvider>
-              <Toaster />
-              <Router />
-              <Analytics />
-              <SpeedInsights />
-            </TooltipProvider>
-          </ThemeProvider>
+        <ThemeProvider defaultTheme="dark">
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+            <Analytics />
+            <SpeedInsights />
+          </TooltipProvider>
+        </ThemeProvider>
         </I18nProvider>
       </AuthProvider>
     </ErrorBoundary>

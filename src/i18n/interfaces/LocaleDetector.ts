@@ -3,3 +3,4 @@ export interface LocaleDetector {
   detectSync(): string;
 }
 
+

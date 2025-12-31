@@ -32,3 +32,4 @@ export class StaticTranslationsRepository implements TranslationsRepository {
   }
 }
 
+

@@ -307,12 +307,12 @@ export default function Portfolio() {
                     <Button
                       variant="ghost"
                       size="icon"
-                        onClick={() => setExpandedImage(null)}
-                        className="text-white hover:bg-white/10"
+                      onClick={() => setExpandedImage(null)}
+                      className="text-white hover:bg-white/10"
                         aria-label={t('common.close')}
-                      >
-                        <X className="w-5 h-5" />
-                      </Button>
+                    >
+                      <X className="w-5 h-5" />
+                    </Button>
                   </div>
                 </DialogHeader>
                 <div className="relative flex-1 flex items-center justify-center bg-background/50 overflow-hidden min-h-0">

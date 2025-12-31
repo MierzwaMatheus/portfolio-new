@@ -3,3 +3,4 @@ export interface TranslationsRepository {
   getAllStaticTranslations(locale: string): Record<string, string>;
 }
 
+
