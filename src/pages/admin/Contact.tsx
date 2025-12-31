@@ -47,9 +47,12 @@ export default function AdminContact() {
       if (error) throw error;
 
       if (data) {
+        // Extrai role do JSONB ou fallback para campo direto
+        const rolePT = data.role_translations?.['pt-BR'] || data.role || "";
+        
         setPersonalData({
           name: data.name || "",
-          role: data.role || "",
+          role: rolePT,
           email: data.email || "",
           showEmail: data.show_email,
           phone: data.phone || "",
@@ -85,9 +88,40 @@ export default function AdminContact() {
 
   const handleSave = async () => {
     try {
+      const rolePT = personalData.role || '';
+
+      // Traduz role para inglês usando a Edge Function
+      let roleEN = rolePT;
+      if (rolePT.trim()) {
+        console.log('Traduzindo role:', rolePT);
+        const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
+          body: {
+            texts: [rolePT],
+            source: 'pt',
+            target: 'en',
+          },
+        });
+
+        console.log('Translation response:', { translateData, translateError });
+
+        if (translateError) {
+          console.error('Translation error:', translateError);
+          alert('Erro ao traduzir título profissional. Salvando apenas em português.');
+        } else {
+          roleEN = translateData?.translatedTexts?.[0] || rolePT;
+          console.log('Role traduzido:', roleEN);
+        }
+      } else {
+        console.log('Role vazio, não será traduzido');
+      }
+
       const updates = {
         name: personalData.name,
-        role: personalData.role,
+        role: rolePT,
+        role_translations: rolePT ? {
+          'pt-BR': rolePT,
+          'en-US': roleEN,
+        } : null,
         email: personalData.email,
         show_email: personalData.showEmail,
         phone: personalData.phone,

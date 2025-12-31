@@ -99,12 +99,18 @@ export function Sidebar() {
       const { data, error } = await supabase
         .schema('app_portfolio')
         .from('contact_info')
-        .select('*')
+        .select('id, name, role, role_translations, email, show_email, phone, show_phone, avatar_url, linkedin_url, github_url, behance_url')
         .single();
 
       if (error) throw error;
       if (data) {
-        setContactInfo(data);
+        // Extrai role traduzido baseado no locale atual
+        const translatedRole = data.role_translations?.[locale] || data.role_translations?.['pt-BR'] || data.role || '';
+        
+        setContactInfo({
+          ...data,
+          role: translatedRole,
+        });
       }
     } catch (error) {
       console.error("Error fetching contact info:", error);
