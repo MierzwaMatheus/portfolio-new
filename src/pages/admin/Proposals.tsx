@@ -512,21 +512,21 @@ export default function AdminProposals() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-white flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2">
             <span className="text-neon-purple">📄</span> Propostas Comerciais
           </h1>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Dialog open={isJsonImportModalOpen} onOpenChange={setIsJsonImportModalOpen}>
               <DialogTrigger asChild>
                 <Button 
                   variant="outline"
-                  className="bg-background hover:bg-background/90 text-white border-white/20"
+                  className="bg-background hover:bg-background/90 text-white border-white/20 text-xs sm:text-sm"
                 >
-                  <Upload className="w-4 h-4 mr-2" /> Importar JSON
+                  <Upload className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Importar JSON</span>
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-card border-white/10 max-w-2xl w-full max-h-[85vh] overflow-y-scroll text-white">
+              <DialogContent className="bg-card border-white/10 max-w-2xl w-[calc(100vw-2rem)] sm:w-full max-h-[85vh] overflow-y-scroll text-white">
                 <DialogHeader>
                   <DialogTitle className="text-xl font-bold">
                     Importar Proposta via JSON
@@ -601,12 +601,12 @@ export default function AdminProposals() {
             </Dialog>
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white">
-                  <Plus className="w-4 h-4 mr-2" /> Nova Proposta
+                <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white text-xs sm:text-sm">
+                  <Plus className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Nova Proposta</span>
                 </Button>
               </DialogTrigger>
-            <DialogContent className="bg-card border-white/10 max-w-2xl w-full max-h-[85vh] overflow-y-scroll text-white">
-              <DialogHeader>
+            <DialogContent className="bg-card border-white/10 max-w-2xl w-full max-h-[85vh] flex flex-col text-white p-0 min-h-0">
+              <DialogHeader className="px-6 pt-6 pb-4">
                 <DialogTitle className="text-xl font-bold">
                   {editingProposal ? "Editar Proposta" : "Nova Proposta"}
                 </DialogTitle>
@@ -615,7 +615,7 @@ export default function AdminProposals() {
                 </VisuallyHidden>
               </DialogHeader>
 
-              <div className="space-y-6 py-2">
+              <div className="space-y-6 py-2 px-6 overflow-y-auto flex-1 min-h-0">
                 <div>
                   <Label className="block text-sm mb-1">Título da Proposta</Label>
                   <Input
@@ -682,20 +682,20 @@ export default function AdminProposals() {
 
                 <div>
                   <Label className="block text-sm mb-1">Escopo dos Serviços</Label>
-                  <div className="flex gap-2 mb-2">
+                  <div className="flex flex-col sm:flex-row gap-2 mb-2">
                     <Input
                       placeholder="Adicionar item..."
-                      className="bg-background border-input"
+                      className="bg-background border-input flex-1"
                       value={newScopeItem}
                       onChange={(e) => setNewScopeItem(e.target.value)}
                     />
-                    <Button onClick={handleAddScopeItem} className="bg-primary text-primary-foreground hover:bg-primary/90">Adicionar</Button>
+                    <Button onClick={handleAddScopeItem} className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">Adicionar</Button>
                   </div>
                   <ul className="space-y-1">
                     {scopeItems.map((item, index) => (
-                      <li key={index} className="flex items-center justify-between bg-white/5 p-2 rounded text-sm">
-                        <span>{item}</span>
-                        <button onClick={() => handleRemoveScopeItem(index)} className="text-red-400 hover:text-red-300">
+                      <li key={index} className="flex items-center justify-between bg-white/5 p-2 rounded text-sm gap-2">
+                        <span className="flex-1 wrap-break-word min-w-0">{item}</span>
+                        <button onClick={() => handleRemoveScopeItem(index)} className="text-red-400 hover:text-red-300 shrink-0">
                           <X className="w-4 h-4" />
                         </button>
                       </li>
@@ -705,26 +705,26 @@ export default function AdminProposals() {
 
                 <div>
                   <Label className="block text-sm mb-1">Cronograma</Label>
-                  <div className="flex gap-2 mb-2">
+                  <div className="flex flex-col sm:flex-row gap-2 mb-2">
                     <Input
                       placeholder="Etapa"
-                      className="bg-background border-input"
+                      className="bg-background border-input flex-1"
                       value={newTimelineStep}
                       onChange={(e) => setNewTimelineStep(e.target.value)}
                     />
                     <Input
                       placeholder="Período estimado"
-                      className="bg-background border-input"
+                      className="bg-background border-input flex-1"
                       value={newTimelinePeriod}
                       onChange={(e) => setNewTimelinePeriod(e.target.value)}
                     />
-                    <Button onClick={handleAddTimelineItem} className="bg-primary text-primary-foreground hover:bg-primary/90">Adicionar</Button>
+                    <Button onClick={handleAddTimelineItem} className="bg-primary text-primary-foreground hover:bg-primary/90 shrink-0">Adicionar</Button>
                   </div>
                   <ul className="space-y-1">
                     {timelineItems.map((item, index) => (
-                      <li key={index} className="flex items-center justify-between bg-white/5 p-2 rounded text-sm">
-                        <span>{item.step} - {item.period}</span>
-                        <button onClick={() => handleRemoveTimelineItem(index)} className="text-red-400 hover:text-red-300">
+                      <li key={index} className="flex items-center justify-between bg-white/5 p-2 rounded text-sm gap-2">
+                        <span className="flex-1 wrap-break-word min-w-0">{item.step} - {item.period}</span>
+                        <button onClick={() => handleRemoveTimelineItem(index)} className="text-red-400 hover:text-red-300 shrink-0">
                           <X className="w-4 h-4" />
                         </button>
                       </li>
@@ -820,7 +820,7 @@ export default function AdminProposals() {
                             newConditions[i].checked = e.target.checked;
                             setConditions(newConditions);
                           }}
-                          className="mt-1 rounded border-gray-300" 
+                          className="mt-1 rounded border-gray-300 shrink-0" 
                         />
                         <Textarea
                           value={condition.text}
@@ -829,7 +829,7 @@ export default function AdminProposals() {
                             newConditions[i].text = e.target.value;
                             setConditions(newConditions);
                           }}
-                          className="bg-background border-input min-h-[60px] text-sm"
+                          className="bg-background border-input min-h-[60px] text-sm flex-1 min-w-0"
                           rows={2}
                         />
                       </div>
@@ -839,48 +839,50 @@ export default function AdminProposals() {
 
                 <div>
                   <Label className="block text-sm mb-1">Senha de Acesso (Opcional)</Label>
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Input
                       type="text"
-                      className="bg-background border-input"
+                      className="bg-background border-input flex-1"
                       placeholder="Deixe em branco para acesso público"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                     />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="icon"
-                      className="shrink-0"
-                      onClick={() => {
-                        // Gerar senha aleatória de 8 caracteres (A-Z, a-z, 0-9)
-                        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                        let randomPassword = '';
-                        for (let i = 0; i < 8; i++) {
-                          randomPassword += chars.charAt(Math.floor(Math.random() * chars.length));
-                        }
-                        setPassword(randomPassword);
-                        toast.success("Senha gerada com sucesso!");
-                      }}
-                      title="Gerar senha aleatória"
-                    >
-                      <KeyRound className="h-4 w-4" />
-                    </Button>
-                    {password && (
+                    <div className="flex gap-2 shrink-0">
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
                         className="shrink-0"
                         onClick={() => {
-                          navigator.clipboard.writeText(password);
-                          toast.success("Senha copiada para a área de transferência!");
+                          // Gerar senha aleatória de 8 caracteres (A-Z, a-z, 0-9)
+                          const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                          let randomPassword = '';
+                          for (let i = 0; i < 8; i++) {
+                            randomPassword += chars.charAt(Math.floor(Math.random() * chars.length));
+                          }
+                          setPassword(randomPassword);
+                          toast.success("Senha gerada com sucesso!");
                         }}
-                        title="Copiar senha"
+                        title="Gerar senha aleatória"
                       >
-                        <Copy className="h-4 w-4" />
+                        <KeyRound className="h-4 w-4" />
                       </Button>
-                    )}
+                      {password && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="shrink-0"
+                          onClick={() => {
+                            navigator.clipboard.writeText(password);
+                            toast.success("Senha copiada para a área de transferência!");
+                          }}
+                          title="Copiar senha"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   <p className="text-xs text-gray-500 mt-1">
                     Se definida, o cliente precisará informar esta senha para acessar a proposta.
@@ -900,19 +902,19 @@ export default function AdminProposals() {
                     Esta política será exibida na proposta e deve incluir hipóteses de rescisão, multas ou proporcionalidades, procedimentos e prazos.
                   </p>
                 </div>
+              </div>
 
-                <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4">
-                  <Button variant="ghost" onClick={() => {
-                    setIsModalOpen(false);
-                    resetForm();
-                  }}>Cancelar</Button>
-                  <Button
-                    className="bg-primary text-primary-foreground hover:bg-primary/90"
-                    onClick={handleCreateProposal}
-                  >
-                    {editingProposal ? "Salvar" : "Criar"}
-                  </Button>
-                </div>
+              <div className="border-t border-white/10 px-6 py-4 mt-auto flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 bg-card">
+                <Button variant="ghost" onClick={() => {
+                  setIsModalOpen(false);
+                  resetForm();
+                }}>Cancelar</Button>
+                <Button
+                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  onClick={handleCreateProposal}
+                >
+                  {editingProposal ? "Salvar" : "Criar"}
+                </Button>
               </div>
             </DialogContent>
           </Dialog>
