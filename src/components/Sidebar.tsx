@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
@@ -77,8 +77,23 @@ export function Sidebar() {
   const { t } = useTranslation();
   const { locale, setLocale } = useI18n();
   const [location] = useLocation();
-  const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
+  const [contactInfoRaw, setContactInfoRaw] = useState<any>(null); // Dados brutos com JSONB
   const [loading, setLoading] = useState(true);
+
+  // Deriva role traduzido baseado no locale atual (sem refetch)
+  const contactRole = useMemo(() => {
+    if (!contactInfoRaw) return "Front-End Developer";
+    return contactInfoRaw.role_translations?.[locale] || contactInfoRaw.role_translations?.['pt-BR'] || contactInfoRaw.role || "Front-End Developer";
+  }, [contactInfoRaw, locale]);
+
+  // Deriva contactInfo completo com role traduzido
+  const contactInfo = useMemo((): ContactInfo | null => {
+    if (!contactInfoRaw) return null;
+    return {
+      ...contactInfoRaw,
+      role: contactRole,
+    };
+  }, [contactInfoRaw, contactRole]);
   
   const NAV_ITEMS = NAV_ITEMS_KEYS.map(item => ({
     ...item,
@@ -104,13 +119,8 @@ export function Sidebar() {
 
       if (error) throw error;
       if (data) {
-        // Extrai role traduzido baseado no locale atual
-        const translatedRole = data.role_translations?.[locale] || data.role_translations?.['pt-BR'] || data.role || '';
-        
-        setContactInfo({
-          ...data,
-          role: translatedRole,
-        });
+        // Salva dados brutos (com JSONB completo) - a tradução será derivada via useMemo
+        setContactInfoRaw(data);
       }
     } catch (error) {
       console.error("Error fetching contact info:", error);
