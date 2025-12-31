@@ -9,8 +9,10 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { useI18n } from "@/i18n/context/I18nContext";
+import { useTranslation } from "@/i18n/hooks/useTranslation";
 
 export default function BlogPost() {
+    const { t } = useTranslation();
     const { locale, isLoading: i18nLoading } = useI18n();
     const [match, params] = useRoute("/blog/:slug");
     const [postRaw, setPostRaw] = useState<any>(null);
@@ -65,12 +67,12 @@ export default function BlogPost() {
         return (
             <Layout>
                 <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-                    <h1 className="text-3xl font-bold text-white">Post não encontrado</h1>
-                    <p className="text-gray-400">O artigo que você procura não existe ou foi removido.</p>
+                    <h1 className="text-3xl font-bold text-white">{t('blog.postNotFound')}</h1>
+                    <p className="text-gray-400">{t('blog.postNotFoundDescription')}</p>
                     <Link href="/blog">
                         <Button variant="outline" className="mt-4">
                             <ArrowLeft className="mr-2 h-4 w-4" />
-                            Voltar para o Blog
+                            {t('blog.backToBlog')}
                         </Button>
                     </Link>
                 </div>
@@ -88,7 +90,7 @@ export default function BlogPost() {
                 <Link href="/blog">
                     <Button variant="ghost" className="text-gray-400 hover:text-white -ml-4">
                         <ArrowLeft className="mr-2 h-4 w-4" />
-                        Voltar para o Blog
+                        {t('blog.backToBlog')}
                     </Button>
                 </Link>
 
@@ -123,7 +125,7 @@ export default function BlogPost() {
                         {/* Read time could be calculated based on word count */}
                         <div className="flex items-center gap-2">
                             <Clock className="w-4 h-4" />
-                            <span>{Math.ceil(post.content.split(' ').length / 200)} min de leitura</span>
+                            <span>{Math.ceil(post.content.split(' ').length / 200)} {t('blog.readTime')}</span>
                         </div>
                     </div>
                 </header>

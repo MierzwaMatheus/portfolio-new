@@ -75,6 +75,23 @@ export const enUS = {
     softSkills: "Soft Skills",
     languages: "Languages",
   },
+  blog: {
+    title: "Blog",
+    subtitle: "Sharing knowledge about development and design",
+    featured: "Featured",
+    readNow: "Read now",
+    readTime: "min read",
+    searchPlaceholder: "Search articles...",
+    filterByTags: "Filter by tags",
+    clear: "Clear",
+    noTags: "No tags available",
+    noPosts: "No articles published yet.",
+    comeBackSoon: "Come back soon to check out new content!",
+    readMore: "Read more",
+    backToBlog: "Back to Blog",
+    postNotFound: "Post not found",
+    postNotFoundDescription: "The article you are looking for does not exist or has been removed.",
+  },
   admin: {
     home: {
       title: "Home Page Editing",

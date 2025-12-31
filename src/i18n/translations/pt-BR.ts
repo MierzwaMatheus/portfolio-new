@@ -75,6 +75,23 @@ export const ptBR = {
     softSkills: "Soft Skills",
     languages: "Idiomas",
   },
+  blog: {
+    title: "Blog",
+    subtitle: "Compartilhando conhecimento sobre desenvolvimento e design",
+    featured: "Em Destaque",
+    readNow: "Ler agora",
+    readTime: "min de leitura",
+    searchPlaceholder: "Buscar artigos...",
+    filterByTags: "Filtrar por tags",
+    clear: "Limpar",
+    noTags: "Nenhuma tag disponível",
+    noPosts: "Nenhum artigo publicado ainda.",
+    comeBackSoon: "Volte em breve para conferir novos conteúdos!",
+    readMore: "Ler mais",
+    backToBlog: "Voltar para o Blog",
+    postNotFound: "Post não encontrado",
+    postNotFoundDescription: "O artigo que você procura não existe ou foi removido.",
+  },
   admin: {
     home: {
       title: "Edição da Página Inicial",

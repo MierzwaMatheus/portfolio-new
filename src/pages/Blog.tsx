@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { supabase } from "@/lib/supabase";
 import { Link } from "wouter";
 import { useI18n } from "@/i18n/context/I18nContext";
+import { useTranslation } from "@/i18n/hooks/useTranslation";
 import {
   Carousel,
   CarouselContent,
@@ -20,6 +21,7 @@ import {
 } from "@/components/ui/carousel";
 
 export default function Blog() {
+  const { t } = useTranslation();
   const { locale, isLoading: i18nLoading } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -153,14 +155,14 @@ export default function Blog() {
         className="space-y-12 pb-12"
       >
         <header className="space-y-4">
-          <h1 className="text-3xl font-bold text-white">Blog</h1>
-          <p className="text-gray-400">Compartilhando conhecimento sobre desenvolvimento e design</p>
+          <h1 className="text-3xl font-bold text-white">{t('blog.title')}</h1>
+          <p className="text-gray-400">{t('blog.subtitle')}</p>
         </header>
 
         {/* Featured Posts Carousel */}
         {featuredPosts.length > 0 && (
           <motion.section variants={item} className="space-y-6">
-            <h2 className="text-xl font-bold text-white">Em Destaque</h2>
+            <h2 className="text-xl font-bold text-white">{t('blog.featured')}</h2>
 
             {featuredPosts.length === 1 ? (
               <Link href={`/blog/${featuredPosts[0].slug}`}>
@@ -194,12 +196,12 @@ export default function Blog() {
                         <span>{new Date(featuredPosts[0].published_at).toLocaleDateString('pt-BR')}</span>
                         <span className="flex items-center">
                           <Clock className="w-4 h-4 mr-1" />
-                          {Math.ceil(featuredPosts[0].content.split(' ').length / 200)} min de leitura
+                          {Math.ceil(featuredPosts[0].content.split(' ').length / 200)} {t('blog.readTime')}
                         </span>
                       </div>
 
                       <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white">
-                        Ler agora
+                        {t('blog.readNow')}
                       </Button>
                     </div>
                   </div>
@@ -241,12 +243,12 @@ export default function Blog() {
                                 <span>{new Date(post.published_at).toLocaleDateString('pt-BR')}</span>
                                 <span className="flex items-center">
                                   <Clock className="w-4 h-4 mr-1" />
-                                  {Math.ceil(post.content.split(' ').length / 200)} min de leitura
+                                  {Math.ceil(post.content.split(' ').length / 200)} {t('blog.readTime')}
                                 </span>
                               </div>
 
                               <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white">
-                                Ler agora
+                                {t('blog.readNow')}
                               </Button>
                             </div>
                           </div>
@@ -267,7 +269,7 @@ export default function Blog() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             <Input
-              placeholder="Buscar artigos..."
+              placeholder={t('blog.searchPlaceholder')}
               className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-neon-purple/50 focus:ring-neon-purple/20"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -282,7 +284,7 @@ export default function Blog() {
                 }`}
               >
                 <Filter className="mr-2 h-4 w-4" />
-                Filtrar por tags
+                {t('blog.filterByTags')}
                 {selectedTags.length > 0 && (
                   <Badge className="ml-2 bg-neon-purple text-white border-none">
                     {selectedTags.length}
@@ -302,13 +304,13 @@ export default function Blog() {
                       className="h-7 px-2 text-xs text-gray-400 hover:text-white"
                     >
                       <X className="h-3 w-3 mr-1" />
-                      Limpar
+                      {t('blog.clear')}
                     </Button>
                   )}
                 </div>
                 <div className="max-h-64 overflow-y-auto space-y-2">
                   {allTags.length === 0 ? (
-                    <p className="text-sm text-gray-400">Nenhuma tag disponível</p>
+                    <p className="text-sm text-gray-400">{t('blog.noTags')}</p>
                   ) : (
                     allTags.map((tag) => (
                       <div
@@ -337,8 +339,8 @@ export default function Blog() {
         <motion.div variants={item} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {filteredPosts.length === 0 ? (
             <div className="col-span-2 text-center py-12">
-              <p className="text-gray-400 text-lg">Nenhum artigo publicado ainda.</p>
-              <p className="text-gray-500 text-sm mt-2">Volte em breve para conferir novos conteúdos!</p>
+              <p className="text-gray-400 text-lg">{t('blog.noPosts')}</p>
+              <p className="text-gray-500 text-sm mt-2">{t('blog.comeBackSoon')}</p>
             </div>
           ) : (
             filteredPosts.map((post) => (
@@ -359,7 +361,7 @@ export default function Blog() {
                   <div className="flex items-center text-xs text-gray-500 mb-3 space-x-3">
                     <span>{new Date(post.published_at).toLocaleDateString('pt-BR')}</span>
                     <span className="w-1 h-1 rounded-full bg-gray-600"></span>
-                    <span>{Math.ceil(post.content.split(' ').length / 200)} min de leitura</span>
+                    <span>{Math.ceil(post.content.split(' ').length / 200)} {t('blog.readTime')}</span>
                   </div>
 
                   <h3 className="text-xl font-bold text-white mb-3 group-hover:text-neon-purple transition-colors">
@@ -384,7 +386,7 @@ export default function Blog() {
                   </div>
 
                   <span className="inline-flex items-center text-sm text-neon-purple hover:text-neon-lime transition-colors mt-auto">
-                    Ler mais <ChevronRight className="ml-1 w-4 h-4" />
+                    {t('blog.readMore')} <ChevronRight className="ml-1 w-4 h-4" />
                   </span>
                 </div>
               </div>
