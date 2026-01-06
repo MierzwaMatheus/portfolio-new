@@ -1014,6 +1014,7 @@ export default function AdminProposals() {
                     <TableHead className="text-gray-300">Cliente</TableHead>
                     <TableHead className="text-gray-300">Data de Criação</TableHead>
                     <TableHead className="text-gray-300">Data de Aceite</TableHead>
+                    <TableHead className="text-gray-300">Senha de Acesso</TableHead>
                     <TableHead className="text-gray-300">Status</TableHead>
                     <TableHead className="text-gray-300 text-right">Ações</TableHead>
                   </TableRow>
@@ -1030,6 +1031,27 @@ export default function AdminProposals() {
                       <TableCell className="text-gray-400">{new Date(proposal.created_at).toLocaleDateString('pt-BR')}</TableCell>
                       <TableCell className="text-gray-400">
                         {proposal.accepted_at ? new Date(proposal.accepted_at).toLocaleDateString('pt-BR') : '-'}
+                      </TableCell>
+                      <TableCell className="text-gray-400">
+                        {proposal.password ? (
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-sm">{proposal.password}</span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 text-gray-400 hover:text-white hover:bg-white/10"
+                              onClick={() => {
+                                navigator.clipboard.writeText(proposal.password);
+                                toast.success("Senha copiada para a área de transferência!");
+                              }}
+                              title="Copiar senha"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-gray-500 text-sm">Pública</span>
+                        )}
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
