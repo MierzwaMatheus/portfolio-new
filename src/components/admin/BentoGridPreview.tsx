@@ -25,11 +25,11 @@ function SortablePreviewCard({ item, index }: { item: DailyRoutineItem; index: n
   const getSpanClasses = (spanSize: string) => {
     switch (spanSize) {
       case '1x2':
-        return 'md:row-span-2';
+        return 'row-span-2';
       case '2x1':
-        return 'md:col-span-2';
+        return 'col-span-2';
       case '2x2':
-        return 'md:col-span-2 md:row-span-2';
+        return 'col-span-2 row-span-2';
       default:
         return '';
     }
@@ -76,7 +76,7 @@ export function BentoGridPreview({ items }: BentoGridPreviewProps) {
       <div className="text-sm text-gray-400 mb-2">
         Preview do Layout do Bento Grid (arraste para reordenar)
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-[200px] p-4 bg-white/5 border border-white/10 rounded-xl">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 auto-rows-[200px] p-4 bg-white/5 border border-white/10 rounded-xl">
         {sortedItems.length === 0 ? (
           <div className="col-span-full flex items-center justify-center h-32 text-gray-500 text-sm">
             Nenhum item adicionado ainda
@@ -90,7 +90,7 @@ export function BentoGridPreview({ items }: BentoGridPreviewProps) {
       <div className="text-xs text-gray-500 space-y-1">
         <p>• Os números indicam a ordem de exibição</p>
         <p>• Os tamanhos (1x1, 1x2, 2x1, 2x2) mostram quantas células cada card ocupa</p>
-        <p>• O grid tem 3 colunas no desktop</p>
+        <p>• O grid tem 2 colunas no mobile e 3 colunas no desktop</p>
         <p>• Arraste os cards para reordená-los</p>
       </div>
     </div>

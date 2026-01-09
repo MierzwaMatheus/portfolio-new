@@ -108,11 +108,11 @@ export default function About() {
   const getSpanClasses = (spanSize: string) => {
     switch (spanSize) {
       case '1x2':
-        return 'md:row-span-2';
+        return 'row-span-2';
       case '2x1':
-        return 'md:col-span-2';
+        return 'col-span-2';
       case '2x2':
-        return 'md:col-span-2 md:row-span-2';
+        return 'col-span-2 row-span-2';
       default:
         return '';
     }
@@ -166,7 +166,7 @@ export default function About() {
         </h2>
 
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-[200px]">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 auto-rows-[200px]">
             {Array.from({ length: 6 }).map((_, i) => (
               <div key={i} className="bg-white/5 border border-white/10 rounded-xl animate-pulse" />
             ))}
@@ -176,7 +176,7 @@ export default function About() {
             {t('about.dailyRoutine.empty')}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-[200px]">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 auto-rows-[200px]">
             {dailyRoutine.map((routineItem) => (
               <motion.div
                 key={routineItem.id}
