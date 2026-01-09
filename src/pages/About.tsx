@@ -203,7 +203,7 @@ export default function About() {
 
                 {/* Tags */}
                 <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2 z-10">
-                  {routineItem.tags?.map((tag, idx) => (
+                  {routineItem.tags?.map((tag: string, idx: number) => (
                     <Badge
                       key={idx}
                       className="bg-neon-purple/80 text-white border-none text-xs backdrop-blur-sm"
@@ -218,7 +218,7 @@ export default function About() {
                   className={cn(
                     "absolute inset-0 bg-black/90 backdrop-blur-sm transition-all duration-300 z-20",
                     "flex items-center justify-center p-6",
-                    hoveredItem === routineItem.id || isMobile
+                    hoveredItem === routineItem.id
                       ? "opacity-100 pointer-events-auto"
                       : "opacity-0 pointer-events-none"
                   )}
@@ -275,7 +275,7 @@ export default function About() {
                 >
                   <AccordionTrigger className="text-white hover:text-neon-purple px-6 py-4 hover:no-underline">
                     <div className="flex items-center gap-3">
-                      <HelpCircle className="w-5 h-5 text-neon-purple flex-shrink-0" />
+                      <HelpCircle className="w-5 h-5 text-neon-purple shrink-0" />
                       <span className="text-left font-medium">{faqItem.question}</span>
                     </div>
                   </AccordionTrigger>

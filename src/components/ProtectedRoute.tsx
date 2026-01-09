@@ -2,7 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Redirect, Route, RouteProps } from "wouter";
 import { Loader2 } from "lucide-react";
 
-export function ProtectedRoute({ allowedRoles, ...props }: RouteProps & { allowedRoles?: string[] }) {
+export function ProtectedRoute({ component: Component, allowedRoles, ...props }: RouteProps & { allowedRoles?: string[]; component: React.ComponentType<any> }) {
   const { user, isLoading, checkRole } = useAuth();
 
   if (isLoading) {
@@ -39,5 +39,5 @@ export function ProtectedRoute({ allowedRoles, ...props }: RouteProps & { allowe
     );
   }
 
-  return <Route {...props} />;
+  return <Component />;
 }

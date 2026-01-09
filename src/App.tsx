@@ -38,17 +38,39 @@ function Router() {
   if (isAdminRoute) {
     return (
       <Switch>
-        <ProtectedRoute path="/admin/dashboard" component={Dashboard} allowedRoles={['root', 'admin']} />
-        <ProtectedRoute path="/admin" component={Dashboard} allowedRoles={['root', 'admin']} />
-        <ProtectedRoute path="/admin/projects" component={AdminProjects} allowedRoles={['root', 'admin']} />
-        <ProtectedRoute path="/admin/blog" component={AdminBlog} allowedRoles={['root', 'admin']} />
-        <ProtectedRoute path="/admin/resume" component={AdminResume} allowedRoles={['root', 'admin']} />
-        <ProtectedRoute path="/admin/home" component={AdminHome} allowedRoles={['root', 'admin']} />
-        <ProtectedRoute path="/admin/about" component={AdminAbout} allowedRoles={['root', 'admin']} />
-        <ProtectedRoute path="/admin/contact" component={AdminContact} allowedRoles={['root', 'admin']} />
-        <ProtectedRoute path="/admin/proposals" component={AdminProposals} allowedRoles={['root', 'admin', 'proposal-editor']} />
-        <ProtectedRoute path="/admin/payment-links" component={AdminPaymentLinks} allowedRoles={['root', 'admin']} />
-        <ProtectedRoute path="/admin/users/new" component={AdminCreateUser} allowedRoles={['root']} />
+        <Route path="/admin/dashboard">
+          <ProtectedRoute component={Dashboard} allowedRoles={['root', 'admin']} />
+        </Route>
+        <Route path="/admin">
+          <ProtectedRoute component={Dashboard} allowedRoles={['root', 'admin']} />
+        </Route>
+        <Route path="/admin/projects">
+          <ProtectedRoute component={AdminProjects} allowedRoles={['root', 'admin']} />
+        </Route>
+        <Route path="/admin/blog">
+          <ProtectedRoute component={AdminBlog} allowedRoles={['root', 'admin']} />
+        </Route>
+        <Route path="/admin/resume">
+          <ProtectedRoute component={AdminResume} allowedRoles={['root', 'admin']} />
+        </Route>
+        <Route path="/admin/home">
+          <ProtectedRoute component={AdminHome} allowedRoles={['root', 'admin']} />
+        </Route>
+        <Route path="/admin/about">
+          <ProtectedRoute component={AdminAbout} allowedRoles={['root', 'admin']} />
+        </Route>
+        <Route path="/admin/contact">
+          <ProtectedRoute component={AdminContact} allowedRoles={['root', 'admin']} />
+        </Route>
+        <Route path="/admin/proposals">
+          <ProtectedRoute component={AdminProposals} allowedRoles={['root', 'admin', 'proposal-editor']} />
+        </Route>
+        <Route path="/admin/payment-links">
+          <ProtectedRoute component={AdminPaymentLinks} allowedRoles={['root', 'admin']} />
+        </Route>
+        <Route path="/admin/users/new">
+          <ProtectedRoute component={AdminCreateUser} allowedRoles={['root']} />
+        </Route>
       </Switch>
     );
   }
