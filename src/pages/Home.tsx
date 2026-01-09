@@ -15,6 +15,7 @@ import {
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useI18n } from "@/i18n/context/I18nContext";
 import { supabase } from "@/lib/supabase";
+import { useMatrixText } from "@/hooks/useMatrixText";
 
 interface ContactInfo {
   role: string;
@@ -28,10 +29,22 @@ export default function Home() {
   const { t, tValue } = useTranslation();
   const { locale, isLoading: i18nLoading } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
-  const [aboutDataRaw, setAboutDataRaw] = useState<any>(null); // Dados brutos do JSONB
-  const [servicesRaw, setServicesRaw] = useState<any[]>([]); // Dados brutos com JSONB completo
-  const [testimonialsRaw, setTestimonialsRaw] = useState<any[]>([]); // Dados brutos com JSONB completo
+  const [aboutDataRaw, setAboutDataRaw] = useState<any>(null);
+  const [servicesRaw, setServicesRaw] = useState<any[]>([]);
+  const [testimonialsRaw, setTestimonialsRaw] = useState<any[]>([]);
   const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
+
+  const matrixAboutText = useMatrixText({
+    text: 'Carregando informações do perfil...\n\nSincronizando dados do banco de dados, processando traduções e preparando experiência personalizada. Por favor, aguarde enquanto o sistema carrega todas as informações.',
+    speed: 30,
+    chars: '!@#$%^&*()_+-=[]{}|;:,.<>?~ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  });
+
+  const matrixTestimonialText = useMatrixText({
+    text: '"Carregando depoimento..."',
+    speed: 30,
+    chars: '!@#$%^&*()_+-=[]{}|;:,.<>?~ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  });
 
   // Deriva role traduzido baseado no locale atual (sem refetch)
   const contactRole = useMemo(() => {
@@ -210,11 +223,9 @@ export default function Home() {
 
             <div className="relative z-10 space-y-6 text-gray-300 leading-relaxed text-lg">
               {isLoading ? (
-                <div className="space-y-3 animate-pulse">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="h-4 bg-gray-600/30 rounded w-full"></div>
-                  ))}
-                </div>
+                <p className="whitespace-pre-wrap text-neon-lime font-mono">
+                  {matrixAboutText}
+                </p>
               ) : (
                 <p className="whitespace-pre-wrap">
                   {aboutText || t('home.about.loading')}
@@ -284,11 +295,9 @@ export default function Home() {
                   </div>
                 </div>
                 {isLoading ? (
-                  <div className="space-y-2 animate-pulse">
-                    {Array.from({ length: 4 }).map((_, i) => (
-                      <div key={i} className="h-3 bg-gray-600/30 rounded w-full"></div>
-                    ))}
-                  </div>
+                  <p className="text-neon-lime font-mono text-sm italic leading-relaxed">
+                    {matrixTestimonialText}
+                  </p>
                 ) : (
                   <p className="text-gray-400 text-sm italic leading-relaxed">"{testimonial.text}"</p>
                 )}
