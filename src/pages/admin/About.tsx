@@ -8,12 +8,100 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Pencil, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash2, Pencil, Image as ImageIcon, GripVertical } from "lucide-react";
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { supabase } from "@/lib/supabase";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
+import { BentoGridPreview } from "@/components/admin/BentoGridPreview";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+function SortableDailyRoutineCard({ item, onEdit, onDelete, t }: { item: any, onEdit: (item: any) => void, onDelete: (id: string) => void, t: (key: string) => string }) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className="bg-card border-white/10 group">
+        <CardContent className="pt-6 space-y-4">
+          <div className="relative aspect-video rounded-lg overflow-hidden border border-white/10">
+            <img src={item.image_url} alt={item.description} className="w-full h-full object-cover" />
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+              <div {...attributes} {...listeners} className="cursor-move">
+                <GripVertical className="w-4 h-4 text-gray-500 hover:text-white" />
+              </div>
+              {item.description_translations?.['pt-BR'] || item.description}
+            </h3>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {item.tags?.map((tag: string, idx: number) => (
+                <Badge key={idx} className="bg-neon-purple/20 text-neon-purple border-none text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+            <p className="text-gray-400 text-xs">
+              {t('admin.about.spanSize')}: {item.span_size}
+            </p>
+          </div>
+          <div className="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button variant="ghost" size="sm" onClick={() => onEdit(item)} className="text-white hover:text-neon-purple">
+              <Pencil className="w-4 h-4 mr-2" /> {t('common.edit')}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => onDelete(item.id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
+              <Trash2 className="w-4 h-4 mr-2" /> {t('common.delete')}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function SortableFaqCard({ item, onEdit, onDelete, t }: { item: any, onEdit: (item: any) => void, onDelete: (id: string) => void, t: (key: string) => string }) {
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <Card className="bg-card border-white/10 group">
+        <CardContent className="pt-6 space-y-4">
+          <div>
+            <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
+              <div {...attributes} {...listeners} className="cursor-move">
+                <GripVertical className="w-4 h-4 text-gray-500 hover:text-white" />
+              </div>
+              {item.question_translations?.['pt-BR'] || item.question}
+            </h3>
+            <p className="text-gray-400 text-sm leading-relaxed">
+              {item.answer_translations?.['pt-BR'] || item.answer}
+            </p>
+          </div>
+          <div className="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <Button variant="ghost" size="sm" onClick={() => onEdit(item)} className="text-white hover:text-neon-purple">
+              <Pencil className="w-4 h-4 mr-2" /> {t('common.edit')}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={() => onDelete(item.id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
+              <Trash2 className="w-4 h-4 mr-2" /> {t('common.delete')}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 export default function AdminAbout() {
   const { t } = useTranslation();
@@ -26,6 +114,13 @@ export default function AdminAbout() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState<string>("");
   const [spanSize, setSpanSize] = useState<string>("1x1");
+
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     fetchData();
@@ -106,7 +201,7 @@ export default function AdminAbout() {
     try {
       if (activeModal === "dailyRoutine") {
         const descriptionPT = formData.get("description") as string;
-        const displayOrder = parseInt(formData.get("displayOrder") as string) || 0;
+        const displayOrder = editingItem ? editingItem.display_order : dailyRoutine.length;
 
         // Traduz descrição usando a Edge Function
         const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
@@ -145,7 +240,7 @@ export default function AdminAbout() {
       } else if (activeModal === "faq") {
         const questionPT = formData.get("question") as string;
         const answerPT = formData.get("answer") as string;
-        const displayOrder = parseInt(formData.get("displayOrder") as string) || 0;
+        const displayOrder = editingItem ? editingItem.display_order : faq.length;
 
         // Traduz pergunta e resposta usando a Edge Function
         const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
@@ -212,6 +307,58 @@ export default function AdminAbout() {
     }
   };
 
+  const handleDragEnd = async (event: DragEndEvent, type: string) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const items = type === "dailyRoutine" ? dailyRoutine : faq;
+      const sortedItems = [...items].sort((a, b) => a.display_order - b.display_order);
+      const oldIndex = sortedItems.findIndex((item) => item.id === active.id);
+      const newIndex = sortedItems.findIndex((item) => item.id === over.id);
+
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const newOrder = arrayMove(sortedItems, oldIndex, newIndex);
+
+      const updatedOrder = newOrder.map((item, index) => ({
+        ...item,
+        display_order: index
+      }));
+
+      if (type === "dailyRoutine") {
+        setDailyRoutine(updatedOrder);
+      } else {
+        setFaq(updatedOrder);
+      }
+
+      try {
+        const tableName = type === "dailyRoutine" ? "daily_routine_items" : "faq_items";
+        const updatePromises = updatedOrder.map((item, index) =>
+          supabase
+            .schema("app_portfolio")
+            .from(tableName)
+            .update({ display_order: index })
+            .eq("id", item.id)
+        );
+
+        const results = await Promise.all(updatePromises);
+        const hasError = results.some(result => result.error);
+
+        if (hasError) {
+          const errors = results.filter(r => r.error).map(r => r.error);
+          console.error("Error reordering items:", errors);
+          throw new Error("Erro ao atualizar ordem dos itens");
+        }
+
+        alert("Ordem atualizada com sucesso");
+      } catch (error) {
+        console.error("Error reordering items:", error);
+        alert("Erro ao reordenar itens");
+        fetchData();
+      }
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -233,40 +380,35 @@ export default function AdminAbout() {
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {dailyRoutine.map(item => (
-                <Card key={item.id} className="bg-card border-white/10 group">
-                  <CardContent className="pt-6 space-y-4">
-                    <div className="relative aspect-video rounded-lg overflow-hidden border border-white/10">
-                      <img src={item.image_url} alt={item.description} className="w-full h-full object-cover" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-white mb-2">
-                        {item.description_translations?.['pt-BR'] || item.description}
-                      </h3>
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {item.tags?.map((tag: string, idx: number) => (
-                          <Badge key={idx} className="bg-neon-purple/20 text-neon-purple border-none text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                      <p className="text-gray-400 text-xs">
-                        {t('admin.about.spanSize')}: {item.span_size} | {t('admin.about.displayOrder')}: {item.display_order}
-                      </p>
-                    </div>
-                    <div className="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="sm" onClick={() => handleOpenModal("dailyRoutine", item)} className="text-white hover:text-neon-purple">
-                        <Pencil className="w-4 h-4 mr-2" /> {t('common.edit')}
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete("dailyRoutine", item.id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
-                        <Trash2 className="w-4 h-4 mr-2" /> {t('common.delete')}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {/* Preview do Layout */}
+            <Card className="bg-card border-white/10">
+              <CardHeader>
+                <CardTitle className="text-white text-lg">Preview do Layout</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'dailyRoutine')}>
+                  <SortableContext items={dailyRoutine.map(i => i.id)} strategy={rectSortingStrategy}>
+                    <BentoGridPreview items={dailyRoutine} />
+                  </SortableContext>
+                </DndContext>
+              </CardContent>
+            </Card>
+
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'dailyRoutine')}>
+              <SortableContext items={dailyRoutine.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {dailyRoutine.map(item => (
+                    <SortableDailyRoutineCard
+                      key={item.id}
+                      item={item}
+                      onEdit={(item) => handleOpenModal("dailyRoutine", item)}
+                      onDelete={(id) => handleDelete("dailyRoutine", id)}
+                      t={t}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           </TabsContent>
 
           <TabsContent value="faq" className="space-y-6 mt-6">
@@ -277,33 +419,21 @@ export default function AdminAbout() {
               </Button>
             </div>
 
-            <div className="space-y-4">
-              {faq.map(item => (
-                <Card key={item.id} className="bg-card border-white/10 group">
-                  <CardContent className="pt-6 space-y-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-white mb-2">
-                        {item.question_translations?.['pt-BR'] || item.question}
-                      </h3>
-                      <p className="text-gray-400 text-sm leading-relaxed">
-                        {item.answer_translations?.['pt-BR'] || item.answer}
-                      </p>
-                      <p className="text-gray-500 text-xs mt-2">
-                        {t('admin.about.displayOrder')}: {item.display_order}
-                      </p>
-                    </div>
-                    <div className="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="sm" onClick={() => handleOpenModal("faq", item)} className="text-white hover:text-neon-purple">
-                        <Pencil className="w-4 h-4 mr-2" /> {t('common.edit')}
-                      </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete("faq", item.id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
-                        <Trash2 className="w-4 h-4 mr-2" /> {t('common.delete')}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'faq')}>
+              <SortableContext items={faq.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                <div className="space-y-4">
+                  {faq.map(item => (
+                    <SortableFaqCard
+                      key={item.id}
+                      item={item}
+                      onEdit={(item) => handleOpenModal("faq", item)}
+                      onDelete={(id) => handleDelete("faq", id)}
+                      t={t}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+            </DndContext>
           </TabsContent>
         </Tabs>
 
@@ -403,16 +533,6 @@ export default function AdminAbout() {
                       </Select>
                       <input type="hidden" name="spanSize" value={spanSize} />
                     </div>
-
-                    <div className="space-y-2">
-                      <Label className="text-white">{t('admin.about.displayOrder')}</Label>
-                      <Input
-                        name="displayOrder"
-                        type="number"
-                        defaultValue={editingItem?.display_order || 0}
-                        className="bg-white/5 border-white/10 text-white"
-                      />
-                    </div>
                   </div>
                 </>
               )}
@@ -436,16 +556,6 @@ export default function AdminAbout() {
                       defaultValue={editingItem?.answer_translations?.['pt-BR'] || editingItem?.answer}
                       className="bg-white/5 border-white/10 text-white min-h-[150px]"
                       required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label className="text-white">{t('admin.about.displayOrder')}</Label>
-                    <Input
-                      name="displayOrder"
-                      type="number"
-                      defaultValue={editingItem?.display_order || 0}
-                      className="bg-white/5 border-white/10 text-white"
                     />
                   </div>
                 </>
