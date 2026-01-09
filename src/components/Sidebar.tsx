@@ -25,9 +25,9 @@ import { useI18n } from "@/i18n/context/I18nContext";
 
 const NAV_ITEMS_KEYS = [
   { key: "home", href: "/", icon: Home },
-  { key: "about", href: "/sobre", icon: User },
   { key: "resume", href: "/curriculo", icon: Briefcase },
   { key: "portfolio", href: "/portfolio", icon: FolderOpen },
+  { key: "about", href: "/sobre", icon: User },
   { key: "blog", href: "/blog", icon: PenTool },
 ];
 
