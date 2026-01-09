@@ -135,13 +135,7 @@ export default function Home() {
     created_at: testimonial.created_at,
   }));
 
-  if (isLoading || i18nLoading) {
-    return (
-      <Layout>
-        <PageSkeleton />
-      </Layout>
-    );
-  }
+  // Remove early return - renderiza conteúdo estático imediatamente
 
   const container = {
     hidden: { opacity: 0 },
