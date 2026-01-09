@@ -1,4 +1,3 @@
-import { Layout } from "@/components/Layout";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
@@ -166,7 +165,6 @@ export default function Home() {
   };
 
   return (
-    <Layout>
       <motion.div
         variants={container}
         initial="hidden"
@@ -306,6 +304,5 @@ export default function Home() {
           </div>
         </motion.section>
       </motion.div>
-    </Layout>
   );
 }

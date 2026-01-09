@@ -26,12 +26,19 @@ import Proposal from "./pages/Proposal";
 import ProposalAccept from "./pages/ProposalAccept";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Layout } from "./components/Layout";
+import { PublicRoute } from "./components/PublicRoute";
 
 function Router() {
   return (
-    <Switch>
-      <Route path={"/"} component={Home} />
-      <Route path={"/login"} component={Login} />
+    <Layout>
+      <Switch>
+        <Route path={"/"}>
+          <PublicRoute>
+            <Home />
+          </PublicRoute>
+        </Route>
+        <Route path={"/login"} component={Login} />
 
       {/* Admin Routes */}
       <ProtectedRoute path="/admin/dashboard" component={Dashboard} allowedRoles={['root', 'admin']} />
@@ -46,17 +53,42 @@ function Router() {
       <ProtectedRoute path="/admin/users/new" component={AdminCreateUser} allowedRoles={['root']} />
 
       {/* Public Routes */}
-      <Route path="/curriculo" component={Resume} />
-      <Route path="/portfolio" component={Portfolio} />
-      <Route path="/blog" component={Blog} />
-      <Route path="/blog/:slug" component={BlogPost} />
-      <Route path="/proposta/:id" component={Proposal} />
-      <Route path="/proposta/:slug/aceitar" component={ProposalAccept} />
+      <Route path="/curriculo">
+        <PublicRoute>
+          <Resume />
+        </PublicRoute>
+      </Route>
+      <Route path="/portfolio">
+        <PublicRoute>
+          <Portfolio />
+        </PublicRoute>
+      </Route>
+      <Route path="/blog">
+        <PublicRoute>
+          <Blog />
+        </PublicRoute>
+      </Route>
+      <Route path="/blog/:slug">
+        <PublicRoute>
+          <BlogPost />
+        </PublicRoute>
+      </Route>
+      <Route path="/proposta/:id">
+        <PublicRoute>
+          <Proposal />
+        </PublicRoute>
+      </Route>
+      <Route path="/proposta/:slug/aceitar">
+        <PublicRoute>
+          <ProposalAccept />
+        </PublicRoute>
+      </Route>
 
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
     </Switch>
+    </Layout>
   );
 }
 

@@ -1,4 +1,3 @@
-import { Layout } from "@/components/Layout";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
@@ -124,11 +123,7 @@ export default function Blog() {
   };
 
   if (isLoading) {
-    return (
-      <Layout>
-        <PageSkeleton />
-      </Layout>
-    );
+    return <PageSkeleton />;
   }
 
   const container = {
@@ -147,7 +142,6 @@ export default function Blog() {
   };
 
   return (
-    <Layout>
       <motion.div
         variants={container}
         initial="hidden"
@@ -395,6 +389,5 @@ export default function Blog() {
           )}
         </motion.div>
       </motion.div>
-    </Layout>
   );
 }

@@ -1,4 +1,3 @@
-import { Layout } from "@/components/Layout";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -127,15 +126,10 @@ export default function Portfolio() {
   }, [activeFilter, availableTags, t]);
 
   if (isLoading || i18nLoading) {
-    return (
-      <Layout>
-        <PageSkeleton />
-      </Layout>
-    );
+    return <PageSkeleton />;
   }
 
   return (
-    <Layout>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -398,6 +392,5 @@ export default function Portfolio() {
           </DialogContent>
         </Dialog>
       </motion.div>
-    </Layout>
   );
 }

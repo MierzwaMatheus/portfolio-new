@@ -1,4 +1,3 @@
-import { Layout } from "@/components/Layout";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useState, useEffect, useMemo } from "react";
 import { useRoute } from "wouter";
@@ -56,17 +55,12 @@ export default function BlogPost() {
     };
 
     if (isLoading || i18nLoading) {
-        return (
-            <Layout>
-                <PageSkeleton />
-            </Layout>
-        );
+        return <PageSkeleton />;
     }
 
     if (!post) {
         return (
-            <Layout>
-                <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+            <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
                     <h1 className="text-3xl font-bold text-white">{t('blog.postNotFound')}</h1>
                     <p className="text-gray-400">{t('blog.postNotFoundDescription')}</p>
                     <Link href="/blog">
@@ -75,13 +69,11 @@ export default function BlogPost() {
                             {t('blog.backToBlog')}
                         </Button>
                     </Link>
-                </div>
-            </Layout>
+            </div>
         );
     }
 
     return (
-        <Layout>
             <motion.article
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -145,6 +137,5 @@ export default function BlogPost() {
                     dangerouslySetInnerHTML={{ __html: post.content }}
                 />
             </motion.article>
-        </Layout>
     );
 }

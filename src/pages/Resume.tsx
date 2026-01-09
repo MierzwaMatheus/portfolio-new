@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Briefcase, GraduationCap, Code, Languages, Award, Heart, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
-import { Layout } from "@/components/Layout";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useI18n } from "@/i18n/context/I18nContext";
@@ -66,11 +65,7 @@ export default function Resume() {
   const getItemsByType = (type: string) => items.filter(i => i.type === type).sort((a, b) => a.order_index - b.order_index);
 
   if (isLoading) {
-    return (
-      <Layout>
-        <PageSkeleton />
-      </Layout>
-    );
+    return <PageSkeleton />;
   }
 
   const experience = getItemsByType("experience");
@@ -82,7 +77,6 @@ export default function Resume() {
   const softSkills = getItemsByType("soft_skill");
 
   return (
-    <Layout>
       <div className="max-w-4xl mx-auto space-y-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -446,6 +440,5 @@ export default function Resume() {
           </div>
         </div>
       </div>
-    </Layout>
   );
 }
