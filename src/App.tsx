@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -15,6 +15,7 @@ import AdminContact from "./pages/admin/Contact";
 import AdminProposals from "./pages/admin/Proposals";
 import AdminCreateUser from "./pages/admin/CreateUser";
 import AdminPaymentLinks from "./pages/admin/PaymentLinks";
+import AdminAbout from "./pages/admin/About";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { I18nProvider } from "./i18n/context/I18nContext";
@@ -24,12 +25,34 @@ import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import Proposal from "./pages/Proposal";
 import ProposalAccept from "./pages/ProposalAccept";
+import About from "./pages/About";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Layout } from "./components/Layout";
 import { PublicRoute } from "./components/PublicRoute";
 
 function Router() {
+  const [location] = useLocation();
+  const isAdminRoute = location.startsWith('/admin');
+
+  if (isAdminRoute) {
+    return (
+      <Switch>
+        <ProtectedRoute path="/admin/dashboard" component={Dashboard} allowedRoles={['root', 'admin']} />
+        <ProtectedRoute path="/admin" component={Dashboard} allowedRoles={['root', 'admin']} />
+        <ProtectedRoute path="/admin/projects" component={AdminProjects} allowedRoles={['root', 'admin']} />
+        <ProtectedRoute path="/admin/blog" component={AdminBlog} allowedRoles={['root', 'admin']} />
+        <ProtectedRoute path="/admin/resume" component={AdminResume} allowedRoles={['root', 'admin']} />
+        <ProtectedRoute path="/admin/home" component={AdminHome} allowedRoles={['root', 'admin']} />
+        <ProtectedRoute path="/admin/about" component={AdminAbout} allowedRoles={['root', 'admin']} />
+        <ProtectedRoute path="/admin/contact" component={AdminContact} allowedRoles={['root', 'admin']} />
+        <ProtectedRoute path="/admin/proposals" component={AdminProposals} allowedRoles={['root', 'admin', 'proposal-editor']} />
+        <ProtectedRoute path="/admin/payment-links" component={AdminPaymentLinks} allowedRoles={['root', 'admin']} />
+        <ProtectedRoute path="/admin/users/new" component={AdminCreateUser} allowedRoles={['root']} />
+      </Switch>
+    );
+  }
+
   return (
     <Layout>
       <Switch>
@@ -39,55 +62,44 @@ function Router() {
           </PublicRoute>
         </Route>
         <Route path={"/login"} component={Login} />
-
-      {/* Admin Routes */}
-      <ProtectedRoute path="/admin/dashboard" component={Dashboard} allowedRoles={['root', 'admin']} />
-      <ProtectedRoute path="/admin" component={Dashboard} allowedRoles={['root', 'admin']} />
-      <ProtectedRoute path="/admin/projects" component={AdminProjects} allowedRoles={['root', 'admin']} />
-      <ProtectedRoute path="/admin/blog" component={AdminBlog} allowedRoles={['root', 'admin']} />
-      <ProtectedRoute path="/admin/resume" component={AdminResume} allowedRoles={['root', 'admin']} />
-      <ProtectedRoute path="/admin/home" component={AdminHome} allowedRoles={['root', 'admin']} />
-      <ProtectedRoute path="/admin/contact" component={AdminContact} allowedRoles={['root', 'admin']} />
-      <ProtectedRoute path="/admin/proposals" component={AdminProposals} allowedRoles={['root', 'admin', 'proposal-editor']} />
-      <ProtectedRoute path="/admin/payment-links" component={AdminPaymentLinks} allowedRoles={['root', 'admin']} />
-      <ProtectedRoute path="/admin/users/new" component={AdminCreateUser} allowedRoles={['root']} />
-
-      {/* Public Routes */}
-      <Route path="/curriculo">
-        <PublicRoute>
-          <Resume />
-        </PublicRoute>
-      </Route>
-      <Route path="/portfolio">
-        <PublicRoute>
-          <Portfolio />
-        </PublicRoute>
-      </Route>
-      <Route path="/blog">
-        <PublicRoute>
-          <Blog />
-        </PublicRoute>
-      </Route>
-      <Route path="/blog/:slug">
-        <PublicRoute>
-          <BlogPost />
-        </PublicRoute>
-      </Route>
-      <Route path="/proposta/:id">
-        <PublicRoute>
-          <Proposal />
-        </PublicRoute>
-      </Route>
-      <Route path="/proposta/:slug/aceitar">
-        <PublicRoute>
-          <ProposalAccept />
-        </PublicRoute>
-      </Route>
-
-      <Route path="/404" component={NotFound} />
-      {/* Final fallback route */}
-      <Route component={NotFound} />
-    </Switch>
+        <Route path="/sobre">
+          <PublicRoute>
+            <About />
+          </PublicRoute>
+        </Route>
+        <Route path="/curriculo">
+          <PublicRoute>
+            <Resume />
+          </PublicRoute>
+        </Route>
+        <Route path="/portfolio">
+          <PublicRoute>
+            <Portfolio />
+          </PublicRoute>
+        </Route>
+        <Route path="/blog">
+          <PublicRoute>
+            <Blog />
+          </PublicRoute>
+        </Route>
+        <Route path="/blog/:slug">
+          <PublicRoute>
+            <BlogPost />
+          </PublicRoute>
+        </Route>
+        <Route path="/proposta/:id">
+          <PublicRoute>
+            <Proposal />
+          </PublicRoute>
+        </Route>
+        <Route path="/proposta/:slug/aceitar">
+          <PublicRoute>
+            <ProposalAccept />
+          </PublicRoute>
+        </Route>
+        <Route path="/404" component={NotFound} />
+        <Route component={NotFound} />
+      </Switch>
     </Layout>
   );
 }

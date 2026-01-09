@@ -9,7 +9,8 @@ import {
   Briefcase,
   FolderOpen,
   PenTool,
-  Menu
+  Menu,
+  User
 } from "lucide-react";
 import { SiBehance } from "react-icons/si";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ import { useI18n } from "@/i18n/context/I18nContext";
 
 const NAV_ITEMS_KEYS = [
   { key: "home", href: "/", icon: Home },
+  { key: "about", href: "/sobre", icon: User },
   { key: "resume", href: "/curriculo", icon: Briefcase },
   { key: "portfolio", href: "/portfolio", icon: FolderOpen },
   { key: "blog", href: "/blog", icon: PenTool },
