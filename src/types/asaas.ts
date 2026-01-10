@@ -132,12 +132,18 @@ export interface ChargeListResponse {
 
 export interface CreateChargeInput {
   customer: string;
-  billingType: 'BOLETO' | 'CREDIT_CARD' | 'PIX';
+  billingType: 'BOLETO' | 'CREDIT_CARD' | 'PIX' | 'UNDEFINED';
   value: number;
   dueDate: string;
   description?: string;
   installmentCount?: number;
   installmentValue?: number;
+  externalReference?: string;
+  discount?: {
+    value: number;
+    type: 'FIXED' | 'PERCENTAGE';
+  };
+  totalValue?: number;
 }
 
 export interface Invoice {

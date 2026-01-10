@@ -86,6 +86,14 @@ export class HttpAsaasApi implements AsaasApi {
     return data.data as Charge;
   }
 
+  async deleteCharge(chargeId: string): Promise<void> {
+    const { error } = await supabase.functions.invoke('asaas-api', {
+      body: { action: 'delete_charge', charge_id: chargeId }
+    });
+
+    if (error) throw error;
+  }
+
   async listInvoices(limit: number = 100): Promise<InvoiceListResponse> {
     const { data, error } = await supabase.functions.invoke('asaas-api', {
       body: { action: 'list_invoices', limit }

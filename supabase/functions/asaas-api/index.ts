@@ -107,6 +107,11 @@ serve(async (req) => {
         method = 'GET'
         break
 
+      case 'delete_charge':
+        endpoint = `${asaasBaseUrl}/payments/${params.charge_id}`
+        method = 'DELETE'
+        break
+
       case 'list_invoices':
         endpoint = `${asaasBaseUrl}/invoices?limit=${params.limit || 100}`
         method = 'GET'

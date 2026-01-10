@@ -19,6 +19,7 @@ export interface AsaasApi {
   listCharges(limit?: number): Promise<ChargeListResponse>;
   createCharge(input: CreateChargeInput): Promise<Charge>;
   getCharge(chargeId: string): Promise<Charge>;
+  deleteCharge(chargeId: string): Promise<void>;
   listInvoices(limit?: number): Promise<InvoiceListResponse>;
   getInvoice(invoiceId: string): Promise<Invoice>;
 }

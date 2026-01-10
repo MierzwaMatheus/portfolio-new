@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Copy, Trash2, Users, FileText, Receipt } from "lucide-react";
@@ -12,14 +13,21 @@ import { toast } from "sonner";
 import { HttpAsaasApi } from "@/services/asaas/HttpAsaasApi";
 import { CreateCustomerUseCase } from "@/usecases/asaas/CreateCustomerUseCase";
 import { ListCustomersUseCase } from "@/usecases/asaas/ListCustomersUseCase";
-import { Customer, CreateCustomerInput } from "@/types/asaas";
+import { CreateChargeUseCase } from "@/usecases/asaas/CreateChargeUseCase";
+import { ListChargesUseCase } from "@/usecases/asaas/ListChargesUseCase";
+import { Customer, CreateCustomerInput, Charge, CreateChargeInput } from "@/types/asaas";
+import { CreateCheckoutInput } from "@/types/checkout";
+import { supabase } from "@/lib/supabase";
 
 export default function PaymentLinks() {
   const asaasApi = new HttpAsaasApi();
   const createCustomerUseCase = new CreateCustomerUseCase(asaasApi);
   const listCustomersUseCase = new ListCustomersUseCase(asaasApi);
+  const createChargeUseCase = new CreateChargeUseCase(asaasApi);
+  const listChargesUseCase = new ListChargesUseCase(asaasApi);
 
   const [customers, setCustomers] = useState<Customer[]>([]);
+  const [charges, setCharges] = useState<Charge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   const [isCustomerDialogOpen, setIsCustomerDialogOpen] = useState(false);
@@ -32,8 +40,34 @@ export default function PaymentLinks() {
     phone: "",
   });
 
+  const [isChargeDialogOpen, setIsChargeDialogOpen] = useState(false);
+  const [chargeForm, setChargeForm] = useState<CreateChargeInput>({
+    customer: "",
+    billingType: "UNDEFINED",
+    value: 0,
+    dueDate: "",
+    description: "",
+  });
+
+  const [isCheckoutDialogOpen, setIsCheckoutDialogOpen] = useState(false);
+  const [checkoutForm, setCheckoutForm] = useState<{
+    customer_id: string;
+    value: number;
+    due_date: string;
+    description: string;
+  }>({
+    customer_id: "",
+    value: 0,
+    due_date: "",
+    description: "",
+  });
+  const [checkoutLink, setCheckoutLink] = useState<string>("");
+  const [checkouts, setCheckouts] = useState<any[]>([]);
+
   useEffect(() => {
     fetchCustomers();
+    fetchCharges();
+    fetchCheckouts();
   }, []);
 
   const fetchCustomers = async () => {
@@ -107,6 +141,156 @@ export default function PaymentLinks() {
       return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
     }
     return value;
+  };
+
+  const fetchCharges = async () => {
+    try {
+      setIsLoading(true);
+      const response = await listChargesUseCase.execute(100);
+      setCharges(response.data);
+    } catch (error) {
+      console.error("Error fetching charges:", error);
+      toast.error("Erro ao carregar cobranças");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateCharge = async () => {
+    try {
+      await createChargeUseCase.execute(chargeForm);
+      toast.success("Cobrança criada com sucesso!");
+      setIsChargeDialogOpen(false);
+      setChargeForm({
+        customer: "",
+        billingType: "UNDEFINED",
+        value: 0,
+        dueDate: "",
+        description: "",
+      });
+      await fetchCharges();
+    } catch (error: any) {
+      console.error("Error creating charge:", error);
+      toast.error(error.message || "Erro ao criar cobrança");
+    }
+  };
+
+  const handleDeleteCharge = async (chargeId: string) => {
+    if (!confirm("Tem certeza que deseja excluir esta cobrança?")) {
+      return;
+    }
+
+    try {
+      await asaasApi.deleteCharge(chargeId);
+      toast.success("Cobrança excluída com sucesso!");
+      await fetchCharges();
+    } catch (error: any) {
+      console.error("Error deleting charge:", error);
+      toast.error(error.message || "Erro ao excluir cobrança");
+    }
+  };
+
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(value);
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('pt-BR');
+  };
+
+  const getCustomerName = (customerId: string) => {
+    return customers.find(c => c.id === customerId)?.name || customerId;
+  };
+
+  const getCheckoutStatusBadge = (status: string) => {
+    const statusMap: Record<string, { label: string; color: string }> = {
+      pending: { label: 'Pendente', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' },
+      payment_selected: { label: 'Pagamento Selecionado', color: 'bg-blue-500/20 text-blue-400 border-blue-500/50' },
+      payment_confirmed: { label: 'Pagamento Confirmado', color: 'bg-purple-500/20 text-purple-400 border-purple-500/50' },
+      completed: { label: 'Concluído', color: 'bg-green-500/20 text-green-400 border-green-500/50' },
+      expired: { label: 'Expirado', color: 'bg-red-500/20 text-red-400 border-red-500/50' },
+      cancelled: { label: 'Cancelado', color: 'bg-gray-500/20 text-gray-400 border-gray-500/50' },
+    };
+    const statusInfo = statusMap[status] || { label: status, color: 'bg-gray-500/20 text-gray-400 border-gray-500/50' };
+    return <Badge variant="outline" className={statusInfo.color}>{statusInfo.label}</Badge>;
+  };
+
+  const handleCreateCheckout = async () => {
+    try {
+      const customer = customers.find(c => c.id === checkoutForm.customer_id);
+      if (!customer) {
+        toast.error("Selecione um cliente");
+        return;
+      }
+
+      const uniqueLink = generateUniqueLink();
+      const checkoutData = {
+        unique_link: uniqueLink,
+        customer_id: checkoutForm.customer_id,
+        customer_name: customer.name,
+        customer_email: customer.email,
+        customer_cpf_cnpj: customer.cpfCnpj,
+        customer_mobile_phone: customer.mobilePhone,
+        value: checkoutForm.value,
+        due_date: checkoutForm.due_date,
+        description: checkoutForm.description || null,
+        status: 'pending',
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      };
+
+      const { error } = await supabase
+        .schema('app_portfolio')
+        .from('checkouts')
+        .insert(checkoutData)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const link = `${window.location.origin}/checkout/${uniqueLink}`;
+      setCheckoutLink(link);
+      toast.success("Checkout criado com sucesso!");
+      setIsCheckoutDialogOpen(false);
+      setCheckoutForm({
+        customer_id: "",
+        value: 0,
+        due_date: "",
+        description: "",
+      });
+      await fetchCheckouts();
+    } catch (error: any) {
+      console.error("Error creating checkout:", error);
+      toast.error(error.message || "Erro ao criar checkout");
+    }
+  };
+
+  function generateUniqueLink(): string {
+    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 16; i++) {
+      result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+  }
+
+  const fetchCheckouts = async () => {
+    try {
+      const { data, error } = await supabase
+        .schema('app_portfolio')
+        .from('checkouts')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setCheckouts(data || []);
+    } catch (error) {
+      console.error("Error fetching checkouts:", error);
+      toast.error("Erro ao carregar checkouts");
+    }
   };
 
   return (
@@ -222,14 +406,81 @@ export default function PaymentLinks() {
           <TabsContent value="charges" className="mt-6">
             <Card className="bg-card border-white/10">
               <CardHeader>
-                <CardTitle>Cobranças</CardTitle>
-                <CardDescription>Gerencie as cobranças criadas no Asaas</CardDescription>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Checkouts</CardTitle>
+                    <CardDescription>Gerencie os checkouts personalizados</CardDescription>
+                  </div>
+                  <Button
+                    onClick={() => setIsCheckoutDialogOpen(true)}
+                    className="bg-neon-purple hover:bg-neon-purple/90"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Novo Checkout
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12 text-gray-400">
-                  <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>Funcionalidade de cobranças em desenvolvimento</p>
-                </div>
+                {isLoading ? (
+                  <div className="text-center py-12 text-gray-400">Carregando...</div>
+                ) : checkouts.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    Nenhum checkout criado ainda
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {checkouts.map((checkout) => (
+                      <div
+                        key={checkout.id}
+                        className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-2 flex-wrap">
+                            <span className="font-medium text-white">
+                              {checkout.customer_name}
+                            </span>
+                            {getCheckoutStatusBadge(checkout.status)}
+                            {checkout.payment_method && (
+                              <Badge variant="outline" className="border-white/20">
+                                {checkout.payment_method === 'pix' ? 'PIX' : checkout.payment_method === 'boleto' ? 'Boleto' : 'Cartão'}
+                              </Badge>
+                            )}
+                            <Badge variant="outline" className="border-neon-purple/50 text-neon-purple bg-neon-purple/10">
+                              {formatCurrency(checkout.value)}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-gray-400">
+                            <span>CPF/CNPJ: {formatCpfCnpj(checkout.customer_cpf_cnpj)}</span>
+                            <span>Vencimento: {formatDate(checkout.due_date)}</span>
+                            <span>Link: {checkout.unique_link.substring(0, 8)}...</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 ml-4 shrink-0">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => {
+                              const link = `${window.location.origin}/checkout/${checkout.unique_link}`;
+                              navigator.clipboard.writeText(link);
+                              toast.success("Link copiado!");
+                            }}
+                            title="Copiar link"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => window.open(`${window.location.origin}/checkout/${checkout.unique_link}`, "_blank")}
+                            title="Abrir checkout"
+                          >
+                            <FileText className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -249,6 +500,232 @@ export default function PaymentLinks() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <Dialog open={isCheckoutDialogOpen} onOpenChange={setIsCheckoutDialogOpen}>
+          <DialogContent className="bg-card border-white/10 max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Criar Novo Checkout</DialogTitle>
+              <DialogDescription>
+                Crie um link de checkout personalizado para o cliente
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+              <div>
+                <Label htmlFor="checkout-customer">Cliente *</Label>
+                <Select
+                  value={checkoutForm.customer_id}
+                  onValueChange={(value) => setCheckoutForm({ ...checkoutForm, customer_id: value })}
+                >
+                  <SelectTrigger className="mt-1 bg-white/5 border-white/10">
+                    <SelectValue placeholder="Selecione um cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map((customer) => (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="checkout-value">Valor *</Label>
+                  <Input
+                    id="checkout-value"
+                    type="number"
+                    step="0.01"
+                    value={checkoutForm.value}
+                    onChange={(e) => setCheckoutForm({ ...checkoutForm, value: parseFloat(e.target.value) || 0 })}
+                    placeholder="0.00"
+                    className="mt-1 bg-white/5 border-white/10"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="checkout-due-date">Data de Vencimento *</Label>
+                  <Input
+                    id="checkout-due-date"
+                    type="date"
+                    value={checkoutForm.due_date}
+                    onChange={(e) => setCheckoutForm({ ...checkoutForm, due_date: e.target.value })}
+                    className="mt-1 bg-white/5 border-white/10"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="checkout-description">Descrição (máx. 500 caracteres)</Label>
+                <Input
+                  id="checkout-description"
+                  value={checkoutForm.description}
+                  onChange={(e) => setCheckoutForm({ ...checkoutForm, description: e.target.value })}
+                  placeholder="Descrição do pagamento"
+                  className="mt-1 bg-white/5 border-white/10"
+                  maxLength={500}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4 border-t border-white/10">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsCheckoutDialogOpen(false)}
+                  className="border-white/10"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleCreateCheckout}
+                  className="bg-neon-purple hover:bg-neon-purple/90"
+                >
+                  Criar Checkout
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {checkoutLink && (
+          <Dialog open={!!checkoutLink} onOpenChange={() => setCheckoutLink("")}>
+            <DialogContent className="bg-card border-white/10 max-w-md">
+              <DialogHeader>
+                <DialogTitle>Link de Checkout Criado!</DialogTitle>
+                <DialogDescription>
+                  Compartilhe este link com o cliente
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="bg-white/5 rounded-lg p-4">
+                  <p className="text-sm text-gray-400 mb-2">Link do checkout:</p>
+                  <div className="flex gap-2">
+                    <Input
+                      value={checkoutLink}
+                      readOnly
+                      className="bg-white/5 border-white/10"
+                    />
+                    <Button
+                      onClick={() => {
+                        navigator.clipboard.writeText(checkoutLink);
+                        toast.success("Link copiado!");
+                      }}
+                      className="bg-neon-purple hover:bg-neon-purple/90"
+                    >
+                      <Copy className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+                <Button
+                  onClick={() => window.open(checkoutLink, "_blank")}
+                  className="w-full bg-neon-purple hover:bg-neon-purple/90"
+                >
+                  Abrir Link
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+
+        <Dialog open={isChargeDialogOpen} onOpenChange={setIsChargeDialogOpen}>
+          <DialogContent className="bg-card border-white/10 max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Criar Nova Cobrança</DialogTitle>
+              <DialogDescription>
+                Crie uma nova cobrança no Asaas
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 max-h-[70vh] overflow-y-auto">
+              <div>
+                <Label htmlFor="charge-customer">Cliente *</Label>
+                <Select
+                  value={chargeForm.customer}
+                  onValueChange={(value) => setChargeForm({ ...chargeForm, customer: value })}
+                >
+                  <SelectTrigger className="mt-1 bg-white/5 border-white/10">
+                    <SelectValue placeholder="Selecione um cliente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {customers.map((customer) => (
+                      <SelectItem key={customer.id} value={customer.id}>
+                        {customer.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="charge-value">Valor *</Label>
+                  <Input
+                    id="charge-value"
+                    type="number"
+                    step="0.01"
+                    value={chargeForm.value}
+                    onChange={(e) => setChargeForm({ ...chargeForm, value: parseFloat(e.target.value) || 0 })}
+                    placeholder="0.00"
+                    className="mt-1 bg-white/5 border-white/10"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="charge-due-date">Data de Vencimento *</Label>
+                  <Input
+                    id="charge-due-date"
+                    type="date"
+                    value={chargeForm.dueDate}
+                    onChange={(e) => setChargeForm({ ...chargeForm, dueDate: e.target.value })}
+                    className="mt-1 bg-white/5 border-white/10"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="charge-billing-type">Tipo de Cobrança *</Label>
+                <Select
+                  value={chargeForm.billingType}
+                  onValueChange={(value: any) => setChargeForm({ ...chargeForm, billingType: value })}
+                >
+                  <SelectTrigger className="mt-1 bg-white/5 border-white/10">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="UNDEFINED">Não definido</SelectItem>
+                    <SelectItem value="BOLETO">Boleto</SelectItem>
+                    <SelectItem value="CREDIT_CARD">Cartão de Crédito</SelectItem>
+                    <SelectItem value="PIX">PIX</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="charge-description">Descrição (máx. 500 caracteres)</Label>
+                <Input
+                  id="charge-description"
+                  value={chargeForm.description}
+                  onChange={(e) => setChargeForm({ ...chargeForm, description: e.target.value })}
+                  placeholder="Descrição da cobrança"
+                  className="mt-1 bg-white/5 border-white/10"
+                  maxLength={500}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2 pt-4 border-t border-white/10">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsChargeDialogOpen(false)}
+                  className="border-white/10"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={handleCreateCharge}
+                  className="bg-neon-purple hover:bg-neon-purple/90"
+                >
+                  Criar Cobrança
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={isCustomerDialogOpen} onOpenChange={setIsCustomerDialogOpen}>
           <DialogContent className="bg-card border-white/10 max-w-2xl">
