@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Checkout, PaymentMethod, InstallmentOption } from "@/types/checkout";
-import { Check, CreditCard, QrCode, FileText, AlertCircle, Loader2 } from "lucide-react";
+import { Check, CreditCard, QrCode, FileText, AlertCircle, Loader2, Copy } from "lucide-react";
 
 export default function CheckoutPage() {
   const { uniqueLink } = useParams<{ uniqueLink: string }>();
@@ -17,6 +17,7 @@ export default function CheckoutPage() {
   const [selectedInstallment, setSelectedInstallment] = useState<InstallmentOption | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pixData, setPixData] = useState<any>(null);
 
   useEffect(() => {
     if (uniqueLink) {
@@ -156,11 +157,36 @@ export default function CheckoutPage() {
       if (checkout) {
         setCheckout({ ...checkout, ...updateData });
       }
+
+      // Se for PIX, criar pagamento no Asaas
+      if (selectedPaymentMethod === 'pix') {
+        await createPixPayment();
+      }
     } catch (error) {
       console.error('Error confirming payment:', error);
       toast.error('Erro ao confirmar pagamento');
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const createPixPayment = async () => {
+    if (!checkout) return;
+
+    try {
+      const { data, error } = await supabase.functions.invoke('payment-api', {
+        body: { action: 'create_pix_payment', checkout_id: checkout.id }
+      });
+
+      if (error) throw error;
+
+      setPixData(data.pix);
+      
+      // Atualizar checkout com dados do PIX
+      await fetchCheckout();
+    } catch (error: any) {
+      console.error('Error creating PIX payment:', error);
+      toast.error(error.message || 'Erro ao criar pagamento PIX');
     }
   };
 
@@ -422,6 +448,60 @@ export default function CheckoutPage() {
           </div>
         </motion.div>
       </div>
+
+      {pixData && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md bg-card border-white/10">
+            <CardHeader>
+              <CardTitle className="text-white text-center">QR Code PIX</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="bg-white rounded-lg p-4">
+                {pixData.encodedImage && (
+                  <img 
+                    src={`data:image/png;base64,${pixData.encodedImage}`} 
+                    alt="QR Code PIX" 
+                    className="w-full h-auto"
+                  />
+                )}
+              </div>
+              
+              <div>
+                <p className="text-sm text-gray-400 mb-2">Pix Copia e Cola:</p>
+                <div className="bg-white/5 rounded-lg p-3">
+                  <p className="text-xs text-white break-all font-mono">
+                    {pixData.payload}
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    navigator.clipboard.writeText(pixData.payload);
+                    toast.success("Código PIX copiado!");
+                  }}
+                  className="w-full mt-2 bg-neon-purple hover:bg-neon-purple/90"
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copiar Código PIX
+                </Button>
+              </div>
+
+              {pixData.expirationDate && (
+                <p className="text-sm text-gray-400 text-center">
+                  Expira em: {new Date(pixData.expirationDate).toLocaleString('pt-BR')}
+                </p>
+              )}
+
+              <Button
+                onClick={() => setPixData(null)}
+                variant="outline"
+                className="w-full border-white/10"
+              >
+                Fechar
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
 
       {showConfirmDialog && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
