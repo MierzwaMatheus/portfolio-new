@@ -19,6 +19,7 @@ export default function CheckoutPage() {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pixData, setPixData] = useState<any>(null);
   const [pixExpiration, setPixExpiration] = useState<Date | null>(null);
+  const [boletoData, setBoletoData] = useState<any>(null);
 
   useEffect(() => {
     if (uniqueLink) {
@@ -131,37 +132,68 @@ export default function CheckoutPage() {
 
     setIsProcessing(true);
     try {
-      const updateData: any = {
-        status: 'payment_selected',
-        payment_method: selectedPaymentMethod,
-      };
+      // Verificar se o método de pagamento mudou e já existe cobrança
+      const paymentMethodChanged = checkout.payment_method && checkout.payment_method !== selectedPaymentMethod;
+      const hasExistingCharge = !!checkout.asaas_charge_id;
 
-      if (selectedPaymentMethod === 'credit_card' && selectedInstallment) {
-        updateData.installment_count = selectedInstallment.count;
-        updateData.installment_value = selectedInstallment.value;
-        updateData.installment_interest_rate = selectedInstallment.interestRate || 0;
-        updateData.installment_interest_amount = selectedInstallment.interestAmount || 0;
-        updateData.total_value = selectedInstallment.totalValue;
+      if (paymentMethodChanged && hasExistingCharge) {
+        // Atualizar cobrança existente no Asaas
+        const { error: updateError } = await supabase.functions.invoke('payment-api', {
+          body: {
+            action: 'update_payment',
+            checkout_id: checkout.id,
+            billing_type: selectedPaymentMethod,
+            value: checkout.value,
+            due_date: checkout.due_date,
+          }
+        });
+
+        if (updateError) throw updateError;
+
+        toast.success('Método de pagamento atualizado!');
+      } else {
+        // Atualizar checkout localmente
+        const updateData: any = {
+          status: 'payment_selected',
+          payment_method: selectedPaymentMethod,
+        };
+
+        if (selectedPaymentMethod === 'credit_card' && selectedInstallment) {
+          updateData.installment_count = selectedInstallment.count;
+          updateData.installment_value = selectedInstallment.value;
+          updateData.installment_interest_rate = selectedInstallment.interestRate || 0;
+          updateData.installment_interest_amount = selectedInstallment.interestAmount || 0;
+          updateData.total_value = selectedInstallment.totalValue;
+        }
+
+        const { error } = await supabase
+          .schema('app_portfolio')
+          .from('checkouts')
+          .update(updateData)
+          .eq('id', checkout.id);
+
+        if (error) throw error;
+
+        toast.success('Método de pagamento confirmado!');
+        
+        if (checkout) {
+          setCheckout({ ...checkout, ...updateData });
+        }
       }
 
-      const { error } = await supabase
-        .schema('app_portfolio')
-        .from('checkouts')
-        .update(updateData)
-        .eq('id', checkout.id);
-
-      if (error) throw error;
-
-      toast.success('Método de pagamento confirmado!');
       setShowConfirmDialog(false);
       
-      if (checkout) {
-        setCheckout({ ...checkout, ...updateData });
-      }
+      // Atualizar dados do checkout após mudança
+      await fetchCheckout();
 
-      // Se for PIX, verificar se já existe cobrança válida ou criar nova
+      // Se for PIX, verificar se já existe cobrança válida ou buscar QR Code
       if (selectedPaymentMethod === 'pix') {
         await handlePixPayment();
+      }
+
+      // Se for boleto, buscar campo de identificação
+      if (selectedPaymentMethod === 'boleto') {
+        await handleBoletoPayment();
       }
     } catch (error) {
       console.error('Error confirming payment:', error);
@@ -215,6 +247,42 @@ export default function CheckoutPage() {
     } catch (error: any) {
       console.error('Error creating PIX payment:', error);
       toast.error(error.message || 'Erro ao criar pagamento PIX');
+    }
+  };
+
+  const handleBoletoPayment = async () => {
+    if (!checkout) return;
+
+    // Se não existe cobrança, criar nova
+    if (!checkout.asaas_charge_id) {
+      try {
+        const { data, error } = await supabase.functions.invoke('payment-api', {
+          body: { action: 'create_pix_payment', checkout_id: checkout.id }
+        });
+
+        if (error) throw error;
+
+        // Atualizar checkout com dados
+        await fetchCheckout();
+      } catch (error: any) {
+        console.error('Error creating boleto payment:', error);
+        toast.error(error.message || 'Erro ao criar pagamento boleto');
+        return;
+      }
+    }
+
+    // Buscar campo de identificação do boleto
+    try {
+      const { data, error } = await supabase.functions.invoke('payment-api', {
+        body: { action: 'get_boleto_identification', asaas_charge_id: checkout.asaas_charge_id }
+      });
+
+      if (error) throw error;
+
+      setBoletoData(data.identification);
+    } catch (error: any) {
+      console.error('Error fetching boleto identification:', error);
+      toast.error(error.message || 'Erro ao buscar dados do boleto');
     }
   };
 
@@ -553,6 +621,44 @@ export default function CheckoutPage() {
 
               <Button
                 onClick={() => setPixData(null)}
+                variant="outline"
+                className="w-full border-white/10"
+              >
+                Fechar
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {boletoData && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-md bg-card border-white/10">
+            <CardHeader>
+              <CardTitle className="text-white text-center">Boleto Bancário</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-400 mb-2">Código de Barras:</p>
+                <div className="bg-white/5 rounded-lg p-3">
+                  <p className="text-sm text-white break-all font-mono">
+                    {boletoData.barCode}
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    navigator.clipboard.writeText(boletoData.barCode);
+                    toast.success("Código de barras copiado!");
+                  }}
+                  className="w-full mt-2 bg-neon-purple hover:bg-neon-purple/90"
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copiar Código de Barras
+                </Button>
+              </div>
+
+              <Button
+                onClick={() => setBoletoData(null)}
                 variant="outline"
                 className="w-full border-white/10"
               >

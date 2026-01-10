@@ -191,6 +191,147 @@ serve(async (req) => {
         break
       }
 
+      case 'update_payment': {
+        const { checkout_id, billing_type, value, due_date } = params
+
+        if (!checkout_id || !billing_type || !value || !due_date) {
+          return new Response(
+            JSON.stringify({ error: 'Parâmetros incompletos' }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 400,
+            }
+          )
+        }
+
+        // Buscar dados do checkout
+        const { data: checkoutData, error: checkoutError } = await supabase
+          .schema('app_portfolio')
+          .from('checkouts')
+          .select('*')
+          .eq('id', checkout_id)
+          .single()
+
+        if (checkoutError) {
+          throw new Error(`Erro ao buscar checkout: ${checkoutError.message}`)
+        }
+
+        const checkout = checkoutData
+
+        if (!checkout) {
+          throw new Error('Checkout não encontrado')
+        }
+
+        if (!checkout.asaas_charge_id) {
+          throw new Error('Checkout não possui cobrança associada')
+        }
+
+        // Mapear método de pagamento para billingType do Asaas
+        const billingTypeMap: Record<string, string> = {
+          'pix': 'PIX',
+          'boleto': 'BOLETO',
+          'credit_card': 'CREDIT_CARD',
+        }
+
+        const asaasBillingType = billingTypeMap[billing_type]
+        if (!asaasBillingType) {
+          throw new Error('Método de pagamento inválido')
+        }
+
+        // Atualizar pagamento no Asaas
+        const updateData = {
+          billingType: asaasBillingType,
+          value: value,
+          dueDate: due_date,
+        }
+
+        const updateResponse = await fetch(
+          `${asaasBaseUrl}/payments/${checkout.asaas_charge_id}`,
+          {
+            method: 'PUT',
+            headers: {
+              'accept': 'application/json',
+              'content-type': 'application/json',
+              'access_token': asaasToken,
+            },
+            body: JSON.stringify(updateData),
+          }
+        )
+
+        if (!updateResponse.ok) {
+          const error = await updateResponse.json()
+          throw new Error(error.message || 'Erro ao atualizar pagamento no Asaas')
+        }
+
+        const updatedPayment = await updateResponse.json()
+
+        // Limpar dados do PIX no checkout se mudou de PIX para outro método
+        const updateCheckoutData: any = {
+          payment_method: billing_type,
+        }
+
+        if (billing_type !== 'pix') {
+          updateCheckoutData.pix_qr_code = null
+          updateCheckoutData.pix_qr_code_image = null
+          updateCheckoutData.pix_expiration_date = null
+        }
+
+        const { error: updateCheckoutError } = await supabase
+          .schema('app_portfolio')
+          .from('checkouts')
+          .update(updateCheckoutData)
+          .eq('id', checkout_id)
+
+        if (updateCheckoutError) {
+          throw new Error(`Erro ao atualizar checkout: ${updateCheckoutError.message}`)
+        }
+
+        result = {
+          success: true,
+          payment: updatedPayment,
+        }
+        break
+      }
+
+      case 'get_boleto_identification': {
+        const { asaas_charge_id } = params
+
+        if (!asaas_charge_id) {
+          return new Response(
+            JSON.stringify({ error: 'asaas_charge_id não fornecido' }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 400,
+            }
+          )
+        }
+
+        // Buscar campo de identificação do boleto
+        const identificationResponse = await fetch(
+          `${asaasBaseUrl}/payments/${asaas_charge_id}/identificationField`,
+          {
+            method: 'GET',
+            headers: {
+              'accept': 'application/json',
+              'access_token': asaasToken,
+            },
+          }
+        )
+
+        if (!identificationResponse.ok) {
+          const error = await identificationResponse.json()
+          throw new Error(error.message || 'Erro ao buscar campo de identificação do boleto')
+        }
+
+        const identificationData = await identificationResponse.json()
+
+        result = {
+          success: true,
+          identification: identificationData,
+        }
+        break
+      }
+
       default:
         return new Response(
           JSON.stringify({ error: 'Ação não suportada' }),
