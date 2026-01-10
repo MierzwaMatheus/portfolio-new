@@ -98,6 +98,8 @@ export const enUS = {
     backToBlog: "Back to Blog",
     postNotFound: "Post not found",
     postNotFoundDescription: "The article you are looking for does not exist or has been removed.",
+    loading: "Loading...",
+    loadMore: "Load more",
   },
   about: {
     title: "About Me",

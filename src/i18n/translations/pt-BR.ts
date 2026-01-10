@@ -98,6 +98,8 @@ export const ptBR = {
     backToBlog: "Voltar para o Blog",
     postNotFound: "Post não encontrado",
     postNotFoundDescription: "O artigo que você procura não existe ou foi removido.",
+    loading: "Carregando...",
+    loadMore: "Carregar mais",
   },
   about: {
     title: "Sobre Mim",
