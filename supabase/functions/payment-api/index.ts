@@ -152,6 +152,45 @@ serve(async (req) => {
         break
       }
 
+      case 'get_pix_qr_code': {
+        const { asaas_charge_id } = params
+
+        if (!asaas_charge_id) {
+          return new Response(
+            JSON.stringify({ error: 'asaas_charge_id não fornecido' }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 400,
+            }
+          )
+        }
+
+        // Buscar QR Code PIX existente
+        const pixQrCodeResponse = await fetch(
+          `${asaasBaseUrl}/payments/${asaas_charge_id}/pixQrCode`,
+          {
+            method: 'GET',
+            headers: {
+              'accept': 'application/json',
+              'access_token': asaasToken,
+            },
+          }
+        )
+
+        if (!pixQrCodeResponse.ok) {
+          const error = await pixQrCodeResponse.json()
+          throw new Error(error.message || 'Erro ao buscar QR Code PIX')
+        }
+
+        const pixData = await pixQrCodeResponse.json()
+
+        result = {
+          success: true,
+          pix: pixData,
+        }
+        break
+      }
+
       default:
         return new Response(
           JSON.stringify({ error: 'Ação não suportada' }),

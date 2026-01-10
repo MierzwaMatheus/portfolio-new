@@ -18,6 +18,7 @@ export default function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pixData, setPixData] = useState<any>(null);
+  const [pixExpiration, setPixExpiration] = useState<Date | null>(null);
 
   useEffect(() => {
     if (uniqueLink) {
@@ -158,9 +159,9 @@ export default function CheckoutPage() {
         setCheckout({ ...checkout, ...updateData });
       }
 
-      // Se for PIX, criar pagamento no Asaas
+      // Se for PIX, verificar se já existe cobrança válida ou criar nova
       if (selectedPaymentMethod === 'pix') {
-        await createPixPayment();
+        await handlePixPayment();
       }
     } catch (error) {
       console.error('Error confirming payment:', error);
@@ -168,6 +169,32 @@ export default function CheckoutPage() {
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handlePixPayment = async () => {
+    if (!checkout) return;
+
+    // Verificar se já existe cobrança PIX
+    if (checkout.asaas_charge_id) {
+      // Buscar QR Code PIX existente pelo ID da cobrança
+      try {
+        const { data, error } = await supabase.functions.invoke('payment-api', {
+          body: { action: 'get_pix_qr_code', asaas_charge_id: checkout.asaas_charge_id }
+        });
+
+        if (error) throw error;
+
+        setPixData(data.pix);
+        setPixExpiration(new Date(Date.now() + 8 * 60 * 1000)); // 8 minutos
+        return;
+      } catch (error: any) {
+        console.error('Error fetching existing PIX:', error);
+        // Se falhar, cria nova cobrança
+      }
+    }
+
+    // Criar nova cobrança
+    await createPixPayment();
   };
 
   const createPixPayment = async () => {
@@ -181,6 +208,7 @@ export default function CheckoutPage() {
       if (error) throw error;
 
       setPixData(data.pix);
+      setPixExpiration(new Date(Date.now() + 8 * 60 * 1000)); // 8 minutos
       
       // Atualizar checkout com dados do PIX
       await fetchCheckout();
@@ -191,6 +219,33 @@ export default function CheckoutPage() {
   };
 
   const installmentOptions = checkout ? calculateInstallments(checkout.value) : [];
+
+  const getTimeRemaining = () => {
+    if (!pixExpiration) return 0;
+    const now = new Date();
+    const diff = pixExpiration.getTime() - now.getTime();
+    return Math.max(0, Math.floor(diff / 1000));
+  };
+
+  const formatTimeRemaining = () => {
+    const seconds = getTimeRemaining();
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  useEffect(() => {
+    if (pixData && pixExpiration) {
+      const interval = setInterval(() => {
+        if (getTimeRemaining() <= 0) {
+          setPixData(null);
+          setPixExpiration(null);
+          toast.error('Tempo de pagamento expirado');
+        }
+      }, 1000);
+      return () => clearInterval(interval);
+    }
+  }, [pixData, pixExpiration]);
 
   if (isLoading) {
     return (
@@ -485,11 +540,16 @@ export default function CheckoutPage() {
                 </Button>
               </div>
 
-              {pixData.expirationDate && (
-                <p className="text-sm text-gray-400 text-center">
-                  Expira em: {new Date(pixData.expirationDate).toLocaleString('pt-BR')}
+              <div className="text-center">
+                {pixExpiration && (
+                  <p className={`text-lg font-bold ${getTimeRemaining() < 60 ? 'text-red-400' : 'text-neon-purple'}`}>
+                    {formatTimeRemaining()}
+                  </p>
+                )}
+                <p className="text-sm text-gray-400 mt-1">
+                  Tempo restante para pagamento
                 </p>
-              )}
+              </div>
 
               <Button
                 onClick={() => setPixData(null)}
