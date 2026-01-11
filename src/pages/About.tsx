@@ -143,7 +143,7 @@ export default function About() {
                 {/* Indicador de hover (mobile) */}
                 {isMobile && hoveredItem !== routineItem.id && (
                   <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
-                    <div className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-xs text-white">
+                    <div className="bg-white/20 backdrop-blur-sm text-center px-3 py-1 rounded-full text-xs text-white">
                       Toque para Saber Mais
                     </div>
                   </div>
