@@ -13,6 +13,9 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 import ReactMarkdown from "react-markdown";
+import { ContractModal } from "@/components/ContractModal";
+import { generateContractContent } from "@/utils/contractGenerator";
+import jsPDF from "jspdf";
 
 export default function ProposalAccept() {
   const { slug } = useParams();
@@ -31,6 +34,8 @@ export default function ProposalAccept() {
   const [isRescisionOpen, setIsRescisionOpen] = useState(false);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showContractModal, setShowContractModal] = useState(false);
+  const [isSigning, setIsSigning] = useState(false);
 
   useEffect(() => {
     if (slug) {
@@ -133,7 +138,7 @@ export default function ProposalAccept() {
     setClientDocument(formatted);
   };
 
-  const handleAccept = async () => {
+  const handleOpenContract = () => {
     if (!sessionToken || !proposal) {
       toast.error("Sessão inválida");
       return;
@@ -156,52 +161,12 @@ export default function ProposalAccept() {
     }
 
     if (!hasConsent) {
-      toast.error("Você deve concordar com os termos para aceitar a proposta");
+      toast.error("Você deve concordar com os termos para ler o contrato");
       return;
     }
 
-    setIsSubmitting(true);
-
-    try {
-      // Obter IP e User-Agent
-      const ipAddress = await fetch('https://api.ipify.org?format=json')
-        .then(res => res.json())
-        .then(data => data.ip)
-        .catch(() => null);
-      
-      const userAgent = navigator.userAgent;
-
-      const { data, error } = await supabase.rpc('register_proposal_acceptance', {
-        p_session_token: sessionToken,
-        p_client_name: clientName.trim(),
-        p_client_document: clientDocument.replace(/\D/g, ''),
-        p_client_email: clientEmail.trim(),
-        p_client_role: clientRole.trim() || null,
-        p_client_declaration: clientDeclaration.trim() || null,
-        p_ip_address: ipAddress || null,
-        p_user_agent: userAgent || null
-      });
-
-      if (error) {
-        if (error.message.includes('já foi aceita')) {
-          toast.error("Esta proposta já foi aceita anteriormente");
-        } else if (error.message.includes('Sessão inválida')) {
-          toast.error("Sessão expirada. Por favor, recarregue a página");
-        } else {
-          throw error;
-        }
-      } else {
-        toast.success("Proposta aceita com sucesso!");
-        setTimeout(() => {
-          setLocation(`/proposta/${slug}`);
-        }, 2000);
-      }
-    } catch (error: any) {
-      console.error("Error accepting proposal:", error);
-      toast.error(error.message || "Erro ao aceitar proposta");
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Abrir modal do contrato (sem aceitar ainda)
+    setShowContractModal(true);
   };
 
   if (isLoading) {
@@ -427,38 +392,255 @@ export default function ProposalAccept() {
             </CardContent>
           </Card>
 
-          {/* Botão de Aceite */}
+          {/* Botão de Ler Contrato */}
           <div className="flex justify-center">
             <Button
               size="lg"
               className="bg-neon-purple hover:bg-neon-purple/90 text-white px-12 py-6 text-lg"
-              onClick={handleAccept}
-              disabled={!hasConsent || isSubmitting}
+              onClick={handleOpenContract}
+              disabled={!hasConsent}
             >
-              {isSubmitting ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Processando...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="w-5 h-5 mr-2" />
-                  Aceitar Proposta
-                </>
-              )}
+              <FileText className="w-5 h-5 mr-2" />
+              Ler Contrato
             </Button>
           </div>
 
           {/* Aviso Legal */}
           <div className="text-center text-sm text-gray-500">
             <p>
-              Ao aceitar esta proposta, você está celebrando um contrato válido e vinculante.
-              Todas as informações fornecidas e o momento do aceite serão registrados para fins de comprovação.
+              Ao clicar em "Ler Contrato", você poderá visualizar o contrato completo.
+              A proposta só será aceita quando você assinar digitalmente no final do contrato.
             </p>
           </div>
         </motion.div>
       </div>
+
+      {/* Modal do Contrato */}
+      {proposal && clientName && clientDocument && clientEmail && (
+        <ContractModal
+          open={showContractModal}
+          onOpenChange={setShowContractModal}
+          proposal={proposal}
+          clientData={{
+            client_name: clientName.trim(),
+            client_document: clientDocument.replace(/\D/g, ''),
+            client_email: clientEmail.trim(),
+            client_role: clientRole.trim() || null,
+            client_declaration: clientDeclaration.trim() || null,
+          }}
+          sessionToken={sessionToken}
+          onSign={handleDigitalSignature}
+          isSigning={isSigning}
+        />
+      )}
     </div>
   );
+
+  async function handleDigitalSignature() {
+    if (!proposal || !sessionToken) return;
+
+    setIsSigning(true);
+
+    try {
+      // Obter IP e User-Agent
+      const ipAddress = await fetch('https://api.ipify.org?format=json')
+        .then(res => res.json())
+        .then(data => data.ip)
+        .catch(() => null);
+      
+      const userAgent = navigator.userAgent;
+
+      // Aceitar a proposta
+      const { data, error } = await supabase.rpc('register_proposal_acceptance', {
+        p_session_token: sessionToken,
+        p_client_name: clientName.trim(),
+        p_client_document: clientDocument.replace(/\D/g, ''),
+        p_client_email: clientEmail.trim(),
+        p_client_role: clientRole.trim() || null,
+        p_client_declaration: clientDeclaration.trim() || null,
+        p_ip_address: ipAddress || null,
+        p_user_agent: userAgent || null
+      });
+
+      if (error) {
+        if (error.message.includes('já foi aceita')) {
+          toast.error("Esta proposta já foi aceita anteriormente");
+        } else if (error.message.includes('Sessão inválida')) {
+          toast.error("Sessão expirada. Por favor, recarregue a página");
+        } else {
+          throw error;
+        }
+        setIsSigning(false);
+        return;
+      }
+
+      // Buscar dados do aceite para gerar PDF
+      const { data: acceptance, error: acceptanceError } = await supabase.rpc('get_proposal_acceptance', {
+        p_proposal_id: proposal.id
+      });
+
+      if (acceptanceError || !acceptance || acceptance.length === 0) {
+        throw new Error("Erro ao buscar dados do aceite");
+      }
+
+      const acceptanceInfo = acceptance[0];
+      const acceptanceData = {
+        client_name: clientName.trim(),
+        client_document: formatDocument(clientDocument),
+        client_email: clientEmail.trim(),
+        client_role: clientRole.trim() || null,
+        client_declaration: clientDeclaration.trim() || null,
+        accepted_at: acceptanceInfo.accepted_at,
+        ip_address: ipAddress || null,
+        user_agent: userAgent || null,
+        content_hash: acceptanceInfo.content_hash || null,
+        proposal_version: acceptanceInfo.proposal_version || '1.0'
+      };
+
+      // Gerar PDF do contrato completo
+      await generateContractPDF(proposal, acceptanceData);
+
+      toast.success("Contrato assinado digitalmente e PDF gerado com sucesso!");
+      
+      setTimeout(() => {
+        setShowContractModal(false);
+        setLocation(`/proposta/${slug}`);
+      }, 2000);
+    } catch (error: any) {
+      console.error("Error signing contract:", error);
+      toast.error(error.message || "Erro ao assinar contrato");
+    } finally {
+      setIsSigning(false);
+    }
+  }
+
+  async function generateContractPDF(proposal: any, acceptanceData: any) {
+    const doc = new jsPDF();
+    let yPos = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const maxWidth = pageWidth - (margin * 2);
+
+    // Função auxiliar para verificar se precisa de nova página
+    const checkPageBreak = (requiredSpace: number = 10) => {
+      if (yPos + requiredSpace > 270) {
+        doc.addPage();
+        yPos = 20;
+        return true;
+      }
+      return false;
+    };
+
+    // Função auxiliar para adicionar texto com quebra de linha
+    const addText = (text: string, fontSize: number = 12, isBold: boolean = false, color: [number, number, number] = [0, 0, 0], lineHeight: number = 0.6) => {
+      if (!text || String(text).trim() === '') return;
+      
+      doc.setFontSize(fontSize);
+      doc.setTextColor(color[0], color[1], color[2]);
+      doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+      
+      // Converter para string e limpar caracteres problemáticos
+      // Remover markdown mas manter estrutura
+      let cleanText = String(text)
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n')
+        .replace(/\*\*/g, '') // Remove negrito markdown
+        .replace(/#{1,6}\s/g, '') // Remove headers markdown
+        .replace(/---/g, '') // Remove separadores markdown
+        .trim();
+      
+      const lines = doc.splitTextToSize(cleanText, maxWidth);
+      
+      lines.forEach((line: string) => {
+        checkPageBreak(fontSize * lineHeight + 2);
+        doc.text(line, margin, yPos);
+        yPos += fontSize * lineHeight;
+      });
+      yPos += 2;
+    };
+
+    // Gerar conteúdo do contrato
+    const contractContent = generateContractContent(proposal, acceptanceData);
+
+    // Cabeçalho
+    addText('CONTRATO ELETRÔNICO', 18, true, [0, 0, 0]);
+    yPos += 5;
+
+    // Identificação das Partes
+    const headerText = contractContent.header
+      .replace(/\*\*/g, '')
+      .replace(/---/g, '')
+      .trim();
+    addText(headerText, 12);
+    yPos += 5;
+
+    // Cláusulas - garantir que todas sejam incluídas
+    contractContent.clauses.forEach((clause, index) => {
+      // Processar cada cláusula mantendo a estrutura
+      let cleanClause = clause
+        .replace(/\*\*/g, '') // Remove negrito markdown
+        .replace(/#{1,6}\s/g, '') // Remove headers markdown
+        .trim();
+      
+      // Adicionar título da cláusula em negrito se existir
+      const titleMatch = cleanClause.match(/^(CLÁUSULA \d+[^:]*:)/);
+      if (titleMatch) {
+        addText(titleMatch[1], 12, true, [0, 0, 0], 0.7);
+        cleanClause = cleanClause.replace(titleMatch[1], '').trim();
+      }
+      
+      // Adicionar conteúdo da cláusula
+      if (cleanClause) {
+        addText(cleanClause, 11, false, [0, 0, 0], 0.6);
+      }
+      yPos += 3;
+    });
+
+    // Assinatura Digital
+    addText('ASSINATURA DIGITAL', 14, true);
+    addText(`Este contrato foi assinado digitalmente em ${new Date(acceptanceData.accepted_at).toLocaleString('pt-BR')}`, 11);
+    addText(`Nome: ${acceptanceData.client_name}`, 11);
+    addText(`Documento: ${acceptanceData.client_document}`, 11);
+    addText(`E-mail: ${acceptanceData.client_email}`, 11);
+    if (acceptanceData.client_role) {
+      addText(`Cargo/Função: ${acceptanceData.client_role}`, 11);
+    }
+    if (acceptanceData.client_declaration) {
+      addText(`Declaração: ${acceptanceData.client_declaration}`, 10);
+    }
+    yPos += 5;
+
+    // Evidências Técnicas
+    addText('EVIDÊNCIAS TÉCNICAS', 12, true);
+    const hash = await generateContentHash(proposal, acceptanceData);
+    addText(`Hash SHA-256: ${hash}`, 9);
+    addText(`IP de Origem: ${acceptanceData.ip_address || 'N/A'}`, 9);
+    addText(`User-Agent: ${acceptanceData.user_agent || 'N/A'}`, 9);
+    addText(`Versão da Proposta: ${acceptanceData.proposal_version || '1.0'}`, 9);
+
+    // Salvar PDF
+    const fileName = `Contrato_${proposal.client_name.replace(/\s+/g, '_')}_${new Date(acceptanceData.accepted_at).toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+  }
+
+  async function generateContentHash(proposal: any, acceptanceData: any): Promise<string> {
+    // Criar hash do conteúdo do contrato para evidência técnica
+    const content = JSON.stringify({
+      proposal_id: proposal.id,
+      client_name: acceptanceData.client_name,
+      client_document: acceptanceData.client_document,
+      accepted_at: acceptanceData.accepted_at,
+      investment_value: proposal.investment_value
+    });
+
+    // Usar Web Crypto API para gerar hash SHA-256
+    const encoder = new TextEncoder();
+    const data = encoder.encode(content);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    return hashHex;
+  }
 }
 

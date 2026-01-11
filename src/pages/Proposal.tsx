@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 import ReactMarkdown from "react-markdown";
 import jsPDF from "jspdf";
+import { ContractModal } from "@/components/ContractModal";
+import { generateContractContent } from "@/utils/contractGenerator";
 
 export default function Proposal() {
   const { id } = useParams(); // This is the slug
@@ -27,6 +29,7 @@ export default function Proposal() {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [isRescisionOpen, setIsRescisionOpen] = useState(false);
   const [acceptanceData, setAcceptanceData] = useState<any>(null);
+  const [showContractModal, setShowContractModal] = useState(false);
 
   useEffect(() => {
     setIsVisible(true);
@@ -188,174 +191,16 @@ export default function Proposal() {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!proposal || !acceptanceData) return;
-
-    const doc = new jsPDF();
-    let yPos = 20;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 20;
-    const maxWidth = pageWidth - (margin * 2);
-
-    // Função auxiliar para verificar se precisa de nova página
-    const checkPageBreak = (requiredSpace: number = 10) => {
-      if (yPos + requiredSpace > 270) {
-        doc.addPage();
-        yPos = 20;
-        return true;
-      }
-      return false;
-    };
-
-    // Função auxiliar para adicionar texto com quebra de linha
-    const addText = (text: string, fontSize: number = 12, isBold: boolean = false, color: [number, number, number] = [0, 0, 0], lineHeight: number = 0.6) => {
-      if (!text || String(text).trim() === '') return;
-      
-      doc.setFontSize(fontSize);
-      doc.setTextColor(color[0], color[1], color[2]);
-      doc.setFont('helvetica', isBold ? 'bold' : 'normal');
-      
-      // Converter para string e limpar caracteres problemáticos
-      const cleanText = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
-      const lines = doc.splitTextToSize(cleanText, maxWidth);
-      
-      lines.forEach((line: string) => {
-        checkPageBreak(fontSize * lineHeight + 2);
-        doc.text(line, margin, yPos);
-        yPos += fontSize * lineHeight;
-      });
-      yPos += 2;
-    };
-
-    // Título
-    addText('CONTRATO ELETRÔNICO', 18, true, [0, 0, 0]);
-    yPos += 5;
-
-    // Informações da Proposta
-    addText(`Proposta: ${proposal.title || `Projeto para ${proposal.client_name}`}`, 14, true);
-    addText(`Cliente: ${acceptanceData.client_name}`, 12);
-    addText(`CPF/CNPJ: ${acceptanceData.client_document}`, 12);
-    addText(`E-mail: ${acceptanceData.client_email}`, 12);
-    if (acceptanceData.client_role) {
-      addText(`Cargo/Função: ${acceptanceData.client_role}`, 12);
+    
+    try {
+      // Usar a função atualizada que inclui todas as cláusulas
+      await generateContractPDF(proposal, acceptanceData);
+    } catch (error: any) {
+      console.error("Error generating PDF:", error);
+      toast.error(error.message || "Erro ao gerar PDF");
     }
-    yPos += 5;
-
-    // Objetivo
-    addText('OBJETIVO DO PROJETO', 14, true);
-    if (proposal.objective) {
-      // Se objective é uma string, adicionar diretamente
-      if (typeof proposal.objective === 'string') {
-        addText(proposal.objective, 11, false, [0, 0, 0], 0.6);
-      } else if (Array.isArray(proposal.objective)) {
-        // Se é um array, processar cada item
-        proposal.objective.forEach((item: any) => {
-          if (typeof item === 'string') {
-            addText(`• ${item}`, 11, false, [0, 0, 0], 0.6);
-          } else if (item && typeof item === 'object') {
-            // Se é um objeto, tentar extrair texto
-            const text = item.text || item.label || JSON.stringify(item);
-            addText(`• ${text}`, 11, false, [0, 0, 0], 0.6);
-          }
-        });
-      }
-    }
-    yPos += 3;
-
-    // Escopo
-    if (proposal.scope) {
-      addText('ESCOPO DOS SERVIÇOS', 14, true);
-      
-      // Se scope é uma string, tratar como texto único
-      if (typeof proposal.scope === 'string') {
-        addText(proposal.scope, 11, false, [0, 0, 0], 0.6);
-      } else if (Array.isArray(proposal.scope) && proposal.scope.length > 0) {
-        // Se é um array, processar cada item
-        proposal.scope.forEach((item: any) => {
-          if (typeof item === 'string') {
-            addText(`• ${item}`, 11, false, [0, 0, 0], 0.6);
-          } else if (item && typeof item === 'object') {
-            // Se é um objeto, tentar extrair texto
-            const text = item.text || item.label || item.description || JSON.stringify(item);
-            addText(`• ${text}`, 11, false, [0, 0, 0], 0.6);
-          }
-        });
-      }
-      yPos += 3;
-    }
-
-    // Cronograma
-    if (proposal.timeline && proposal.timeline.length > 0) {
-      addText('CRONOGRAMA', 14, true);
-      proposal.timeline.forEach((item: any) => {
-        addText(`${item.step} - ${item.period}`, 11);
-      });
-      if (proposal.delivery_date) {
-        addText(`Entrega prevista: ${new Date(proposal.delivery_date).toLocaleDateString('pt-BR')}`, 11);
-      }
-      yPos += 5;
-    }
-
-    // Valor
-    addText('INVESTIMENTO', 14, true);
-    addText(`Valor Total: ${formatCurrency(proposal.investment_value)}`, 12, true);
-    yPos += 5;
-
-    // Formas de Pagamento
-    if (proposal.payment_methods && proposal.payment_methods.length > 0) {
-      addText('FORMAS DE PAGAMENTO', 14, true);
-      proposal.payment_methods.forEach((method: string) => {
-        addText(`• ${method}`, 11);
-      });
-      yPos += 5;
-    }
-
-    // Condições Gerais
-    if (proposal.conditions && proposal.conditions.length > 0) {
-      addText('CONDIÇÕES GERAIS', 14, true);
-      proposal.conditions.forEach((condition: string) => {
-        addText(`• ${condition}`, 11);
-      });
-      yPos += 5;
-    }
-
-    // Política de Rescisão
-    const rescisionPolicy = proposal.rescision_policy || DEFAULT_RESCISION_POLICY;
-    addText('POLÍTICA DE RESCISÃO', 14, true);
-    // Remover markdown básico para texto simples
-    const cleanPolicy = rescisionPolicy
-      .replace(/#{1,6}\s/g, '')
-      .replace(/\*\*(.*?)\*\*/g, '$1')
-      .replace(/\*(.*?)\*/g, '$1');
-    addText(cleanPolicy, 10);
-    yPos += 10;
-
-    // Assinatura Digital
-    addText('ASSINATURA DIGITAL', 14, true);
-    addText(`Esta proposta foi aceita eletronicamente em ${new Date(acceptanceData.accepted_at).toLocaleString('pt-BR')}`, 11);
-    addText(`Nome: ${acceptanceData.client_name}`, 11);
-    addText(`Documento: ${acceptanceData.client_document}`, 11);
-    addText(`E-mail: ${acceptanceData.client_email}`, 11);
-    if (acceptanceData.client_declaration) {
-      addText(`Declaração: ${acceptanceData.client_declaration}`, 10);
-    }
-    yPos += 5;
-
-    // Evidências Técnicas
-    addText('EVIDÊNCIAS TÉCNICAS', 12, true);
-    addText(`Hash SHA-256: ${acceptanceData.content_hash}`, 9);
-    addText(`IP de Origem: ${acceptanceData.ip_address || 'N/A'}`, 9);
-    addText(`User-Agent: ${acceptanceData.user_agent || 'N/A'}`, 9);
-    addText(`Versão da Proposta: ${acceptanceData.proposal_version}`, 9);
-    yPos += 5;
-
-    // Foro
-    addText('FORO', 12, true);
-    addText('Fica eleito o foro da comarca de Itapevi – SP para dirimir quaisquer controvérsias oriundas deste contrato, com renúncia a qualquer outro, por mais privilegiado que seja.', 10);
-
-    // Salvar PDF
-    const fileName = `Contrato_${proposal.client_name.replace(/\s+/g, '_')}_${new Date(acceptanceData.accepted_at).toISOString().split('T')[0]}.pdf`;
-    doc.save(fileName);
   };
 
   const handleDownloadPDFOld = () => {
@@ -930,6 +775,20 @@ export default function Proposal() {
             </motion.div>
           )}
 
+          {/* Botão Ler Contrato quando já aceito */}
+          {proposal.is_accepted && acceptanceData && (
+            <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4 pb-12">
+              <Button 
+                size="lg" 
+                className="bg-neon-purple hover:bg-neon-purple/90 text-white h-14 px-8 w-full sm:w-auto"
+                onClick={() => setShowContractModal(true)}
+              >
+                <FileText className="mr-2 w-5 h-5" />
+                Ler Contrato
+              </Button>
+            </motion.div>
+          )}
+
           {/* Footer */}
           <motion.footer variants={itemVariants} className="text-center border-t border-white/10 pt-8 pb-4">
             <p className="text-gray-500 text-sm">
@@ -941,6 +800,146 @@ export default function Proposal() {
           </motion.footer>
         </motion.div>
       </div>
+
+      {/* Modal do Contrato */}
+      {proposal.is_accepted && acceptanceData && (
+        <ContractModal
+          open={showContractModal}
+          onOpenChange={setShowContractModal}
+          proposal={proposal}
+          clientData={{
+            client_name: acceptanceData.client_name,
+            client_document: acceptanceData.client_document,
+            client_email: acceptanceData.client_email,
+            client_role: acceptanceData.client_role || null,
+            client_declaration: acceptanceData.client_declaration || null,
+          }}
+          sessionToken={null}
+          onSign={handleDigitalSignature}
+          isSigning={false}
+        />
+      )}
     </div>
   );
+
+  async function handleDigitalSignature() {
+    if (!proposal || !acceptanceData) return;
+
+    try {
+      // Gerar PDF do contrato completo usando a função utilitária
+      await generateContractPDF(proposal, acceptanceData);
+      toast.success("PDF do contrato gerado com sucesso!");
+    } catch (error: any) {
+      console.error("Error generating PDF:", error);
+      toast.error(error.message || "Erro ao gerar PDF");
+    }
+  }
+
+  async function generateContractPDF(proposal: any, acceptanceData: any) {
+    const doc = new jsPDF();
+    let yPos = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    const maxWidth = pageWidth - (margin * 2);
+
+    // Função auxiliar para verificar se precisa de nova página
+    const checkPageBreak = (requiredSpace: number = 10) => {
+      if (yPos + requiredSpace > 270) {
+        doc.addPage();
+        yPos = 20;
+        return true;
+      }
+      return false;
+    };
+
+    // Função auxiliar para adicionar texto com quebra de linha
+    const addText = (text: string, fontSize: number = 12, isBold: boolean = false, color: [number, number, number] = [0, 0, 0], lineHeight: number = 0.6) => {
+      if (!text || String(text).trim() === '') return;
+      
+      doc.setFontSize(fontSize);
+      doc.setTextColor(color[0], color[1], color[2]);
+      doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+      
+      // Converter para string e limpar caracteres problemáticos
+      // Remover markdown mas manter estrutura
+      let cleanText = String(text)
+        .replace(/\r\n/g, '\n')
+        .replace(/\r/g, '\n')
+        .replace(/\*\*/g, '') // Remove negrito markdown
+        .replace(/#{1,6}\s/g, '') // Remove headers markdown
+        .replace(/---/g, '') // Remove separadores markdown
+        .trim();
+      
+      const lines = doc.splitTextToSize(cleanText, maxWidth);
+      
+      lines.forEach((line: string) => {
+        checkPageBreak(fontSize * lineHeight + 2);
+        doc.text(line, margin, yPos);
+        yPos += fontSize * lineHeight;
+      });
+      yPos += 2;
+    };
+
+    // Gerar conteúdo do contrato usando a função utilitária
+    const contractContent = generateContractContent(proposal, acceptanceData);
+
+    // Cabeçalho
+    addText('CONTRATO ELETRÔNICO', 18, true, [0, 0, 0]);
+    yPos += 5;
+
+    // Identificação das Partes
+    const headerText = contractContent.header
+      .replace(/\*\*/g, '')
+      .replace(/---/g, '')
+      .trim();
+    addText(headerText, 12);
+    yPos += 5;
+
+    // Cláusulas - garantir que todas sejam incluídas
+    contractContent.clauses.forEach((clause, index) => {
+      // Processar cada cláusula mantendo a estrutura
+      let cleanClause = clause
+        .replace(/\*\*/g, '') // Remove negrito markdown
+        .replace(/#{1,6}\s/g, '') // Remove headers markdown
+        .trim();
+      
+      // Adicionar título da cláusula em negrito se existir
+      const titleMatch = cleanClause.match(/^(CLÁUSULA \d+[^:]*:)/);
+      if (titleMatch) {
+        addText(titleMatch[1], 12, true, [0, 0, 0], 0.7);
+        cleanClause = cleanClause.replace(titleMatch[1], '').trim();
+      }
+      
+      // Adicionar conteúdo da cláusula
+      if (cleanClause) {
+        addText(cleanClause, 11, false, [0, 0, 0], 0.6);
+      }
+      yPos += 3;
+    });
+
+    // Assinatura Digital
+    addText('ASSINATURA DIGITAL', 14, true);
+    addText(`Este contrato foi assinado digitalmente em ${new Date(acceptanceData.accepted_at).toLocaleString('pt-BR')}`, 11);
+    addText(`Nome: ${acceptanceData.client_name}`, 11);
+    addText(`Documento: ${acceptanceData.client_document}`, 11);
+    addText(`E-mail: ${acceptanceData.client_email}`, 11);
+    if (acceptanceData.client_role) {
+      addText(`Cargo/Função: ${acceptanceData.client_role}`, 11);
+    }
+    if (acceptanceData.client_declaration) {
+      addText(`Declaração: ${acceptanceData.client_declaration}`, 10);
+    }
+    yPos += 5;
+
+    // Evidências Técnicas
+    addText('EVIDÊNCIAS TÉCNICAS', 12, true);
+    addText(`Hash SHA-256: ${acceptanceData.content_hash || 'N/A'}`, 9);
+    addText(`IP de Origem: ${acceptanceData.ip_address || 'N/A'}`, 9);
+    addText(`User-Agent: ${acceptanceData.user_agent || 'N/A'}`, 9);
+    addText(`Versão da Proposta: ${acceptanceData.proposal_version || '1.0'}`, 9);
+
+    // Salvar PDF
+    const fileName = `Contrato_${proposal.client_name.replace(/\s+/g, '_')}_${new Date(acceptanceData.accepted_at).toISOString().split('T')[0]}.pdf`;
+    doc.save(fileName);
+  }
 }
