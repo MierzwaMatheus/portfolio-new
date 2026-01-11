@@ -34,11 +34,6 @@ export function ProposalDialog({ open, onOpenChange, proposal, onSave }: Proposa
     const [newTimelinePeriod, setNewTimelinePeriod] = useState("");
 
     // Payment & Conditions
-    const [payment50_50, setPayment50_50] = useState(true);
-    const [payment100, setPayment100] = useState(false);
-    const [payment3x, setPayment3x] = useState(false);
-    const [paymentCustom, setPaymentCustom] = useState(false);
-    const [customPaymentMethod, setCustomPaymentMethod] = useState("");
     const [conditions, setConditions] = useState<Array<{ text: string; checked: boolean }>>([
         { text: "Revisões: até 2 rodadas incluídas por etapa. Alterações fora do escopo serão orçadas.", checked: true },
         { text: "Garantia: correções de falhas por até 30 dias após entrega.", checked: true },
@@ -58,27 +53,6 @@ export function ProposalDialog({ open, onOpenChange, proposal, onSave }: Proposa
                 setInvestmentValue(proposal.investment_value?.toString().replace('.', ',') || "");
                 setScopeItems(Array.isArray(proposal.scope) ? proposal.scope : []);
                 setTimelineItems(Array.isArray(proposal.timeline) ? proposal.timeline : []);
-
-                // Carregar métodos de pagamento
-                const paymentMethods = proposal.payment_methods || [];
-                setPayment50_50(paymentMethods.includes("50% no início / 50% na entrega"));
-                setPayment100(paymentMethods.includes("100% antecipado (desconto de 10%)"));
-                setPayment3x(paymentMethods.includes("Parcelado em até 3x (sem juros)"));
-
-                // Verificar se há método personalizado
-                const standardMethods = [
-                    "50% no início / 50% na entrega",
-                    "100% antecipado (desconto de 10%)",
-                    "Parcelado em até 3x (sem juros)"
-                ];
-                const customMethod = paymentMethods.find((pm: string) => !standardMethods.includes(pm));
-                if (customMethod) {
-                    setPaymentCustom(true);
-                    setCustomPaymentMethod(customMethod);
-                } else {
-                    setPaymentCustom(false);
-                    setCustomPaymentMethod("");
-                }
 
                 // Carregar condições
                 const savedConditions = proposal.conditions || [];
@@ -117,11 +91,6 @@ export function ProposalDialog({ open, onOpenChange, proposal, onSave }: Proposa
         setTimelineItems([]);
         setDeliveryDate("");
         setInvestmentValue("");
-        setPayment50_50(true);
-        setPayment100(false);
-        setPayment3x(false);
-        setPaymentCustom(false);
-        setCustomPaymentMethod("");
         setConditions([
             { text: "Revisões: até 2 rodadas incluídas por etapa. Alterações fora do escopo serão orçadas.", checked: true },
             { text: "Garantia: correções de falhas por até 30 dias após entrega.", checked: true },
@@ -155,14 +124,6 @@ export function ProposalDialog({ open, onOpenChange, proposal, onSave }: Proposa
         if (slugError) return alert("Corrija o erro do slug antes de continuar.");
         if (!clientName || !slug) return alert("Preencha os campos obrigatórios.");
 
-        const selectedPaymentMethods: string[] = [];
-        if (payment50_50) selectedPaymentMethods.push("50% no início / 50% na entrega");
-        if (payment100) selectedPaymentMethods.push("100% antecipado (desconto de 10%)");
-        if (payment3x) selectedPaymentMethods.push("Parcelado em até 3x (sem juros)");
-        if (paymentCustom && customPaymentMethod.trim()) {
-            selectedPaymentMethods.push(customPaymentMethod.trim());
-        }
-
         const selectedConditions = conditions
             .filter(c => c.checked)
             .map(c => c.text);
@@ -177,7 +138,6 @@ export function ProposalDialog({ open, onOpenChange, proposal, onSave }: Proposa
             timeline: timelineItems,
             delivery_date: deliveryDate || null,
             investment_value: parseFloat(investmentValue.replace(',', '.')) || 0,
-            payment_methods: selectedPaymentMethods,
             conditions: selectedConditions
         };
 
@@ -391,59 +351,6 @@ export function ProposalDialog({ open, onOpenChange, proposal, onSave }: Proposa
                                 value={investmentValue}
                                 onChange={(e) => setInvestmentValue(e.target.value)}
                             />
-                        </div>
-                    </div>
-
-                    <div>
-                        <Label className="block text-sm mb-1">Formas de Pagamento</Label>
-                        <div className="flex flex-col gap-2">
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    checked={payment50_50}
-                                    onChange={(e) => setPayment50_50(e.target.checked)}
-                                    className="rounded border-gray-300"
-                                />
-                                <span className="text-sm">50% no início / 50% na entrega</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    checked={payment100}
-                                    onChange={(e) => setPayment100(e.target.checked)}
-                                    className="rounded border-gray-300"
-                                />
-                                <span className="text-sm">100% antecipado (desconto de 10%)</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <input
-                                    type="checkbox"
-                                    checked={payment3x}
-                                    onChange={(e) => setPayment3x(e.target.checked)}
-                                    className="rounded border-gray-300"
-                                />
-                                <span className="text-sm">Parcelado em até 3x (sem juros)</span>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                                <div className="flex items-center gap-2">
-                                    <input
-                                        type="checkbox"
-                                        checked={paymentCustom}
-                                        onChange={(e) => setPaymentCustom(e.target.checked)}
-                                        className="rounded border-gray-300"
-                                    />
-                                    <span className="text-sm">Personalizado</span>
-                                </div>
-                                {paymentCustom && (
-                                    <Textarea
-                                        className="bg-background border-input min-h-[80px]"
-                                        rows={2}
-                                        placeholder="Detalhe a forma de pagamento personalizada..."
-                                        value={customPaymentMethod}
-                                        onChange={(e) => setCustomPaymentMethod(e.target.value)}
-                                    />
-                                )}
-                            </div>
                         </div>
                     </div>
 

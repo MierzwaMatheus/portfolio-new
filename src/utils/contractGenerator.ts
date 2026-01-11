@@ -8,7 +8,6 @@ export interface ProposalData {
   timeline?: Array<{ step: string; period: string }>;
   delivery_date?: string;
   investment_value: number;
-  payment_methods?: string[];
   conditions?: string[];
   rescision_policy?: string;
 }
@@ -32,25 +31,41 @@ export interface ContractContent {
  */
 function formatDocument(doc: string): string {
   if (!doc) return '';
-  
+
   // Se já está formatado (contém pontos ou barras), retornar como está
   if (doc.includes('.') || doc.includes('/') || doc.includes('-')) {
     return doc;
   }
-  
+
   const numbers = doc.replace(/\D/g, '');
-  
+
   // CPF: 11 dígitos
   if (numbers.length === 11) {
     return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
   }
-  
+
   // CNPJ: 14 dígitos
   if (numbers.length === 14) {
     return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
   }
-  
+
   return doc;
+}
+
+/**
+ * Gera as formas de pagamento fixas baseadas no valor
+ */
+export function generatePaymentMethods(value: number): string[] {
+  const pixValue = value * 0.9;
+  const installmentValue = value / 3;
+  const installmentValueWithInterest = value / 12;
+
+  return [
+    `PIX: R$ ${pixValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} (10% de desconto)`,
+    `50/50: 50% no início e 50% na entrega`,
+    `Cartão de crédito até 3x sem juros (R$ ${installmentValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mês)`,
+    `Cartão de crédito até 12x com juros`
+  ];
 }
 
 /**
@@ -112,9 +127,8 @@ ${timelineText}${proposal.delivery_date ? `\n\nEntrega prevista: ${new Date(prop
   }
 
   // Cláusula 4 - Investimento e Formas de Pagamento
-  const paymentMethodsText = proposal.payment_methods && proposal.payment_methods.length > 0
-    ? proposal.payment_methods.map(method => `• ${method}`).join('\n')
-    : 'A ser acordado entre as partes.';
+  const paymentMethods = generatePaymentMethods(proposal.investment_value);
+  const paymentMethodsText = paymentMethods.map(method => `• ${method}`).join('\n');
 
   clauses.push(`### CLÁUSULA 4 – DO INVESTIMENTO E FORMAS DE PAGAMENTO
 

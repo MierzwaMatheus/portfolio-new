@@ -15,7 +15,7 @@ import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 import ReactMarkdown from "react-markdown";
 import jsPDF from "jspdf";
 import { ContractModal } from "@/components/ContractModal";
-import { generateContractContent } from "@/utils/contractGenerator";
+import { generateContractContent, generatePaymentMethods } from "@/utils/contractGenerator";
 
 export default function Proposal() {
   const { id } = useParams(); // This is the slug
@@ -703,7 +703,7 @@ export default function Proposal() {
                       Formas de Pagamento
                     </h3>
                     <ul className="space-y-2">
-                      {proposal.payment_methods?.map((method: string, idx: number) => (
+                      {generatePaymentMethods(proposal.investment_value).map((method: string, idx: number) => (
                         <li key={idx} className="text-gray-400 flex items-center gap-2">
                           <div className="w-1 h-1 bg-gray-500 rounded-full" />
                           {method}

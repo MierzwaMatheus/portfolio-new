@@ -42,11 +42,6 @@ export default function AdminProposals() {
   const [newTimelinePeriod, setNewTimelinePeriod] = useState("");
 
   // Payment & Conditions
-  const [payment50_50, setPayment50_50] = useState(true);
-  const [payment100, setPayment100] = useState(false);
-  const [payment3x, setPayment3x] = useState(false);
-  const [paymentCustom, setPaymentCustom] = useState(false);
-  const [customPaymentMethod, setCustomPaymentMethod] = useState("");
   const [conditions, setConditions] = useState<Array<{ text: string; checked: boolean }>>([
     { text: "Revisões: até 2 rodadas incluídas por etapa. Alterações fora do escopo serão orçadas.", checked: true },
     { text: "Garantia: correções de falhas por até 30 dias após entrega.", checked: true },
@@ -109,15 +104,6 @@ export default function AdminProposals() {
       return alert("Esta proposta já foi aceita e não pode ser editada. Crie uma nova proposta.");
     }
 
-    // Construir array de métodos de pagamento baseado nos checkboxes
-    const selectedPaymentMethods: string[] = [];
-    if (payment50_50) selectedPaymentMethods.push("50% no início / 50% na entrega");
-    if (payment100) selectedPaymentMethods.push("100% antecipado (desconto de 10%)");
-    if (payment3x) selectedPaymentMethods.push("Parcelado em até 3x (sem juros)");
-    if (paymentCustom && customPaymentMethod.trim()) {
-      selectedPaymentMethods.push(customPaymentMethod.trim());
-    }
-
     // Construir array de condições baseado nos checkboxes marcados
     const selectedConditions = conditions
       .filter(c => c.checked)
@@ -136,7 +122,6 @@ export default function AdminProposals() {
       timeline: timelineItems,
       delivery_date: deliveryDate || null,
       investment_value: parseFloat(investmentValue.replace(',', '.')) || 0,
-      payment_methods: selectedPaymentMethods,
       conditions: selectedConditions,
       password: password || null,
       rescision_policy: rescisionPolicy || null
@@ -220,11 +205,6 @@ export default function AdminProposals() {
     setTimelineItems([]);
     setDeliveryDate("");
     setInvestmentValue("");
-    setPayment50_50(true);
-    setPayment100(false);
-    setPayment3x(false);
-    setPaymentCustom(false);
-    setCustomPaymentMethod("");
     setConditions([
       { text: "Revisões: até 2 rodadas incluídas por etapa. Alterações fora do escopo serão orçadas.", checked: true },
       { text: "Garantia: correções de falhas por até 30 dias após entrega.", checked: true },
@@ -308,27 +288,6 @@ export default function AdminProposals() {
     setInvestmentValue(proposal.investment_value?.toString().replace('.', ',') || "");
     setScopeItems(Array.isArray(proposal.scope) ? proposal.scope : []);
     setTimelineItems(Array.isArray(proposal.timeline) ? proposal.timeline : []);
-    
-    // Carregar métodos de pagamento
-    const paymentMethods = proposal.payment_methods || [];
-    setPayment50_50(paymentMethods.includes("50% no início / 50% na entrega"));
-    setPayment100(paymentMethods.includes("100% antecipado (desconto de 10%)"));
-    setPayment3x(paymentMethods.includes("Parcelado em até 3x (sem juros)"));
-    
-    // Verificar se há método personalizado (não é uma das opções padrão)
-    const standardMethods = [
-      "50% no início / 50% na entrega",
-      "100% antecipado (desconto de 10%)",
-      "Parcelado em até 3x (sem juros)"
-    ];
-    const customMethod = paymentMethods.find((pm: string) => !standardMethods.includes(pm));
-    if (customMethod) {
-      setPaymentCustom(true);
-      setCustomPaymentMethod(customMethod);
-    } else {
-      setPaymentCustom(false);
-      setCustomPaymentMethod("");
-    }
     
     // Carregar condições
     const savedConditions = proposal.conditions || [];
@@ -416,11 +375,6 @@ export default function AdminProposals() {
       ? jsonData.scope.map((item: any) => String(item))
       : [];
 
-    // Validar e processar payment_methods
-    const paymentMethods: string[] = Array.isArray(jsonData.payment_methods)
-      ? jsonData.payment_methods.map((item: any) => String(item))
-      : [];
-
     // Validar e processar conditions
     const conditions: string[] = Array.isArray(jsonData.conditions)
       ? jsonData.conditions.map((item: any) => String(item))
@@ -444,7 +398,6 @@ export default function AdminProposals() {
       investment_value: typeof jsonData.investment_value === 'number' 
         ? jsonData.investment_value 
         : parseFloat(String(jsonData.investment_value || 0).replace(',', '.')) || 0,
-      payment_methods: paymentMethods,
       conditions: conditions,
       password: jsonData.password?.trim() || null,
       rescision_policy: rescisionPolicy
@@ -751,59 +704,6 @@ export default function AdminProposals() {
                       value={investmentValue}
                       onChange={(e) => setInvestmentValue(e.target.value)}
                     />
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="block text-sm mb-1">Formas de Pagamento</Label>
-                  <div className="flex flex-col gap-2">
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        checked={payment50_50}
-                        onChange={(e) => setPayment50_50(e.target.checked)}
-                        className="rounded border-gray-300" 
-                      />
-                      <span className="text-sm">50% no início / 50% na entrega</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        checked={payment100}
-                        onChange={(e) => setPayment100(e.target.checked)}
-                        className="rounded border-gray-300" 
-                      />
-                      <span className="text-sm">100% antecipado (desconto de 10%)</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input 
-                        type="checkbox" 
-                        checked={payment3x}
-                        onChange={(e) => setPayment3x(e.target.checked)}
-                        className="rounded border-gray-300" 
-                      />
-                      <span className="text-sm">Parcelado em até 3x (sem juros)</span>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                      <div className="flex items-center gap-2">
-                        <input 
-                          type="checkbox" 
-                          checked={paymentCustom}
-                          onChange={(e) => setPaymentCustom(e.target.checked)}
-                          className="rounded border-gray-300" 
-                        />
-                        <span className="text-sm">Personalizado</span>
-                      </div>
-                      {paymentCustom && (
-                        <Textarea
-                          className="bg-background border-input min-h-[80px]"
-                          rows={2}
-                          placeholder="Detalhe a forma de pagamento personalizada..."
-                          value={customPaymentMethod}
-                          onChange={(e) => setCustomPaymentMethod(e.target.value)}
-                        />
-                      )}
-                    </div>
                   </div>
                 </div>
 
