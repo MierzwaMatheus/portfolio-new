@@ -104,7 +104,7 @@ ${typeof proposal.objective === 'string' ? proposal.objective : proposal.objecti
   if (proposal.scope) {
     const scopeText = typeof proposal.scope === 'string' 
       ? proposal.scope 
-      : proposal.scope.map(item => `• ${item}`).join('\n');
+      : proposal.scope.map((item) => `- ${item}`).join('\n');
     
     clauses.push(`### CLÁUSULA 2 – DO ESCOPO DOS SERVIÇOS
 
@@ -116,7 +116,7 @@ ${scopeText}
   // Cláusula 3 - Cronograma
   if (proposal.timeline && proposal.timeline.length > 0) {
     const timelineText = proposal.timeline
-      .map(item => `• ${item.step} - ${item.period}`)
+      .map((item) => `- ${item.step} - ${item.period}`)
       .join('\n');
     
     clauses.push(`### CLÁUSULA 3 – DO CRONOGRAMA
@@ -128,20 +128,21 @@ ${timelineText}${proposal.delivery_date ? `\n\nEntrega prevista: ${new Date(prop
 
   // Cláusula 4 - Investimento e Formas de Pagamento
   const paymentMethods = generatePaymentMethods(proposal.investment_value);
-  const paymentMethodsText = paymentMethods.map(method => `• ${method}`).join('\n');
+  const paymentMethodsText = paymentMethods.map((method) => `- ${method}`).join('\n');
 
   clauses.push(`### CLÁUSULA 4 – DO INVESTIMENTO E FORMAS DE PAGAMENTO
 
 O investimento total para a execução deste projeto é de **R$ ${proposal.investment_value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}**.
 
 **Formas de Pagamento:**
+
 ${paymentMethodsText}
 
 `);
 
   // Cláusula 5 - Condições Gerais
   if (proposal.conditions && proposal.conditions.length > 0) {
-    const conditionsText = proposal.conditions.map(condition => `• ${condition}`).join('\n');
+    const conditionsText = proposal.conditions.map((condition) => `- ${condition}`).join('\n');
     
     clauses.push(`### CLÁUSULA 5 – DAS CONDIÇÕES GERAIS
 
