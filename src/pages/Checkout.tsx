@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { useParams } from "wouter";
+import { useParams, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { Checkout, PaymentMethod, InstallmentOption } from "@/types/checkout";
@@ -11,6 +13,7 @@ import { Check, CreditCard, QrCode, FileText, AlertCircle, Loader2, Copy } from 
 
 export default function CheckoutPage() {
   const { uniqueLink } = useParams<{ uniqueLink: string }>();
+  const [, navigate] = useLocation();
   const [checkout, setCheckout] = useState<Checkout | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
@@ -20,6 +23,121 @@ export default function CheckoutPage() {
   const [pixData, setPixData] = useState<any>(null);
   const [pixExpiration, setPixExpiration] = useState<Date | null>(null);
   const [boletoData, setBoletoData] = useState<any>(null);
+
+  // Estados para dados do cartão de crédito
+  const [creditCard, setCreditCard] = useState({
+    holderName: '',
+    number: '',
+    expiryMonth: '',
+    expiryYear: '',
+    ccv: '',
+  });
+  const [creditCardHolderInfo, setCreditCardHolderInfo] = useState({
+    name: '',
+    email: '',
+    cpfCnpj: '',
+    postalCode: '',
+    addressNumber: '',
+    addressComplement: '',
+    phone: '',
+  });
+
+  // Funções de validação e máscara
+  const formatCardNumber = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    const chunks = cleaned.match(/.{1,4}/g) || [];
+    return chunks.join(' ').substr(0, 19); // 16 dígitos + 3 espaços
+  };
+
+  const formatCPF = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length <= 11) {
+      return cleaned
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d)/, '$1.$2')
+        .replace(/(\d{3})(\d{1,2})/, '$1-$2')
+        .replace(/(-\d{2})\d+?$/, '$1');
+    }
+    return cleaned
+      .replace(/(\d{2})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1.$2')
+      .replace(/(\d{3})(\d)/, '$1/$2')
+      .replace(/(\d{4})(\d)/, '$1-$2')
+      .replace(/(-\d{2})\d+?$/, '$1');
+  };
+
+  const formatPhone = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    if (cleaned.length === 11) {
+      return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+    } else if (cleaned.length === 10) {
+      return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    }
+    return value;
+  };
+
+  const formatPostalCode = (value: string) => {
+    const cleaned = value.replace(/\D/g, '');
+    return cleaned
+      .replace(/(\d{5})(\d)/, '$1-$2')
+      .replace(/(-\d{3})\d+?$/, '$1');
+  };
+
+  const validateCardData = () => {
+    const errors: string[] = [];
+
+    // Validação do cartão
+    if (!creditCard.holderName.trim()) {
+      errors.push('Nome impresso no cartão é obrigatório');
+    }
+
+    const cardNumberClean = creditCard.number.replace(/\D/g, '');
+    if (cardNumberClean.length !== 16) {
+      errors.push('Número do cartão deve ter 16 dígitos');
+    }
+
+    if (!creditCard.expiryMonth) {
+      errors.push('Mês de validade é obrigatório');
+    }
+
+    if (!creditCard.expiryYear) {
+      errors.push('Ano de validade é obrigatório');
+    }
+
+    if (!creditCard.ccv.trim() || creditCard.ccv.length !== 3) {
+      errors.push('CVV deve ter 3 dígitos');
+    }
+
+    // Validação do titular
+    if (!creditCardHolderInfo.name.trim()) {
+      errors.push('Nome completo é obrigatório');
+    }
+
+    if (!creditCardHolderInfo.email.trim()) {
+      errors.push('E-mail é obrigatório');
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(creditCardHolderInfo.email)) {
+      errors.push('E-mail inválido');
+    }
+
+    const cpfCnpjClean = creditCardHolderInfo.cpfCnpj.replace(/\D/g, '');
+    if (cpfCnpjClean.length !== 11 && cpfCnpjClean.length !== 14) {
+      errors.push('CPF/CNPJ inválido');
+    }
+
+    if (!creditCardHolderInfo.postalCode.trim()) {
+      errors.push('CEP é obrigatório');
+    }
+
+    if (!creditCardHolderInfo.addressNumber.trim()) {
+      errors.push('Número do endereço é obrigatório');
+    }
+
+    if (!creditCardHolderInfo.phone.trim()) {
+      errors.push('Telefone é obrigatório');
+    }
+
+    return errors;
+  };
 
   useEffect(() => {
     if (uniqueLink) {
@@ -46,9 +164,13 @@ export default function CheckoutPage() {
 
       setCheckout(data as Checkout);
 
-      if (data.status === 'completed') {
-        toast.success('Pagamento já realizado!');
-      } else if (data.status === 'expired') {
+      // Verificar se o pagamento já foi realizado e redirecionar
+      if (data.status === 'paid' || data.status === 'completed') {
+        navigate(`/payment-success/${uniqueLink}`);
+        return;
+      }
+
+      if (data.status === 'expired') {
         toast.error('Este checkout expirou');
       }
     } catch (error) {
@@ -72,16 +194,6 @@ export default function CheckoutPage() {
       return cleaned.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
     } else if (cleaned.length === 14) {
       return cleaned.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-    }
-    return value;
-  };
-
-  const formatPhone = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
-    if (cleaned.length === 11) {
-      return cleaned.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
-    } else if (cleaned.length === 10) {
-      return cleaned.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
     }
     return value;
   };
@@ -132,12 +244,91 @@ export default function CheckoutPage() {
 
     setIsProcessing(true);
     try {
-      // Verificar se o método de pagamento mudou e já existe cobrança
+      // Se for cartão de crédito, processar pagamento diretamente
+      if (selectedPaymentMethod === 'credit_card') {
+        // Validar campos do cartão
+        if (!creditCard.holderName || !creditCard.number || !creditCard.expiryMonth || 
+            !creditCard.expiryYear || !creditCard.ccv) {
+          toast.error('Preencha todos os dados do cartão');
+          setIsProcessing(false);
+          return;
+        }
+
+        if (!creditCardHolderInfo.name || !creditCardHolderInfo.email || !creditCardHolderInfo.cpfCnpj ||
+            !creditCardHolderInfo.postalCode || !creditCardHolderInfo.addressNumber || !creditCardHolderInfo.phone) {
+          toast.error('Preencha todos os dados do titular');
+          setIsProcessing(false);
+          return;
+        }
+
+        if (!selectedInstallment) {
+          toast.error('Selecione o número de parcelas');
+          setIsProcessing(false);
+          return;
+        }
+
+        // Obter IP do cliente
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        const remoteIp = ipData.ip;
+
+        // Validar dados do cartão antes de processar
+        const validationErrors = validateCardData();
+        if (validationErrors.length > 0) {
+          toast.error('Por favor, corrija os seguintes erros:');
+          validationErrors.forEach(error => toast.error(error));
+          setIsProcessing(false);
+          return;
+        }
+
+        // Atualizar checkout com informações de parcelamento
+        const updateData = {
+          payment_method: selectedPaymentMethod,
+          installment_count: selectedInstallment.count,
+          installment_value: selectedInstallment.value,
+          total_value: selectedInstallment.totalValue,
+        };
+
+        const { error: updateError } = await supabase
+          .schema('app_portfolio')
+          .from('checkouts')
+          .update(updateData)
+          .eq('id', checkout.id);
+
+        if (updateError) throw updateError;
+
+        // Processar pagamento com cartão de crédito
+        const { error: paymentError } = await supabase.functions.invoke('payment-api', {
+          body: {
+            action: 'create_credit_card_payment',
+            checkout_id: checkout.id,
+            creditCard: creditCard,
+            creditCardHolderInfo: creditCardHolderInfo,
+            remoteIp: remoteIp,
+            installmentCount: selectedInstallment.count,
+          }
+        });
+
+        if (paymentError) throw paymentError;
+
+        toast.success('Pagamento processado com sucesso!');
+        setShowConfirmDialog(false);
+        
+        // Atualizar dados do checkout
+        await fetchCheckout();
+        
+        // Redirecionar para página de sucesso
+        navigate(`/payment-success/${uniqueLink}`);
+        
+        setIsProcessing(false);
+        return;
+      }
+
+      // Para PIX e Boleto, manter a lógica existente
       const paymentMethodChanged = checkout.payment_method && checkout.payment_method !== selectedPaymentMethod;
       const hasExistingCharge = !!checkout.asaas_charge_id;
 
       if (paymentMethodChanged && hasExistingCharge) {
-        // Atualizar cobrança existente no Asaas
         const { error: updateError } = await supabase.functions.invoke('payment-api', {
           body: {
             action: 'update_payment',
@@ -152,19 +343,10 @@ export default function CheckoutPage() {
 
         toast.success('Método de pagamento atualizado!');
       } else {
-        // Atualizar checkout localmente
         const updateData: any = {
           status: 'payment_selected',
           payment_method: selectedPaymentMethod,
         };
-
-        if (selectedPaymentMethod === 'credit_card' && selectedInstallment) {
-          updateData.installment_count = selectedInstallment.count;
-          updateData.installment_value = selectedInstallment.value;
-          updateData.installment_interest_rate = selectedInstallment.interestRate || 0;
-          updateData.installment_interest_amount = selectedInstallment.interestAmount || 0;
-          updateData.total_value = selectedInstallment.totalValue;
-        }
 
         const { error } = await supabase
           .schema('app_portfolio')
@@ -183,21 +365,18 @@ export default function CheckoutPage() {
 
       setShowConfirmDialog(false);
       
-      // Atualizar dados do checkout após mudança
       await fetchCheckout();
 
-      // Se for PIX, verificar se já existe cobrança válida ou buscar QR Code
       if (selectedPaymentMethod === 'pix') {
         await handlePixPayment();
       }
 
-      // Se for boleto, buscar campo de identificação
       if (selectedPaymentMethod === 'boleto') {
         await handleBoletoPayment();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error confirming payment:', error);
-      toast.error('Erro ao confirmar pagamento');
+      toast.error(error.message || 'Erro ao confirmar pagamento');
     } finally {
       setIsProcessing(false);
     }
@@ -552,6 +731,163 @@ export default function CheckoutPage() {
                             </div>
                           </button>
                         ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-card border-white/10 mt-4">
+                    <CardHeader>
+                      <CardTitle className="text-white">Dados do Cartão</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label className="text-white">Nome Impresso no Cartão</Label>
+                        <Input
+                          value={creditCard.holderName}
+                          onChange={(e) => setCreditCard({ ...creditCard, holderName: e.target.value })}
+                          placeholder="Como está no cartão"
+                          className="mt-1 bg-white/5 border-white/10 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-white">Número do Cartão</Label>
+                        <Input
+                          value={formatCardNumber(creditCard.number)}
+                          onChange={(e) => setCreditCard({ ...creditCard, number: e.target.value.replace(/\D/g, '') })}
+                          placeholder="0000 0000 0000 0000"
+                          maxLength={19}
+                          className="mt-1 bg-white/5 border-white/10 text-white"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4">
+                        <div>
+                          <Label className="text-white">Mês</Label>
+                          <select
+                            value={creditCard.expiryMonth}
+                            onChange={(e) => setCreditCard({ ...creditCard, expiryMonth: e.target.value })}
+                            className="w-full mt-1 p-2 rounded bg-gray-800 border border-gray-600 text-white"
+                          >
+                            <option value="">Mês</option>
+                            {Array.from({ length: 12 }, (_, i) => (
+                              <option key={i + 1} value={String(i + 1).padStart(2, '0')}>
+                                {String(i + 1).padStart(2, '0')}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <Label className="text-white">Ano</Label>
+                          <select
+                            value={creditCard.expiryYear}
+                            onChange={(e) => setCreditCard({ ...creditCard, expiryYear: e.target.value })}
+                            className="w-full mt-1 p-2 rounded bg-gray-800 border border-gray-600 text-white"
+                          >
+                            <option value="">Ano</option>
+                            {Array.from({ length: 20 }, (_, i) => {
+                              const year = new Date().getFullYear() + i;
+                              return (
+                                <option key={year} value={String(year)}>
+                                  {year}
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
+
+                        <div>
+                          <Label className="text-white">CVV</Label>
+                          <Input
+                            value={creditCard.ccv}
+                            onChange={(e) => setCreditCard({ ...creditCard, ccv: e.target.value.replace(/\D/g, '') })}
+                            placeholder="123"
+                            maxLength={3}
+                            className="mt-1 bg-white/5 border-white/10 text-white"
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-card border-white/10 mt-4">
+                    <CardHeader>
+                      <CardTitle className="text-white">Dados do Titular</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div>
+                        <Label className="text-white">Nome Completo</Label>
+                        <Input
+                          value={creditCardHolderInfo.name}
+                          onChange={(e) => setCreditCardHolderInfo({ ...creditCardHolderInfo, name: e.target.value })}
+                          placeholder="Nome do titular"
+                          className="mt-1 bg-white/5 border-white/10 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-white">Email</Label>
+                        <Input
+                          type="email"
+                          value={creditCardHolderInfo.email}
+                          onChange={(e) => setCreditCardHolderInfo({ ...creditCardHolderInfo, email: e.target.value })}
+                          placeholder="email@exemplo.com"
+                          className="mt-1 bg-white/5 border-white/10 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-white">CPF/CNPJ</Label>
+                        <Input
+                          value={formatCPF(creditCardHolderInfo.cpfCnpj)}
+                          onChange={(e) => setCreditCardHolderInfo({ ...creditCardHolderInfo, cpfCnpj: e.target.value })}
+                          placeholder="000.000.000-00"
+                          maxLength={18}
+                          className="mt-1 bg-white/5 border-white/10 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-white">CEP</Label>
+                        <Input
+                          value={formatPostalCode(creditCardHolderInfo.postalCode)}
+                          onChange={(e) => setCreditCardHolderInfo({ ...creditCardHolderInfo, postalCode: e.target.value })}
+                          placeholder="00000-000"
+                          maxLength={9}
+                          className="mt-1 bg-white/5 border-white/10 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-white">Endereço e Número</Label>
+                        <Input
+                          value={creditCardHolderInfo.addressNumber}
+                          onChange={(e) => setCreditCardHolderInfo({ ...creditCardHolderInfo, addressNumber: e.target.value })}
+                          placeholder="Rua Exemplo, 123"
+                          className="mt-1 bg-white/5 border-white/10 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-white">Complemento (opcional)</Label>
+                        <Input
+                          value={creditCardHolderInfo.addressComplement}
+                          onChange={(e) => setCreditCardHolderInfo({ ...creditCardHolderInfo, addressComplement: e.target.value })}
+                          placeholder="Apto 101"
+                          className="mt-1 bg-white/5 border-white/10 text-white"
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-white">Telefone</Label>
+                        <Input
+                          value={formatPhone(creditCardHolderInfo.phone)}
+                          onChange={(e) => setCreditCardHolderInfo({ ...creditCardHolderInfo, phone: e.target.value })}
+                          placeholder="(11) 99999-9999"
+                          maxLength={15}
+                          className="mt-1 bg-white/5 border-white/10 text-white"
+                        />
                       </div>
                     </CardContent>
                   </Card>

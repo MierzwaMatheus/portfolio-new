@@ -332,6 +332,164 @@ serve(async (req) => {
         break
       }
 
+      case 'delete_payment': {
+        const { asaas_charge_id } = params
+
+        if (!asaas_charge_id) {
+          return new Response(
+            JSON.stringify({ error: 'asaas_charge_id não fornecido' }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 400,
+            }
+          )
+        }
+
+        // Deletar pagamento no Asaas
+        const deleteResponse = await fetch(
+          `${asaasBaseUrl}/payments/${asaas_charge_id}`,
+          {
+            method: 'DELETE',
+            headers: {
+              'accept': 'application/json',
+              'access_token': asaasToken,
+            },
+          }
+        )
+
+        if (!deleteResponse.ok) {
+          const error = await deleteResponse.json()
+          throw new Error(error.message || 'Erro ao deletar pagamento no Asaas')
+        }
+
+        result = {
+          success: true,
+          deleted: true,
+        }
+        break
+      }
+
+      case 'create_credit_card_payment': {
+        const {
+          checkout_id,
+          creditCard,
+          creditCardHolderInfo,
+          remoteIp,
+          installmentCount
+        } = params
+
+        if (!checkout_id || !creditCard || !creditCardHolderInfo || !remoteIp) {
+          return new Response(
+            JSON.stringify({ error: 'Parâmetros incompletos' }),
+            {
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+              status: 400,
+            }
+          )
+        }
+
+        // Buscar dados do checkout
+        const { data: checkoutData, error: checkoutError } = await supabase
+          .schema('app_portfolio')
+          .from('checkouts')
+          .select('*')
+          .eq('id', checkout_id)
+          .single()
+
+        if (checkoutError) {
+          throw new Error(`Erro ao buscar checkout: ${checkoutError.message}`)
+        }
+
+        const checkout = checkoutData
+
+        if (!checkout) {
+          throw new Error('Checkout não encontrado')
+        }
+
+        // Deletar cobrança existente se houver
+        if (checkout.asaas_charge_id) {
+          await fetch(
+            `${asaasBaseUrl}/payments/${checkout.asaas_charge_id}`,
+            {
+              method: 'DELETE',
+              headers: {
+                'accept': 'application/json',
+                'access_token': asaasToken,
+              },
+            }
+          )
+        }
+
+        // Criar pagamento com cartão de crédito
+        const paymentData: any = {
+          billingType: 'CREDIT_CARD',
+          customer: checkout.customer_id,
+          value: checkout.total_value || checkout.value,
+          dueDate: checkout.due_date,
+          description: checkout.description || '',
+          totalValue: checkout.total_value || checkout.value,
+          creditCard: creditCard,
+          creditCardHolderInfo: creditCardHolderInfo,
+          remoteIp: remoteIp,
+        }
+
+        // Adicionar informações de parcelamento se disponíveis
+        if (installmentCount) {
+          paymentData.installmentCount = installmentCount
+        }
+
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 120000) // 120 segundos
+
+        try {
+          const paymentResponse = await fetch(`${asaasBaseUrl}/payments`, {
+            method: 'POST',
+            headers: {
+              'accept': 'application/json',
+              'content-type': 'application/json',
+              'access_token': asaasToken,
+            },
+            body: JSON.stringify(paymentData),
+            signal: controller.signal,
+          })
+
+          clearTimeout(timeoutId)
+
+          if (!paymentResponse.ok) {
+            const error = await paymentResponse.json()
+            throw new Error(error.message || 'Erro ao criar pagamento com cartão de crédito')
+          }
+
+          const payment = await paymentResponse.json()
+
+          // Atualizar checkout com novo ID da cobrança
+          const { error: updateCheckoutError } = await supabase
+            .schema('app_portfolio')
+            .from('checkouts')
+            .update({
+              asaas_charge_id: payment.id,
+              status: 'paid',
+            })
+            .eq('id', checkout_id)
+
+          if (updateCheckoutError) {
+            throw new Error(`Erro ao atualizar checkout: ${updateCheckoutError.message}`)
+          }
+
+          result = {
+            success: true,
+            payment: payment,
+          }
+        } catch (error: any) {
+          clearTimeout(timeoutId)
+          if (error.name === 'AbortError') {
+            throw new Error('Timeout ao processar pagamento com cartão de crédito')
+          }
+          throw error
+        }
+        break
+      }
+
       default:
         return new Response(
           JSON.stringify({ error: 'Ação não suportada' }),

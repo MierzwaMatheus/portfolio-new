@@ -27,6 +27,7 @@ import Proposal from "./pages/Proposal";
 import ProposalAccept from "./pages/ProposalAccept";
 import About from "./pages/About";
 import Checkout from "./pages/Checkout";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Layout } from "./components/Layout";
@@ -123,6 +124,11 @@ function Router() {
         <Route path="/checkout/:uniqueLink">
           <PublicRoute>
             <Checkout />
+          </PublicRoute>
+        </Route>
+        <Route path="/payment-success/:uniqueLink">
+          <PublicRoute>
+            <PaymentSuccess />
           </PublicRoute>
         </Route>
         <Route path="/404" component={NotFound} />
