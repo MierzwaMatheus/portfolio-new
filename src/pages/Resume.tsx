@@ -1,68 +1,15 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Briefcase, GraduationCap, Code, Languages, Award, Heart, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
+import { Briefcase, GraduationCap, Code, Languages, Award, Heart } from "lucide-react";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
-import { useI18n } from "@/i18n/context/I18nContext";
-
-// Types
-interface ResumeItem {
-  id: string;
-  type: string;
-  content: any;
-  content_translations?: {
-    'pt-BR'?: any;
-    'en-US'?: any;
-  };
-  order_index: number;
-}
+import { useResume } from "@/hooks/useResume";
+import { resumeRepository } from "@/repositories/instances";
 
 export default function Resume() {
   const { t } = useTranslation();
-  const { locale } = useI18n();
-  const [items, setItems] = useState<ResumeItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Helper function to get translated content based on locale
-  const getTranslatedContent = (item: ResumeItem): any => {
-    if (!item.content_translations) {
-      return item.content;
-    }
-    
-    // Tenta usar a tradução para o locale atual, depois pt-BR como fallback, depois content original
-    return item.content_translations[locale as 'pt-BR' | 'en-US'] 
-      || item.content_translations['pt-BR'] 
-      || item.content;
-  };
-
-  useEffect(() => {
-    fetchItems();
-  }, []); // Busca apenas uma vez na montagem do componente
-
-  const fetchItems = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .schema("app_portfolio")
-        .from("resume_items")
-        .select("*")
-        .order("order_index", { ascending: true });
-
-      if (error) throw error;
-      setItems(data || []);
-    } catch (error) {
-      console.error("Error fetching items:", error);
-      toast.error("Erro ao carregar dados do currículo");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const getItemsByType = (type: string) => items.filter(i => i.type === type).sort((a, b) => a.order_index - b.order_index);
+  const { items, getItemsByType, isLoading } = useResume(resumeRepository);
 
   if (isLoading) {
     return <PageSkeleton />;
@@ -129,7 +76,7 @@ export default function Resume() {
                     </div>
                   ) : (
                     experience.map((item, index) => {
-                      const content = getTranslatedContent(item);
+                      const content = item.translatedContent;
                       return (
                         <motion.div
                           key={item.id}
@@ -192,7 +139,7 @@ export default function Resume() {
                     </div>
                   ) : (
                     education.map((item, index) => {
-                      const content = getTranslatedContent(item);
+                      const content = item.translatedContent;
                       return (
                         <motion.div
                           key={item.id}
@@ -242,7 +189,7 @@ export default function Resume() {
                     ))
                   ) : (
                     courses.map((item, index) => {
-                      const content = getTranslatedContent(item);
+                      const content = item.translatedContent;
                       return (
                         <motion.div
                           key={item.id}
@@ -281,7 +228,7 @@ export default function Resume() {
                     ))
                   ) : (
                     volunteer.map((item, index) => {
-                      const content = getTranslatedContent(item);
+                      const content = item.translatedContent;
                       return (
                         <motion.div
                           key={item.id}
@@ -328,7 +275,7 @@ export default function Resume() {
                     ))
                   ) : (
                     skills.map((item, index) => {
-                      const content = getTranslatedContent(item);
+                      const content = item.translatedContent;
                       return (
                         <motion.div
                           key={item.id}
@@ -378,7 +325,7 @@ export default function Resume() {
                     ))
                   ) : (
                     softSkills.map((item, index) => {
-                      const content = getTranslatedContent(item);
+                      const content = item.translatedContent;
                       return (
                         <motion.div
                           key={item.id}
@@ -419,7 +366,7 @@ export default function Resume() {
                     ))
                   ) : (
                     languages.map((item, index) => {
-                      const content = getTranslatedContent(item);
+                      const content = item.translatedContent;
                       return (
                         <motion.div
                           key={item.id}

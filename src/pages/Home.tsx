@@ -1,5 +1,5 @@
 import { PageSkeleton } from "@/components/PageSkeleton";
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import {
   Code,
@@ -13,25 +13,14 @@ import {
 } from "lucide-react";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useI18n } from "@/i18n/context/I18nContext";
-import { supabase } from "@/lib/supabase";
+import { useHome } from "@/hooks/useHome";
+import { homeRepository } from "@/repositories/instances";
 import { useMatrixText } from "@/hooks/useMatrixText";
-
-interface ContactInfo {
-  role: string;
-  role_translations?: {
-    'pt-BR'?: string;
-    'en-US'?: string;
-  };
-}
 
 export default function Home() {
   const { t, tValue } = useTranslation();
-  const { locale, isLoading: i18nLoading } = useI18n();
-  const [isLoading, setIsLoading] = useState(true);
-  const [aboutDataRaw, setAboutDataRaw] = useState<any>(null);
-  const [servicesRaw, setServicesRaw] = useState<any[]>([]);
-  const [testimonialsRaw, setTestimonialsRaw] = useState<any[]>([]);
-  const [contactInfo, setContactInfo] = useState<ContactInfo | null>(null);
+  const { isLoading: i18nLoading } = useI18n();
+  const { contactRole, aboutText, services, testimonials, isLoading } = useHome(homeRepository);
 
   const matrixAboutText = useMatrixText({
     text: 'Carregando informações do perfil...\n\nSincronizando dados do banco de dados, processando traduções e preparando experiência personalizada. Por favor, aguarde enquanto o sistema carrega todas as informações.',
@@ -45,109 +34,12 @@ export default function Home() {
     chars: '!@#$%^&*()_+-=[]{}|;:,.<>?~ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
   });
 
-  // Deriva role traduzido baseado no locale atual (sem refetch)
-  const contactRole = useMemo(() => {
-    if (!contactInfo) return t('home.subtitle');
-    // Extrai role traduzido baseado no locale atual
-    const translatedRole = contactInfo.role_translations?.[locale] || contactInfo.role_translations?.['pt-BR'] || contactInfo.role || '';
-    return translatedRole || t('home.subtitle');
-  }, [contactInfo, locale, t]);
+  // Fallback para contactRole se não houver dados
+  const displayContactRole = contactRole || t('home.subtitle');
 
-  // Busca dados apenas uma vez na montagem do componente
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Fetch Contact Info - busca role_translations também
-        const { data: contactData, error: contactError } = await supabase
-          .schema('app_portfolio')
-          .from('contact_info')
-          .select('role, role_translations')
-          .single();
-        if (contactError) {
-          console.error("Error fetching contact info:", contactError);
-        } else if (contactData) {
-          setContactInfo(contactData as any);
-        }
-
-        // Fetch About - mantém o JSONB completo
-        const { data: aboutData, error: aboutError } = await supabase
-          .schema('app_portfolio')
-          .from('content')
-          .select('value')
-          .eq('key', 'about_text')
-          .single();
-        
-        if (aboutError) {
-          console.error("Error fetching about:", aboutError);
-        } else if (aboutData) {
-          setAboutDataRaw(aboutData.value);
-        }
-
-        // Fetch Services - mantém dados brutos com JSONB completo
-        const { data: servicesData, error: servicesError } = await supabase
-          .schema('app_portfolio')
-          .from('services')
-          .select('id, title, description, title_translations, description_translations, created_at')
-          .order('created_at');
-        
-        if (servicesError) {
-          console.error("Error fetching services:", servicesError);
-        } else if (servicesData) {
-          setServicesRaw(servicesData);
-        }
-
-        // Fetch Testimonials - mantém dados brutos com JSONB completo
-        const { data: testimonialsData, error: testimonialsError } = await supabase
-          .schema('app_portfolio')
-          .from('testimonials')
-          .select('id, name, role, text, text_translations, image_url, created_at')
-          .order('created_at');
-        
-        if (testimonialsError) {
-          console.error("Error fetching testimonials:", testimonialsError);
-        } else if (testimonialsData) {
-          setTestimonialsRaw(testimonialsData);
-        }
-      } catch (error) {
-        console.error("Unexpected error fetching data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    if (!i18nLoading) {
-      fetchData();
-    }
-  }, [i18nLoading]); // Removido locale das dependências
-
-  // Deriva aboutText baseado no locale atual (sem fazer fetch)
-  const aboutText = (() => {
-    if (!aboutDataRaw) return '';
-    if (typeof aboutDataRaw === 'object' && aboutDataRaw !== null) {
-      return aboutDataRaw[locale] || aboutDataRaw['pt-BR'] || '';
-    }
-    return typeof aboutDataRaw === 'string' ? aboutDataRaw : '';
-  })();
-
-  // Deriva services traduzidos baseado no locale atual (sem fazer fetch)
-  const services = servicesRaw.map(service => ({
-    id: service.id,
-    title: service.title_translations?.[locale] || service.title_translations?.['pt-BR'] || service.title || '',
-    description: service.description_translations?.[locale] || service.description_translations?.['pt-BR'] || service.description || '',
-    created_at: service.created_at,
-  }));
-
-  // Deriva testimonials traduzidos baseado no locale atual (sem fazer fetch)
-  const testimonials = testimonialsRaw.map(testimonial => ({
-    id: testimonial.id,
-    name: testimonial.name,
-    role: testimonial.role,
-    text: testimonial.text_translations?.[locale] || testimonial.text_translations?.['pt-BR'] || testimonial.text || '',
-    image_url: testimonial.image_url,
-    created_at: testimonial.created_at,
-  }));
-
-  // Remove early return - renderiza conteúdo estático imediatamente
+  if (isLoading || i18nLoading) {
+    return <PageSkeleton />;
+  }
 
   const container = {
     hidden: { opacity: 0 },
@@ -190,7 +82,7 @@ export default function Home() {
             </h1>
 
             <h2 className="text-2xl md:text-3xl mt-4 text-gray-400 font-light">
-              {contactRole}
+              {displayContactRole}
             </h2>
 
             <p className="max-w-2xl mt-8 text-gray-300 text-lg leading-relaxed border-l-2 border-neon-purple/50 pl-6">

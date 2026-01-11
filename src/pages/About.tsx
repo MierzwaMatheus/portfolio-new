@@ -1,109 +1,21 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Code, HelpCircle } from "lucide-react";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useI18n } from "@/i18n/context/I18nContext";
-import { supabase } from "@/lib/supabase";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useMobile";
-
-interface DailyRoutineItem {
-  id: string;
-  image_url: string;
-  tags: string[];
-  description: string;
-  description_translations?: {
-    'pt-BR'?: string;
-    'en-US'?: string;
-  };
-  span_size: '1x1' | '1x2' | '2x1' | '2x2';
-  display_order: number;
-}
-
-interface FAQItem {
-  id: string;
-  question: string;
-  question_translations?: {
-    'pt-BR'?: string;
-    'en-US'?: string;
-  };
-  answer: string;
-  answer_translations?: {
-    'pt-BR'?: string;
-    'en-US'?: string;
-  };
-  display_order: number;
-}
+import { useAbout } from "@/hooks/useAbout";
+import { aboutRepository } from "@/repositories/instances";
 
 export default function About() {
   const { t } = useTranslation();
-  const { locale, isLoading: i18nLoading } = useI18n();
+  const { isLoading: i18nLoading } = useI18n();
   const isMobile = useIsMobile();
-  const [isLoading, setIsLoading] = useState(true);
-  const [dailyRoutineRaw, setDailyRoutineRaw] = useState<any[]>([]);
-  const [faqRaw, setFaqRaw] = useState<any[]>([]);
+  const { dailyRoutine, faq, isLoading } = useAbout(aboutRepository);
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
-
-  // Deriva daily routine traduzido baseado no locale atual
-  const dailyRoutine = useMemo(() => {
-    return dailyRoutineRaw.map((item) => ({
-      ...item,
-      description: item.description_translations?.[locale] || item.description_translations?.['pt-BR'] || item.description || '',
-    }));
-  }, [dailyRoutineRaw, locale]);
-
-  // Deriva FAQ traduzido baseado no locale atual
-  const faq = useMemo(() => {
-    return faqRaw.map((item) => ({
-      ...item,
-      question: item.question_translations?.[locale] || item.question_translations?.['pt-BR'] || item.question || '',
-      answer: item.answer_translations?.[locale] || item.answer_translations?.['pt-BR'] || item.answer || '',
-    }));
-  }, [faqRaw, locale]);
-
-  useEffect(() => {
-    if (i18nLoading) return;
-
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-
-        // Fetch Daily Routine Items
-        const { data: dailyData, error: dailyError } = await supabase
-          .schema('app_portfolio')
-          .from('daily_routine_items')
-          .select('id, image_url, tags, description, description_translations, span_size, display_order')
-          .order('display_order', { ascending: true });
-
-        if (dailyError) {
-          console.error("Error fetching daily routine:", dailyError);
-        } else if (dailyData) {
-          setDailyRoutineRaw(dailyData);
-        }
-
-        // Fetch FAQ Items
-        const { data: faqData, error: faqError } = await supabase
-          .schema('app_portfolio')
-          .from('faq_items')
-          .select('id, question, question_translations, answer, answer_translations, display_order')
-          .order('display_order', { ascending: true });
-
-        if (faqError) {
-          console.error("Error fetching FAQ:", faqError);
-        } else if (faqData) {
-          setFaqRaw(faqData);
-        }
-      } catch (error) {
-        console.error("Unexpected error fetching data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [i18nLoading]);
 
   const getSpanClasses = (spanSize: string) => {
     switch (spanSize) {

@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { supabase } from "@/lib/supabase";
 import { Link } from "wouter";
 import { useI18n } from "@/i18n/context/I18nContext";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
+import { useBlogPosts } from "@/hooks/useBlog";
+import { blogRepository } from "@/repositories/instances";
 import {
   Carousel,
   CarouselContent,
@@ -21,45 +22,18 @@ import {
 
 export default function Blog() {
   const { t } = useTranslation();
-  const { locale, isLoading: i18nLoading } = useI18n();
-  const [isLoading, setIsLoading] = useState(true);
+  const { isLoading: i18nLoading } = useI18n();
+  const { posts, featuredPosts, isLoading } = useBlogPosts(blogRepository);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [postsRaw, setPostsRaw] = useState<any[]>([]); // Dados brutos com JSONB
-  const [featuredPostsRaw, setFeaturedPostsRaw] = useState<any[]>([]); // Dados brutos com JSONB
-
-  // Deriva posts traduzidos baseados no locale atual (sem refetch)
-  const posts = useMemo(() => {
-    return postsRaw.map((post) => ({
-      ...post,
-      title: post.title_translations?.[locale] || post.title_translations?.['pt-BR'] || post.title || '',
-      subtitle: post.subtitle_translations?.[locale] || post.subtitle_translations?.['pt-BR'] || post.subtitle || '',
-      content: post.content_translations?.[locale] || post.content_translations?.['pt-BR'] || post.content || '',
-    }));
-  }, [postsRaw, locale]);
-
-  const featuredPosts = useMemo(() => {
-    return featuredPostsRaw.map((post) => ({
-      ...post,
-      title: post.title_translations?.[locale] || post.title_translations?.['pt-BR'] || post.title || '',
-      subtitle: post.subtitle_translations?.[locale] || post.subtitle_translations?.['pt-BR'] || post.subtitle || '',
-      content: post.content_translations?.[locale] || post.content_translations?.['pt-BR'] || post.content || '',
-    }));
-  }, [featuredPostsRaw, locale]);
-
-  useEffect(() => {
-    if (!i18nLoading) {
-      fetchPosts();
-    }
-  }, [i18nLoading]); // Removido locale das dependências - dados já vêm com JSONB completo
 
   // Preload da primeira imagem crítica (featured post)
   useEffect(() => {
-    if (featuredPostsRaw.length > 0 && featuredPostsRaw[0]?.image) {
+    if (featuredPosts.length > 0 && featuredPosts[0]?.image) {
       const link = document.createElement('link');
       link.rel = 'preload';
       link.as = 'image';
-      link.href = featuredPostsRaw[0].image;
+      link.href = featuredPosts[0].image;
       document.head.appendChild(link);
       
       return () => {
@@ -68,42 +42,7 @@ export default function Blog() {
         }
       };
     }
-  }, [featuredPostsRaw]);
-
-  const fetchPosts = async () => {
-    try {
-      setIsLoading(true);
-      
-      const { data, error } = await supabase
-        .schema('app_portfolio')
-        .from('posts')
-        .select('id, title, subtitle, content, title_translations, subtitle_translations, content_translations, image, featured, status, created_at, published_at, tags, slug')
-        .eq('status', 'published')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      if (data && data.length > 0) {
-        // Find all featured posts
-        const featured = data.filter((p: any) => p.featured === true);
-        
-        // Set featured posts for carousel
-        setFeaturedPostsRaw(featured || []);
-        
-        // Set ALL posts for the main list (including featured)
-        setPostsRaw(data);
-      } else {
-        setFeaturedPostsRaw([]);
-        setPostsRaw([]);
-      }
-    } catch (error: any) {
-      console.error('Error fetching posts:', error);
-      setFeaturedPostsRaw([]);
-      setPostsRaw([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [featuredPosts]);
 
   // Coletar todas as tags únicas dos posts
   const allTags = useMemo(() => {

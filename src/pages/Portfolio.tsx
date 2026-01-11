@@ -9,37 +9,17 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { useI18n } from "@/i18n/context/I18nContext";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
-import { supabase } from "@/lib/supabase";
-
-interface Project {
-  id: number;
-  title: string;
-  description: string;
-  long_description: string;
-  tags: string[];
-  images: string[];
-  demo_link: string;
-  github_link: string;
-}
+import { usePortfolio } from "@/hooks/usePortfolio";
+import { portfolioRepository } from "@/repositories/instances";
+import { Project } from "@/repositories/interfaces/PortfolioRepository";
 
 export default function Portfolio() {
   const { t } = useTranslation();
-  const { locale, isLoading: i18nLoading } = useI18n();
-  const [isLoading, setIsLoading] = useState(true);
+  const { isLoading: i18nLoading } = useI18n();
+  const { projects, isLoading } = usePortfolio(portfolioRepository);
   const [activeFilter, setActiveFilter] = useState(t('portfolio.all'));
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [projectsRaw, setProjectsRaw] = useState<any[]>([]); // Dados brutos com JSONB
   const [expandedImage, setExpandedImage] = useState<{ url: string; index: number; images: string[] } | null>(null);
-
-  // Deriva projetos traduzidos baseados no locale atual (sem refetch)
-  const projects = useMemo(() => {
-    return projectsRaw.map((project) => ({
-      ...project,
-      title: project.title_translations?.[locale] || project.title_translations?.['pt-BR'] || project.title || '',
-      description: project.description_translations?.[locale] || project.description_translations?.['pt-BR'] || project.description || '',
-      long_description: project.long_description_translations?.[locale] || project.long_description_translations?.['pt-BR'] || project.long_description || '',
-    }));
-  }, [projectsRaw, locale]);
 
   // Navegação por teclado para as imagens expandidas
   useEffect(() => {
@@ -77,30 +57,6 @@ export default function Portfolio() {
     };
   }, [expandedImage]);
 
-  const fetchProjects = async () => {
-    try {
-      // Busca dados brutos com JSONB completo
-      const { data, error } = await supabase
-        .schema('app_portfolio')
-        .from('projects')
-        .select('id, title, description, long_description, title_translations, description_translations, long_description_translations, tags, images, demo_link, github_link, order_index')
-        .order('order_index', { ascending: true, nullsFirst: false });
-
-      if (error) throw error;
-
-      setProjectsRaw(data || []);
-    } catch (error) {
-      console.error('Error fetching projects:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!i18nLoading) {
-      fetchProjects();
-    }
-  }, [i18nLoading]); // Removido locale das dependências - dados já vêm com JSONB completo
 
   // Extrai todas as tags únicas dos projetos e ordena alfabeticamente
   const availableTags = useMemo(() => {

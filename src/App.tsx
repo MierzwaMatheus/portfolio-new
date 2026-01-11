@@ -32,6 +32,7 @@ import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Layout } from "./components/Layout";
 import { PublicRoute } from "./components/PublicRoute";
+import { QueryProvider } from "./providers/QueryProvider";
 
 function Router() {
   const [location] = useLocation();
@@ -141,18 +142,20 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <I18nProvider>
-        <ThemeProvider defaultTheme="dark">
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-            <Analytics />
-            <SpeedInsights />
-          </TooltipProvider>
-        </ThemeProvider>
-        </I18nProvider>
-      </AuthProvider>
+      <QueryProvider>
+        <AuthProvider>
+          <I18nProvider>
+            <ThemeProvider defaultTheme="dark">
+              <TooltipProvider>
+                <Toaster />
+                <Router />
+                <Analytics />
+                <SpeedInsights />
+              </TooltipProvider>
+            </ThemeProvider>
+          </I18nProvider>
+        </AuthProvider>
+      </QueryProvider>
     </ErrorBoundary>
   );
 }

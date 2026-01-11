@@ -1,7 +1,5 @@
 import { PageSkeleton } from "@/components/PageSkeleton";
-import { useState, useEffect, useMemo } from "react";
 import { useRoute } from "wouter";
-import { supabase } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,50 +7,14 @@ import { Link } from "wouter";
 import { motion } from "framer-motion";
 import { useI18n } from "@/i18n/context/I18nContext";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
+import { useBlogPost } from "@/hooks/useBlog";
+import { blogRepository } from "@/repositories/instances";
 
 export default function BlogPost() {
     const { t } = useTranslation();
-    const { locale, isLoading: i18nLoading } = useI18n();
+    const { isLoading: i18nLoading } = useI18n();
     const [match, params] = useRoute("/blog/:slug");
-    const [postRaw, setPostRaw] = useState<any>(null);
-    const [isLoading, setIsLoading] = useState(true);
-
-    // Deriva post traduzido baseado no locale atual (sem refetch)
-    const post = useMemo(() => {
-        if (!postRaw) return null;
-        return {
-            ...postRaw,
-            title: postRaw.title_translations?.[locale] || postRaw.title_translations?.['pt-BR'] || postRaw.title || '',
-            subtitle: postRaw.subtitle_translations?.[locale] || postRaw.subtitle_translations?.['pt-BR'] || postRaw.subtitle || '',
-            content: postRaw.content_translations?.[locale] || postRaw.content_translations?.['pt-BR'] || postRaw.content || '',
-        };
-    }, [postRaw, locale]);
-
-    useEffect(() => {
-        if (params?.slug && !i18nLoading) {
-            fetchPost(params.slug);
-        }
-    }, [params?.slug, i18nLoading]); // Removido locale das dependências - dados já vêm com JSONB completo
-
-    const fetchPost = async (slug: string) => {
-        try {
-            setIsLoading(true);
-            const { data, error } = await supabase
-                .schema('app_portfolio')
-                .from('posts')
-                .select('id, title, subtitle, content, title_translations, subtitle_translations, content_translations, image, featured, status, created_at, published_at, tags, slug')
-                .eq('slug', slug)
-                .eq('status', 'published')
-                .single();
-
-            if (error) throw error;
-            setPostRaw(data);
-        } catch (error) {
-            console.error('Error fetching post:', error);
-        } finally {
-            setIsLoading(false);
-        }
-    };
+    const { post, isLoading } = useBlogPost(blogRepository, params?.slug || '');
 
     if (isLoading || i18nLoading) {
         return <PageSkeleton />;
