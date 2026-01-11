@@ -77,16 +77,29 @@ serve(async (req) => {
           throw new Error('Checkout não está pronto para pagamento')
         }
 
-        if (checkout.payment_method !== 'pix') {
-          throw new Error('Método de pagamento inválido')
+        // Para boleto, garantir que due_date seja pelo menos 2 dias após a data atual
+        let adjustedDueDate = checkout.due_date
+        if (checkout.payment_method === 'boleto') {
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+          
+          const minDueDate = new Date(today)
+          minDueDate.setDate(today.getDate() + 2)
+          
+          const currentDueDate = new Date(checkout.due_date)
+          
+          if (currentDueDate < minDueDate) {
+            adjustedDueDate = minDueDate.toISOString().split('T')[0]
+          }
         }
 
         // Criar pagamento no Asaas
         const paymentData = {
-          billingType: 'PIX',
+          billingType: checkout.payment_method === 'pix' ? 'PIX' : 
+                        checkout.payment_method === 'boleto' ? 'BOLETO' : 'CREDIT_CARD',
           customer: checkout.customer_id,
           value: checkout.value,
-          dueDate: checkout.due_date,
+          dueDate: adjustedDueDate,
           description: checkout.description || '',
           externalReference: checkout.unique_link,
         }
@@ -238,11 +251,27 @@ serve(async (req) => {
           throw new Error('Método de pagamento inválido')
         }
 
+        // Para boleto, garantir que due_date seja pelo menos 2 dias após a data atual
+        let adjustedDueDate = due_date
+        if (billing_type === 'boleto') {
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+          
+          const minDueDate = new Date(today)
+          minDueDate.setDate(today.getDate() + 2)
+          
+          const currentDueDate = new Date(due_date)
+          
+          if (currentDueDate < minDueDate) {
+            adjustedDueDate = minDueDate.toISOString().split('T')[0]
+          }
+        }
+
         // Atualizar pagamento no Asaas
         const updateData = {
           billingType: asaasBillingType,
           value: value,
-          dueDate: due_date,
+          dueDate: adjustedDueDate,
         }
 
         const updateResponse = await fetch(
