@@ -23,14 +23,10 @@ export default function Blog() {
   const { t } = useTranslation();
   const { locale, isLoading: i18nLoading } = useI18n();
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [postsRaw, setPostsRaw] = useState<any[]>([]); // Dados brutos com JSONB
   const [featuredPostsRaw, setFeaturedPostsRaw] = useState<any[]>([]); // Dados brutos com JSONB
-  const [postsPage, setPostsPage] = useState(0);
-  const [hasMorePosts, setHasMorePosts] = useState(true);
-  const POSTS_PER_PAGE = 2;
 
   // Deriva posts traduzidos baseados no locale atual (sem refetch)
   const posts = useMemo(() => {
@@ -74,25 +70,16 @@ export default function Blog() {
     }
   }, [featuredPostsRaw]);
 
-  const fetchPosts = async (page: number = 0, append: boolean = false) => {
+  const fetchPosts = async () => {
     try {
-      if (!append) {
-        setIsLoading(true);
-      } else {
-        setIsLoadingMore(true);
-      }
+      setIsLoading(true);
       
-      const from = page * POSTS_PER_PAGE;
-      const to = from + POSTS_PER_PAGE - 1;
-      
-      // Buscar posts paginados
       const { data, error } = await supabase
         .schema('app_portfolio')
         .from('posts')
         .select('id, title, subtitle, content, title_translations, subtitle_translations, content_translations, image, featured, status, created_at, published_at, tags, slug')
         .eq('status', 'published')
-        .order('created_at', { ascending: false })
-        .range(from, to);
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
@@ -100,36 +87,21 @@ export default function Blog() {
         // Find all featured posts
         const featured = data.filter((p: any) => p.featured === true);
         
-        // Filter out all featured posts from the main list
-        const featuredIds = featured.map((p: any) => p.id);
-        const otherPosts = data.filter((p: any) => !featuredIds.includes(p.id));
+        // Set featured posts for carousel
+        setFeaturedPostsRaw(featured || []);
         
-        if (append) {
-          setPostsRaw(prev => [...prev, ...otherPosts]);
-        } else {
-          setFeaturedPostsRaw(featured || []);
-          setPostsRaw(otherPosts);
-        }
-        
-        // Se retornou a quantidade máxima, pode haver mais posts
-        setHasMorePosts(data.length === POSTS_PER_PAGE);
+        // Set ALL posts for the main list (including featured)
+        setPostsRaw(data);
       } else {
-        if (!append) {
-          setFeaturedPostsRaw([]);
-          setPostsRaw([]);
-        }
-        setHasMorePosts(false);
-      }
-    } catch (error: any) {
-      console.error('Error fetching posts:', error);
-      if (!append) {
         setFeaturedPostsRaw([]);
         setPostsRaw([]);
       }
-      setHasMorePosts(false);
+    } catch (error: any) {
+      console.error('Error fetching posts:', error);
+      setFeaturedPostsRaw([]);
+      setPostsRaw([]);
     } finally {
       setIsLoading(false);
-      setIsLoadingMore(false);
     }
   };
 
@@ -162,12 +134,6 @@ export default function Blog() {
         ? prev.filter(t => t !== tag)
         : [...prev, tag]
     );
-  };
-
-  const handleLoadMore = () => {
-    const nextPage = postsPage + 1;
-    setPostsPage(nextPage);
-    fetchPosts(nextPage, true);
   };
 
   const clearTagFilters = () => {
@@ -455,18 +421,6 @@ export default function Blog() {
               ))
             )}
           </div>
-          
-          {hasMorePosts && (
-            <div className="flex justify-center pt-6">
-              <Button
-                onClick={handleLoadMore}
-                disabled={isLoadingMore}
-                className="bg-neon-purple hover:bg-neon-purple/90 text-white px-8"
-              >
-                {isLoadingMore ? t('blog.loading') : t('blog.loadMore')}
-              </Button>
-            </div>
-          )}
         </motion.div>
       </motion.div>
   );
