@@ -167,7 +167,7 @@ export default function Portfolio() {
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button
-                        className="w-full bg-white/5 hover:bg-neon-purple hover:text-white text-white border border-white/10 transition-all duration-300 group-hover:border-neon-purple/50"
+                        className="w-full bg-white/5 hover:bg-neon-purple hover:text-white text-neon-lime border border-white/10 transition-all duration-300 group-hover:border-neon-purple/50"
                         onClick={() => setSelectedProject(project)}
                       >
                         {t('portfolio.details')}
