@@ -24,9 +24,9 @@ export const enUS = {
     contact: "Contact",
   },
   home: {
-    greeting: "Hello, World!",
+    greeting: "whoami",
     title: "Hi! I'm",
-    subtitle: "Tech Lead Frontend & Full-Stack Engineer",
+    subtitle: "> Tech Lead Frontend & FuHome.tsx:69ll-Stack Engineer",
     about: {
       title: " About me ",
       loading: "Loading about me...",
@@ -51,7 +51,7 @@ export const enUS = {
     title: "Portfolio",
     subtitle: "A selection of my recent works",
     all: "All",
-    details: "View Details",
+    details: "$ view --details",
     noImage: "No image",
     noImages: "No images available",
     projectLinks: "Project Links",

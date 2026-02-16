@@ -24,9 +24,9 @@ export const ptBR = {
     contact: "Contato",
   },
   home: {
-    greeting: "Hello, World!",
+    greeting: "whoami",
     title: "Oi! Eu sou o",
-    subtitle: "Tech Lead Frontend & Engenheiro Full-Stack",
+    subtitle: "> Tech Lead Frontend & Engenheiro Full-Stack",
     about: {
       title: " Sobre mim ",
       loading: "Carregando sobre mim...",
@@ -51,7 +51,7 @@ export const ptBR = {
     title: "Portfólio",
     subtitle: "Uma seleção dos meus trabalhos recentes",
     all: "Todos",
-    details: "Ver Detalhes",
+    details: "$ view --details",
     noImage: "Sem imagem",
     noImages: "Sem imagens disponíveis",
     projectLinks: "Links do Projeto",
