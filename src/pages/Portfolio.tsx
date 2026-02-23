@@ -1,7 +1,7 @@
 import { PageSkeleton } from "@/components/PageSkeleton";
-import { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { FolderOpen, ExternalLink, Github, Layers, ZoomIn, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
+import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
+import { ExternalLink, Github, ZoomIn, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
@@ -13,340 +13,404 @@ import { usePortfolio } from "@/hooks/usePortfolio";
 import { portfolioRepository } from "@/repositories/instances";
 import { Project } from "@/repositories/interfaces/PortfolioRepository";
 
+/* ─────────────── OXYZ3-style 3D Tilt Card ─────────────── */
+function TiltCard({ project, index, t }: {
+  project: Project;
+  index: number;
+  t: (key: string) => string;
+}) {
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const rotateX = useMotionValue(0);
+  const rotateY = useMotionValue(0);
+
+  const springRotateX = useSpring(rotateX, { stiffness: 150, damping: 20 });
+  const springRotateY = useSpring(rotateY, { stiffness: 150, damping: 20 });
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const card = cardRef.current;
+    if (!card) return;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    // max ±12 deg
+    rotateY.set(((x - centerX) / centerX) * 12);
+    rotateX.set(((centerY - y) / centerY) * 12);
+  }, [rotateX, rotateY]);
+
+  const handleMouseLeave = useCallback(() => {
+    rotateX.set(0);
+    rotateY.set(0);
+  }, [rotateX, rotateY]);
+
+  // Stable coordinate labels per card
+  const coord = useMemo(() => ({
+    tl: `[${String(index).padStart(2, "0")}]`,
+    tr: `x${Math.floor(Math.random() * 90 + 10)}`,
+    bl: `y${Math.floor(Math.random() * 90 + 10)}`,
+    br: `z${Math.floor(Math.random() * 90 + 10)}`,
+  }), [index]);
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 30 }}
+      transition={{ duration: 0.4, delay: index * 0.08 }}
+      className="w-full"
+      style={{ perspective: 2000 }}
+    >
+      <motion.div
+        ref={cardRef}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{
+          rotateX: springRotateX,
+          rotateY: springRotateY,
+          transformStyle: "preserve-3d",
+          willChange: "transform",
+        }}
+        onClick={() => setDialogOpen(true)}
+        className="relative w-full aspect-[16/10] cursor-pointer group overflow-visible"
+      >
+        {/* ── Layer 0: Background image ── */}
+        <div
+          className="absolute inset-0 rounded-[6px] overflow-hidden border border-border-default"
+          style={{ transform: "translateZ(0px)" }}
+        >
+          {project.images && project.images.length > 0 ? (
+            <img
+              src={project.images[0]}
+              alt={project.title}
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+            />
+          ) : (
+            <div className="w-full h-full bg-surface-elevated flex items-center justify-center text-text-muted font-mono text-sm">
+              {t("portfolio.noImage")}
+            </div>
+          )}
+
+          {/* Hover grid overlay (like OXYZ3 grid on hover) */}
+          <div
+            className="absolute inset-0 opacity-0 group-hover:opacity-[0.08] transition-opacity duration-300 pointer-events-none"
+            style={{
+              backgroundImage: `
+                linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)
+              `,
+              backgroundSize: "40px 40px",
+            }}
+          />
+
+          {/* Vignette / gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A]/90 via-[#0A0A0A]/30 to-transparent opacity-70 group-hover:opacity-50 transition-opacity duration-500" />
+        </div>
+
+        {/* ── Corner labels (layer Z=50px) — visible on hover ── */}
+        <div style={{ transform: "translateZ(50px)", transformStyle: "preserve-3d" }} className="absolute inset-0 pointer-events-none">
+          <span className="absolute top-3 left-3 text-[10px] font-mono text-text-muted/60 group-hover:text-accent-green transition-colors duration-300 opacity-0 group-hover:opacity-100">
+            {coord.tl}
+          </span>
+          <span className="absolute top-3 right-3 text-[10px] font-mono text-text-muted/60 group-hover:text-accent-purple transition-colors duration-300 opacity-0 group-hover:opacity-100">
+            {coord.tr}
+          </span>
+          <span className="absolute bottom-3 left-3 text-[10px] font-mono text-text-muted/60 group-hover:text-accent-purple transition-colors duration-300 opacity-0 group-hover:opacity-100">
+            {coord.bl}
+          </span>
+          <span className="absolute bottom-3 right-3 text-[10px] font-mono text-text-muted/60 group-hover:text-accent-green transition-colors duration-300 opacity-0 group-hover:opacity-100">
+            {coord.br}
+          </span>
+
+          {/* Corner rect borders (like OXYZ3 rect spans) */}
+          <span className="absolute top-0 left-0 w-6 h-6 border-t border-l border-accent-purple/0 group-hover:border-accent-purple/60 transition-colors duration-500 rounded-tl-[6px]" />
+          <span className="absolute top-0 right-0 w-6 h-6 border-t border-r border-accent-green/0 group-hover:border-accent-green/60 transition-colors duration-500 rounded-tr-[6px]" />
+          <span className="absolute bottom-0 left-0 w-6 h-6 border-b border-l border-accent-green/0 group-hover:border-accent-green/60 transition-colors duration-500 rounded-bl-[6px]" />
+          <span className="absolute bottom-0 right-0 w-6 h-6 border-b border-r border-accent-purple/0 group-hover:border-accent-purple/60 transition-colors duration-500 rounded-br-[6px]" />
+        </div>
+
+        {/* ── Title overlay at Z=40px — "floats" above the image ── */}
+        <div
+          className="absolute bottom-0 left-0 right-0 p-5 pointer-events-none"
+          style={{ transform: "translateZ(40px)", transformStyle: "preserve-3d" }}
+        >
+          <div className="flex flex-wrap gap-2 mb-3">
+            {project.tags?.slice(0, 3).map((tag: string) => (
+              <span
+                key={tag}
+                className="text-[11px] uppercase tracking-widest px-3 py-1 bg-surface-page/70 backdrop-blur-md text-text-primary border border-border-default/40 rounded-[3px] font-mono"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+          <h3 className="text-lg font-bold font-display text-text-primary leading-tight tracking-tight drop-shadow-lg">
+            {project.title}
+          </h3>
+          <p className="text-text-secondary text-sm font-mono mt-1.5 line-clamp-2 drop-shadow-md max-w-[90%]">
+            {project.description}
+          </p>
+        </div>
+
+        {/* ── CTA label at Z=70px — pops out most ── */}
+        <div
+          className="absolute top-4 right-4 pointer-events-none"
+          style={{ transform: "translateZ(70px)", transformStyle: "preserve-3d" }}
+        >
+          <span className="bg-surface-page/70 backdrop-blur-md border border-border-default/60 text-text-primary/80 px-3 py-1.5 text-[11px] font-mono uppercase tracking-widest rounded-[3px] opacity-0 group-hover:opacity-100 transition-all duration-300 inline-block translate-y-1 group-hover:translate-y-0">
+            {t("portfolio.details")}
+          </span>
+        </div>
+
+        {/* ── Dialog (controlled, opens on card click) ── */}
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="max-w-2xl bg-surface-card border-border-default text-text-primary p-0 overflow-hidden max-h-[90vh] flex flex-col rounded-[6px]">
+            <VisuallyHidden>
+              <DialogTitle>{project.title}</DialogTitle>
+            </VisuallyHidden>
+
+            <div className="overflow-y-auto flex-1">
+              {/* Carousel Section */}
+              <div className="bg-surface-page p-6 flex items-center justify-center relative min-h-[250px] border-b border-border-default">
+                {project.images && project.images.length > 0 ? (
+                  <Carousel className="w-full max-w-md mx-auto">
+                    <CarouselContent>
+                      {project.images.map((img: string, idx: number) => (
+                        <CarouselItem key={idx}>
+                          <div className="aspect-video rounded-[4px] overflow-hidden border border-border-default relative group/carousel">
+                            <img src={img} alt={`${project.title} - ${idx + 1}`} className="w-full h-full object-cover" />
+                          </div>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    <CarouselPrevious className="left-2 bg-surface-elevated border-border-default text-text-secondary hover:text-text-primary hover:bg-accent-purple hover:border-accent-purple rounded-[4px]" />
+                    <CarouselNext className="right-2 bg-surface-elevated border-border-default text-text-secondary hover:text-text-primary hover:bg-accent-purple hover:border-accent-purple rounded-[4px]" />
+                  </Carousel>
+                ) : (
+                  <div className="text-text-muted font-mono text-sm">{t("portfolio.noImages")}</div>
+                )}
+              </div>
+
+              {/* Details Section */}
+              <div className="p-6 lg:p-8 space-y-6 bg-surface-card">
+                <div>
+                  <div className="text-2xl font-bold font-display text-text-primary mb-2">{project.title}</div>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {project.tags?.map((tag: string) => (
+                      <Badge key={tag} variant="outline" className="bg-accent-purple-subtle text-accent-purple border-accent-purple hover:bg-accent-purple hover:text-white rounded-[3px] font-mono text-[10px] uppercase tracking-widest px-2 py-0.5">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <DialogDescription className="text-text-secondary text-sm font-mono leading-relaxed whitespace-pre-line">
+                  {project.long_description || project.description}
+                </DialogDescription>
+
+                <div className="space-y-4 pt-6 border-t border-border-default">
+                  <h4 className="text-xs font-bold text-text-muted uppercase font-mono tracking-widest">{t("portfolio.projectLinks")}</h4>
+                  <div className="grid grid-cols-2 gap-3">
+                    {project.demo_link && (
+                      <a href={project.demo_link} target="_blank" rel="noopener noreferrer" className="w-full">
+                        <Button className="w-full bg-accent-green hover:bg-accent-green/90 text-[#0A0A0A] font-mono text-xs uppercase tracking-wider rounded-[4px]">
+                          <ExternalLink className="mr-2 h-3 w-3" />
+                          {t("portfolio.liveDemo")}
+                        </Button>
+                      </a>
+                    )}
+                    {project.github_link && (
+                      <a href={project.github_link} target="_blank" rel="noopener noreferrer" className="w-full">
+                        <Button variant="outline" className="w-full border-border-default text-text-secondary hover:bg-surface-elevated hover:border-accent-purple hover:text-text-primary font-mono text-xs uppercase tracking-wider rounded-[4px]">
+                          <Github className="mr-2 h-3 w-3" />
+                          {t("portfolio.code")}
+                        </Button>
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* ── Stripe overlay (scanlines — very subtle) ── */}
+        <div
+          className="absolute inset-0 rounded-[6px] pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-700"
+          style={{
+            transform: "translateZ(2px)",
+            backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(0,0,0,0.03) 3px, rgba(0,0,0,0.03) 4px)",
+          }}
+        />
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/* ─────────────── Main Portfolio page ─────────────── */
 export default function Portfolio() {
   const { t } = useTranslation();
   const { isLoading: i18nLoading } = useI18n();
   const { projects, isLoading } = usePortfolio(portfolioRepository);
-  const [activeFilter, setActiveFilter] = useState(t('portfolio.all'));
+  const [activeFilter, setActiveFilter] = useState(t("portfolio.all"));
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [expandedImage, setExpandedImage] = useState<{ url: string; index: number; images: string[] } | null>(null);
 
-  // Navegação por teclado para as imagens expandidas
+  // Keyboard nav for expanded images
   useEffect(() => {
     if (!expandedImage || expandedImage.images.length <= 1) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
+      if (e.key === "ArrowLeft") {
         e.preventDefault();
-        const prevIndex = expandedImage.index > 0 
-          ? expandedImage.index - 1 
-          : expandedImage.images.length - 1;
-        setExpandedImage({
-          ...expandedImage,
-          url: expandedImage.images[prevIndex],
-          index: prevIndex
-        });
-      } else if (e.key === 'ArrowRight') {
+        const prevIndex = expandedImage.index > 0 ? expandedImage.index - 1 : expandedImage.images.length - 1;
+        setExpandedImage({ ...expandedImage, url: expandedImage.images[prevIndex], index: prevIndex });
+      } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        const nextIndex = expandedImage.index < expandedImage.images.length - 1
-          ? expandedImage.index + 1
-          : 0;
-        setExpandedImage({
-          ...expandedImage,
-          url: expandedImage.images[nextIndex],
-          index: nextIndex
-        });
-      } else if (e.key === 'Escape') {
+        const nextIndex = expandedImage.index < expandedImage.images.length - 1 ? expandedImage.index + 1 : 0;
+        setExpandedImage({ ...expandedImage, url: expandedImage.images[nextIndex], index: nextIndex });
+      } else if (e.key === "Escape") {
         setExpandedImage(null);
       }
     };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [expandedImage]);
 
-
-  // Extrai todas as tags únicas dos projetos e ordena alfabeticamente
   const availableTags = useMemo(() => {
-    const allTags = projects.flatMap(p => p.tags || []);
-    const uniqueTags = Array.from(new Set(allTags));
-    return uniqueTags.sort();
+    const allTags = projects.flatMap((p) => p.tags || []);
+    return Array.from(new Set(allTags)).sort();
   }, [projects]);
 
-  // Cria a lista de filtros com "Todos" sempre primeiro
-  const filters = useMemo(() => {
-    return [t('portfolio.all'), ...availableTags];
-  }, [availableTags, t]);
+  const filters = useMemo(() => [t("portfolio.all"), ...availableTags], [availableTags, t]);
 
-  const filteredProjects = activeFilter === t('portfolio.all')
-    ? projects
-    : projects.filter(p => p.tags?.includes(activeFilter));
+  const filteredProjects = activeFilter === t("portfolio.all") ? projects : projects.filter((p) => p.tags?.includes(activeFilter));
 
-  // Resetar filtro se a tag selecionada não existir mais
   useEffect(() => {
-    if (activeFilter !== t('portfolio.all') && !availableTags.includes(activeFilter)) {
-      setActiveFilter(t('portfolio.all'));
+    if (activeFilter !== t("portfolio.all") && !availableTags.includes(activeFilter)) {
+      setActiveFilter(t("portfolio.all"));
     }
   }, [activeFilter, availableTags, t]);
 
-  if (isLoading || i18nLoading) {
-    return <PageSkeleton />;
-  }
+  if (isLoading || i18nLoading) return <PageSkeleton />;
 
   return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="space-y-8 pb-12"
-      >
-        <header className="mb-10">
-          <h1 className="text-3xl font-bold text-white">{t('portfolio.title')}</h1>
-          <p className="text-gray-400 mt-2">{t('portfolio.subtitle')}</p>
-        </header>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8 pb-12">
+      <header className="mb-10">
+        <h1 className="text-3xl font-bold font-display text-text-primary uppercase tracking-tight">{t("portfolio.title")}</h1>
+        <p className="text-text-secondary mt-2 font-mono text-sm">{t("portfolio.subtitle")}</p>
+      </header>
 
-        {/* Filters */}
-        {filters.length > 1 && (
-          <div className="flex flex-wrap gap-2 mb-8">
-            {filters.map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setActiveFilter(filter)}
-                className={`
-                  inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-300
-                  ${activeFilter === filter
-                    ? "bg-neon-purple text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]"
-                    : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5"}
-                `}
-              >
-                {filter}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <AnimatePresence mode="popLayout">
-            {filteredProjects.map((project) => (
-              <motion.div
-                key={project.id}
-                layout
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.3 }}
-                className="group rounded-xl bg-card border border-white/5 overflow-hidden hover:border-neon-purple/50 transition-all duration-300 hover:shadow-[0_0_20px_rgba(139,92,246,0.15)] flex flex-col h-full"
-              >
-                <div className="relative h-48 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10 opacity-60 group-hover:opacity-40 transition-opacity" />
-                  {project.images && project.images.length > 0 ? (
-                    <img
-                      src={project.images[0]}
-                      alt={project.title}
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">{t('portfolio.noImage')}</div>
-                  )}
-                  <div className="absolute top-3 right-3 z-20 flex gap-2">
-                    <div className="bg-background/60 backdrop-blur-md p-2 rounded-full border border-white/10 text-white opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300">
-                      <Layers className="w-4 h-4" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-6 flex flex-col flex-grow">
-                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-neon-purple transition-colors">{project.title}</h3>
-                  <p className="text-gray-400 text-sm mb-4 line-clamp-2 flex-grow">{project.description}</p>
-
-                  <div className="flex flex-wrap gap-2 mb-6">
-                    {project.tags?.slice(0, 3).map((tag: string) => (
-                      <span key={tag} className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-white/5 text-gray-300 border border-white/5">
-                        {tag}
-                      </span>
-                    ))}
-                    {project.tags?.length > 3 && (
-                      <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-white/5 text-gray-300 border border-white/5">
-                        +{project.tags.length - 3}
-                      </span>
-                    )}
-                  </div>
-
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        className="w-full bg-white/5 hover:bg-neon-purple hover:text-white text-neon-lime border border-white/10 transition-all duration-300 group-hover:border-neon-purple/50"
-                        onClick={() => setSelectedProject(project)}
-                      >
-                        {t('portfolio.details')}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-2xl bg-background border-white/10 text-white p-0 overflow-hidden max-h-[90vh] flex flex-col">
-                      <VisuallyHidden>
-                        <DialogTitle>{project.title}</DialogTitle>
-                      </VisuallyHidden>
-
-                      <div className="overflow-y-auto flex-1">
-                        {/* Carousel Section */}
-                        <div className="bg-background/50 p-6 flex items-center justify-center relative min-h-[250px]">
-                          {project.images && project.images.length > 0 ? (
-                            <Carousel className="w-full max-w-md mx-auto">
-                              <CarouselContent>
-                                {project.images.map((img: string, idx: number) => (
-                                  <CarouselItem key={idx}>
-                                    <div className="aspect-video rounded-lg overflow-hidden border border-white/10 relative group/carousel">
-                                      <img src={img} alt={`${project.title} - ${idx + 1}`} className="w-full h-full object-cover" />
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setExpandedImage({ url: img, index: idx, images: project.images });
-                                        }}
-                                        className="absolute inset-0 bg-black/40 opacity-0 group-hover/carousel:opacity-100 transition-opacity flex items-center justify-center hover:bg-black/50"
-                                        aria-label={t('portfolio.expandImage')}
-                                      >
-                                        <div className="bg-background/80 backdrop-blur-sm p-3 rounded-full border border-white/20 hover:border-neon-purple transition-colors">
-                                          <ZoomIn className="w-5 h-5 text-white" />
-                                        </div>
-                                      </button>
-                                    </div>
-                                  </CarouselItem>
-                                ))}
-                              </CarouselContent>
-                              <CarouselPrevious className="left-2 bg-background/50 border-white/10 text-white hover:bg-neon-purple hover:border-neon-purple" />
-                              <CarouselNext className="right-2 bg-background/50 border-white/10 text-white hover:bg-neon-purple hover:border-neon-purple" />
-                            </Carousel>
-                          ) : (
-                            <div className="text-gray-500">{t('portfolio.noImages')}</div>
-                          )}
-                        </div>
-
-                        {/* Details Section */}
-                        <div className="p-6 lg:p-8 space-y-6 bg-[#0f0f0f]">
-                          <div>
-                            <div className="text-2xl font-bold text-white mb-2">{project.title}</div>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {project.tags?.map((tag: string) => (
-                                <Badge key={tag} variant="outline" className="bg-neon-purple/10 text-neon-purple border-neon-purple/20 hover:bg-neon-purple/20">
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-
-                          <DialogDescription className="text-gray-300 text-base leading-relaxed whitespace-pre-line">
-                            {project.long_description || project.description}
-                          </DialogDescription>
-
-                          <div className="space-y-3 pt-4 border-t border-white/5">
-                            <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">{t('portfolio.projectLinks')}</h4>
-                            <div className="grid grid-cols-2 gap-3">
-                              {project.demo_link && (
-                                <a href={project.demo_link} target="_blank" rel="noopener noreferrer" className="w-full">
-                                  <Button className="w-full bg-neon-purple hover:bg-neon-purple/80 text-white">
-                                    <ExternalLink className="mr-2 h-4 w-4" />
-                                    {t('portfolio.liveDemo')}
-                                  </Button>
-                                </a>
-                              )}
-                              {project.github_link && (
-                                <a href={project.github_link} target="_blank" rel="noopener noreferrer" className="w-full">
-                                  <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10 hover:text-white">
-                                    <Github className="mr-2 h-4 w-4" />
-                                    {t('portfolio.code')}
-                                  </Button>
-                                </a>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+      {/* Filters */}
+      {filters.length > 1 && (
+        <div className="flex flex-wrap gap-2 mb-8">
+          {filters.map((filter) => (
+            <button
+              key={filter}
+              onClick={() => setActiveFilter(filter)}
+              className={`inline-flex items-center justify-center px-4 py-1.5 rounded-[3px] text-[10px] font-mono uppercase tracking-widest transition-all duration-300 border ${activeFilter === filter
+                ? "bg-accent-purple-subtle text-accent-purple border-accent-purple hover:bg-accent-purple hover:text-white"
+                : "bg-surface-elevated text-text-secondary hover:border-accent-green hover:text-text-primary border-border-default"
+                }`}
+            >
+              {filter}
+            </button>
+          ))}
         </div>
+      )}
 
-        {/* Dialog para imagem expandida */}
-        <Dialog open={!!expandedImage} onOpenChange={(open) => !open && setExpandedImage(null)}>
-          <DialogContent 
-            className="!max-w-[98vw] !w-[98vw] !h-[98vh] !max-h-[98vh] bg-[#0a0a0a] border-white/10 p-0 overflow-hidden flex flex-col !translate-x-[-50%] !translate-y-[-50%] !top-[50%] !left-[50%]"
-            showCloseButton={false}
-          >
-            {expandedImage && (
-              <>
-                <DialogHeader className="p-4 border-b border-white/10 flex-shrink-0">
-                  <div className="flex items-center justify-between">
-                    <DialogTitle className="text-white">
-                      {t('portfolio.image')} {expandedImage.index + 1} {t('portfolio.of')} {expandedImage.images.length}
-                    </DialogTitle>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setExpandedImage(null)}
-                      className="text-white hover:bg-white/10"
-                        aria-label={t('common.close')}
-                    >
-                      <X className="w-5 h-5" />
-                    </Button>
-                  </div>
-                </DialogHeader>
-                <div className="relative flex-1 flex items-center justify-center bg-background/50 overflow-hidden min-h-0">
-                  <AnimatePresence mode="wait">
-                    <motion.div
-                      key={expandedImage.url}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.9 }}
-                      transition={{ duration: 0.3, ease: "easeInOut" }}
-                      className="w-full h-full flex items-center justify-center p-4"
-                    >
-                      <img
-                        src={expandedImage.url}
-                        alt={`Imagem expandida ${expandedImage.index + 1}`}
-                        className="w-auto h-auto max-w-full max-h-full object-contain rounded-lg"
-                        style={{ maxHeight: 'calc(98vh - 100px)' }}
-                      />
-                    </motion.div>
-                  </AnimatePresence>
-                  {expandedImage.images.length > 1 && (
-                    <>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/80 border-white/20 text-white hover:bg-neon-purple hover:border-neon-purple z-10"
-                        onClick={() => {
-                          const prevIndex = expandedImage.index > 0 
-                            ? expandedImage.index - 1 
-                            : expandedImage.images.length - 1;
-                          setExpandedImage({
-                            ...expandedImage,
-                            url: expandedImage.images[prevIndex],
-                            index: prevIndex
-                          });
-                        }}
-                        aria-label={t('portfolio.previousImage')}
-                      >
-                        <ChevronLeft className="w-6 h-6" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/80 border-white/20 text-white hover:bg-neon-purple hover:border-neon-purple z-10"
-                        onClick={() => {
-                          const nextIndex = expandedImage.index < expandedImage.images.length - 1
-                            ? expandedImage.index + 1
-                            : 0;
-                          setExpandedImage({
-                            ...expandedImage,
-                            url: expandedImage.images[nextIndex],
-                            index: nextIndex
-                          });
-                        }}
-                        aria-label={t('portfolio.nextImage')}
-                      >
-                        <ChevronRight className="w-6 h-6" />
-                      </Button>
-                    </>
-                  )}
+      {/* Projects Grid — OXYZ3-style Tilt Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <AnimatePresence mode="popLayout">
+          {filteredProjects.map((project, index) => (
+            <TiltCard
+              key={project.id}
+              project={project}
+              index={index}
+              t={t}
+            />
+          ))}
+        </AnimatePresence>
+      </div>
+
+      {/* Expanded image dialog */}
+      <Dialog open={!!expandedImage} onOpenChange={(open) => !open && setExpandedImage(null)}>
+        <DialogContent
+          className="!max-w-[98vw] !w-[98vw] !h-[98vh] !max-h-[98vh] bg-surface-page border-border-default p-0 overflow-hidden flex flex-col !translate-x-[-50%] !translate-y-[-50%] !top-[50%] !left-[50%] rounded-[6px]"
+          showCloseButton={false}
+        >
+          {expandedImage && (
+            <>
+              <DialogHeader className="p-4 border-b border-border-default flex-shrink-0 bg-surface-sidebar">
+                <div className="flex items-center justify-between">
+                  <DialogTitle className="text-text-primary font-mono text-sm uppercase tracking-wider">
+                    {t("portfolio.image")} {expandedImage.index + 1} {t("portfolio.of")} {expandedImage.images.length}
+                  </DialogTitle>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => setExpandedImage(null)}
+                    className="text-text-secondary hover:text-text-primary hover:bg-surface-elevated rounded-[4px] h-8 w-8"
+                    aria-label={t("common.close")}
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
                 </div>
-              </>
-            )}
-          </DialogContent>
-        </Dialog>
-      </motion.div>
+              </DialogHeader>
+              <div className="relative flex-1 flex items-center justify-center bg-surface-page/80 overflow-hidden min-h-0">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={expandedImage.url}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.9 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="w-full h-full flex items-center justify-center p-4"
+                  >
+                    <img
+                      src={expandedImage.url}
+                      alt={`Imagem expandida ${expandedImage.index + 1}`}
+                      className="w-auto h-auto max-w-full max-h-full object-contain rounded-[4px] border border-border-default"
+                      style={{ maxHeight: "calc(98vh - 100px)" }}
+                    />
+                  </motion.div>
+                </AnimatePresence>
+                {expandedImage.images.length > 1 && (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-surface-elevated/80 border-border-default text-text-secondary hover:text-text-primary hover:bg-accent-purple hover:border-accent-purple z-10 rounded-[4px]"
+                      onClick={() => {
+                        const prevIndex = expandedImage.index > 0 ? expandedImage.index - 1 : expandedImage.images.length - 1;
+                        setExpandedImage({ ...expandedImage, url: expandedImage.images[prevIndex], index: prevIndex });
+                      }}
+                      aria-label={t("portfolio.previousImage")}
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-surface-elevated/80 border-border-default text-text-secondary hover:text-text-primary hover:bg-accent-purple hover:border-accent-purple z-10 rounded-[4px]"
+                      onClick={() => {
+                        const nextIndex = expandedImage.index < expandedImage.images.length - 1 ? expandedImage.index + 1 : 0;
+                        setExpandedImage({ ...expandedImage, url: expandedImage.images[nextIndex], index: nextIndex });
+                      }}
+                      aria-label={t("portfolio.nextImage")}
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </Button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </motion.div>
   );
 }
+
