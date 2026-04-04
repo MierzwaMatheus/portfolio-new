@@ -1,9 +1,15 @@
 import { useState } from "react";
+import { SEO } from "@/components/SEO";
 import { motion } from "framer-motion";
 import { Code, HelpCircle } from "lucide-react";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useI18n } from "@/i18n/context/I18nContext";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useMobile";
@@ -19,14 +25,14 @@ export default function About() {
 
   const getSpanClasses = (spanSize: string) => {
     switch (spanSize) {
-      case '1x2':
-        return 'row-span-2';
-      case '2x1':
-        return 'col-span-2';
-      case '2x2':
-        return 'col-span-2 row-span-2';
+      case "1x2":
+        return "row-span-2";
+      case "2x1":
+        return "col-span-2";
+      case "2x2":
+        return "col-span-2 row-span-2";
       default:
-        return '';
+        return "";
     }
   };
 
@@ -35,172 +41,194 @@ export default function About() {
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const item = {
     hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
+    show: { opacity: 1, y: 0 },
   };
 
   return (
-    <motion.div
-      variants={container}
-      initial="hidden"
-      animate="show"
-      className="space-y-16 pb-12"
-    >
-      {/* Sobre Mim Section */}
-      <motion.section variants={item}>
-        <h2 className="text-2xl font-bold text-white mb-8 flex items-center font-mono">
-          <span className="text-neon-purple mr-2">/*</span> {t('about.aboutMe.title')} <span className="text-neon-purple ml-2">*/</span>
-        </h2>
+    <>
+      <SEO
+        title="Sobre Mim"
+        description="Conheça minha trajetória, dia-a-dia e respostas para perguntas frequentes sobre meu trabalho como desenvolvedor."
+        url="/sobre"
+      />
+      <motion.div
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="space-y-16 pb-12"
+      >
+        {/* Sobre Mim Section */}
+        <motion.section variants={item}>
+          <h2 className="text-2xl font-bold text-white mb-8 flex items-center font-mono">
+            <span className="text-neon-purple mr-2">/*</span>{" "}
+            {t("about.aboutMe.title")}{" "}
+            <span className="text-neon-purple ml-2">*/</span>
+          </h2>
 
-        <div className="rounded-xl border border-white/10 bg-card/50 backdrop-blur-sm p-8 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-            <Code className="w-24 h-24 text-neon-purple" />
+          <div className="rounded-xl border border-white/10 bg-card/50 backdrop-blur-sm p-8 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Code className="w-24 h-24 text-neon-purple" />
+            </div>
+
+            <div className="relative z-10 space-y-6 text-gray-300 leading-relaxed text-lg">
+              <p className="whitespace-pre-wrap">{t("about.aboutMe.text")}</p>
+            </div>
           </div>
+        </motion.section>
 
-          <div className="relative z-10 space-y-6 text-gray-300 leading-relaxed text-lg">
-            <p className="whitespace-pre-wrap">
-              {t('about.aboutMe.text')}
-            </p>
-          </div>
-        </div>
-      </motion.section>
+        {/* Meu Dia-a-Dia Section */}
+        <motion.section variants={item}>
+          <h2 className="text-2xl font-bold text-white mb-8 flex items-center font-mono">
+            <span className="text-neon-purple mr-2">/*</span>{" "}
+            {t("about.dailyRoutine.title")}{" "}
+            <span className="text-neon-purple ml-2">*/</span>
+          </h2>
 
-      {/* Meu Dia-a-Dia Section */}
-      <motion.section variants={item}>
-        <h2 className="text-2xl font-bold text-white mb-8 flex items-center font-mono">
-          <span className="text-neon-purple mr-2">/*</span> {t('about.dailyRoutine.title')} <span className="text-neon-purple ml-2">*/</span>
-        </h2>
-
-        {isLoading ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 auto-rows-[200px]">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} className="bg-white/5 border border-white/10 rounded-xl animate-pulse" />
-            ))}
-          </div>
-        ) : dailyRoutine.length === 0 ? (
-          <div className="rounded-xl border border-white/10 bg-card/50 backdrop-blur-sm p-8 text-center text-gray-400">
-            {t('about.dailyRoutine.empty')}
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4 auto-rows-[200px]">
-            {dailyRoutine.map((routineItem) => (
-              <motion.div
-                key={routineItem.id}
-                className={cn(
-                  "relative group cursor-pointer rounded-xl border border-white/10 overflow-hidden",
-                  "bg-gradient-to-br from-[#1e1e1e] to-[#121212]",
-                  "hover:border-neon-purple/50 transition-all duration-300",
-                  getSpanClasses(routineItem.span_size || '1x1')
-                )}
-                onMouseEnter={() => setHoveredItem(routineItem.id)}
-                onMouseLeave={() => setHoveredItem(null)}
-                onClick={() => setHoveredItem(hoveredItem === routineItem.id ? null : routineItem.id)}
-                variants={item}
-              >
-                {/* Image */}
-                <div className="absolute inset-0">
-                  <img
-                    src={routineItem.image_url}
-                    alt={routineItem.description || ''}
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                </div>
-
-                {/* Tags */}
-                <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2 z-10">
-                  {routineItem.tags?.map((tag: string, idx: number) => (
-                    <Badge
-                      key={idx}
-                      className="bg-neon-purple/80 text-white border-none text-xs backdrop-blur-sm"
-                    >
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-
-                {/* Overlay com descrição */}
+          {isLoading ? (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 auto-rows-[200px]">
+              {Array.from({ length: 6 }).map((_, i) => (
                 <div
-                  className={cn(
-                    "absolute inset-0 bg-black/90 backdrop-blur-sm transition-all duration-300 z-20",
-                    "flex items-center justify-center p-6",
-                    hoveredItem === routineItem.id
-                      ? "opacity-100 pointer-events-auto"
-                      : "opacity-0 pointer-events-none"
-                  )}
-                >
-                  <p className="text-white text-sm md:text-base leading-relaxed text-center">
-                    {routineItem.description}
-                  </p>
-                </div>
-
-                {/* Indicador de hover (mobile) */}
-                {isMobile && hoveredItem !== routineItem.id && (
-                  <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
-                    <div className="bg-white/20 backdrop-blur-sm text-center px-3 py-1 rounded-full text-xs text-white">
-                      Toque para Saber Mais
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            ))}
-          </div>
-        )}
-      </motion.section>
-
-      {/* FAQ Section */}
-      <motion.section variants={item}>
-        <h2 className="text-2xl font-bold text-white mb-8 flex items-center font-mono">
-          <span className="text-neon-purple mr-2">/*</span> {t('about.faq.title')} <span className="text-neon-purple ml-2">*/</span>
-        </h2>
-
-        {isLoading ? (
-          <div className="space-y-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="bg-white/5 border border-white/10 rounded-xl p-6 animate-pulse">
-                <div className="h-6 bg-gray-600/30 rounded w-3/4 mb-4" />
-                <div className="h-4 bg-gray-600/30 rounded w-full" />
-              </div>
-            ))}
-          </div>
-        ) : faq.length === 0 ? (
-          <div className="rounded-xl border border-white/10 bg-card/50 backdrop-blur-sm p-8 text-center text-gray-400">
-            {t('about.faq.empty')}
-          </div>
-        ) : (
-          <div className="rounded-xl border border-white/10 bg-card/50 backdrop-blur-sm overflow-hidden">
-            <Accordion type="single" collapsible className="w-full">
-              {faq.map((faqItem, index) => (
-                <AccordionItem
-                  key={faqItem.id}
-                  value={`faq-${faqItem.id}`}
-                  className={cn(
-                    "border-white/10",
-                    index !== faq.length - 1 && "border-b"
-                  )}
-                >
-                  <AccordionTrigger className="text-white hover:text-neon-purple px-6 py-4 hover:no-underline">
-                    <div className="flex items-center gap-3">
-                      <HelpCircle className="w-5 h-5 text-neon-purple shrink-0" />
-                      <span className="text-left font-medium">{faqItem.question}</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-6 pb-4 text-gray-300 leading-relaxed">
-                    <p className="whitespace-pre-wrap">{faqItem.answer}</p>
-                  </AccordionContent>
-                </AccordionItem>
+                  key={i}
+                  className="bg-white/5 border border-white/10 rounded-xl animate-pulse"
+                />
               ))}
-            </Accordion>
-          </div>
-        )}
-      </motion.section>
-    </motion.div>
+            </div>
+          ) : dailyRoutine.length === 0 ? (
+            <div className="rounded-xl border border-white/10 bg-card/50 backdrop-blur-sm p-8 text-center text-gray-400">
+              {t("about.dailyRoutine.empty")}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 auto-rows-[200px]">
+              {dailyRoutine.map(routineItem => (
+                <motion.div
+                  key={routineItem.id}
+                  className={cn(
+                    "relative group cursor-pointer rounded-xl border border-white/10 overflow-hidden",
+                    "bg-gradient-to-br from-[#1e1e1e] to-[#121212]",
+                    "hover:border-neon-purple/50 transition-all duration-300",
+                    getSpanClasses(routineItem.span_size || "1x1")
+                  )}
+                  onMouseEnter={() => setHoveredItem(routineItem.id)}
+                  onMouseLeave={() => setHoveredItem(null)}
+                  onClick={() =>
+                    setHoveredItem(
+                      hoveredItem === routineItem.id ? null : routineItem.id
+                    )
+                  }
+                  variants={item}
+                >
+                  {/* Image */}
+                  <div className="absolute inset-0">
+                    <img
+                      src={routineItem.image_url}
+                      alt={routineItem.description || ""}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                  </div>
+
+                  {/* Tags */}
+                  <div className="absolute top-4 left-4 right-4 flex flex-wrap gap-2 z-10">
+                    {routineItem.tags?.map((tag: string, idx: number) => (
+                      <Badge
+                        key={idx}
+                        className="bg-neon-purple/80 text-white border-none text-xs backdrop-blur-sm"
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  {/* Overlay com descrição */}
+                  <div
+                    className={cn(
+                      "absolute inset-0 bg-black/90 backdrop-blur-sm transition-all duration-300 z-20",
+                      "flex items-center justify-center p-6",
+                      hoveredItem === routineItem.id
+                        ? "opacity-100 pointer-events-auto"
+                        : "opacity-0 pointer-events-none"
+                    )}
+                  >
+                    <p className="text-white text-sm md:text-base leading-relaxed text-center">
+                      {routineItem.description}
+                    </p>
+                  </div>
+
+                  {/* Indicador de hover (mobile) */}
+                  {isMobile && hoveredItem !== routineItem.id && (
+                    <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+                      <div className="bg-white/20 backdrop-blur-sm text-center px-3 py-1 rounded-full text-xs text-white">
+                        Toque para Saber Mais
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </motion.section>
+
+        {/* FAQ Section */}
+        <motion.section variants={item}>
+          <h2 className="text-2xl font-bold text-white mb-8 flex items-center font-mono">
+            <span className="text-neon-purple mr-2">/*</span>{" "}
+            {t("about.faq.title")}{" "}
+            <span className="text-neon-purple ml-2">*/</span>
+          </h2>
+
+          {isLoading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white/5 border border-white/10 rounded-xl p-6 animate-pulse"
+                >
+                  <div className="h-6 bg-gray-600/30 rounded w-3/4 mb-4" />
+                  <div className="h-4 bg-gray-600/30 rounded w-full" />
+                </div>
+              ))}
+            </div>
+          ) : faq.length === 0 ? (
+            <div className="rounded-xl border border-white/10 bg-card/50 backdrop-blur-sm p-8 text-center text-gray-400">
+              {t("about.faq.empty")}
+            </div>
+          ) : (
+            <div className="rounded-xl border border-white/10 bg-card/50 backdrop-blur-sm overflow-hidden">
+              <Accordion type="single" collapsible className="w-full">
+                {faq.map((faqItem, index) => (
+                  <AccordionItem
+                    key={faqItem.id}
+                    value={`faq-${faqItem.id}`}
+                    className={cn(
+                      "border-white/10",
+                      index !== faq.length - 1 && "border-b"
+                    )}
+                  >
+                    <AccordionTrigger className="text-white hover:text-neon-purple px-6 py-4 hover:no-underline">
+                      <div className="flex items-center gap-3">
+                        <HelpCircle className="w-5 h-5 text-neon-purple shrink-0" />
+                        <span className="text-left font-medium">
+                          {faqItem.question}
+                        </span>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-4 text-gray-300 leading-relaxed">
+                      <p className="whitespace-pre-wrap">{faqItem.answer}</p>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </div>
+          )}
+        </motion.section>
+      </motion.div>
+    </>
   );
 }
-

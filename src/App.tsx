@@ -4,6 +4,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch, useLocation } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { HelmetProvider } from "react-helmet-async";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Dashboard from "./pages/admin/Dashboard";
@@ -36,43 +37,73 @@ import { QueryProvider } from "./providers/QueryProvider";
 
 function Router() {
   const [location] = useLocation();
-  const isAdminRoute = location.startsWith('/admin');
+  const isAdminRoute = location.startsWith("/admin");
 
   if (isAdminRoute) {
     return (
       <Switch>
         <Route path="/admin/dashboard">
-          <ProtectedRoute component={Dashboard} allowedRoles={['root', 'admin']} />
+          <ProtectedRoute
+            component={Dashboard}
+            allowedRoles={["root", "admin"]}
+          />
         </Route>
         <Route path="/admin">
-          <ProtectedRoute component={Dashboard} allowedRoles={['root', 'admin']} />
+          <ProtectedRoute
+            component={Dashboard}
+            allowedRoles={["root", "admin"]}
+          />
         </Route>
         <Route path="/admin/projects">
-          <ProtectedRoute component={AdminProjects} allowedRoles={['root', 'admin']} />
+          <ProtectedRoute
+            component={AdminProjects}
+            allowedRoles={["root", "admin"]}
+          />
         </Route>
         <Route path="/admin/blog">
-          <ProtectedRoute component={AdminBlog} allowedRoles={['root', 'admin']} />
+          <ProtectedRoute
+            component={AdminBlog}
+            allowedRoles={["root", "admin"]}
+          />
         </Route>
         <Route path="/admin/resume">
-          <ProtectedRoute component={AdminResume} allowedRoles={['root', 'admin']} />
+          <ProtectedRoute
+            component={AdminResume}
+            allowedRoles={["root", "admin"]}
+          />
         </Route>
         <Route path="/admin/home">
-          <ProtectedRoute component={AdminHome} allowedRoles={['root', 'admin']} />
+          <ProtectedRoute
+            component={AdminHome}
+            allowedRoles={["root", "admin"]}
+          />
         </Route>
         <Route path="/admin/about">
-          <ProtectedRoute component={AdminAbout} allowedRoles={['root', 'admin']} />
+          <ProtectedRoute
+            component={AdminAbout}
+            allowedRoles={["root", "admin"]}
+          />
         </Route>
         <Route path="/admin/contact">
-          <ProtectedRoute component={AdminContact} allowedRoles={['root', 'admin']} />
+          <ProtectedRoute
+            component={AdminContact}
+            allowedRoles={["root", "admin"]}
+          />
         </Route>
         <Route path="/admin/proposals">
-          <ProtectedRoute component={AdminProposals} allowedRoles={['root', 'admin', 'proposal-editor']} />
+          <ProtectedRoute
+            component={AdminProposals}
+            allowedRoles={["root", "admin", "proposal-editor"]}
+          />
         </Route>
         <Route path="/admin/payment-links">
-          <ProtectedRoute component={AdminPaymentLinks} allowedRoles={['root', 'admin']} />
+          <ProtectedRoute
+            component={AdminPaymentLinks}
+            allowedRoles={["root", "admin"]}
+          />
         </Route>
         <Route path="/admin/users/new">
-          <ProtectedRoute component={AdminCreateUser} allowedRoles={['root']} />
+          <ProtectedRoute component={AdminCreateUser} allowedRoles={["root"]} />
         </Route>
       </Switch>
     );
@@ -141,22 +172,24 @@ function Router() {
 
 function App() {
   return (
-    <ErrorBoundary>
-      <QueryProvider>
-        <AuthProvider>
-          <I18nProvider>
-            <ThemeProvider defaultTheme="dark">
-              <TooltipProvider>
-                <Toaster />
-                <Router />
-                <Analytics />
-                <SpeedInsights />
-              </TooltipProvider>
-            </ThemeProvider>
-          </I18nProvider>
-        </AuthProvider>
-      </QueryProvider>
-    </ErrorBoundary>
+    <HelmetProvider>
+      <ErrorBoundary>
+        <QueryProvider>
+          <AuthProvider>
+            <I18nProvider>
+              <ThemeProvider defaultTheme="dark">
+                <TooltipProvider>
+                  <Toaster />
+                  <Router />
+                  <Analytics />
+                  <SpeedInsights />
+                </TooltipProvider>
+              </ThemeProvider>
+            </I18nProvider>
+          </AuthProvider>
+        </QueryProvider>
+      </ErrorBoundary>
+    </HelmetProvider>
   );
 }
 

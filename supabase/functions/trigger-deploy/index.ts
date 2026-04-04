@@ -88,7 +88,7 @@ Deno.serve(async (req: Request) => {
   const minutesSincePublish =
     (now.getTime() - lastPublished.getTime()) / 1000 / 60;
 
-  if (minutesSincePublish < 10) {
+  if (minutesSincePublish < 1) {
     return new Response(
       JSON.stringify({
         message: "Throttled - last deploy too recent",

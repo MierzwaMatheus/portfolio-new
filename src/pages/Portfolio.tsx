@@ -1,12 +1,35 @@
 import { PageSkeleton } from "@/components/PageSkeleton";
+import { SEO } from "@/components/SEO";
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FolderOpen, ExternalLink, Github, Layers, ZoomIn, X, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  FolderOpen,
+  ExternalLink,
+  Github,
+  Layers,
+  ZoomIn,
+  X,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import { useI18n } from "@/i18n/context/I18nContext";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { usePortfolio } from "@/hooks/usePortfolio";
@@ -17,46 +40,51 @@ export default function Portfolio() {
   const { t } = useTranslation();
   const { isLoading: i18nLoading } = useI18n();
   const { projects, isLoading } = usePortfolio(portfolioRepository);
-  const [activeFilter, setActiveFilter] = useState(t('portfolio.all'));
+  const [activeFilter, setActiveFilter] = useState(t("portfolio.all"));
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
-  const [expandedImage, setExpandedImage] = useState<{ url: string; index: number; images: string[] } | null>(null);
+  const [expandedImage, setExpandedImage] = useState<{
+    url: string;
+    index: number;
+    images: string[];
+  } | null>(null);
 
   // Navegação por teclado para as imagens expandidas
   useEffect(() => {
     if (!expandedImage || expandedImage.images.length <= 1) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowLeft') {
+      if (e.key === "ArrowLeft") {
         e.preventDefault();
-        const prevIndex = expandedImage.index > 0 
-          ? expandedImage.index - 1 
-          : expandedImage.images.length - 1;
+        const prevIndex =
+          expandedImage.index > 0
+            ? expandedImage.index - 1
+            : expandedImage.images.length - 1;
         setExpandedImage({
           ...expandedImage,
           url: expandedImage.images[prevIndex],
-          index: prevIndex
+          index: prevIndex,
         });
-      } else if (e.key === 'ArrowRight') {
+      } else if (e.key === "ArrowRight") {
         e.preventDefault();
-        const nextIndex = expandedImage.index < expandedImage.images.length - 1
-          ? expandedImage.index + 1
-          : 0;
+        const nextIndex =
+          expandedImage.index < expandedImage.images.length - 1
+            ? expandedImage.index + 1
+            : 0;
         setExpandedImage({
           ...expandedImage,
           url: expandedImage.images[nextIndex],
-          index: nextIndex
+          index: nextIndex,
         });
-      } else if (e.key === 'Escape') {
+      } else if (e.key === "Escape") {
         setExpandedImage(null);
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [expandedImage]);
-
 
   // Extrai todas as tags únicas dos projetos e ordena alfabeticamente
   const availableTags = useMemo(() => {
@@ -67,17 +95,21 @@ export default function Portfolio() {
 
   // Cria a lista de filtros com "Todos" sempre primeiro
   const filters = useMemo(() => {
-    return [t('portfolio.all'), ...availableTags];
+    return [t("portfolio.all"), ...availableTags];
   }, [availableTags, t]);
 
-  const filteredProjects = activeFilter === t('portfolio.all')
-    ? projects
-    : projects.filter(p => p.tags?.includes(activeFilter));
+  const filteredProjects =
+    activeFilter === t("portfolio.all")
+      ? projects
+      : projects.filter(p => p.tags?.includes(activeFilter));
 
   // Resetar filtro se a tag selecionada não existir mais
   useEffect(() => {
-    if (activeFilter !== t('portfolio.all') && !availableTags.includes(activeFilter)) {
-      setActiveFilter(t('portfolio.all'));
+    if (
+      activeFilter !== t("portfolio.all") &&
+      !availableTags.includes(activeFilter)
+    ) {
+      setActiveFilter(t("portfolio.all"));
     }
   }, [activeFilter, availableTags, t]);
 
@@ -86,28 +118,38 @@ export default function Portfolio() {
   }
 
   return (
+    <>
+      <SEO
+        title="Portfólio de Projetos"
+        description="Confira meus projetos de desenvolvimento front-end e full-stack. Cases com React, TypeScript e tecnologias modernas."
+        url="/portfolio"
+      />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="space-y-8 pb-12"
       >
         <header className="mb-10">
-          <h1 className="text-3xl font-bold text-white">{t('portfolio.title')}</h1>
-          <p className="text-gray-400 mt-2">{t('portfolio.subtitle')}</p>
+          <h1 className="text-3xl font-bold text-white">
+            {t("portfolio.title")}
+          </h1>
+          <p className="text-gray-400 mt-2">{t("portfolio.subtitle")}</p>
         </header>
 
         {/* Filters */}
         {filters.length > 1 && (
           <div className="flex flex-wrap gap-2 mb-8">
-            {filters.map((filter) => (
+            {filters.map(filter => (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
                 className={`
                   inline-flex items-center justify-center px-4 py-2 rounded-md text-sm font-medium transition-all duration-300
-                  ${activeFilter === filter
-                    ? "bg-neon-purple text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]"
-                    : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5"}
+                  ${
+                    activeFilter === filter
+                      ? "bg-neon-purple text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]"
+                      : "bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white border border-white/5"
+                  }
                 `}
               >
                 {filter}
@@ -119,7 +161,7 @@ export default function Portfolio() {
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <AnimatePresence mode="popLayout">
-            {filteredProjects.map((project) => (
+            {filteredProjects.map(project => (
               <motion.div
                 key={project.id}
                 layout
@@ -138,7 +180,9 @@ export default function Portfolio() {
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   ) : (
-                    <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">{t('portfolio.noImage')}</div>
+                    <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">
+                      {t("portfolio.noImage")}
+                    </div>
                   )}
                   <div className="absolute top-3 right-3 z-20 flex gap-2">
                     <div className="bg-background/60 backdrop-blur-md p-2 rounded-full border border-white/10 text-white opacity-0 group-hover:opacity-100 transition-opacity translate-y-2 group-hover:translate-y-0 duration-300">
@@ -148,12 +192,19 @@ export default function Portfolio() {
                 </div>
 
                 <div className="p-6 flex flex-col flex-grow">
-                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-neon-purple transition-colors">{project.title}</h3>
-                  <p className="text-gray-400 text-sm mb-4 line-clamp-2 flex-grow">{project.description}</p>
+                  <h3 className="text-xl font-bold text-white mb-2 group-hover:text-neon-purple transition-colors">
+                    {project.title}
+                  </h3>
+                  <p className="text-gray-400 text-sm mb-4 line-clamp-2 flex-grow">
+                    {project.description}
+                  </p>
 
                   <div className="flex flex-wrap gap-2 mb-6">
                     {project.tags?.slice(0, 3).map((tag: string) => (
-                      <span key={tag} className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-white/5 text-gray-300 border border-white/5">
+                      <span
+                        key={tag}
+                        className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-white/5 text-gray-300 border border-white/5"
+                      >
                         {tag}
                       </span>
                     ))}
@@ -170,7 +221,7 @@ export default function Portfolio() {
                         className="w-full bg-white/5 hover:bg-neon-purple hover:text-white text-neon-lime border border-white/10 transition-all duration-300 group-hover:border-neon-purple/50"
                         onClick={() => setSelectedProject(project)}
                       >
-                        {t('portfolio.details')}
+                        {t("portfolio.details")}
                       </Button>
                     </DialogTrigger>
                     <DialogContent className="max-w-2xl bg-background border-white/10 text-white p-0 overflow-hidden max-h-[90vh] flex flex-col">
@@ -184,41 +235,61 @@ export default function Portfolio() {
                           {project.images && project.images.length > 0 ? (
                             <Carousel className="w-full max-w-md mx-auto">
                               <CarouselContent>
-                                {project.images.map((img: string, idx: number) => (
-                                  <CarouselItem key={idx}>
-                                    <div className="aspect-video rounded-lg overflow-hidden border border-white/10 relative group/carousel">
-                                      <img src={img} alt={`${project.title} - ${idx + 1}`} className="w-full h-full object-cover" />
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setExpandedImage({ url: img, index: idx, images: project.images });
-                                        }}
-                                        className="absolute inset-0 bg-black/40 opacity-0 group-hover/carousel:opacity-100 transition-opacity flex items-center justify-center hover:bg-black/50"
-                                        aria-label={t('portfolio.expandImage')}
-                                      >
-                                        <div className="bg-background/80 backdrop-blur-sm p-3 rounded-full border border-white/20 hover:border-neon-purple transition-colors">
-                                          <ZoomIn className="w-5 h-5 text-white" />
-                                        </div>
-                                      </button>
-                                    </div>
-                                  </CarouselItem>
-                                ))}
+                                {project.images.map(
+                                  (img: string, idx: number) => (
+                                    <CarouselItem key={idx}>
+                                      <div className="aspect-video rounded-lg overflow-hidden border border-white/10 relative group/carousel">
+                                        <img
+                                          src={img}
+                                          alt={`${project.title} - ${idx + 1}`}
+                                          className="w-full h-full object-cover"
+                                        />
+                                        <button
+                                          onClick={e => {
+                                            e.stopPropagation();
+                                            setExpandedImage({
+                                              url: img,
+                                              index: idx,
+                                              images: project.images,
+                                            });
+                                          }}
+                                          className="absolute inset-0 bg-black/40 opacity-0 group-hover/carousel:opacity-100 transition-opacity flex items-center justify-center hover:bg-black/50"
+                                          aria-label={t(
+                                            "portfolio.expandImage"
+                                          )}
+                                        >
+                                          <div className="bg-background/80 backdrop-blur-sm p-3 rounded-full border border-white/20 hover:border-neon-purple transition-colors">
+                                            <ZoomIn className="w-5 h-5 text-white" />
+                                          </div>
+                                        </button>
+                                      </div>
+                                    </CarouselItem>
+                                  )
+                                )}
                               </CarouselContent>
                               <CarouselPrevious className="left-2 bg-background/50 border-white/10 text-white hover:bg-neon-purple hover:border-neon-purple" />
                               <CarouselNext className="right-2 bg-background/50 border-white/10 text-white hover:bg-neon-purple hover:border-neon-purple" />
                             </Carousel>
                           ) : (
-                            <div className="text-gray-500">{t('portfolio.noImages')}</div>
+                            <div className="text-gray-500">
+                              {t("portfolio.noImages")}
+                            </div>
                           )}
                         </div>
 
                         {/* Details Section */}
                         <div className="p-6 lg:p-8 space-y-6 bg-[#0f0f0f]">
                           <div>
-                            <div className="text-2xl font-bold text-white mb-2">{project.title}</div>
+                            <div className="text-2xl font-bold text-white mb-2">
+                              {project.title}
+                            </div>
                             <div className="flex flex-wrap gap-2 mt-2">
                               {project.tags?.map((tag: string) => (
-                                <Badge key={tag} variant="outline" className="bg-neon-purple/10 text-neon-purple border-neon-purple/20 hover:bg-neon-purple/20">
+                                <Badge
+                                  key={tag}
+                                  variant="outline"
+                                  className="bg-neon-purple/10 text-neon-purple border-neon-purple/20 hover:bg-neon-purple/20"
+                                >
                                   {tag}
                                 </Badge>
                               ))}
@@ -230,21 +301,36 @@ export default function Portfolio() {
                           </DialogDescription>
 
                           <div className="space-y-3 pt-4 border-t border-white/5">
-                            <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">{t('portfolio.projectLinks')}</h4>
+                            <h4 className="text-sm font-medium text-gray-400 uppercase tracking-wider mb-3">
+                              {t("portfolio.projectLinks")}
+                            </h4>
                             <div className="grid grid-cols-2 gap-3">
                               {project.demo_link && (
-                                <a href={project.demo_link} target="_blank" rel="noopener noreferrer" className="w-full">
+                                <a
+                                  href={project.demo_link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-full"
+                                >
                                   <Button className="w-full bg-neon-purple hover:bg-neon-purple/80 text-white">
                                     <ExternalLink className="mr-2 h-4 w-4" />
-                                    {t('portfolio.liveDemo')}
+                                    {t("portfolio.liveDemo")}
                                   </Button>
                                 </a>
                               )}
                               {project.github_link && (
-                                <a href={project.github_link} target="_blank" rel="noopener noreferrer" className="w-full">
-                                  <Button variant="outline" className="w-full border-white/20 text-white hover:bg-white/10 hover:text-white">
+                                <a
+                                  href={project.github_link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-full"
+                                >
+                                  <Button
+                                    variant="outline"
+                                    className="w-full border-white/20 text-white hover:bg-white/10 hover:text-white"
+                                  >
                                     <Github className="mr-2 h-4 w-4" />
-                                    {t('portfolio.code')}
+                                    {t("portfolio.code")}
                                   </Button>
                                 </a>
                               )}
@@ -261,8 +347,11 @@ export default function Portfolio() {
         </div>
 
         {/* Dialog para imagem expandida */}
-        <Dialog open={!!expandedImage} onOpenChange={(open) => !open && setExpandedImage(null)}>
-          <DialogContent 
+        <Dialog
+          open={!!expandedImage}
+          onOpenChange={open => !open && setExpandedImage(null)}
+        >
+          <DialogContent
             className="!max-w-[98vw] !w-[98vw] !h-[98vh] !max-h-[98vh] bg-[#0a0a0a] border-white/10 p-0 overflow-hidden flex flex-col !translate-x-[-50%] !translate-y-[-50%] !top-[50%] !left-[50%]"
             showCloseButton={false}
           >
@@ -271,14 +360,15 @@ export default function Portfolio() {
                 <DialogHeader className="p-4 border-b border-white/10 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <DialogTitle className="text-white">
-                      {t('portfolio.image')} {expandedImage.index + 1} {t('portfolio.of')} {expandedImage.images.length}
+                      {t("portfolio.image")} {expandedImage.index + 1}{" "}
+                      {t("portfolio.of")} {expandedImage.images.length}
                     </DialogTitle>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => setExpandedImage(null)}
                       className="text-white hover:bg-white/10"
-                        aria-label={t('common.close')}
+                      aria-label={t("common.close")}
                     >
                       <X className="w-5 h-5" />
                     </Button>
@@ -298,7 +388,7 @@ export default function Portfolio() {
                         src={expandedImage.url}
                         alt={`Imagem expandida ${expandedImage.index + 1}`}
                         className="w-auto h-auto max-w-full max-h-full object-contain rounded-lg"
-                        style={{ maxHeight: 'calc(98vh - 100px)' }}
+                        style={{ maxHeight: "calc(98vh - 100px)" }}
                       />
                     </motion.div>
                   </AnimatePresence>
@@ -309,16 +399,17 @@ export default function Portfolio() {
                         size="icon"
                         className="absolute left-4 top-1/2 -translate-y-1/2 bg-background/80 border-white/20 text-white hover:bg-neon-purple hover:border-neon-purple z-10"
                         onClick={() => {
-                          const prevIndex = expandedImage.index > 0 
-                            ? expandedImage.index - 1 
-                            : expandedImage.images.length - 1;
+                          const prevIndex =
+                            expandedImage.index > 0
+                              ? expandedImage.index - 1
+                              : expandedImage.images.length - 1;
                           setExpandedImage({
                             ...expandedImage,
                             url: expandedImage.images[prevIndex],
-                            index: prevIndex
+                            index: prevIndex,
                           });
                         }}
-                        aria-label={t('portfolio.previousImage')}
+                        aria-label={t("portfolio.previousImage")}
                       >
                         <ChevronLeft className="w-6 h-6" />
                       </Button>
@@ -327,16 +418,18 @@ export default function Portfolio() {
                         size="icon"
                         className="absolute right-4 top-1/2 -translate-y-1/2 bg-background/80 border-white/20 text-white hover:bg-neon-purple hover:border-neon-purple z-10"
                         onClick={() => {
-                          const nextIndex = expandedImage.index < expandedImage.images.length - 1
-                            ? expandedImage.index + 1
-                            : 0;
+                          const nextIndex =
+                            expandedImage.index <
+                            expandedImage.images.length - 1
+                              ? expandedImage.index + 1
+                              : 0;
                           setExpandedImage({
                             ...expandedImage,
                             url: expandedImage.images[nextIndex],
-                            index: nextIndex
+                            index: nextIndex,
                           });
                         }}
-                        aria-label={t('portfolio.nextImage')}
+                        aria-label={t("portfolio.nextImage")}
                       >
                         <ChevronRight className="w-6 h-6" />
                       </Button>
@@ -348,5 +441,6 @@ export default function Portfolio() {
           </DialogContent>
         </Dialog>
       </motion.div>
+    </>
   );
 }

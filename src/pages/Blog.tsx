@@ -1,12 +1,24 @@
 import { PageSkeleton } from "@/components/PageSkeleton";
+import { SEO } from "@/components/SEO";
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Search, Filter, ChevronRight, ChevronLeft, Clock, X } from "lucide-react";
+import {
+  Search,
+  Filter,
+  ChevronRight,
+  ChevronLeft,
+  Clock,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Link } from "wouter";
 import { useI18n } from "@/i18n/context/I18nContext";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
@@ -30,12 +42,12 @@ export default function Blog() {
   // Preload da primeira imagem crítica (featured post)
   useEffect(() => {
     if (featuredPosts.length > 0 && featuredPosts[0]?.image) {
-      const link = document.createElement('link');
-      link.rel = 'preload';
-      link.as = 'image';
+      const link = document.createElement("link");
+      link.rel = "preload";
+      link.as = "image";
       link.href = featuredPosts[0].image;
       document.head.appendChild(link);
-      
+
       return () => {
         if (document.head.contains(link)) {
           document.head.removeChild(link);
@@ -55,23 +67,24 @@ export default function Blog() {
 
   const filteredPosts = posts.filter(post => {
     // Filtro por termo de busca
-    const matchesSearch = 
+    const matchesSearch =
       post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       post.subtitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.tags?.some((tag: string) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+      post.tags?.some((tag: string) =>
+        tag.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
     // Filtro por tags selecionadas
-    const matchesTags = selectedTags.length === 0 || 
+    const matchesTags =
+      selectedTags.length === 0 ||
       selectedTags.some(tag => post.tags?.includes(tag));
 
     return matchesSearch && matchesTags;
   });
 
   const handleTagToggle = (tag: string) => {
-    setSelectedTags(prev => 
-      prev.includes(tag) 
-        ? prev.filter(t => t !== tag)
-        : [...prev, tag]
+    setSelectedTags(prev =>
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
   };
 
@@ -88,17 +101,23 @@ export default function Blog() {
     show: {
       opacity: 1,
       transition: {
-        staggerChildren: 0.1
-      }
-    }
+        staggerChildren: 0.1,
+      },
+    },
   };
 
   const item = {
     hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
+    show: { opacity: 1, y: 0 },
   };
 
   return (
+    <>
+      <SEO
+        title="Blog"
+        description="Artigos sobre desenvolvimento web, React, TypeScript e tecnologia. Compartilhando conhecimento e experiências."
+        url="/blog"
+      />
       <motion.div
         variants={container}
         initial="hidden"
@@ -106,21 +125,26 @@ export default function Blog() {
         className="space-y-12 pb-12"
       >
         <header className="space-y-4">
-          <h1 className="text-3xl font-bold text-white">{t('blog.title')}</h1>
-          <p className="text-gray-400">{t('blog.subtitle')}</p>
+          <h1 className="text-3xl font-bold text-white">{t("blog.title")}</h1>
+          <p className="text-gray-400">{t("blog.subtitle")}</p>
         </header>
 
         {/* Featured Posts Carousel */}
         {featuredPosts.length > 0 && (
           <motion.section variants={item} className="space-y-6">
-            <h2 className="text-xl font-bold text-white">{t('blog.featured')}</h2>
+            <h2 className="text-xl font-bold text-white">
+              {t("blog.featured")}
+            </h2>
 
             {featuredPosts.length === 1 ? (
               <Link href={`/blog/${featuredPosts[0].slug}`}>
                 <div className="relative rounded-2xl overflow-hidden group cursor-pointer border border-white/5 shadow-2xl h-[400px]">
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent z-10"></div>
                   <img
-                    src={featuredPosts[0].image || "https://via.placeholder.com/800x400"}
+                    src={
+                      featuredPosts[0].image ||
+                      "https://via.placeholder.com/800x400"
+                    }
                     alt={featuredPosts[0].title}
                     loading="eager"
                     fetchPriority="high"
@@ -133,7 +157,10 @@ export default function Blog() {
                   <div className="absolute bottom-0 left-0 right-0 p-8 z-20">
                     <div className="flex flex-wrap gap-2 mb-4">
                       {featuredPosts[0].tags?.map((tag: string) => (
-                        <Badge key={tag} className="bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-sm">
+                        <Badge
+                          key={tag}
+                          className="bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-sm"
+                        >
                           {tag}
                         </Badge>
                       ))}
@@ -149,15 +176,22 @@ export default function Blog() {
 
                     <div className="flex items-center justify-between">
                       <div className="flex items-center text-sm text-gray-400 space-x-4">
-                        <span>{new Date(featuredPosts[0].published_at).toLocaleDateString('pt-BR')}</span>
+                        <span>
+                          {new Date(
+                            featuredPosts[0].published_at
+                          ).toLocaleDateString("pt-BR")}
+                        </span>
                         <span className="flex items-center">
                           <Clock className="w-4 h-4 mr-1" />
-                          {Math.ceil(featuredPosts[0].content.split(' ').length / 200)} {t('blog.readTime')}
+                          {Math.ceil(
+                            featuredPosts[0].content.split(" ").length / 200
+                          )}{" "}
+                          {t("blog.readTime")}
                         </span>
                       </div>
 
                       <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white">
-                        {t('blog.readNow')}
+                        {t("blog.readNow")}
                       </Button>
                     </div>
                   </div>
@@ -167,12 +201,18 @@ export default function Blog() {
               <Carousel className="w-full" opts={{ loop: true }}>
                 <CarouselContent className="-ml-2 md:-ml-4">
                   {featuredPosts.map((post, index) => (
-                    <CarouselItem key={post.id} className="pl-2 md:pl-4 basis-full">
+                    <CarouselItem
+                      key={post.id}
+                      className="pl-2 md:pl-4 basis-full"
+                    >
                       <Link href={`/blog/${post.slug}`}>
                         <div className="relative rounded-2xl overflow-hidden group cursor-pointer border border-white/5 shadow-2xl h-[400px]">
                           <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent z-10"></div>
                           <img
-                            src={post.image || "https://via.placeholder.com/800x400"}
+                            src={
+                              post.image ||
+                              "https://via.placeholder.com/800x400"
+                            }
                             alt={post.title}
                             loading={index === 0 ? "eager" : "lazy"}
                             fetchPriority={index === 0 ? "high" : "auto"}
@@ -185,7 +225,10 @@ export default function Blog() {
                           <div className="absolute bottom-0 left-0 right-0 p-8 z-20">
                             <div className="flex flex-wrap gap-2 mb-4">
                               {post.tags?.map((tag: string) => (
-                                <Badge key={tag} className="bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-sm">
+                                <Badge
+                                  key={tag}
+                                  className="bg-white/10 hover:bg-white/20 text-white border-none backdrop-blur-sm"
+                                >
                                   {tag}
                                 </Badge>
                               ))}
@@ -201,15 +244,22 @@ export default function Blog() {
 
                             <div className="flex items-center justify-between">
                               <div className="flex items-center text-sm text-gray-400 space-x-4">
-                                <span>{new Date(post.published_at).toLocaleDateString('pt-BR')}</span>
+                                <span>
+                                  {new Date(
+                                    post.published_at
+                                  ).toLocaleDateString("pt-BR")}
+                                </span>
                                 <span className="flex items-center">
                                   <Clock className="w-4 h-4 mr-1" />
-                                  {Math.ceil(post.content.split(' ').length / 200)} {t('blog.readTime')}
+                                  {Math.ceil(
+                                    post.content.split(" ").length / 200
+                                  )}{" "}
+                                  {t("blog.readTime")}
                                 </span>
                               </div>
 
                               <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white">
-                                {t('blog.readNow')}
+                                {t("blog.readNow")}
                               </Button>
                             </div>
                           </div>
@@ -230,22 +280,24 @@ export default function Blog() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
             <Input
-              placeholder={t('blog.searchPlaceholder')}
+              placeholder={t("blog.searchPlaceholder")}
               className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-gray-500 focus:border-neon-purple/50 focus:ring-neon-purple/20"
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
           <Popover>
             <PopoverTrigger asChild>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className={`border-white/10 text-gray-300 hover:text-white hover:bg-white/5 ${
-                  selectedTags.length > 0 ? 'border-neon-purple/50 bg-neon-purple/10' : ''
+                  selectedTags.length > 0
+                    ? "border-neon-purple/50 bg-neon-purple/10"
+                    : ""
                 }`}
               >
                 <Filter className="mr-2 h-4 w-4" />
-                {t('blog.filterByTags')}
+                {t("blog.filterByTags")}
                 {selectedTags.length > 0 && (
                   <Badge className="ml-2 bg-neon-purple text-white border-none">
                     {selectedTags.length}
@@ -265,15 +317,15 @@ export default function Blog() {
                       className="h-7 px-2 text-xs text-gray-400 hover:text-white"
                     >
                       <X className="h-3 w-3 mr-1" />
-                      {t('blog.clear')}
+                      {t("blog.clear")}
                     </Button>
                   )}
                 </div>
                 <div className="max-h-64 overflow-y-auto space-y-2">
                   {allTags.length === 0 ? (
-                    <p className="text-sm text-gray-400">{t('blog.noTags')}</p>
+                    <p className="text-sm text-gray-400">{t("blog.noTags")}</p>
                   ) : (
-                    allTags.map((tag) => (
+                    allTags.map(tag => (
                       <div
                         key={tag}
                         className="flex items-center space-x-2 cursor-pointer hover:bg-white/5 rounded-md p-2 transition-colors"
@@ -301,66 +353,84 @@ export default function Blog() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredPosts.length === 0 ? (
               <div className="col-span-2 text-center py-12">
-                <p className="text-gray-400 text-lg">{t('blog.noPosts')}</p>
-                <p className="text-gray-500 text-sm mt-2">{t('blog.comeBackSoon')}</p>
+                <p className="text-gray-400 text-lg">{t("blog.noPosts")}</p>
+                <p className="text-gray-500 text-sm mt-2">
+                  {t("blog.comeBackSoon")}
+                </p>
               </div>
             ) : (
-              filteredPosts.map((post) => (
-              <Link key={post.id} href={`/blog/${post.slug}`}>
-                <div
-                  className="group rounded-xl bg-card border border-white/5 overflow-hidden hover:border-neon-purple/30 transition-all duration-300 flex flex-col h-full cursor-pointer"
-                >
-                  <div className="relative h-48 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
-                    <img
-                      src={post.image || "https://via.placeholder.com/400x200"}
-                      alt={post.title}
-                      loading="lazy"
-                      decoding="async"
-                      width="400"
-                      height="200"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                    />
-                  </div>
-
-                  <div className="p-6 flex flex-col flex-1">
-                    <div className="flex items-center text-xs text-gray-500 mb-3 space-x-3">
-                      <span>{new Date(post.published_at).toLocaleDateString('pt-BR')}</span>
-                      <span className="w-1 h-1 rounded-full bg-gray-600"></span>
-                      <span>{Math.ceil(post.content.split(' ').length / 200)} {t('blog.readTime')}</span>
+              filteredPosts.map(post => (
+                <Link key={post.id} href={`/blog/${post.slug}`}>
+                  <div className="group rounded-xl bg-card border border-white/5 overflow-hidden hover:border-neon-purple/30 transition-all duration-300 flex flex-col h-full cursor-pointer">
+                    <div className="relative h-48 overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent z-10"></div>
+                      <img
+                        src={
+                          post.image || "https://via.placeholder.com/400x200"
+                        }
+                        alt={post.title}
+                        loading="lazy"
+                        decoding="async"
+                        width="400"
+                        height="200"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
                     </div>
 
-                    <h3 className="text-xl font-bold text-white mb-3 group-hover:text-neon-purple transition-colors">
-                      {post.title}
-                    </h3>
+                    <div className="p-6 flex flex-col flex-1">
+                      <div className="flex items-center text-xs text-gray-500 mb-3 space-x-3">
+                        <span>
+                          {new Date(post.published_at).toLocaleDateString(
+                            "pt-BR"
+                          )}
+                        </span>
+                        <span className="w-1 h-1 rounded-full bg-gray-600"></span>
+                        <span>
+                          {Math.ceil(post.content.split(" ").length / 200)}{" "}
+                          {t("blog.readTime")}
+                        </span>
+                      </div>
 
-                    <p className="text-gray-400 text-sm mb-6 line-clamp-2 flex-1">
-                      {post.subtitle}
-                    </p>
+                      <h3 className="text-xl font-bold text-white mb-3 group-hover:text-neon-purple transition-colors">
+                        {post.title}
+                      </h3>
 
-                    <div className="flex flex-wrap gap-2 mb-6">
-                      {post.tags?.slice(0, 3).map((tag: string) => (
-                        <Badge key={tag} variant="secondary" className="bg-white/5 hover:bg-white/10 text-gray-300 border border-white/5 text-[10px]">
-                          {tag}
-                        </Badge>
-                      ))}
-                      {post.tags?.length > 3 && (
-                        <Badge variant="secondary" className="bg-white/5 text-gray-300 border border-white/5 text-[10px]">
-                          +{post.tags.length - 3}
-                        </Badge>
-                      )}
+                      <p className="text-gray-400 text-sm mb-6 line-clamp-2 flex-1">
+                        {post.subtitle}
+                      </p>
+
+                      <div className="flex flex-wrap gap-2 mb-6">
+                        {post.tags?.slice(0, 3).map((tag: string) => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="bg-white/5 hover:bg-white/10 text-gray-300 border border-white/5 text-[10px]"
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                        {post.tags?.length > 3 && (
+                          <Badge
+                            variant="secondary"
+                            className="bg-white/5 text-gray-300 border border-white/5 text-[10px]"
+                          >
+                            +{post.tags.length - 3}
+                          </Badge>
+                        )}
+                      </div>
+
+                      <span className="inline-flex items-center text-sm text-neon-purple hover:text-neon-lime transition-colors mt-auto">
+                        {t("blog.readMore")}{" "}
+                        <ChevronRight className="ml-1 w-4 h-4" />
+                      </span>
                     </div>
-
-                    <span className="inline-flex items-center text-sm text-neon-purple hover:text-neon-lime transition-colors mt-auto">
-                      {t('blog.readMore')} <ChevronRight className="ml-1 w-4 h-4" />
-                    </span>
                   </div>
-                </div>
-              </Link>
+                </Link>
               ))
             )}
           </div>
         </motion.div>
       </motion.div>
+    </>
   );
 }
