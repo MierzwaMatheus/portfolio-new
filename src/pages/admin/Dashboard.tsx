@@ -16,7 +16,7 @@ import {
   Image as ImageIcon,
   Briefcase,
   Plus,
-  CreditCard
+  CreditCard,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,7 @@ import { ProjectDialog } from "@/components/admin/ProjectDialog";
 import { ProposalDialog } from "@/components/admin/ProposalDialog";
 import { ResumeExperienceDialog } from "@/components/admin/ResumeExperienceDialog";
 import { ImagePicker } from "@/components/admin/ImagePicker";
+import { PublishStatus } from "@/components/admin/PublishStatus";
 
 // Admin Sidebar Component
 function AdminSidebar() {
@@ -33,16 +34,66 @@ function AdminSidebar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const navItems = [
-    { icon: LayoutDashboard, label: "Dashboard", path: "/admin/dashboard", roles: ["root", "admin"] },
-    { icon: FolderKanban, label: "Projetos", path: "/admin/projects", roles: ["root", "admin"] },
-    { icon: FileText, label: "Blog", path: "/admin/blog", roles: ["root", "admin"] },
-    { icon: User, label: "Currículo", path: "/admin/resume", roles: ["root", "admin"] },
-    { icon: FileSignature, label: "Propostas", path: "/admin/proposals", roles: ["root", "admin", "proposal-editor"] },
-    { icon: Home, label: "Home", path: "/admin/home", roles: ["root", "admin"] },
-    { icon: User, label: "Sobre Mim", path: "/admin/about", roles: ["root", "admin"] },
-    { icon: Mail, label: "Contato", path: "/admin/contact", roles: ["root", "admin"] },
-    { icon: CreditCard, label: "Links de Pagamento", path: "/admin/payment-links", roles: ["root", "admin"] },
-    { icon: UserPlus, label: "Criar Usuário", path: "/admin/users/new", roles: ["root"] },
+    {
+      icon: LayoutDashboard,
+      label: "Dashboard",
+      path: "/admin/dashboard",
+      roles: ["root", "admin"],
+    },
+    {
+      icon: FolderKanban,
+      label: "Projetos",
+      path: "/admin/projects",
+      roles: ["root", "admin"],
+    },
+    {
+      icon: FileText,
+      label: "Blog",
+      path: "/admin/blog",
+      roles: ["root", "admin"],
+    },
+    {
+      icon: User,
+      label: "Currículo",
+      path: "/admin/resume",
+      roles: ["root", "admin"],
+    },
+    {
+      icon: FileSignature,
+      label: "Propostas",
+      path: "/admin/proposals",
+      roles: ["root", "admin", "proposal-editor"],
+    },
+    {
+      icon: Home,
+      label: "Home",
+      path: "/admin/home",
+      roles: ["root", "admin"],
+    },
+    {
+      icon: User,
+      label: "Sobre Mim",
+      path: "/admin/about",
+      roles: ["root", "admin"],
+    },
+    {
+      icon: Mail,
+      label: "Contato",
+      path: "/admin/contact",
+      roles: ["root", "admin"],
+    },
+    {
+      icon: CreditCard,
+      label: "Links de Pagamento",
+      path: "/admin/payment-links",
+      roles: ["root", "admin"],
+    },
+    {
+      icon: UserPlus,
+      label: "Criar Usuário",
+      path: "/admin/users/new",
+      roles: ["root"],
+    },
   ];
 
   const filteredNavItems = navItems.filter(item => checkRole(item.roles));
@@ -60,10 +111,12 @@ function AdminSidebar() {
       </Button>
 
       {/* Sidebar */}
-      <aside className={cn(
-        "fixed inset-y-0 left-0 z-40 w-64 bg-sidebar border-r border-white/10 transform transition-transform duration-300 ease-in-out md:translate-x-0",
-        isOpen ? "translate-x-0" : "-translate-x-full"
-      )}>
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 z-40 w-64 bg-sidebar border-r border-white/10 transform transition-transform duration-300 ease-in-out md:translate-x-0",
+          isOpen ? "translate-x-0" : "-translate-x-full"
+        )}
+      >
         <div className="flex flex-col h-full p-6">
           <div className="mb-8 flex items-center space-x-2">
             <div className="h-8 w-8 rounded bg-neon-purple flex items-center justify-center">
@@ -73,16 +126,18 @@ function AdminSidebar() {
           </div>
 
           <nav className="flex-1 space-y-2">
-            {filteredNavItems.map((item) => {
+            {filteredNavItems.map(item => {
               const isActive = location === item.path;
               return (
                 <Link key={item.path} href={item.path}>
-                  <a className={cn(
-                    "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors",
-                    isActive
-                      ? "bg-neon-purple/10 text-neon-purple border border-neon-purple/20"
-                      : "text-gray-400 hover:text-white hover:bg-white/5"
-                  )}>
+                  <a
+                    className={cn(
+                      "flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors",
+                      isActive
+                        ? "bg-neon-purple/10 text-neon-purple border border-neon-purple/20"
+                        : "text-gray-400 hover:text-white hover:bg-white/5"
+                    )}
+                  >
                     <item.icon className="w-5 h-5" />
                     <span>{item.label}</span>
                   </a>
@@ -112,9 +167,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-background text-white">
       <AdminSidebar />
-      <main className="md:ml-64 p-8 pt-20 md:pt-8">
-        {children}
-      </main>
+      <main className="md:ml-64 p-8 pt-20 md:pt-8">{children}</main>
     </div>
   );
 }
@@ -124,7 +177,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState({
     projects: 0,
     articles: 0,
-    proposals: 0
+    proposals: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [isProjectOpen, setIsProjectOpen] = useState(false);
@@ -141,29 +194,29 @@ export default function Dashboard() {
 
       // Buscar contagem de projetos
       const { count: projectsCount } = await supabase
-        .schema('app_portfolio')
-        .from('projects')
-        .select('*', { count: 'exact', head: true });
+        .schema("app_portfolio")
+        .from("projects")
+        .select("*", { count: "exact", head: true });
 
       // Buscar contagem de artigos (posts)
       const { count: articlesCount } = await supabase
-        .schema('app_portfolio')
-        .from('posts')
-        .select('*', { count: 'exact', head: true });
+        .schema("app_portfolio")
+        .from("posts")
+        .select("*", { count: "exact", head: true });
 
       // Buscar contagem de propostas
       const { count: proposalsCount } = await supabase
-        .schema('app_portfolio')
-        .from('proposals')
-        .select('*', { count: 'exact', head: true });
+        .schema("app_portfolio")
+        .from("proposals")
+        .select("*", { count: "exact", head: true });
 
       setStats({
         projects: projectsCount || 0,
         articles: articlesCount || 0,
-        proposals: proposalsCount || 0
+        proposals: proposalsCount || 0,
       });
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error("Error fetching stats:", error);
     } finally {
       setIsLoading(false);
     }
@@ -172,18 +225,44 @@ export default function Dashboard() {
   return (
     <AdminLayout>
       <div className="space-y-8">
-        <header>
-          <h1 className="text-3xl font-bold text-white">Dashboard</h1>
-          <p className="text-gray-400 mt-2">Bem-vindo ao painel administrativo do seu portfólio.</p>
+        <header className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Dashboard</h1>
+            <p className="text-gray-400 mt-2">
+              Bem-vindo ao painel administrativo do seu portfólio.
+            </p>
+          </div>
+          <PublishStatus />
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
-            { title: "Projetos", count: stats.projects, icon: FolderKanban, color: "text-blue-400", bg: "bg-blue-400/10" },
-            { title: "Artigos", count: stats.articles, icon: FileText, color: "text-green-400", bg: "bg-green-400/10" },
-            { title: "Propostas", count: stats.proposals, icon: FileSignature, color: "text-purple-400", bg: "bg-purple-400/10" },
+            {
+              title: "Projetos",
+              count: stats.projects,
+              icon: FolderKanban,
+              color: "text-blue-400",
+              bg: "bg-blue-400/10",
+            },
+            {
+              title: "Artigos",
+              count: stats.articles,
+              icon: FileText,
+              color: "text-green-400",
+              bg: "bg-green-400/10",
+            },
+            {
+              title: "Propostas",
+              count: stats.proposals,
+              icon: FileSignature,
+              color: "text-purple-400",
+              bg: "bg-purple-400/10",
+            },
           ].map((stat, index) => (
-            <div key={index} className="bg-card border border-white/10 rounded-xl p-6 flex items-center space-x-4">
+            <div
+              key={index}
+              className="bg-card border border-white/10 rounded-xl p-6 flex items-center space-x-4"
+            >
               <div className={cn("p-4 rounded-lg", stat.bg)}>
                 <stat.icon className={cn("w-8 h-8", stat.color)} />
               </div>
@@ -228,9 +307,12 @@ export default function Dashboard() {
             </Button>
 
             <ImagePicker
-              onSelect={() => { }}
+              onSelect={() => {}}
               trigger={
-                <Button variant="outline" className="w-full h-24 flex flex-col items-center justify-center gap-2 border-white/10 hover:bg-white/5 hover:border-neon-purple/50">
+                <Button
+                  variant="outline"
+                  className="w-full h-24 flex flex-col items-center justify-center gap-2 border-white/10 hover:bg-white/5 hover:border-neon-purple/50"
+                >
                   <ImageIcon className="w-6 h-6 text-neon-purple" />
                   Galeria de Imagens
                 </Button>
@@ -254,7 +336,7 @@ export default function Dashboard() {
         <ResumeExperienceDialog
           open={isExperienceOpen}
           onOpenChange={setIsExperienceOpen}
-          onSave={() => { }}
+          onSave={() => {}}
         />
       </div>
     </AdminLayout>

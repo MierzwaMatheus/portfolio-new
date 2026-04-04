@@ -9,11 +9,14 @@ export function PublishStatus() {
   const { data: status, isLoading } = useQuery({
     queryKey: ["deploy-status"],
     queryFn: async () => {
-      const { data } = await supabase
-        .schema("app_portfolio")
-        .from("deploy_status")
-        .select("pending_changes, last_published_at")
-        .single();
+      const { data, error } = await supabase.rpc("get_deploy_status").single();
+
+      if (error) {
+        console.error("❌ Error fetching deploy status:", error);
+        throw error;
+      }
+
+      console.log("✅ Deploy status fetched:", data);
       return data;
     },
     refetchInterval: 30000,
@@ -80,6 +83,13 @@ export function PublishStatus() {
   };
 
   if (isLoading) return <Badge variant="secondary">Carregando...</Badge>;
+
+  console.log("🔍 PublishStatus render:", {
+    isLoading,
+    hasStatus: !!status,
+    pendingChanges: status?.pending_changes,
+    status,
+  });
 
   if (status?.pending_changes) {
     return (
