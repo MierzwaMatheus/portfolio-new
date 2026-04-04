@@ -1,0 +1,126 @@
+{
+  "testimonials": [
+    {
+      "id": "122a26ff-cd29-4675-9501-7f58929d932e",
+      "created_at": "2025-12-13T23:41:42.907085+00:00",
+      "name": "Lucas",
+      "role": "CEO ForgeCode",
+      "image_url": "https://roxus-studio.web.app/assets/images/depoimentos/lucas.jpeg",
+      "text": "Obrigado Matheus pela modernização da nossa marca. Foi essencial essa reformulação! Superou as espectativas, trabalho rápido e muito eficiente. Nós da Forge Code agradecemos muito a atenção e os serviços prestados!\n",
+      "text_translations": {
+        "en-US": "Thank you Matheus for the modernization of our brand. This recasting was essential! You've overcome expectations, fast work and very efficient. We from Forge Code We thank you very much for the attention and services provided!\n!",
+        "pt-BR": "Obrigado Matheus pela modernização da nossa marca. Foi essencial essa reformulação! Superou as espectativas, trabalho rápido e muito eficiente. Nós da Forge Code agradecemos muito a atenção e os serviços prestados!\n"
+      },
+      "role_translations": {
+        "pt-BR": ""
+      }
+    },
+    {
+      "id": "c88bf4fe-cb1a-49ed-bf5e-84892ecddc0c",
+      "created_at": "2025-12-13T23:41:42.907116+00:00",
+      "name": "Luiz Cossolin",
+      "role": "CEO Paith",
+      "image_url": "https://roxus-studio.web.app/assets/images/depoimentos/Luiz%20Cossolin.jpeg",
+      "text": "Valeu demais pelo trabalho! Desde o início, aprendi muito sobre identidade visual. A primeira chamada que tivemos esclareceu todas as dúvidas e permitiu explicar bem o que eu queria. O questionário é bastante completo, e o serviço de atendimento está em outro nível.",
+      "text_translations": {
+        "en-US": "Thanks so much for the work! From the beginning, I learned a lot about visual identity. The first call we had clarified all the doubts and allowed me to explain what I wanted. The questionnaire is quite complete, and the service is at another level.",
+        "pt-BR": "Valeu demais pelo trabalho! Desde o início, aprendi muito sobre identidade visual. A primeira chamada que tivemos esclareceu todas as dúvidas e permitiu explicar bem o que eu queria. O questionário é bastante completo, e o serviço de atendimento está em outro nível."
+      },
+      "role_translations": {
+        "pt-BR": ""
+      }
+    },
+    {
+      "id": "342c3e27-0265-4668-a062-420f9dbc1a9c",
+      "created_at": "2025-12-13T23:41:42.907123+00:00",
+      "name": "Fabio Oliveira",
+      "role": "CEO Sampa Invest Group",
+      "image_url": "https://roxus-studio.web.app/assets/images/cartoes/fabio-oliveira.jpeg",
+      "text": "Cara, a minha marca ficou top demais! Sério, eu fiquei impressionado com o que a Roxus conseguiu fazer. Eu já esperava algo legal, mas isso foi muito além! Com certeza vou recomendar para todos os meus amigos e colegas de trabalho.",
+      "text_translations": {
+        "en-US": "Dude, my brand's too topped! Seriously, I was impressed with what Roxus was able to do. I expected something nice, but that went way beyond! I'll definitely recommend it to all my friends and coworkers.",
+        "pt-BR": "Cara, a minha marca ficou top demais! Sério, eu fiquei impressionado com o que a Roxus conseguiu fazer. Eu já esperava algo legal, mas isso foi muito além! Com certeza vou recomendar para todos os meus amigos e colegas de trabalho."
+      },
+      "role_translations": {
+        "pt-BR": ""
+      }
+    },
+    {
+      "id": "48cd67f5-8cd8-46c9-88b4-9a950d8fd434",
+      "created_at": "2025-12-13T23:41:42.907137+00:00",
+      "name": "Maria Cecilia",
+      "role": "CEO Aroma & Latte",
+      "image_url": "https://roxus-studio.web.app/assets/images/depoimentos/maria%20cecilia.jpg",
+      "text": "Quando iniciei o projeto não tinha certeza se era um bom investimento, agora já passaram 3 meses e nós percebemos um aumento de 30% no marketing orgânico da marca. A forma que a Roxus encaminhou o projeto fez os clientes se sentirem muito mais próximos da nossa marca.",
+      "text_translations": {
+        "en-US": "When I started the project I wasn't sure if it was a good investment, now it's been three months and we realized a 30% increase in organic brand marketing. The way Roxus forwarded the project made customers feel much closer to our brand.",
+        "pt-BR": "Quando iniciei o projeto não tinha certeza se era um bom investimento, agora já passaram 3 meses e nós percebemos um aumento de 30% no marketing orgânico da marca. A forma que a Roxus encaminhou o projeto fez os clientes se sentirem muito mais próximos da nossa marca."
+      },
+      "role_translations": {
+        "pt-BR": ""
+      }
+    }
+  ],
+  "services": [
+    {
+      "id": "f68f71d6-2707-4e65-a4a3-9b253f407b08",
+      "created_at": "2025-12-14T03:34:31.485854+00:00",
+      "title": "Experiências Digitais Inteligentes",
+      "description": "Crio interfaces que não apenas encantam visualmente, mas que resolvem problemas reais com elegância. Integro IA de forma inteligente (Gemini, LLMs), construo dashboards que revelam insights, e desenho jornadas que transformam usuários em defensores da marca.\n",
+      "title_translations": {
+        "en-US": "Intelligent Digital Experiences",
+        "pt-BR": "Experiências Digitais Inteligentes"
+      },
+      "description_translations": {
+        "en-US": "I create interfaces that not only delight visually, but solve real problems with elegance. Integro IA intelligently (Gemini, LLMs), I build dashboards that reveal insights, and design journeys that transform users into brand advocates.\n.",
+        "pt-BR": "Crio interfaces que não apenas encantam visualmente, mas que resolvem problemas reais com elegância. Integro IA de forma inteligente (Gemini, LLMs), construo dashboards que revelam insights, e desenho jornadas que transformam usuários em defensores da marca.\n"
+      }
+    },
+    {
+      "id": "02863bc2-ffb0-4106-86ce-db05364ca6e0",
+      "created_at": "2025-12-14T03:34:31.992865+00:00",
+      "title": "Performance & DevOps Frontend",
+      "description": "Otimizo cada milissegundo. Desde build tools (Vite) até estratégias de deployment (Vercel), implemento pipelines que garantem qualidade, velocidade e confiabilidade. Automação, monitoramento e excelência operacional são minha obsessão.\n",
+      "title_translations": {
+        "en-US": "Performance & DevOps Frontend",
+        "pt-BR": "Performance & DevOps Frontend"
+      },
+      "description_translations": {
+        "en-US": "I optimize every millisecond. From built tools (Vite) to deployment strategies (Vercel), implement pipelines that ensure quality, speed and reliability. Automation, monitoring and operational excellence are my obsession.\n.",
+        "pt-BR": "Otimizo cada milissegundo. Desde build tools (Vite) até estratégias de deployment (Vercel), implemento pipelines que garantem qualidade, velocidade e confiabilidade. Automação, monitoramento e excelência operacional são minha obsessão.\n"
+      }
+    },
+    {
+      "id": "3f139617-54d3-4dc4-bf55-b816a1484d68",
+      "created_at": "2025-12-14T03:34:07.355632+00:00",
+      "title": "Arquitetura de Sistemas Escaláveis",
+      "description": "Desenho ecossistemas digitais robustos que crescem com seu negócio. Desde autenticação centralizada (Keycloak) até infraestrutura de CI/CD (GitHub Actions, Vercel), defino padrões técnicos que garantem segurança, performance e manutenibilidade. Cada decisão arquitetural é estratégica.",
+      "title_translations": {
+        "en-US": "Scalable Systems Architecture",
+        "pt-BR": "Arquitetura de Sistemas Escaláveis"
+      },
+      "description_translations": {
+        "en-US": "Design robust digital ecosystems that grow with your business. From centralized authentication (Keycloak) to CI/CD infrastructure (GitHub Actions, Vercel), I define technical standards that ensure security, performance and maintenance. Every architectural decision is strategic.",
+        "pt-BR": "Desenho ecossistemas digitais robustos que crescem com seu negócio. Desde autenticação centralizada (Keycloak) até infraestrutura de CI/CD (GitHub Actions, Vercel), defino padrões técnicos que garantem segurança, performance e manutenibilidade. Cada decisão arquitetural é estratégica."
+      }
+    },
+    {
+      "id": "9a38fe6c-85a5-47ae-b7e8-915803f1d677",
+      "created_at": "2025-12-14T03:34:19.19851+00:00",
+      "title": "Liderança Técnica & Mentoria",
+      "description": "Guio equipes de engenharia na construção de soluções de alta qualidade. Defino arquiteturas, estabeleço padrões de código, realizo code reviews estratégicos e mentoro desenvolvedores para elevar o nível técnico. Meu foco: transformar times em máquinas de inovação.\n",
+      "title_translations": {
+        "en-US": "Technical Leadership & Mentoria",
+        "pt-BR": "Liderança Técnica & Mentoria"
+      },
+      "description_translations": {
+        "en-US": "I guide engineering teams in the construction of high quality solutions. I define architectures, establish code standards, perform code strategic reviews and mentor developers to raise the technical level. My focus: turning teams into innovation machines.\n.",
+        "pt-BR": "Guio equipes de engenharia na construção de soluções de alta qualidade. Defino arquiteturas, estabeleço padrões de código, realizo code reviews estratégicos e mentoro desenvolvedores para elevar o nível técnico. Meu foco: transformar times em máquinas de inovação.\n"
+      }
+    }
+  ],
+  "about_text": {
+    "en-US": "I am a Solutions Architect and Frontend Tech Lead with over 4 years of experience leading digital transformations. My expertise extends beyond code – I design scalable architectures, define technical standards, and drive strategic decisions that impact entire products.\n\nSpecialized in React, TypeScript, and modern infrastructure, I have a proven track record of revitalizing critical platforms, architecting complex authentication systems (Keycloak), implementing CI/CD from the ground up, and intelligently integrating AI into interfaces. I lead technical teams with a focus on innovation, quality, and scalability — transforming business challenges into robust and elegant digital solutions.",
+    "pt-BR": "Sou Arquiteto de Soluções e Tech Lead Frontend com mais de 4 anos de experiência liderando transformações digitais. Minha expertise vai além de código — desenho arquiteturas escaláveis, defino padrões técnicos e conduzo decisões estratégicas que impactam produtos inteiros.\n\nEspecializado em React, TypeScript e infraestrutura moderna, tenho um histórico comprovado em revitalizar plataformas críticas, arquitetar sistemas complexos de autenticação (Keycloak), implementar CI/CD do zero, e integrar IA de forma inteligente em interfaces. Lidero equipes técnicas com foco em inovação, qualidade e escalabilidade — transformando desafios de negócio em soluções digitais robustas e elegantes."
+  }
+}

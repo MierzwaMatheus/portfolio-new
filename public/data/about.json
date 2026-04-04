@@ -1,0 +1,182 @@
+{
+  "daily_routine": [
+    {
+      "id": "6a3d7fa8-2bf0-4430-991d-8d185a1153bf",
+      "image_url": "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/sobre_mim/1767926888808-fr3in.jpg",
+      "tags": [
+        "Paisagem"
+      ],
+      "description": "Apenas uma foto de paisagem que eu gosto muito.",
+      "description_translations": {
+        "en-US": "Just a landscape photo I really like.",
+        "pt-BR": "Apenas uma foto de paisagem que eu gosto muito."
+      },
+      "span_size": "1x2",
+      "display_order": 1,
+      "created_at": "2026-01-09T02:53:20.32837+00:00",
+      "updated_at": "2026-01-09T02:53:20.32837+00:00"
+    },
+    {
+      "id": "589548a4-df05-4be8-b8e2-ab51eaf899c4",
+      "image_url": "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/sobre_mim/1767925750348-x4fm4.webp",
+      "tags": [
+        "Games"
+      ],
+      "description": "Jogando Imperium na folga prolongada de fim de ano",
+      "description_translations": {
+        "en-US": "Playing Imperium during the extended year-end break",
+        "pt-BR": "Jogando Imperium na folga prolongada de fim de ano"
+      },
+      "span_size": "1x1",
+      "display_order": 2,
+      "created_at": "2026-01-09T02:31:26.767376+00:00",
+      "updated_at": "2026-01-09T02:31:26.767376+00:00"
+    },
+    {
+      "id": "14f36ac7-232a-47de-9bf0-f65ca44abf1b",
+      "image_url": "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/sobre_mim/1767926888809-8k1qup.jpg",
+      "tags": [
+        "Arte"
+      ],
+      "description": "Brincando de grafitte no meu quarto",
+      "description_translations": {
+        "en-US": "Playing graffiti in my room",
+        "pt-BR": "Brincando de grafitte no meu quarto"
+      },
+      "span_size": "1x1",
+      "display_order": 3,
+      "created_at": "2026-01-09T02:48:40.190302+00:00",
+      "updated_at": "2026-01-09T02:48:40.190302+00:00"
+    },
+    {
+      "id": "a2dc5ac7-8095-4c54-a9df-48b4dc59372e",
+      "image_url": "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/sobre_mim/1767925750348-2dpunf.jpg",
+      "tags": [
+        "Viagem"
+      ],
+      "description": "Viagem com a família pós natal. ",
+      "description_translations": {
+        "en-US": "Post-Christmas family trip.",
+        "pt-BR": "Viagem com a família pós natal. "
+      },
+      "span_size": "1x1",
+      "display_order": 0,
+      "created_at": "2026-01-09T02:29:59.032564+00:00",
+      "updated_at": "2026-01-09T02:29:59.032564+00:00"
+    },
+    {
+      "id": "c3ee8cc2-4d35-4852-af7b-4e95d5340d26",
+      "image_url": "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/sobre_mim/1767926888807-1bsu7.jpg",
+      "tags": [
+        "Lembraças"
+      ],
+      "description": "Lembranças de um passado onde tudo era mais simples",
+      "description_translations": {
+        "en-US": "Memories of a past when everything was simpler.",
+        "pt-BR": "Lembranças de um passado onde tudo era mais simples"
+      },
+      "span_size": "1x1",
+      "display_order": 4,
+      "created_at": "2026-01-09T02:54:17.883059+00:00",
+      "updated_at": "2026-01-09T02:54:17.883059+00:00"
+    }
+  ],
+  "faq": [
+    {
+      "id": "377ed300-0cb1-48c1-939b-d5b3d2d71574",
+      "question": "O que você faz quando não está trabalhando?",
+      "question_translations": {
+        "en-US": "What do you do when you're not working?",
+        "pt-BR": "O que você faz quando não está trabalhando?"
+      },
+      "answer": "Quando desligo do trampo, quase sempre tô com música no ouvido ou em volta de uma mesa com amigos. Curto rap, RPG de mesa e board games. Gosto de jogo que tem regra, estratégia e história, nada muito aleatório. É meu jeito de relaxar sem desligar o cérebro de vez.",
+      "answer_translations": {
+        "en-US": "When I get off work, I’m almost always listening to music or hanging out with friends. I enjoy rap, tabletop RPGs, and board games. I like games with rules, strategy, and a story—nothing too random. It's my way of relaxing without completely shutting off my brain.",
+        "pt-BR": "Quando desligo do trampo, quase sempre tô com música no ouvido ou em volta de uma mesa com amigos. Curto rap, RPG de mesa e board games. Gosto de jogo que tem regra, estratégia e história, nada muito aleatório. É meu jeito de relaxar sem desligar o cérebro de vez."
+      },
+      "display_order": 0,
+      "created_at": "2026-01-09T02:22:18.62465+00:00",
+      "updated_at": "2026-01-09T02:22:18.62465+00:00"
+    },
+    {
+      "id": "0413f731-e17a-4a7b-9fe2-5a1860b4f8bd",
+      "question": "Por que música é tão importante pra você?",
+      "question_translations": {
+        "en-US": "Why is music so important to you?",
+        "pt-BR": "Por que música é tão importante pra você?"
+      },
+      "answer": "Música é companhia constante. Rap me ajuda a focar, pensar e entrar no ritmo certo das coisas. Fone de ouvido praticamente faz parte do corpo. Sem som, tudo anda meio torto.",
+      "answer_translations": {
+        "en-US": "Music is a constant companion. Rap helps me focus, think, and get into the right rhythm. Headphones are practically a part of my body. Without sound, everything feels off-kilter.",
+        "pt-BR": "Música é companhia constante. Rap me ajuda a focar, pensar e entrar no ritmo certo das coisas. Fone de ouvido praticamente faz parte do corpo. Sem som, tudo anda meio torto."
+      },
+      "display_order": 0,
+      "created_at": "2026-01-09T02:22:21.042394+00:00",
+      "updated_at": "2026-01-09T02:22:21.042394+00:00"
+    },
+    {
+      "id": "d7a18350-c88b-4f69-9994-30ea9ebd0955",
+      "question": "Tem algo em você que as pessoas normalmente não esperam?",
+      "question_translations": {
+        "en-US": "Is there something about you that people usually don't expect?",
+        "pt-BR": "Tem algo em você que as pessoas normalmente não esperam?"
+      },
+      "answer": "Apesar do jeito mais fechado, quase marrento às vezes, curto romance. Principalmente aqueles quase platônicos, cheios de silêncio e sentimento não dito. Contradição? Talvez. Mas funciona.",
+      "answer_translations": {
+        "en-US": "Despite my reserved demeanor, almost cocky at times, I enjoy romance. Especially the almost platonic kind, full of silence and unspoken feelings. A contradiction? Maybe. But it works.",
+        "pt-BR": "Apesar do jeito mais fechado, quase marrento às vezes, curto romance. Principalmente aqueles quase platônicos, cheios de silêncio e sentimento não dito. Contradição? Talvez. Mas funciona."
+      },
+      "display_order": 2,
+      "created_at": "2026-01-09T02:59:56.895739+00:00",
+      "updated_at": "2026-01-09T02:59:56.895739+00:00"
+    },
+    {
+      "id": "443aa92a-e436-4499-8b7c-751ac573ad13",
+      "question": "O que mais te desperta curiosidade fora da tecnologia?",
+      "question_translations": {
+        "en-US": "What sparks your curiosity outside of technology?",
+        "pt-BR": "O que mais te desperta curiosidade fora da tecnologia?"
+      },
+      "answer": "Tenho muita curiosidade sobre outros modos de viver. Quero conhecer tribos indígenas e entender como é o dia a dia delas, sem romantizar, só observar e aprender. Ver o mundo por outras lentes sempre muda alguma coisa por dentro.",
+      "answer_translations": {
+        "en-US": "I'm very curious about other ways of life. I want to visit indigenous tribes and understand their daily lives, without romanticizing them, just observing and learning. Seeing the world through other lenses always changes something inside.",
+        "pt-BR": "Tenho muita curiosidade sobre outros modos de viver. Quero conhecer tribos indígenas e entender como é o dia a dia delas, sem romantizar, só observar e aprender. Ver o mundo por outras lentes sempre muda alguma coisa por dentro."
+      },
+      "display_order": 3,
+      "created_at": "2026-01-09T03:00:14.75079+00:00",
+      "updated_at": "2026-01-09T03:00:14.75079+00:00"
+    },
+    {
+      "id": "6e2a2055-1838-4bca-8f4d-0df8b1cc1776",
+      "question": "Como você encara desafios?",
+      "question_translations": {
+        "en-US": "How do you approach challenges?",
+        "pt-BR": "Como você encara desafios?"
+      },
+      "answer": "Com ânimo real. Desafio técnico pra mim é diversão. Aprender framework novo, configurar servidor do zero, montar homelab… tudo isso é parte do jogo. Dá trabalho, mas sempre ensina algo que fica.",
+      "answer_translations": {
+        "en-US": "With genuine enthusiasm. Technical challenges are fun for me. Learning a new framework, configuring a server from scratch, setting up a homelab... it's all part of the game. It takes work, but it always teaches you something that sticks with you.",
+        "pt-BR": "Com ânimo real. Desafio técnico pra mim é diversão. Aprender framework novo, configurar servidor do zero, montar homelab… tudo isso é parte do jogo. Dá trabalho, mas sempre ensina algo que fica."
+      },
+      "display_order": 4,
+      "created_at": "2026-01-09T03:00:35.271738+00:00",
+      "updated_at": "2026-01-09T03:00:35.271738+00:00"
+    },
+    {
+      "id": "184b7720-9831-4522-b6e0-8e29a0490528",
+      "question": "O que mais te motiva ao criar algo novo?",
+      "question_translations": {
+        "en-US": "What motivates you most when creating something new?",
+        "pt-BR": "O que mais te motiva ao criar algo novo?"
+      },
+      "answer": "O visual final. Ver tudo pronto e perceber que aquilo conversa com a personalidade da marca, que faz sentido, que impacta quem vai usar. Quando o cliente bate o olho e fala “é exatamente isso”, aí valeu.",
+      "answer_translations": {
+        "en-US": "The final look. Seeing everything finished and realizing that it reflects the brand's personality, that it makes sense, that it impacts the user. When the client sees it and says, \"That's exactly it,\" then it was all worth it.",
+        "pt-BR": "O visual final. Ver tudo pronto e perceber que aquilo conversa com a personalidade da marca, que faz sentido, que impacta quem vai usar. Quando o cliente bate o olho e fala “é exatamente isso”, aí valeu."
+      },
+      "display_order": 5,
+      "created_at": "2026-01-09T03:01:00.889879+00:00",
+      "updated_at": "2026-01-09T03:01:00.889879+00:00"
+    }
+  ]
+}

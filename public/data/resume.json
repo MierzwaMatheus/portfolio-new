@@ -1,0 +1,1180 @@
+[
+  {
+    "id": "3d25db5e-709f-49df-a266-5dd49a162506",
+    "type": "soft_skill",
+    "content": {
+      "text": "Arquitetura de Sistemas"
+    },
+    "order_index": 1,
+    "created_at": "2025-12-14T22:10:14.215631+00:00",
+    "updated_at": "2025-12-14T22:10:14.215633+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "3ea4ec81-4be2-4ab6-8d4a-34eee1e6a71a",
+    "type": "skill",
+    "content": {
+      "name": "Tailwind CSS",
+      "level": "92"
+    },
+    "order_index": 3,
+    "created_at": "2025-12-13T23:28:49.216197+00:00",
+    "updated_at": "2025-12-13T23:28:49.216199+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "2a095a58-1815-44d9-96df-c45cd8bead3b",
+    "type": "skill",
+    "content": {
+      "name": "DB SQL",
+      "level": "85"
+    },
+    "order_index": 8,
+    "created_at": "2025-12-15T03:05:42.39965+00:00",
+    "updated_at": "2025-12-15T03:05:42.39965+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "c6d05b24-6550-4552-832b-e3c347e7adb2",
+    "type": "skill",
+    "content": {
+      "name": "TypeScript",
+      "level": "95"
+    },
+    "order_index": 2,
+    "created_at": "2025-12-13T23:28:49.216182+00:00",
+    "updated_at": "2025-12-13T23:28:49.216184+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "45cb192a-9e9e-425d-b608-0ff6143e1510",
+    "type": "skill",
+    "content": {
+      "name": "Git",
+      "level": "88"
+    },
+    "order_index": 7,
+    "created_at": "2025-12-13T23:28:49.216227+00:00",
+    "updated_at": "2025-12-13T23:28:49.216229+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "4a1cc232-a140-4484-9c7c-e8e59c4b4a87",
+    "type": "skill",
+    "content": {
+      "name": "Figma",
+      "level": "88"
+    },
+    "order_index": 9,
+    "created_at": "2025-12-14T22:10:14.21357+00:00",
+    "updated_at": "2025-12-14T22:10:14.213587+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "8dc9ae0c-359b-4884-ae3c-f436bf9d06a1",
+    "type": "skill",
+    "content": {
+      "name": "React.js",
+      "level": "95"
+    },
+    "order_index": 1,
+    "created_at": "2025-12-13T23:28:49.216159+00:00",
+    "updated_at": "2025-12-13T23:28:49.21616+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "2abc99ed-2c4c-498c-8b32-95ae0643ae0a",
+    "type": "skill",
+    "content": {
+      "name": "React Native",
+      "level": "45"
+    },
+    "order_index": 10,
+    "created_at": "2025-12-14T22:10:14.213623+00:00",
+    "updated_at": "2025-12-14T22:10:14.213625+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "171eede6-c279-4f13-bcc1-82ed85e347b0",
+    "type": "skill",
+    "content": {
+      "name": "JavaScript (ES6+)",
+      "level": "90"
+    },
+    "order_index": 14,
+    "created_at": "2025-12-13T23:28:49.21628+00:00",
+    "updated_at": "2025-12-13T23:28:49.216282+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "88eef2f3-4024-4076-b78e-8e22c17d2b2e",
+    "type": "skill",
+    "content": {
+      "name": "HTML5",
+      "level": "95"
+    },
+    "order_index": 13,
+    "created_at": "2025-12-13T23:28:49.216271+00:00",
+    "updated_at": "2025-12-13T23:28:49.216273+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "baa30ad9-7ecf-4221-a5e1-cf866cf36fa2",
+    "type": "skill",
+    "content": {
+      "name": "DB NoSQL",
+      "level": "80"
+    },
+    "order_index": 12,
+    "created_at": "2025-12-13T23:28:49.216263+00:00",
+    "updated_at": "2025-12-13T23:28:49.216264+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "64306213-c8e6-4093-9042-2f34583a963c",
+    "type": "skill",
+    "content": {
+      "name": "CSS3",
+      "level": "95"
+    },
+    "order_index": 15,
+    "created_at": "2025-12-13T23:28:49.216291+00:00",
+    "updated_at": "2025-12-13T23:28:49.216293+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "9a41048f-bd60-41ba-b15c-389121481129",
+    "type": "skill",
+    "content": {
+      "name": "Expo",
+      "level": "45"
+    },
+    "order_index": 11,
+    "created_at": "2025-12-13T23:28:49.216254+00:00",
+    "updated_at": "2025-12-13T23:28:49.216255+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "70b37252-91c0-406e-b183-62b0f035d027",
+    "type": "skill",
+    "content": {
+      "name": "Next.JS",
+      "level": "80"
+    },
+    "order_index": 16,
+    "created_at": "2025-12-13T23:28:49.2163+00:00",
+    "updated_at": "2025-12-13T23:28:49.216302+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "39903074-19bd-47a2-a98b-170f239addb6",
+    "type": "education",
+    "content": {
+      "degree": "Técnico",
+      "period": "2015-2017",
+      "description": " <ul>\n        <li>Base sólida em princípios de gestão organizacional, planejamento estratégico, e gerenciamento de recursos e operações.</li>\n        <li>Fortalecimento de capacidades analíticas e de organização de projetos, aplicáveis à gestão de times e desenvolvimento de produtos digitais.</li>\n        <li>Destaques:\n            <ul>\n                <li>Aprofundamento em fundamentos de economia e mercado, com aplicação prática no suporte à tomada de decisões estratégicas.</li>\n            </ul>\n        </li>\n    </ul>",
+      "institution": "Etec de Barueri"
+    },
+    "order_index": 1,
+    "created_at": "2025-12-13T23:28:49.216035+00:00",
+    "updated_at": "2025-12-13T23:28:49.216054+00:00",
+    "content_translations": {
+      "en-US": {
+        "degree": "Technical",
+        "period": "2015-2017",
+        "description": "<ul>\n        <li>Solid foundation in organizational management principles, strategic planning, and resource and operations management.</li>\n        <li>Strengthened analytical and project organization skills, applicable to team management and digital product development.</li>\n        <li>Highlights:\n            <ul>\n                <li>In-depth understanding of economics and market fundamentals, with practical application in supporting strategic decision-making.</li>\n            </ul>\n        </li>\n    </ul>",
+        "institution": "Etec de Barueri"
+      },
+      "pt-BR": {
+        "degree": "Técnico",
+        "period": "2015-2017",
+        "description": " <ul>\n        <li>Base sólida em princípios de gestão organizacional, planejamento estratégico, e gerenciamento de recursos e operações.</li>\n        <li>Fortalecimento de capacidades analíticas e de organização de projetos, aplicáveis à gestão de times e desenvolvimento de produtos digitais.</li>\n        <li>Destaques:\n            <ul>\n                <li>Aprofundamento em fundamentos de economia e mercado, com aplicação prática no suporte à tomada de decisões estratégicas.</li>\n            </ul>\n        </li>\n    </ul>",
+        "institution": "Etec de Barueri"
+      }
+    }
+  },
+  {
+    "id": "8bad471a-aeff-4a50-a5e2-e647870f82db",
+    "type": "soft_skill",
+    "content": {
+      "text": "Pensamento Estratégico"
+    },
+    "order_index": 3,
+    "created_at": "2025-12-14T22:10:14.215707+00:00",
+    "updated_at": "2025-12-14T22:10:14.21571+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Strategic Thinking"
+      },
+      "pt-BR": {
+        "text": "Pensamento Estratégico"
+      }
+    }
+  },
+  {
+    "id": "3334e036-c0c1-4ca4-9465-019281c64b0c",
+    "type": "soft_skill",
+    "content": {
+      "text": "Liderança Técnica"
+    },
+    "order_index": 0,
+    "created_at": "2025-12-14T22:10:14.215592+00:00",
+    "updated_at": "2025-12-14T22:10:14.215596+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Technical Leadership"
+      },
+      "pt-BR": {
+        "text": "Liderança Técnica"
+      }
+    }
+  },
+  {
+    "id": "aef41a3a-80be-4778-99da-ac516a2319d2",
+    "type": "soft_skill",
+    "content": {
+      "text": "Mentoría e Desenvolvimento de Equipes"
+    },
+    "order_index": 2,
+    "created_at": "2025-12-14T22:10:14.215664+00:00",
+    "updated_at": "2025-12-14T22:10:14.215667+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Team Mentoring and Development"
+      },
+      "pt-BR": {
+        "text": "Mentoría e Desenvolvimento de Equipes"
+      }
+    }
+  },
+  {
+    "id": "d742cb62-5d7f-4a6f-995a-66de0284d6df",
+    "type": "soft_skill",
+    "content": {
+      "text": "Comunicação Estratégica"
+    },
+    "order_index": 4,
+    "created_at": "2025-12-14T22:10:14.215748+00:00",
+    "updated_at": "2025-12-14T22:10:14.21575+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Strategic Communication"
+      },
+      "pt-BR": {
+        "text": "Comunicação Estratégica"
+      }
+    }
+  },
+  {
+    "id": "a2060d93-08ed-4d38-b25a-b5a85bcf4d97",
+    "type": "soft_skill",
+    "content": {
+      "text": "Solução de Problemas Complexos"
+    },
+    "order_index": 5,
+    "created_at": "2025-12-14T22:10:14.215782+00:00",
+    "updated_at": "2025-12-14T22:10:14.215785+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Complex Problem Solving"
+      },
+      "pt-BR": {
+        "text": "Solução de Problemas Complexos"
+      }
+    }
+  },
+  {
+    "id": "9178b44b-72ce-449f-ab0d-bf9a4c817b64",
+    "type": "soft_skill",
+    "content": {
+      "text": "Trabalho em Equipe"
+    },
+    "order_index": 6,
+    "created_at": "2025-12-13T23:28:49.216368+00:00",
+    "updated_at": "2025-12-13T23:28:49.216369+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Teamwork"
+      },
+      "pt-BR": {
+        "text": "Trabalho em Equipe"
+      }
+    }
+  },
+  {
+    "id": "03ed47cd-1a0a-4f59-a2f5-b19124eeb23d",
+    "type": "soft_skill",
+    "content": {
+      "text": "Criatividade e Inovação"
+    },
+    "order_index": 7,
+    "created_at": "2025-12-14T22:10:14.215841+00:00",
+    "updated_at": "2025-12-14T22:10:14.215844+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Creativity and Innovation"
+      },
+      "pt-BR": {
+        "text": "Criatividade e Inovação"
+      }
+    }
+  },
+  {
+    "id": "30fbe7e9-a48c-454a-9bab-a46043a0336a",
+    "type": "soft_skill",
+    "content": {
+      "text": "Autogestão e Autonomia"
+    },
+    "order_index": 8,
+    "created_at": "2025-12-14T22:10:14.215877+00:00",
+    "updated_at": "2025-12-14T22:10:14.21588+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Self-Management and Autonomy"
+      },
+      "pt-BR": {
+        "text": "Autogestão e Autonomia"
+      }
+    }
+  },
+  {
+    "id": "0a4d6e35-57fb-40d8-b614-c9d1ff7493d5",
+    "type": "soft_skill",
+    "content": {
+      "text": "Rápido Aprendizado"
+    },
+    "order_index": 9,
+    "created_at": "2025-12-13T23:28:49.216388+00:00",
+    "updated_at": "2025-12-13T23:28:49.216389+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Quick Learning"
+      },
+      "pt-BR": {
+        "text": "Rápido Aprendizado"
+      }
+    }
+  },
+  {
+    "id": "53609d7d-0b3c-4c2f-a6ce-12ba4f3e6d27",
+    "type": "soft_skill",
+    "content": {
+      "text": "Comprometimento com Excelência"
+    },
+    "order_index": 10,
+    "created_at": "2025-12-14T22:10:14.21592+00:00",
+    "updated_at": "2025-12-14T22:10:14.215923+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Commitment to Excellence"
+      },
+      "pt-BR": {
+        "text": "Comprometimento com Excelência"
+      }
+    }
+  },
+  {
+    "id": "69dfcc35-e7b0-4aaf-9027-d4360f81a462",
+    "type": "soft_skill",
+    "content": {
+      "text": "Visão Estratégica de Produto"
+    },
+    "order_index": 11,
+    "created_at": "2025-12-14T22:10:14.215955+00:00",
+    "updated_at": "2025-12-14T22:10:14.215958+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Product Strategic Vision"
+      },
+      "pt-BR": {
+        "text": "Visão Estratégica de Produto"
+      }
+    }
+  },
+  {
+    "id": "2cd9f41f-254d-4efb-8542-3177fa5124ac",
+    "type": "soft_skill",
+    "content": {
+      "text": "Influência em Decisões C-Level"
+    },
+    "order_index": 12,
+    "created_at": "2025-12-14T22:10:14.215989+00:00",
+    "updated_at": "2025-12-14T22:10:14.215992+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Influence on C-Level Decisions"
+      },
+      "pt-BR": {
+        "text": "Influência em Decisões C-Level"
+      }
+    }
+  },
+  {
+    "id": "136b2f26-df99-4416-b87b-7d46c62c55e7",
+    "type": "course",
+    "content": {
+      "text": "Programação para internet com JS - DIO"
+    },
+    "order_index": 36,
+    "created_at": "2025-12-13T23:28:49.216477+00:00",
+    "updated_at": "2025-12-13T23:28:49.216479+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "7a85e3fe-df1b-4aa4-bc7b-bd42b74aab3d",
+    "type": "course",
+    "content": {
+      "text": "Branding - Construção de Marca - GINEAD"
+    },
+    "order_index": 41,
+    "created_at": "2025-12-13T23:28:49.216524+00:00",
+    "updated_at": "2025-12-13T23:28:49.216525+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "820352cb-a98f-4ae0-af1c-456b10635dd9",
+    "type": "skill",
+    "content": {
+      "name": "Vite",
+      "level": "90"
+    },
+    "order_index": 4,
+    "created_at": "2025-12-13T23:28:49.216208+00:00",
+    "updated_at": "2025-12-13T23:28:49.21621+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "47c71a15-9bc0-4fae-bd9b-a4013a68bdd7",
+    "type": "skill",
+    "content": {
+      "name": "Bootstrap",
+      "level": "88"
+    },
+    "order_index": 6,
+    "created_at": "2025-12-13T23:28:49.216218+00:00",
+    "updated_at": "2025-12-13T23:28:49.216219+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "7103d7df-55be-449b-94cc-b2f9c37a171d",
+    "type": "skill",
+    "content": {
+      "name": "Vercel",
+      "level": "90"
+    },
+    "order_index": 17,
+    "created_at": "2025-12-13T23:28:49.216309+00:00",
+    "updated_at": "2025-12-13T23:28:49.21631+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "b277d93a-9231-4509-895f-6cda60432502",
+    "type": "skill",
+    "content": {
+      "name": "Framer Motion",
+      "level": "88"
+    },
+    "order_index": 22,
+    "created_at": "2025-12-14T22:10:14.215199+00:00",
+    "updated_at": "2025-12-14T22:10:14.215208+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "5d4a90e3-c177-46f3-a29a-64714bd855af",
+    "type": "skill",
+    "content": {
+      "name": "Design Systems",
+      "level": "90"
+    },
+    "order_index": 28,
+    "created_at": "2025-12-14T22:10:14.215421+00:00",
+    "updated_at": "2025-12-14T22:10:14.215423+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "b56aead8-9505-40e7-9885-83875930e7ab",
+    "type": "skill",
+    "content": {
+      "name": "Keycloak",
+      "level": "85"
+    },
+    "order_index": 18,
+    "created_at": "2025-12-14T22:10:14.213862+00:00",
+    "updated_at": "2025-12-14T22:10:14.213866+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "4333f407-d165-44e5-972e-c19c01d58eed",
+    "type": "course",
+    "content": {
+      "text": "Estratégia de Comercialização - GINEAD"
+    },
+    "order_index": 42,
+    "created_at": "2025-12-13T23:28:49.216533+00:00",
+    "updated_at": "2025-12-13T23:28:49.216534+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Go-to-Market Strategy - GINEAD"
+      },
+      "pt-BR": {
+        "text": "Estratégia de Comercialização - GINEAD"
+      }
+    }
+  },
+  {
+    "id": "45713d91-ac84-4603-ac91-3ae80d18184f",
+    "type": "skill",
+    "content": {
+      "name": "LangChain",
+      "level": "75"
+    },
+    "order_index": 31,
+    "created_at": "2025-12-14T22:10:14.215551+00:00",
+    "updated_at": "2025-12-14T22:10:14.215553+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "d1233fb3-86a2-4d51-a97b-13f6f4d63dd7",
+    "type": "skill",
+    "content": {
+      "name": "Supabase",
+      "level": "85"
+    },
+    "order_index": 20,
+    "created_at": "2025-12-14T22:10:14.213971+00:00",
+    "updated_at": "2025-12-14T22:10:14.213973+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "90e62850-aafd-4734-ac2e-9141fb97bc35",
+    "type": "skill",
+    "content": {
+      "name": "UI/UX Design",
+      "level": "88"
+    },
+    "order_index": 29,
+    "created_at": "2025-12-14T22:10:14.215455+00:00",
+    "updated_at": "2025-12-14T22:10:14.215458+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "285b3dc7-90e4-4f98-9161-8d9d3519f292",
+    "type": "skill",
+    "content": {
+      "name": "n8n",
+      "level": "85"
+    },
+    "order_index": 5,
+    "created_at": "2025-12-15T03:33:38.91578+00:00",
+    "updated_at": "2025-12-15T03:33:38.91578+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "055987ff-4597-49f9-9a6d-2b6631eb500a",
+    "type": "skill",
+    "content": {
+      "name": "GitHub Actions",
+      "level": "85"
+    },
+    "order_index": 19,
+    "created_at": "2025-12-14T22:10:14.21392+00:00",
+    "updated_at": "2025-12-14T22:10:14.213923+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "f4825474-145e-4325-bc75-1406118a29d9",
+    "type": "skill",
+    "content": {
+      "name": "Gemini API",
+      "level": "80"
+    },
+    "order_index": 30,
+    "created_at": "2025-12-14T22:10:14.215506+00:00",
+    "updated_at": "2025-12-14T22:10:14.21551+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "4b741896-8a34-4536-b3c1-3c4e304e674e",
+    "type": "skill",
+    "content": {
+      "name": "Zod",
+      "level": "80"
+    },
+    "order_index": 24,
+    "created_at": "2025-12-14T22:10:14.21529+00:00",
+    "updated_at": "2025-12-14T22:10:14.215292+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "daf05d4d-4f6a-41da-bd35-c0b4bd742886",
+    "type": "skill",
+    "content": {
+      "name": "React Query",
+      "level": "85"
+    },
+    "order_index": 23,
+    "created_at": "2025-12-14T22:10:14.215243+00:00",
+    "updated_at": "2025-12-14T22:10:14.215245+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "39065019-5704-40e6-a10d-b0fc91883233",
+    "type": "skill",
+    "content": {
+      "name": "Firebase",
+      "level": "85"
+    },
+    "order_index": 21,
+    "created_at": "2025-12-14T22:10:14.214019+00:00",
+    "updated_at": "2025-12-14T22:10:14.214021+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "7b134b93-c04d-42b2-aa79-5b2050f3cad6",
+    "type": "skill",
+    "content": {
+      "name": "React Hook Form",
+      "level": "85"
+    },
+    "order_index": 25,
+    "created_at": "2025-12-14T22:10:14.215323+00:00",
+    "updated_at": "2025-12-14T22:10:14.215324+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "01525b1d-5819-4546-88f2-1a1c18315243",
+    "type": "skill",
+    "content": {
+      "name": "REST API",
+      "level": "85"
+    },
+    "order_index": 26,
+    "created_at": "2025-12-14T22:10:14.215355+00:00",
+    "updated_at": "2025-12-14T22:10:14.215357+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "aff5b325-ea69-4271-9aae-83bfccd99b14",
+    "type": "skill",
+    "content": {
+      "name": "CI/CD",
+      "level": "85"
+    },
+    "order_index": 27,
+    "created_at": "2025-12-14T22:10:14.215388+00:00",
+    "updated_at": "2025-12-14T22:10:14.21539+00:00",
+    "content_translations": {
+      "pt-BR": null
+    }
+  },
+  {
+    "id": "df802966-1c41-47fb-8444-e4d7e7c10ac6",
+    "type": "skill",
+    "content": {
+      "name": "IA IDE's",
+      "level": "95"
+    },
+    "order_index": 0,
+    "created_at": "2025-12-13T23:28:49.216148+00:00",
+    "updated_at": "2025-12-13T23:28:49.216149+00:00",
+    "content_translations": {
+      "en-US": {
+        "name": "IA IDE's",
+        "level": "95"
+      },
+      "pt-BR": {
+        "name": "IA IDE's",
+        "level": "95"
+      }
+    }
+  },
+  {
+    "id": "a1aa7e83-783c-47c5-96a1-0aff487a1e28",
+    "type": "course",
+    "content": {
+      "text": "Atendimento ao cliente - Bradesco"
+    },
+    "order_index": 44,
+    "created_at": "2025-12-13T23:28:49.216652+00:00",
+    "updated_at": "2025-12-13T23:28:49.216654+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Customer Service - Bradesco"
+      },
+      "pt-BR": {
+        "text": "Atendimento ao cliente - Bradesco"
+      }
+    }
+  },
+  {
+    "id": "dba98ece-2cb7-4e31-a124-47bf84e13877",
+    "type": "course",
+    "content": {
+      "text": "Prevenção a Fraude - Bradesco"
+    },
+    "order_index": 43,
+    "created_at": "2025-12-13T23:28:49.216642+00:00",
+    "updated_at": "2025-12-13T23:28:49.216644+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Fraud Prevention - Bradesco"
+      },
+      "pt-BR": {
+        "text": "Prevenção a Fraude - Bradesco"
+      }
+    }
+  },
+  {
+    "id": "c6879986-8c11-4a4d-a6cc-71bab06a533f",
+    "type": "course",
+    "content": {
+      "text": "Ilustrator PRO - Design Academy"
+    },
+    "order_index": 40,
+    "created_at": "2025-12-13T23:28:49.216512+00:00",
+    "updated_at": "2025-12-13T23:28:49.216513+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Illustrator PRO - Design Academy"
+      },
+      "pt-BR": {
+        "text": "Ilustrator PRO - Design Academy"
+      }
+    }
+  },
+  {
+    "id": "2443c9e0-4652-4b44-bf47-661d87e16f3c",
+    "type": "course",
+    "content": {
+      "text": "Brandy - Design Academy"
+    },
+    "order_index": 39,
+    "created_at": "2025-12-13T23:28:49.216504+00:00",
+    "updated_at": "2025-12-13T23:28:49.216505+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Brandy - Design Academy"
+      },
+      "pt-BR": {
+        "text": "Brandy - Design Academy"
+      }
+    }
+  },
+  {
+    "id": "26ae6f31-7ecb-46bd-993f-334738cdb5fe",
+    "type": "course",
+    "content": {
+      "text": "IT Essentials"
+    },
+    "order_index": 38,
+    "created_at": "2025-12-13T23:28:49.216495+00:00",
+    "updated_at": "2025-12-13T23:28:49.216496+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "IT Essentials"
+      },
+      "pt-BR": {
+        "text": "IT Essentials"
+      }
+    }
+  },
+  {
+    "id": "6c6fbe38-0303-40ff-8e39-bc51611d0026",
+    "type": "course",
+    "content": {
+      "text": "NLW Together - Trilha ReactJS - Rocketseat"
+    },
+    "order_index": 33,
+    "created_at": "2025-12-13T23:28:49.216451+00:00",
+    "updated_at": "2025-12-13T23:28:49.216453+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "NLW Together - ReactJS Path - Rocketseat"
+      },
+      "pt-BR": {
+        "text": "NLW Together - Trilha ReactJS - Rocketseat"
+      }
+    }
+  },
+  {
+    "id": "7dccfd8c-8c1a-454a-8dc1-7da882dcc3d9",
+    "type": "course",
+    "content": {
+      "text": "ChatGPT - Do Zero ao Avançado - Udemy"
+    },
+    "order_index": 37,
+    "created_at": "2025-12-13T23:28:49.216486+00:00",
+    "updated_at": "2025-12-13T23:28:49.216488+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "ChatGPT - From Zero to Advanced - Udemy"
+      },
+      "pt-BR": {
+        "text": "ChatGPT - Do Zero ao Avançado - Udemy"
+      }
+    }
+  },
+  {
+    "id": "e51be806-4a79-42b0-b235-acb16a4e7fd0",
+    "type": "course",
+    "content": {
+      "text": "NLW Return- Trilha Origin- Rocketseat"
+    },
+    "order_index": 35,
+    "created_at": "2025-12-13T23:28:49.216469+00:00",
+    "updated_at": "2025-12-13T23:28:49.21647+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "NLW Return - Origin Path - Rocketseat"
+      },
+      "pt-BR": {
+        "text": "NLW Return- Trilha Origin- Rocketseat"
+      }
+    }
+  },
+  {
+    "id": "7c0b591b-f126-4f66-b129-51b32bf79d6c",
+    "type": "course",
+    "content": {
+      "text": "NLW Heat- Trilha Origin- Rocketseat"
+    },
+    "order_index": 34,
+    "created_at": "2025-12-13T23:28:49.21646+00:00",
+    "updated_at": "2025-12-13T23:28:49.216461+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "NLW Heat - Origin Path - Rocketseat"
+      },
+      "pt-BR": {
+        "text": "NLW Heat- Trilha Origin- Rocketseat"
+      }
+    }
+  },
+  {
+    "id": "be98ea5f-2ab7-455a-9fa8-45d830c91c6e",
+    "type": "course",
+    "content": {
+      "text": "RYLA (Treinamento de Liderança) - Rotary Club"
+    },
+    "order_index": 32,
+    "created_at": "2025-12-13T23:28:49.216442+00:00",
+    "updated_at": "2025-12-13T23:28:49.216443+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "RYLA (Leadership Training) - Rotary Club"
+      },
+      "pt-BR": {
+        "text": "RYLA (Treinamento de Liderança) - Rotary Club"
+      }
+    }
+  },
+  {
+    "id": "74590885-e7c2-427c-90b4-a2e611e3afef",
+    "type": "language",
+    "content": {
+      "name": "Espanhol",
+      "level": "Intermediário"
+    },
+    "order_index": 23,
+    "created_at": "2025-12-13T23:28:49.216338+00:00",
+    "updated_at": "2025-12-13T23:28:49.216339+00:00",
+    "content_translations": {
+      "en-US": {
+        "name": "Spanish",
+        "level": "Intermediate"
+      },
+      "pt-BR": {
+        "name": "Espanhol",
+        "level": "Intermediário"
+      }
+    }
+  },
+  {
+    "id": "6559f708-aa3a-4f89-ac78-18a9f94a2246",
+    "type": "language",
+    "content": {
+      "name": "Inglês",
+      "level": "Avançado"
+    },
+    "order_index": 22,
+    "created_at": "2025-12-13T23:28:49.216329+00:00",
+    "updated_at": "2025-12-13T23:28:49.21633+00:00",
+    "content_translations": {
+      "en-US": {
+        "name": "English",
+        "level": "Advanced"
+      },
+      "pt-BR": {
+        "name": "Inglês",
+        "level": "Avançado"
+      }
+    }
+  },
+  {
+    "id": "9ed0baf0-4b5d-4be9-a103-d85646fa0df2",
+    "type": "volunteer",
+    "content": {
+      "text": "Diretor de Imagem Pública Rotaract Club Barueri Gestão 2019-2020"
+    },
+    "order_index": 45,
+    "created_at": "2025-12-13T23:28:49.216662+00:00",
+    "updated_at": "2025-12-13T23:28:49.216664+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Public Image Director, Rotaract Club of Barueri, 2019-2020"
+      },
+      "pt-BR": {
+        "text": "Diretor de Imagem Pública Rotaract Club Barueri Gestão 2019-2020"
+      }
+    }
+  },
+  {
+    "id": "49731c0e-369a-4fe0-9006-bac209f12335",
+    "type": "volunteer",
+    "content": {
+      "text": "Participação em projeto de plantio de mais de 1000 árvores na baixada santista"
+    },
+    "order_index": 46,
+    "created_at": "2025-12-13T23:28:49.216672+00:00",
+    "updated_at": "2025-12-13T23:28:49.216674+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Participation in a project to plant over 1,000 trees in the Baixada Santista region"
+      },
+      "pt-BR": {
+        "text": "Participação em projeto de plantio de mais de 1000 árvores na baixada santista"
+      }
+    }
+  },
+  {
+    "id": "de13b747-4ed2-4733-9747-2ff38ee2f5ba",
+    "type": "volunteer",
+    "content": {
+      "text": "Professor em projeto de informática básica para idosos"
+    },
+    "order_index": 47,
+    "created_at": "2025-12-13T23:28:49.216684+00:00",
+    "updated_at": "2025-12-13T23:28:49.216689+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Professor for a basic computer skills project for senior citizens"
+      },
+      "pt-BR": {
+        "text": "Professor em projeto de informática básica para idosos"
+      }
+    }
+  },
+  {
+    "id": "7a833163-5977-442b-9e67-131f2745d69e",
+    "type": "volunteer",
+    "content": {
+      "text": "Revitalização Gratuita de Sites de ONGs e Movimentos Sociais"
+    },
+    "order_index": 48,
+    "created_at": "2025-12-13T23:28:49.216697+00:00",
+    "updated_at": "2025-12-13T23:28:49.216699+00:00",
+    "content_translations": {
+      "en-US": {
+        "text": "Free Website Revitalization for NGOs and Social Movements"
+      },
+      "pt-BR": {
+        "text": "Revitalização Gratuita de Sites de ONGs e Movimentos Sociais"
+      }
+    }
+  },
+  {
+    "id": "1723c6c5-5590-4f89-a356-6259bfaafa71",
+    "type": "experience",
+    "content": {
+      "role": "Programador Front-End e UI/UX Designer",
+      "period": "2022-2024",
+      "company": "Roxus Studio",
+      "description": " <ul>\n        <li>Desenvolvimento de diversas landing pages e plataformas corporativas, contribuindo para um <strong>aumento médio de 20% na taxa de conversão</strong> dos clientes.</li>\n        <li>Gerenciamento de projetos de front-end ponta a ponta, desde o briefing até a entrega final, mantendo um <strong>índice de satisfação do cliente acima de 90%</strong>.</li>\n        <li>Implementação de bibliotecas de componentes reutilizáveis em TypeScript, <strong>acelerando o desenvolvimento de novos projetos em 25%</strong>.</li>\n    </ul>"
+    },
+    "order_index": 2,
+    "created_at": "2025-12-13T23:28:49.216094+00:00",
+    "updated_at": "2025-12-13T23:28:49.216096+00:00",
+    "content_translations": {
+      "en-US": {
+        "role": "Front-End Developer and UI/UX Designer",
+        "period": "2022-2024",
+        "company": "Roxus Studio",
+        "description": "<ul>\n        <li>Developed multiple landing pages and corporate platforms, contributing to an <strong>average increase of 20% in client conversion rates</strong>.</li>\n        <li>Managed end-to-end front-end projects, from briefing to final delivery, maintaining a <strong>customer satisfaction rate above 90%</strong>.</li>\n        <li>Implemented reusable component libraries in TypeScript, <strong>accelerating the development of new projects by 25%</strong>.</li>\n    </ul>"
+      },
+      "pt-BR": {
+        "role": "Programador Front-End e UI/UX Designer",
+        "period": "2022-2024",
+        "company": "Roxus Studio",
+        "description": " <ul>\n        <li>Desenvolvimento de diversas landing pages e plataformas corporativas, contribuindo para um <strong>aumento médio de 20% na taxa de conversão</strong> dos clientes.</li>\n        <li>Gerenciamento de projetos de front-end ponta a ponta, desde o briefing até a entrega final, mantendo um <strong>índice de satisfação do cliente acima de 90%</strong>.</li>\n        <li>Implementação de bibliotecas de componentes reutilizáveis em TypeScript, <strong>acelerando o desenvolvimento de novos projetos em 25%</strong>.</li>\n    </ul>"
+      }
+    }
+  },
+  {
+    "id": "5690ade9-3a4a-4dd4-82e0-0c4bfd9d4a29",
+    "type": "education",
+    "content": {
+      "degree": "Técnologo",
+      "period": "2020-2023",
+      "description": "    <ul>\n        <li>Formação com foco em governança de TI, segurança da informação e alinhamento estratégico entre tecnologia e objetivos de negócios.</li>\n        <li>Desenvolvimento de habilidades críticas para liderança técnica de equipes, gerenciamento de projetos de TI e integração de soluções inovadoras.</li>\n        <li>Resultados relevantes:\n            <ul>\n                <li>Editor-chefe do blog de tecnologia Retec, liderando projetos de comunicação técnica.</li>\n                <li>Nota máxima no TCC, com projeto para conectar ONGs de resgate animal a adotantes interessados.</li>\n            </ul>\n        </li>\n    </ul>",
+      "institution": "Fatec de Barueri"
+    },
+    "order_index": 0,
+    "created_at": "2025-12-13T23:28:49.216076+00:00",
+    "updated_at": "2025-12-13T23:28:49.216078+00:00",
+    "content_translations": {
+      "en-US": {
+        "degree": "Technologist",
+        "period": "2020-2023",
+        "description": "<ul>\n        <li>Training focused on IT governance, information security, and strategic alignment between technology and business objectives.</li>\n        <li>Development of critical skills for technical team leadership, IT project management, and integration of innovative solutions.</li>\n        <li>Relevant achievements:\n            <ul>\n                <li>Editor-in-chief of the Retec technology blog, leading technical communication projects.</li>\n                <li>Perfect score on the final project, with a project to connect animal rescue NGOs to interested adopters.</li>\n            </ul>\n        </li>\n    </ul>",
+        "institution": "Fatec de Barueri"
+      },
+      "pt-BR": {
+        "degree": "Técnologo",
+        "period": "2020-2023",
+        "description": "    <ul>\n        <li>Formação com foco em governança de TI, segurança da informação e alinhamento estratégico entre tecnologia e objetivos de negócios.</li>\n        <li>Desenvolvimento de habilidades críticas para liderança técnica de equipes, gerenciamento de projetos de TI e integração de soluções inovadoras.</li>\n        <li>Resultados relevantes:\n            <ul>\n                <li>Editor-chefe do blog de tecnologia Retec, liderando projetos de comunicação técnica.</li>\n                <li>Nota máxima no TCC, com projeto para conectar ONGs de resgate animal a adotantes interessados.</li>\n            </ul>\n        </li>\n    </ul>",
+        "institution": "Fatec de Barueri"
+      }
+    }
+  },
+  {
+    "id": "6a83264a-e526-4e25-9393-d739266ec6be",
+    "type": "experience",
+    "content": {
+      "role": "Líder Técnico de Front-End",
+      "period": "Jan-2025 - atual",
+      "company": "InBot",
+      "description": "<p>\n  Fui promovido a <strong>Líder Técnico</strong> após demonstrar <strong>impacto estratégico</strong> na revitalização da principal plataforma da empresa. \n  Lidero a <strong>arquitetura</strong>, o <strong>desenvolvimento</strong> e a <strong>infraestrutura</strong> de todas as soluções front-end.\n</p>\n\n<br />\n\n<h3>Liderança em Arquitetura e Infraestrutura</h3>\n<ul>\n  <li>\n    Liderei a <strong>análise e decisão</strong> de migrar o sistema de autenticação legado para <strong>Keycloak</strong>, arquitetando um <strong>ecossistema de login centralizado</strong> e um <strong>painel de gerenciamento de usuários</strong> para toda a empresa.\n  </li>\n  <li>\n    Persuadi a <strong>liderança (COO/CTO)</strong> a adotar a <strong>Vercel</strong> em vez de soluções inadequadas, assumindo a <strong>responsabilidade total pela infraestrutura de front-end</strong>.\n  </li>\n  <li>\n    Implementei <strong>do zero</strong> o <strong>pipeline de CI/CD</strong> com GitHub Actions e a estratégia de <strong>Git Flow</strong>, instituindo <strong>ambientes de homologação</strong> inexistentes e eliminando configurações <strong>hardcoded</strong> por meio de <strong>variáveis de ambiente</strong>.\n  </li>\n</ul>\n\n<br />\n\n<h3>Liderança de Produto e Inovação</h3>\n<ul>\n  <li>\n    Liderei a <strong>reconstrução da principal interface administrativa</strong> da empresa com <strong>React</strong> e <strong>TypeScript</strong>, após obter <strong>autonomia total da diretoria</strong> para definir a <strong>arquitetura</strong> e o <strong>Design System</strong>.\n  </li>\n  <li>\n    Idealizei e desenvolvi uma <strong>plataforma de documentação inovadora</strong> que gera interface e navegação <strong>dinamicamente a partir de Markdown</strong>, permitindo criação de conteúdo <strong>sem necessidade de código</strong>.\n  </li>\n  <li>\n    Arquitetei e entreguei <strong>múltiplas plataformas complexas</strong>, incluindo um <strong>Broker de IA</strong>, um <strong>sistema de gestão para restaurantes (HRC)</strong> e uma <strong>ferramenta de criação de agentes de IA</strong> para não-técnicos (<strong>InCity</strong>).\n  </li>\n</ul>\n\n<br />\n\n<h3>Liderança de Equipe e Mentoria</h3>\n<ul>\n  <li>\n    Lidero tecnicamente a <strong>equipe de front-end</strong>, definindo <strong>arquiteturas</strong>, <strong>padrões de código</strong> e <strong>boas práticas</strong>, além de realizar <strong>code reviews</strong> e <strong>mentoria</strong> para elevar a <strong>qualidade técnica</strong> do time.\n  </li>\n</ul>\n"
+    },
+    "order_index": 0,
+    "created_at": "2025-12-13T23:28:49.216135+00:00",
+    "updated_at": "2025-12-13T23:28:49.216137+00:00",
+    "content_translations": {
+      "en-US": {
+        "role": "Front-End Tech Lead",
+        "period": "Jan-2025 - atual",
+        "company": "InBot",
+        "description": "<p>\n  I was promoted to <strong>Technical Lead</strong> after demonstrating <strong>strategic impact</strong> in revitalizing the company's main platform.\n  I lead the <strong>architecture</strong>, <strong>development</strong>, and <strong>infrastructure</strong> of all front-end solutions.\n</p>\n\n<br />\n\n<h3>Architecture and Infrastructure Leadership</h3>\n<ul>\n  <li>\n    I led the <strong>analysis and decision</strong> to migrate the legacy authentication system to <strong>Keycloak</strong>, architecting a <strong>centralized login ecosystem</strong> and a <strong>user management panel</strong> for the entire company.\n  </li>\n  <li>\n    I persuaded <strong>leadership (COO/CTO)</strong> to adopt <strong>Vercel</strong> instead of unsuitable solutions, assuming <strong>full responsibility for the front-end infrastructure</strong>.\n  </li>\n  <li>\n    I implemented a <strong>CI/CD pipeline from scratch</strong> with GitHub Actions and the <strong>Git Flow</strong> strategy, establishing non-existent <strong>staging environments</strong> and eliminating <strong>hardcoded</strong> configurations through <strong>environment variables</strong>.\n  </li>\n</ul>\n\n<br />\n\n<h3>Product Leadership and Innovation</h3>\n<ul>\n  <li>\n    I led the <strong>rebuilding of the company's main administrative interface</strong> with <strong>React</strong> and <strong>TypeScript</strong>, after obtaining <strong>full autonomy from the board</strong> to define the <strong>architecture</strong> and <strong>Design System</strong>.\n  </li>\n  <li>\n    I conceived and developed an <strong>innovative documentation platform</strong> that generates interface and navigation <strong>dynamically from Markdown</strong>, allowing content creation <strong>without the need for code</strong>.\n  </li>\n  <li>\n    I architected and delivered <strong>multiple complex platforms</strong>, including an <strong>AI Broker</strong>, a <strong>management system for restaurants (HRC)</strong>, and an <strong>AI agent creation tool</strong> for non-technical users (<strong>InCity</strong>).\n  </li>\n</ul>\n\n<br />\n\n<h3>Team Leadership and Mentoring</h3>\n<ul>\n  <li>\n    I technically lead the <strong>front-end team</strong>, defining <strong>architectures</strong>, <strong>code standards</strong>, and <strong>best practices</strong>, in addition to conducting <strong>code reviews</strong> and <strong>mentoring</strong> to raise the team's <strong>technical quality</strong>.\n  </li>\n</ul>"
+      },
+      "pt-BR": {
+        "role": "Líder Técnico de Front-End",
+        "period": "Jan-2025 - atual",
+        "company": "InBot",
+        "description": "<p>\n  Fui promovido a <strong>Líder Técnico</strong> após demonstrar <strong>impacto estratégico</strong> na revitalização da principal plataforma da empresa. \n  Lidero a <strong>arquitetura</strong>, o <strong>desenvolvimento</strong> e a <strong>infraestrutura</strong> de todas as soluções front-end.\n</p>\n\n<br />\n\n<h3>Liderança em Arquitetura e Infraestrutura</h3>\n<ul>\n  <li>\n    Liderei a <strong>análise e decisão</strong> de migrar o sistema de autenticação legado para <strong>Keycloak</strong>, arquitetando um <strong>ecossistema de login centralizado</strong> e um <strong>painel de gerenciamento de usuários</strong> para toda a empresa.\n  </li>\n  <li>\n    Persuadi a <strong>liderança (COO/CTO)</strong> a adotar a <strong>Vercel</strong> em vez de soluções inadequadas, assumindo a <strong>responsabilidade total pela infraestrutura de front-end</strong>.\n  </li>\n  <li>\n    Implementei <strong>do zero</strong> o <strong>pipeline de CI/CD</strong> com GitHub Actions e a estratégia de <strong>Git Flow</strong>, instituindo <strong>ambientes de homologação</strong> inexistentes e eliminando configurações <strong>hardcoded</strong> por meio de <strong>variáveis de ambiente</strong>.\n  </li>\n</ul>\n\n<br />\n\n<h3>Liderança de Produto e Inovação</h3>\n<ul>\n  <li>\n    Liderei a <strong>reconstrução da principal interface administrativa</strong> da empresa com <strong>React</strong> e <strong>TypeScript</strong>, após obter <strong>autonomia total da diretoria</strong> para definir a <strong>arquitetura</strong> e o <strong>Design System</strong>.\n  </li>\n  <li>\n    Idealizei e desenvolvi uma <strong>plataforma de documentação inovadora</strong> que gera interface e navegação <strong>dinamicamente a partir de Markdown</strong>, permitindo criação de conteúdo <strong>sem necessidade de código</strong>.\n  </li>\n  <li>\n    Arquitetei e entreguei <strong>múltiplas plataformas complexas</strong>, incluindo um <strong>Broker de IA</strong>, um <strong>sistema de gestão para restaurantes (HRC)</strong> e uma <strong>ferramenta de criação de agentes de IA</strong> para não-técnicos (<strong>InCity</strong>).\n  </li>\n</ul>\n\n<br />\n\n<h3>Liderança de Equipe e Mentoria</h3>\n<ul>\n  <li>\n    Lidero tecnicamente a <strong>equipe de front-end</strong>, definindo <strong>arquiteturas</strong>, <strong>padrões de código</strong> e <strong>boas práticas</strong>, além de realizar <strong>code reviews</strong> e <strong>mentoria</strong> para elevar a <strong>qualidade técnica</strong> do time.\n  </li>\n</ul>\n"
+      }
+    }
+  },
+  {
+    "id": "99e657cb-9c6a-415b-b677-4d3c461b5bc4",
+    "type": "experience",
+    "content": {
+      "role": "Programador Front-End e UI Designer",
+      "period": "2024-Jan-2025",
+      "company": "InBot",
+      "description": "    <ul>\n        <li>Revitalização completa das interfaces da plataforma administrativa e de clientes utilizando JS Puro (por solicitação), resultando em uma <strong>melhoria de 30% na usabilidade percebida</strong> (feedback de usuários).</li>\n        <li><strong>Criação de um novo padrão visual</strong> e guia de estilo para a plataforma, garantindo consistência e escalabilidade do design.</li>\n        <li>Implementação de soluções de programação utilizando IA para automação de tarefas internas de desenvolvimento, <strong>otimizando o tempo de codificação em 40%</strong>.</li>\n    </ul>"
+    },
+    "order_index": 1,
+    "created_at": "2025-12-13T23:28:49.216117+00:00",
+    "updated_at": "2025-12-13T23:28:49.216118+00:00",
+    "content_translations": {
+      "en-US": {
+        "role": "Front-End Developer and UI Designer",
+        "period": "2024-Jan-2025",
+        "company": "InBot",
+        "description": "<ul>\n        <li>Complete revitalization of the administrative and client platform interfaces using Vanilla JS (as requested), resulting in a <strong>30% improvement in perceived usability</strong> (user feedback).</li>\n        <li><strong>Creation of a new visual standard</strong> and style guide for the platform, ensuring design consistency and scalability.</li>\n        <li>Implementation of AI-powered programming solutions to automate internal development tasks, <strong>optimizing coding time by 40%</strong>.</li>\n    </ul>"
+      },
+      "pt-BR": {
+        "role": "Programador Front-End e UI Designer",
+        "period": "2024-Jan-2025",
+        "company": "InBot",
+        "description": "    <ul>\n        <li>Revitalização completa das interfaces da plataforma administrativa e de clientes utilizando JS Puro (por solicitação), resultando em uma <strong>melhoria de 30% na usabilidade percebida</strong> (feedback de usuários).</li>\n        <li><strong>Criação de um novo padrão visual</strong> e guia de estilo para a plataforma, garantindo consistência e escalabilidade do design.</li>\n        <li>Implementação de soluções de programação utilizando IA para automação de tarefas internas de desenvolvimento, <strong>otimizando o tempo de codificação em 40%</strong>.</li>\n    </ul>"
+      }
+    }
+  },
+  {
+    "id": "3a6137ed-328a-4f79-8dd3-10138ec2f4fe",
+    "type": "language",
+    "content": {
+      "name": "Português",
+      "level": "Nativo"
+    },
+    "order_index": 21,
+    "created_at": "2025-12-13T23:28:49.216319+00:00",
+    "updated_at": "2025-12-13T23:28:49.216321+00:00",
+    "content_translations": {
+      "en-US": {
+        "name": "Portuguese.",
+        "level": "Native"
+      },
+      "pt-BR": {
+        "name": "Português",
+        "level": "Nativo"
+      }
+    }
+  }
+]

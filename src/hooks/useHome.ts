@@ -12,59 +12,88 @@ export function useHome(repository: HomeRepository) {
   const { locale } = useI18n();
 
   const { data: contactInfo, isLoading: isLoadingContact } = useQuery({
-    queryKey: ['home', 'contact'],
+    queryKey: ["home", "contact"],
     queryFn: () => repository.getContactInfo(),
+    staleTime: Infinity,
   });
 
   const { data: aboutDataRaw, isLoading: isLoadingAbout } = useQuery({
-    queryKey: ['home', 'about'],
+    queryKey: ["home", "about"],
     queryFn: () => repository.getAboutData(),
+    staleTime: Infinity,
   });
 
   const { data: servicesRaw, isLoading: isLoadingServices } = useQuery({
-    queryKey: ['home', 'services'],
+    queryKey: ["home", "services"],
     queryFn: () => repository.getServices(),
+    staleTime: Infinity,
   });
 
   const { data: testimonialsRaw, isLoading: isLoadingTestimonials } = useQuery({
-    queryKey: ['home', 'testimonials'],
+    queryKey: ["home", "testimonials"],
     queryFn: () => repository.getTestimonials(),
+    staleTime: Infinity,
   });
 
-  const isLoading = isLoadingContact || isLoadingAbout || isLoadingServices || isLoadingTestimonials;
+  const isLoading =
+    isLoadingContact ||
+    isLoadingAbout ||
+    isLoadingServices ||
+    isLoadingTestimonials;
 
   // Deriva role traduzido baseado no locale atual (sem refetch)
   const contactRole = useMemo(() => {
-    if (!contactInfo) return '';
-    return contactInfo.role_translations?.[locale] || contactInfo.role_translations?.['pt-BR'] || contactInfo.role || '';
+    if (!contactInfo) return "";
+    return (
+      contactInfo.role_translations?.[locale] ||
+      contactInfo.role_translations?.["pt-BR"] ||
+      contactInfo.role ||
+      ""
+    );
   }, [contactInfo, locale]);
 
   // Deriva aboutText baseado no locale atual (sem fazer fetch)
   const aboutText = useMemo(() => {
-    if (!aboutDataRaw?.value) return '';
-    return aboutDataRaw.value[locale] || aboutDataRaw.value['pt-BR'] || '';
+    if (!aboutDataRaw?.value) return "";
+    return aboutDataRaw.value[locale] || aboutDataRaw.value["pt-BR"] || "";
   }, [aboutDataRaw, locale]);
 
   // Deriva services traduzidos baseado no locale atual (sem fazer fetch)
   const services = useMemo(() => {
     if (!servicesRaw) return [];
-    
-    return servicesRaw.map((service) => ({
+
+    return servicesRaw.map(service => ({
       ...service,
-      title: service.title_translations?.[locale] || service.title_translations?.['pt-BR'] || service.title || '',
-      description: service.description_translations?.[locale] || service.description_translations?.['pt-BR'] || service.description || '',
+      title:
+        service.title_translations?.[locale] ||
+        service.title_translations?.["pt-BR"] ||
+        service.title ||
+        "",
+      description:
+        service.description_translations?.[locale] ||
+        service.description_translations?.["pt-BR"] ||
+        service.description ||
+        "",
     }));
   }, [servicesRaw, locale]);
 
   // Deriva testimonials traduzidos baseado no locale atual (sem fazer fetch)
   const testimonials = useMemo(() => {
     if (!testimonialsRaw) return [];
-    
-    return testimonialsRaw.map((testimonial) => ({
+
+    return testimonialsRaw.map(testimonial => ({
       ...testimonial,
-      name: testimonial.name || '',
-      role: testimonial.role_translations?.[locale] || testimonial.role_translations?.['pt-BR'] || testimonial.role || '',
-      text: testimonial.text_translations?.[locale] || testimonial.text_translations?.['pt-BR'] || testimonial.text || '',
+      name: testimonial.name || "",
+      role:
+        testimonial.role_translations?.[locale] ||
+        testimonial.role_translations?.["pt-BR"] ||
+        testimonial.role ||
+        "",
+      text:
+        testimonial.text_translations?.[locale] ||
+        testimonial.text_translations?.["pt-BR"] ||
+        testimonial.text ||
+        "",
     }));
   }, [testimonialsRaw, locale]);
 
@@ -76,4 +105,3 @@ export function useHome(repository: HomeRepository) {
     isLoading,
   };
 }
-

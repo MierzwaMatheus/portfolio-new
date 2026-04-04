@@ -1,0 +1,827 @@
+[
+  {
+    "id": 13,
+    "created_at": "2025-12-14T20:03:22.513133+00:00",
+    "title": "Página Portfólio Pessoal",
+    "description": "Portfólio profissional full-stack com CMS integrado. React + TypeScript + Supabase para gerenciar projetos, blog, currículo, propostas comerciais e conteúdo com painel administrativo robusto.",
+    "long_description": "Quando você é desenvolvedor, seu portfólio é mais que um site — é uma declaração de valores, habilidades e visão. Este projeto nasceu da necessidade de criar uma plataforma que não apenas exibisse trabalho, mas que contasse histórias através de código bem estruturado.\nA visão era clara: construir um portfólio que fosse tão impressionante quanto os projetos que exibe. Um lugar onde visitantes pudessem explorar não apenas o que foi feito, mas como foi feito. Um espaço que respirasse modernidade, performance e atenção aos detalhes.\nA arquitetura é full-stack por design. No frontend, React 19 com TypeScript oferece tipagem segura e componentes reutilizáveis. Vite garante builds rápidos e hot module replacement durante desenvolvimento. Tailwind CSS + Radix UI criam uma interface acessível e visualmente coerente. Framer Motion adiciona animações suaves que não distraem, mas encantam.\nO backend é serverless com Supabase. PostgreSQL armazena dados estruturados (projetos, posts, currículo, propostas). Storage gerencia imagens sem complicações. Autenticação via Supabase Auth oferece segurança sem overhead. Row Level Security (RLS) garante que dados sensíveis permaneçam privados.\nA área pública é um showcase. A página inicial apresenta uma seção hero acolhedora, seguida por \"Sobre Mim\" (conteúdo gerenciável), grid de serviços/habilidades, depoimentos de clientes, e chamadas à ação estratégicas. O portfólio exibe projetos em grid com filtros por tags, carrossel de imagens, visualizador fullscreen, links para demo e código-fonte. Cada projeto pode ser reordenado via drag and drop — porque ordem importa na primeira impressão.\nO currículo é estruturado em categorias: experiências profissionais, formação acadêmica, habilidades técnicas, idiomas, certificações e interesses pessoais. Tudo ordenável via admin, garantindo que as informações mais relevantes apareçam primeiro. O blog oferece posts com tags, busca, paginação e renderização de markdown/HTML. Posts em destaque aparecem primeiro, criando narrativa.\nPropostas comerciais são documentos vivos. Cada proposta tem validade de 10 dias, status visual (aprovada, pendente, expirada), e pode ser baixada em PDF. Não é apenas um formulário — é uma ferramenta de vendas profissional.\nA área administrativa é onde a magia acontece. Dashboard mostra estatísticas em tempo real: quantos projetos, artigos, propostas. Atalhos rápidos permitem criar conteúdo sem navegar. O gerenciador de projetos oferece CRUD completo com upload múltiplo de imagens, sistema de tags, ordenação via drag and drop, e preview antes de publicar. O gerenciador de blog usa TipTap — um editor de texto rico extensível que permite formatação rica sem deixar o navegador.\nGerenciamento de currículo é intuitivo: adicione itens por categoria, ordene conforme necessário. Gerenciamento de propostas oferece templates, validação automática de expiração, e geração de slugs. Gerenciamento da home permite editar conteúdo, serviços e depoimentos sem tocar código. Gerenciamento de contato centraliza informações de redes sociais e visibilidade de dados.\nO sistema de autenticação é robusto. Diferentes roles (root, admin, proposal-editor) oferecem controle granular. Apenas root pode criar novos usuários. Apenas admins podem gerenciar conteúdo. Proposal-editors focam apenas em propostas. Refresh automático de tokens garante sessões seguras. ProtectedRoute verifica permissões antes de renderizar qualquer página administrativa.\nA performance é obsessiva. Vite oferece tree-shaking agressivo. Lazy loading de rotas reduz bundle inicial. Imagens são otimizadas no Supabase Storage. TypeScript previne bugs em tempo de compilação. ESLint + Prettier garantem código limpo e consistente.\nO design responsivo funciona em desktop, tablet e mobile. Tema dark é padrão, mas tema light está disponível com persistência. Animações suaves com Framer Motion não são apenas bonitas — comunicam estado e transição. Cada interação é pensada.\nEste portfólio não é apenas um projeto — é um manifesto de como construir software com excelência. É código que você pode estudar, aprender, e usar como referência. É um lugar onde visitantes veem não apenas o que você faz, mas como você pensa.\n",
+    "tags": [
+      "React",
+      "Vite",
+      "Cursor",
+      "TypeScript",
+      "Supabase"
+    ],
+    "images": [
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765762308983-a6vz3k.jpg",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/portfolio_img/1765998430505-dm554b.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765762503064-9q36a5.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765762503064-eb45u5.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765762503064-jz6t1r.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/portfolio_img/1765938062191-mkegp.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/portfolio_img/1765938062191-s1ntrg.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765762503065-8m1ixx.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765762503065-f116tn.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765762503065-jbaexl.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765762503065-jcdjgq.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765762503065-kg1g9d.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765762503065-xehlkp.png"
+    ],
+    "demo_link": null,
+    "github_link": "https://github.com/MierzwaMatheus/portfolio-new",
+    "order_index": 3,
+    "title_translations": {
+      "en-US": "Personal Portfolio Page",
+      "pt-BR": "Página Portfólio Pessoal"
+    },
+    "description_translations": {
+      "en-US": "Full-stack professional portfolio with integrated CMS. React + TypeScript + Supabase to manage projects, blog, resume, business proposals, and content with a robust admin panel.",
+      "pt-BR": "Portfólio profissional full-stack com CMS integrado. React + TypeScript + Supabase para gerenciar projetos, blog, currículo, propostas comerciais e conteúdo com painel administrativo robusto."
+    },
+    "long_description_translations": {
+      "en-US": "For a developer, your portfolio is more than just a website—it's a statement of values, skills, and vision. This project was born from the need to create a platform that not only showcases work but also tells stories through well-structured code.\nThe vision was clear: to build a portfolio as impressive as the projects it displays. A place where visitors could explore not just what was done, but how it was done. A space that exudes modernity, performance, and attention to detail.\nThe architecture is full-stack by design. On the frontend, React 19 with TypeScript offers safe typing and reusable components. Vite ensures fast builds and hot module replacement during development. Tailwind CSS + Radix UI create an accessible and visually coherent interface. Framer Motion adds smooth animations that don't distract but delight.\nThe backend is serverless with Supabase. PostgreSQL stores structured data (projects, posts, resume, proposals). Storage manages images without complications. Authentication via Supabase Auth offers security without overhead. Row Level Security (RLS) ensures that sensitive data remains private.\nThe public area is a showcase. The homepage features a welcoming hero section, followed by \"About Me\" (manageable content), a grid of services/skills, customer testimonials, and strategic calls to action. The portfolio displays projects in a grid with tag filters, an image carousel, a fullscreen viewer, and links to the demo and source code. Each project can be reordered via drag and drop—because order matters in first impressions.\nThe resume is structured into categories: professional experiences, academic background, technical skills, languages, certifications, and personal interests. Everything is orderable via admin, ensuring that the most relevant information appears first. The blog offers posts with tags, search, pagination, and markdown/HTML rendering. Featured posts appear first, creating a narrative.\nCommercial proposals are living documents. Each proposal has a validity of 10 days, a visual status (approved, pending, expired), and can be downloaded in PDF format. It's not just a form—it's a professional sales tool.\nThe administrative area is where the magic happens. The dashboard shows real-time statistics: how many projects, articles, proposals. Quick shortcuts allow you to create content without navigating. The project manager offers complete CRUD functionality with multiple image uploads, a tag system, drag-and-drop ordering, and a preview before publishing. The blog manager uses TipTap—an extensible rich text editor that allows rich formatting without leaving the browser.\nResume management is intuitive: add items by category, order as needed. Proposal management offers templates, automatic expiration validation, and slug generation. Home management allows you to edit content, services, and testimonials without touching code. Contact management centralizes social media information and data visibility.\nThe authentication system is robust. Different roles (root, admin, proposal-editor) offer granular control. Only root can create new users. Only admins can manage content. Proposal-editors focus only on proposals. Automatic token refresh ensures secure sessions. ProtectedRoute verifies permissions before rendering any administrative page.\nPerformance is an obsession. Vite offers aggressive tree-shaking. Lazy loading of routes reduces the initial bundle size. Images are optimized in Supabase Storage. TypeScript prevents bugs at compile time. ESLint + Prettier ensure clean and consistent code.\nThe responsive design works on desktop, tablet, and mobile. The dark theme is standard, but a light theme is available with persistence. Smooth animations with Framer Motion are not just pretty—they communicate state and transition. Every interaction is carefully considered.\nThis portfolio is not just a project—it's a manifesto on how to build software with excellence. It's code that you can study, learn from, and use as a reference. It's a place where visitors see not only what you do, but how you think.",
+      "pt-BR": "Quando você é desenvolvedor, seu portfólio é mais que um site — é uma declaração de valores, habilidades e visão. Este projeto nasceu da necessidade de criar uma plataforma que não apenas exibisse trabalho, mas que contasse histórias através de código bem estruturado.\nA visão era clara: construir um portfólio que fosse tão impressionante quanto os projetos que exibe. Um lugar onde visitantes pudessem explorar não apenas o que foi feito, mas como foi feito. Um espaço que respirasse modernidade, performance e atenção aos detalhes.\nA arquitetura é full-stack por design. No frontend, React 19 com TypeScript oferece tipagem segura e componentes reutilizáveis. Vite garante builds rápidos e hot module replacement durante desenvolvimento. Tailwind CSS + Radix UI criam uma interface acessível e visualmente coerente. Framer Motion adiciona animações suaves que não distraem, mas encantam.\nO backend é serverless com Supabase. PostgreSQL armazena dados estruturados (projetos, posts, currículo, propostas). Storage gerencia imagens sem complicações. Autenticação via Supabase Auth oferece segurança sem overhead. Row Level Security (RLS) garante que dados sensíveis permaneçam privados.\nA área pública é um showcase. A página inicial apresenta uma seção hero acolhedora, seguida por \"Sobre Mim\" (conteúdo gerenciável), grid de serviços/habilidades, depoimentos de clientes, e chamadas à ação estratégicas. O portfólio exibe projetos em grid com filtros por tags, carrossel de imagens, visualizador fullscreen, links para demo e código-fonte. Cada projeto pode ser reordenado via drag and drop — porque ordem importa na primeira impressão.\nO currículo é estruturado em categorias: experiências profissionais, formação acadêmica, habilidades técnicas, idiomas, certificações e interesses pessoais. Tudo ordenável via admin, garantindo que as informações mais relevantes apareçam primeiro. O blog oferece posts com tags, busca, paginação e renderização de markdown/HTML. Posts em destaque aparecem primeiro, criando narrativa.\nPropostas comerciais são documentos vivos. Cada proposta tem validade de 10 dias, status visual (aprovada, pendente, expirada), e pode ser baixada em PDF. Não é apenas um formulário — é uma ferramenta de vendas profissional.\nA área administrativa é onde a magia acontece. Dashboard mostra estatísticas em tempo real: quantos projetos, artigos, propostas. Atalhos rápidos permitem criar conteúdo sem navegar. O gerenciador de projetos oferece CRUD completo com upload múltiplo de imagens, sistema de tags, ordenação via drag and drop, e preview antes de publicar. O gerenciador de blog usa TipTap — um editor de texto rico extensível que permite formatação rica sem deixar o navegador.\nGerenciamento de currículo é intuitivo: adicione itens por categoria, ordene conforme necessário. Gerenciamento de propostas oferece templates, validação automática de expiração, e geração de slugs. Gerenciamento da home permite editar conteúdo, serviços e depoimentos sem tocar código. Gerenciamento de contato centraliza informações de redes sociais e visibilidade de dados.\nO sistema de autenticação é robusto. Diferentes roles (root, admin, proposal-editor) oferecem controle granular. Apenas root pode criar novos usuários. Apenas admins podem gerenciar conteúdo. Proposal-editors focam apenas em propostas. Refresh automático de tokens garante sessões seguras. ProtectedRoute verifica permissões antes de renderizar qualquer página administrativa.\nA performance é obsessiva. Vite oferece tree-shaking agressivo. Lazy loading de rotas reduz bundle inicial. Imagens são otimizadas no Supabase Storage. TypeScript previne bugs em tempo de compilação. ESLint + Prettier garantem código limpo e consistente.\nO design responsivo funciona em desktop, tablet e mobile. Tema dark é padrão, mas tema light está disponível com persistência. Animações suaves com Framer Motion não são apenas bonitas — comunicam estado e transição. Cada interação é pensada.\nEste portfólio não é apenas um projeto — é um manifesto de como construir software com excelência. É código que você pode estudar, aprender, e usar como referência. É um lugar onde visitantes veem não apenas o que você faz, mas como você pensa.\n"
+    }
+  },
+  {
+    "id": 12,
+    "created_at": "2025-12-14T20:03:22.513123+00:00",
+    "title": "Mythoscape - Mestre com IA",
+    "description": "Mythoscape - Mestre com IA",
+    "long_description": "MythoScape é uma plataforma de RPG digital que utiliza uma arquitetura de agentes especialistas com IA generativa (Gemini/Google) para mestrar campanhas de forma automatizada. O sistema integra React, TypeScript e Firebase Realtime Database, garantindo atualização em tempo real, rastreabilidade e automação narrativa, com controle de acesso seguro e modularidade para expansão de agentes.",
+    "tags": [
+      "React Native",
+      "Expo",
+      "TailwindCSS",
+      "Cursor",
+      "Supabase",
+      "Gemini API"
+    ],
+    "images": [
+      "https://mythoscape-gm.web.app/assets/images/og-img0.png"
+    ],
+    "demo_link": "https://mythoscape-gm.web.app/",
+    "github_link": "https://github.com/MierzwaMatheus/mythoscape",
+    "order_index": 11,
+    "title_translations": {
+      "en-US": "Mythoscape - AI Master",
+      "pt-BR": "Mythoscape - Mestre com IA"
+    },
+    "description_translations": {
+      "en-US": "Mythoscape - AI Master",
+      "pt-BR": "Mythoscape - Mestre com IA"
+    },
+    "long_description_translations": {
+      "en-US": "MythoScape is a digital RPG platform that uses a specialist agent architecture with generative AI (Gemini/Google) to automate game mastering. The system integrates React, TypeScript, and Firebase Realtime Database, ensuring real-time updates, traceability, and narrative automation, with secure access control and modularity for agent expansion.",
+      "pt-BR": "MythoScape é uma plataforma de RPG digital que utiliza uma arquitetura de agentes especialistas com IA generativa (Gemini/Google) para mestrar campanhas de forma automatizada. O sistema integra React, TypeScript e Firebase Realtime Database, garantindo atualização em tempo real, rastreabilidade e automação narrativa, com controle de acesso seguro e modularidade para expansão de agentes."
+    }
+  },
+  {
+    "id": 4,
+    "created_at": "2025-12-14T20:03:22.513029+00:00",
+    "title": "InCity",
+    "description": "Plataforma para criação e gerenciamento de agentes de IA com integração Gemini e análise de logs. (Sistema administrativo confidencial)",
+    "long_description": "InCity é uma plataforma web moderna que permite criar, gerenciar e interagir com agentes de Inteligência Artificial personalizados. O painel de agentes oferece visualização em grid com busca por nome/descrição/tag, filtros por categorias e ordenação por nome, data de criação ou última atualização. A criação de agentes segue um formulário multi-etapas com seções de identidade (nome, cliente, descrição, tag) e lógica (system prompt, user prompt, personalidade, variáveis). O gerador de prompts assistido por IA utiliza Google Gemini para gerar e enriquecer prompts estruturados automaticamente. Sistema de variáveis dinâmicas com detecção automática nos prompts e validação de obrigatoriedade. Seleção de templates como base e duplicação de agentes existentes. Modal de Fichas para configuração avançada de coleta de dados. Logs de interações com filtros por data e agente específico, paginação e detalhes de cada interação. Gerenciamento de tags e clientes com cores customizáveis. Autenticação Keycloak, estado global com Zustand, integração com Google Generative AI e design responsivo.",
+    "tags": [
+      "React",
+      "TypeScript",
+      "Vite",
+      "TailwindCSS",
+      "Zustand",
+      "Keycloak",
+      "Gemini API",
+      "React Query",
+      "Framer Motion",
+      "REST API"
+    ],
+    "images": [
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761770924-0fygh1s.jpg",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761780527-mpug4j.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761780528-ntct0b.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761780528-r2pzxz.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761780533-02n0ja.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761780533-a6x1vi.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761780534-3b8z9.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761780534-uqt3t8.png"
+    ],
+    "demo_link": null,
+    "github_link": null,
+    "order_index": 7,
+    "title_translations": {
+      "en-US": "InCity",
+      "pt-BR": "InCity"
+    },
+    "description_translations": {
+      "en-US": "Platform for creating and managing AI agents with Gemini integration and log analysis. (Confidential administrative system)",
+      "pt-BR": "Plataforma para criação e gerenciamento de agentes de IA com integração Gemini e análise de logs. (Sistema administrativo confidencial)"
+    },
+    "long_description_translations": {
+      "en-US": "InCity is a modern web platform that allows you to create, manage, and interact with custom Artificial Intelligence agents. The agent dashboard offers a grid view with search by name/description/tag, filters by categories, and sorting by name, creation date, or last updated date. Agent creation follows a multi-step form with identity (name, client, description, tag) and logic (system prompt, user prompt, personality, variables) sections. The AI-assisted prompt generator uses Google Gemini to automatically generate and enrich structured prompts. Dynamic variable system with automatic detection in prompts and mandatory validation. Selection of templates as a base and duplication of existing agents. Data Sheet modal for advanced data collection configuration. Interaction logs with filters by date and specific agent, pagination, and details of each interaction. Management of tags and clients with customizable colors. Keycloak authentication, global state with Zustand, integration with Google Generative AI, and responsive design.",
+      "pt-BR": "InCity é uma plataforma web moderna que permite criar, gerenciar e interagir com agentes de Inteligência Artificial personalizados. O painel de agentes oferece visualização em grid com busca por nome/descrição/tag, filtros por categorias e ordenação por nome, data de criação ou última atualização. A criação de agentes segue um formulário multi-etapas com seções de identidade (nome, cliente, descrição, tag) e lógica (system prompt, user prompt, personalidade, variáveis). O gerador de prompts assistido por IA utiliza Google Gemini para gerar e enriquecer prompts estruturados automaticamente. Sistema de variáveis dinâmicas com detecção automática nos prompts e validação de obrigatoriedade. Seleção de templates como base e duplicação de agentes existentes. Modal de Fichas para configuração avançada de coleta de dados. Logs de interações com filtros por data e agente específico, paginação e detalhes de cada interação. Gerenciamento de tags e clientes com cores customizáveis. Autenticação Keycloak, estado global com Zustand, integração com Google Generative AI e design responsivo."
+    }
+  },
+  {
+    "id": 22,
+    "created_at": "2026-01-04T04:40:49.675733+00:00",
+    "title": "Toca do Gordzilla",
+    "description": "A Toca do Gordzilla tinha um problema: o sistema de pedidos era eficiente, mas a marca se perdia. Em um mercado saturado, ser \"apenas mais um\" não é uma opção.",
+    "long_description": "A Toca do Gordzilla tinha um problema: o sistema de pedidos era eficiente, mas a marca se perdia. Em um mercado saturado, ser \"apenas mais um\" não é uma opção.\n\nA solução? Construir um sistema próprio, onde a interface é a extensão da identidade da marca.\n\nA gente transformou o cardápio em um campo de batalha temático:\n🍔 **Produtos viraram \"Monstros\"**\n🧬 **Adicionais viraram \"Mutações\"** que deixam o Monstro mais forte.\n\nO sistema administrativo fala a mesma língua: \"A fera está dormindo\" (sem pedidos), \"Enviar para a chapa\", etc.\n\nE o design? Usamos o **Neo-Brutalismo** para dar a cara da marca: cores chapadas, bordas retas, sombras marcadas. Uma estética que grita exclusividade e força.\n\nO resultado é um sistema que não só gerencia pedidos, mas **vende a experiência** da Toca do Gordzilla. É a prova de que a tecnologia deve servir à personalidade da marca, e não o contrário.\n\nLink completo para o projeto no blog: https://www.mmlo.com.br/blog/toca-do-gordzilla\n",
+    "tags": [
+      "React",
+      "TypeScript",
+      "TailwindCSS",
+      "Vite",
+      "Firebase",
+      "Cursor",
+      "Vercel"
+    ],
+    "images": [
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501097469-711li.jpg",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563425-250hgc.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563425-ogkap8.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563425-2i3fw.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563425-i0m7r.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563425-hdfpw.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563426-tbom3f.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563426-ic8j84g.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563425-5g4rfa.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563426-oljojt.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563426-avoa9c.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563426-gagtqg.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563427-qdz9pl.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563427-ckty6.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563427-yrtyf.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563427-ltca17.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563427-wle06.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563428-55u9ck.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563428-ix369.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563428-dp47dr.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563428-t5log0s.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563428-m5bh6o.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563429-913lf.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563429-yg09es.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/toca/1767501563429-l1shjc.png"
+    ],
+    "demo_link": "https://youtu.be/VuJWWDeVPqI",
+    "github_link": null,
+    "order_index": 0,
+    "title_translations": {
+      "en-US": "Gordzilla's Den",
+      "pt-BR": "Toca do Gordzilla"
+    },
+    "description_translations": {
+      "en-US": "Gordzilla's Lair had a problem: their ordering system was efficient, but their brand was getting lost. In a saturated market, being \"just another option\" is not a viable strategy.",
+      "pt-BR": "A Toca do Gordzilla tinha um problema: o sistema de pedidos era eficiente, mas a marca se perdia. Em um mercado saturado, ser \"apenas mais um\" não é uma opção."
+    },
+    "long_description_translations": {
+      "en-US": "Gordzilla's Lair had a problem: their ordering system was efficient, but the brand got lost in the shuffle. In a saturated market, being \"just another\" option is not a viable strategy.\n\nThe solution? Build a proprietary system where the interface is an extension of the brand's identity.\n\nWe transformed the menu into a thematic battleground:\n🍔 **Products became \"Monsters.\"**\n🧬 **Add-ons became \"Mutations\"** that make the Monster stronger.\n\nThe administrative system speaks the same language: \"The beast is sleeping\" (no orders), \"Send to the grill,\" etc.\n\nAnd the design? We used **Neo-Brutalism** to showcase the brand's personality: flat colors, straight edges, strong shadows. An aesthetic that screams exclusivity and power.\n\nThe result is a system that not only manages orders but **sells the Gordzilla's Lair experience**. It's proof that technology should serve the brand's personality, not the other way around.\n\nFull project link on the blog: https://www.mmlo.com.br/blog/toca-do-gordzilla",
+      "pt-BR": "A Toca do Gordzilla tinha um problema: o sistema de pedidos era eficiente, mas a marca se perdia. Em um mercado saturado, ser \"apenas mais um\" não é uma opção.\n\nA solução? Construir um sistema próprio, onde a interface é a extensão da identidade da marca.\n\nA gente transformou o cardápio em um campo de batalha temático:\n🍔 **Produtos viraram \"Monstros\"**\n🧬 **Adicionais viraram \"Mutações\"** que deixam o Monstro mais forte.\n\nO sistema administrativo fala a mesma língua: \"A fera está dormindo\" (sem pedidos), \"Enviar para a chapa\", etc.\n\nE o design? Usamos o **Neo-Brutalismo** para dar a cara da marca: cores chapadas, bordas retas, sombras marcadas. Uma estética que grita exclusividade e força.\n\nO resultado é um sistema que não só gerencia pedidos, mas **vende a experiência** da Toca do Gordzilla. É a prova de que a tecnologia deve servir à personalidade da marca, e não o contrário.\n\nLink completo para o projeto no blog: https://www.mmlo.com.br/blog/toca-do-gordzilla\n"
+    }
+  },
+  {
+    "id": 5,
+    "created_at": "2025-12-14T20:03:22.513046+00:00",
+    "title": "InProfile",
+    "description": "Aplicação administrativa para gestão de usuários e permissões do ecossistema InBot com RBAC. (Sistema administrativo confidencial)",
+    "long_description": "InProfile é uma aplicação web moderna desenvolvida para gerenciar usuários, grupos e permissões do ecossistema InBot. A interface principal apresenta uma tabela de dados genérica e reutilizável com busca em tempo real, paginação configurável, ordenação por colunas, seleção múltipla e ações customizáveis por linha. Funcionalidades incluem criar novos usuários com campos de username, email, nome, sobrenome, senha e status, editar informações de usuários existentes, excluir usuários com modal de confirmação e gerenciar grupos de permissões. Modal de adição/edição de usuários com validação de formulários usando React Hook Form e Zod. Modal para gerenciar grupos associados a cada usuário com seleção múltipla. Sistema de autenticação via Keycloak com verificação de roles obrigatórias, refresh automático de tokens e persistência de sessão. Proteção de rotas com componente ProtectedRoute que verifica autenticação e permissões. Layout responsivo com sidebar colapsável, header com informações do usuário e logout. Componentes UI baseados em shadcn/ui com suporte a tema claro/escuro.",
+    "tags": [
+      "React",
+      "TypeScript",
+      "Vite",
+      "TailwindCSS",
+      "Keycloak",
+      "React Query",
+      "Zod",
+      "React Hook Form",
+      "REST API",
+      "Radix UI"
+    ],
+    "images": [
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761918934-mno5fw.jpg",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761935425-f5w0z.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761935426-fipvxj.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761935427-njkkow.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761935427-om87zl.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761935428-ehl7o6.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761935429-pxqa0n.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761935429-q00e6b.png"
+    ],
+    "demo_link": null,
+    "github_link": null,
+    "order_index": 9,
+    "title_translations": {
+      "en-US": "InProfile",
+      "pt-BR": "InProfile"
+    },
+    "description_translations": {
+      "en-US": "Administrative application for managing users and permissions within the InBot ecosystem using RBAC. (Confidential administrative system)",
+      "pt-BR": "Aplicação administrativa para gestão de usuários e permissões do ecossistema InBot com RBAC. (Sistema administrativo confidencial)"
+    },
+    "long_description_translations": {
+      "en-US": "InProfile is a modern web application developed to manage users, groups, and permissions within the InBot ecosystem. The main interface features a generic and reusable data table with real-time search, configurable pagination, column sorting, multiple selection, and customizable row actions. Functionalities include creating new users with fields for username, email, first name, last name, password, and status; editing information for existing users; deleting users with a confirmation modal; and managing permission groups. User add/edit modal with form validation using React Hook Form and Zod. Modal for managing groups associated with each user with multiple selection. Authentication system via Keycloak with mandatory role verification, automatic token refresh, and session persistence. Route protection with a ProtectedRoute component that verifies authentication and permissions. Responsive layout with collapsible sidebar, header with user information, and logout. UI components based on shadcn/ui with light/dark theme support.",
+      "pt-BR": "InProfile é uma aplicação web moderna desenvolvida para gerenciar usuários, grupos e permissões do ecossistema InBot. A interface principal apresenta uma tabela de dados genérica e reutilizável com busca em tempo real, paginação configurável, ordenação por colunas, seleção múltipla e ações customizáveis por linha. Funcionalidades incluem criar novos usuários com campos de username, email, nome, sobrenome, senha e status, editar informações de usuários existentes, excluir usuários com modal de confirmação e gerenciar grupos de permissões. Modal de adição/edição de usuários com validação de formulários usando React Hook Form e Zod. Modal para gerenciar grupos associados a cada usuário com seleção múltipla. Sistema de autenticação via Keycloak com verificação de roles obrigatórias, refresh automático de tokens e persistência de sessão. Proteção de rotas com componente ProtectedRoute que verifica autenticação e permissões. Layout responsivo com sidebar colapsável, header com informações do usuário e logout. Componentes UI baseados em shadcn/ui com suporte a tema claro/escuro."
+    }
+  },
+  {
+    "id": 11,
+    "created_at": "2025-12-14T20:03:22.513114+00:00",
+    "title": "IdeaForge - Desenvolva uma Estratégia para seu Negócio",
+    "description": "IdeaForge - Desenvolva uma Estratégia para seu Negócio",
+    "long_description": "IdeaForge é uma plataforma revolucionária para empreendedores e criativos que transforma ideias vagas em projetos estruturados com documentos acionáveis. Utilizando IA especializada, o IdeaForge oferece feedback de múltiplas perspectivas para refinar sua ideia e gerar documentos essenciais como pitch decks, business canvas e landing pages.",
+    "tags": [
+      "React",
+      "TypeScript",
+      "TailwindCSS",
+      "Vite",
+      "Firebase",
+      "Cursor",
+      "Vercel",
+      "Gemini API"
+    ],
+    "images": [
+      "https://i.postimg.cc/6QxwKxQf/favIF0.png"
+    ],
+    "demo_link": "https://ideaforge-ia.vercel.app/",
+    "github_link": "https://github.com/MierzwaMatheus/ideaforge-ia/",
+    "order_index": 10,
+    "title_translations": {
+      "en-US": "IdeaForge - Develop a Strategy for Your Business",
+      "pt-BR": "IdeaForge - Desenvolva uma Estratégia para seu Negócio"
+    },
+    "description_translations": {
+      "en-US": "IdeaForge - Develop a Strategy for Your Business",
+      "pt-BR": "IdeaForge - Desenvolva uma Estratégia para seu Negócio"
+    },
+    "long_description_translations": {
+      "en-US": "IdeaForge is a revolutionary platform for entrepreneurs and creatives that transforms vague ideas into structured projects with actionable documents. Using specialized AI, IdeaForge provides feedback from multiple perspectives to refine your idea and generate essential documents such as pitch decks, business model canvases, and landing pages.",
+      "pt-BR": "IdeaForge é uma plataforma revolucionária para empreendedores e criativos que transforma ideias vagas em projetos estruturados com documentos acionáveis. Utilizando IA especializada, o IdeaForge oferece feedback de múltiplas perspectivas para refinar sua ideia e gerar documentos essenciais como pitch decks, business canvas e landing pages."
+    }
+  },
+  {
+    "id": 2,
+    "created_at": "2025-12-14T20:03:22.513006+00:00",
+    "title": "HRC Gestão de Mesas",
+    "description": "Sistema administrativo de gestão de mesas e reservas para Hard Rock Cafe com autenticação Keycloak. (Sistema administrativo confidencial)",
+    "long_description": "HRC Gestão de Mesas é um sistema web completo desenvolvido para o Hard Rock Cafe que automatiza o gerenciamento de mesas, reservas e clientes. A aplicação oferece um dashboard intuitivo com visualização em tempo real do status das 51 mesas distribuídas entre térreo e mezzanino, com estados (disponível, reservada, ocupada, indisponível) e operações CRUD completas. O módulo de reservas permite criar, editar e cancelar reservas com validação inteligente de capacidade, suporte a clientes PCD e observações especiais. A gestão de clientes inclui histórico de reservas, preferências e data da última visita. Configurações avançadas permitem definir dias fechados com recorrência, bloqueios por faixa horária, eventos especiais e percentuais de capacidade diferenciados para dias úteis e finais de semana. O sistema gera relatórios de ocupação e receita com visualizações gráficas. Autenticação via Keycloak com role-based access control, API RESTful com validação de schemas Zod e design responsivo com componentes shadcn/ui.",
+    "tags": [
+      "React",
+      "TypeScript",
+      "Vite",
+      "TailwindCSS",
+      "Keycloak",
+      "REST API",
+      "React Query",
+      "Recharts",
+      "Zod",
+      "React Hook Form"
+    ],
+    "images": [
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765760685879.jpg",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761132597-myoe4.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761132598-sodzsg.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761132598-yq8ruh.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761132599-axupvn.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761132600-lxtz8.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761132601-dqcmr.png"
+    ],
+    "demo_link": null,
+    "github_link": null,
+    "order_index": 4,
+    "title_translations": {
+      "en-US": "HRC Table Management",
+      "pt-BR": "HRC Gestão de Mesas"
+    },
+    "description_translations": {
+      "en-US": "Hard Rock Cafe table and reservation management administration system with Keycloak authentication. (Confidential administration system)",
+      "pt-BR": "Sistema administrativo de gestão de mesas e reservas para Hard Rock Cafe com autenticação Keycloak. (Sistema administrativo confidencial)"
+    },
+    "long_description_translations": {
+      "en-US": "HRC Table Management is a comprehensive web system developed for Hard Rock Cafe that automates the management of tables, reservations, and customers. The application offers an intuitive dashboard with a real-time view of the status of all 51 tables, distributed between the ground floor and mezzanine, with statuses (available, reserved, occupied, unavailable) and complete CRUD operations. The reservation module allows users to create, edit, and cancel reservations with intelligent capacity validation, support for disabled customers, and special notes. Customer management includes reservation history, preferences, and the date of the last visit. Advanced settings allow users to define recurring closed days, time-based blocks, special events, and different capacity percentages for weekdays and weekends. The system generates occupancy and revenue reports with graphical visualizations. Authentication is via Keycloak with role-based access control, a RESTful API with Zod schema validation, and a responsive design with shadcn/ui components.",
+      "pt-BR": "HRC Gestão de Mesas é um sistema web completo desenvolvido para o Hard Rock Cafe que automatiza o gerenciamento de mesas, reservas e clientes. A aplicação oferece um dashboard intuitivo com visualização em tempo real do status das 51 mesas distribuídas entre térreo e mezzanino, com estados (disponível, reservada, ocupada, indisponível) e operações CRUD completas. O módulo de reservas permite criar, editar e cancelar reservas com validação inteligente de capacidade, suporte a clientes PCD e observações especiais. A gestão de clientes inclui histórico de reservas, preferências e data da última visita. Configurações avançadas permitem definir dias fechados com recorrência, bloqueios por faixa horária, eventos especiais e percentuais de capacidade diferenciados para dias úteis e finais de semana. O sistema gera relatórios de ocupação e receita com visualizações gráficas. Autenticação via Keycloak com role-based access control, API RESTful com validação de schemas Zod e design responsivo com componentes shadcn/ui."
+    }
+  },
+  {
+    "id": 6,
+    "created_at": "2025-12-14T20:03:22.513057+00:00",
+    "title": "Inscribe - Documentação InBot",
+    "description": "Plataforma moderna de documentação técnica com busca avançada, renderização Markdown e API interativa. (Sistema administrativo confidencial)",
+    "long_description": "Inscribe é uma plataforma de documentação desenvolvida para o InBot que oferece visualização de documentação técnica pública e interna, além de documentação interativa de APIs. O sistema renderiza dinamicamente arquivos Markdown da pasta /public/docs/ com suporte a frontmatter YAML para metadados, realce de sintaxe com highlight.js e botão de copiar código em blocos. Geração automática de tabela de conteúdos a partir dos headings com navegação por hash para seções específicas. Sistema de busca em tempo real que indexa documentos na inicialização e busca por título, descrição, tags e conteúdo com scoring de relevância e destaque de matches. Documentação de API com visualização interativa de endpoints OpenAPI/Swagger, organização por tags/categorias, detalhes completos de cada endpoint (método, path, parâmetros, request body, responses, segurança) e testador de API integrado. Autenticação via Keycloak com proteção de rotas internas e verificação de roles. Interface responsiva com sidebar dinâmica colapsável em desktop e drawer em mobile, tema claro/escuro com persistência, breadcrumbs e indicadores visuais de página ativa. Firebase Functions para processamento serverless.",
+    "tags": [
+      "React",
+      "TypeScript",
+      "Vite",
+      "TailwindCSS",
+      "Keycloak",
+      "Firebase",
+      "React Query",
+      "Marked",
+      "REST API",
+      "Radix UI"
+    ],
+    "images": [
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761834202-9pe9vb.jpg",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761843521-jvqdm9.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761843521-onjea.png"
+    ],
+    "demo_link": null,
+    "github_link": null,
+    "order_index": 8,
+    "title_translations": {
+      "en-US": "Inscribe - InBot Documentation",
+      "pt-BR": "Inscribe - Documentação InBot"
+    },
+    "description_translations": {
+      "en-US": "Modern technical documentation platform with advanced search, Markdown rendering, and interactive API. (Confidential administrative system)",
+      "pt-BR": "Plataforma moderna de documentação técnica com busca avançada, renderização Markdown e API interativa. (Sistema administrativo confidencial)"
+    },
+    "long_description_translations": {
+      "en-US": "Inscribe is a documentation platform developed for InBot that offers a view of public and internal technical documentation, as well as interactive API documentation. The system dynamically renders Markdown files from the /public/docs/ folder, with support for YAML frontmatter for metadata, syntax highlighting with highlight.js, and a button to copy code in blocks. It features automatic table of contents generation from headings with hash navigation to specific sections. A real-time search system indexes documents on startup and searches by title, description, tags, and content, with relevance scoring and match highlighting. API documentation includes interactive visualization of OpenAPI/Swagger endpoints, organization by tags/categories, complete details for each endpoint (method, path, parameters, request body, responses, security), and an integrated API tester. Authentication is handled via Keycloak, with protection of internal routes and role verification. The responsive interface features a dynamic sidebar that collapses on desktop and becomes a drawer on mobile, a light/dark theme with persistence, breadcrumbs, and visual indicators for the active page. Firebase Functions are used for serverless processing.",
+      "pt-BR": "Inscribe é uma plataforma de documentação desenvolvida para o InBot que oferece visualização de documentação técnica pública e interna, além de documentação interativa de APIs. O sistema renderiza dinamicamente arquivos Markdown da pasta /public/docs/ com suporte a frontmatter YAML para metadados, realce de sintaxe com highlight.js e botão de copiar código em blocos. Geração automática de tabela de conteúdos a partir dos headings com navegação por hash para seções específicas. Sistema de busca em tempo real que indexa documentos na inicialização e busca por título, descrição, tags e conteúdo com scoring de relevância e destaque de matches. Documentação de API com visualização interativa de endpoints OpenAPI/Swagger, organização por tags/categorias, detalhes completos de cada endpoint (método, path, parâmetros, request body, responses, segurança) e testador de API integrado. Autenticação via Keycloak com proteção de rotas internas e verificação de roles. Interface responsiva com sidebar dinâmica colapsável em desktop e drawer em mobile, tema claro/escuro com persistência, breadcrumbs e indicadores visuais de página ativa. Firebase Functions para processamento serverless."
+    }
+  },
+  {
+    "id": 21,
+    "created_at": "2025-12-29T22:17:59.271496+00:00",
+    "title": "Forge Code",
+    "description": "O momento mais importante de um projeto não é quando ele funciona, mas quando ele te força a questionar a própria fundação.",
+    "long_description": "O momento mais importante de um projeto não é quando ele funciona, mas quando ele te força a questionar a própria fundação.\n\nEu comecei a construir o #CodeForge com uma ideia simples: usar IA para planejar projetos. Mas logo percebi o problema: a IA \"concorda\" com tudo, e o rigor técnico se perde.\n\nFoi aí que o projeto deu uma guinada radical. O Code Forge não é um gerador de código. É um **Sistema de Desenvolvimento Guiado por Evidência**. Ele é o guia de como sair de um projeto do zero e chegar ao final com **rastreabilidade total**.\n\nA premissa é desconfortável: Se não existe evidência verificável, não existe conclusão válida.\n\nO Code Forge impõe rigor através de:\n1️⃣ **Steps Numerados:** Cada etapa tem um objetivo explícito e testes obrigatórios.\n2️⃣ **Evidência como Contrato:** O usuário executa os testes e anexa as evidências (logs, prints, outputs).\n3️⃣ **IA como Auditor:** A IA atua como um auditor frio e imparcial. Ela não opina, ela **verifica** se a evidência anexada prova o critério de conclusão. O resultado é binário: ACCEPTED ou REJECTED.\n\nIsso elimina a subjetividade, o \"funciona na minha máquina\" e o \"jeitinho\". O Code Forge formaliza o método que usamos para construir software de alta qualidade: **exigir prova**.\n\nO projeto é open source. Se você valoriza o rigor, venha auditar o processo!",
+    "tags": [
+      "MongoDB",
+      "Express",
+      "React",
+      "Node.js",
+      "Docker",
+      "Cursor",
+      "TailwindCSS"
+    ],
+    "images": [
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/code_forge/1767046376173-e50vss.jpg",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/code_forge/1767046556033-5c3pao.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/code_forge/1767046556033-zy33fs.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/code_forge/1767046556033-ybgqb.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/code_forge/1767046556034-0ghyjn.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/code_forge/1767046556034-8g7m65.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/code_forge/1767046556034-li4fk5.png"
+    ],
+    "demo_link": "https://youtu.be/t7gJuxH5ye0",
+    "github_link": "https://github.com/MierzwaMatheus/forge-code",
+    "order_index": 1,
+    "title_translations": {
+      "en-US": "Forge Code",
+      "pt-BR": "Forge Code"
+    },
+    "description_translations": {
+      "en-US": "The most important moment in a project isn't when it works, but when it forces you to question its very foundation.",
+      "pt-BR": "O momento mais importante de um projeto não é quando ele funciona, mas quando ele te força a questionar a própria fundação."
+    },
+    "long_description_translations": {
+      "en-US": "The most important moment in a project isn't when it works, but when it forces you to question its very foundation.\n\nI started building #CodeForge with a simple idea: using AI to plan projects. But I soon realized the problem: AI \"agrees\" with everything, and technical rigor is lost.\n\nThat's when the project took a radical turn. Code Forge isn't a code generator. It's an **Evidence-Driven Development System**. It guides you from the very beginning of a project to the end with **complete traceability**.\n\nThe premise is uncomfortable: If verifiable evidence doesn't exist, no conclusion is valid.\n\nCode Forge enforces rigor through:\n1️⃣ **Numbered Steps:** Each step has an explicit objective and mandatory tests.\n2️⃣ **Evidence as a Contract:** The user runs the tests and attaches the evidence (logs, prints, outputs).\n3️⃣ **AI as Auditor:** The AI acts as a cold, impartial auditor. It doesn't give opinions; it **verifies** whether the attached evidence proves the completion criteria. The result is binary: ACCEPTED or REJECTED.\n\nThis eliminates subjectivity, the \"it works on my machine\" excuse, and workarounds. Code Forge formalizes the method we use to build high-quality software: **demand proof**.\n\nThe project is open source. If you value rigor, come and audit the process!",
+      "pt-BR": "O momento mais importante de um projeto não é quando ele funciona, mas quando ele te força a questionar a própria fundação.\n\nEu comecei a construir o #CodeForge com uma ideia simples: usar IA para planejar projetos. Mas logo percebi o problema: a IA \"concorda\" com tudo, e o rigor técnico se perde.\n\nFoi aí que o projeto deu uma guinada radical. O Code Forge não é um gerador de código. É um **Sistema de Desenvolvimento Guiado por Evidência**. Ele é o guia de como sair de um projeto do zero e chegar ao final com **rastreabilidade total**.\n\nA premissa é desconfortável: Se não existe evidência verificável, não existe conclusão válida.\n\nO Code Forge impõe rigor através de:\n1️⃣ **Steps Numerados:** Cada etapa tem um objetivo explícito e testes obrigatórios.\n2️⃣ **Evidência como Contrato:** O usuário executa os testes e anexa as evidências (logs, prints, outputs).\n3️⃣ **IA como Auditor:** A IA atua como um auditor frio e imparcial. Ela não opina, ela **verifica** se a evidência anexada prova o critério de conclusão. O resultado é binário: ACCEPTED ou REJECTED.\n\nIsso elimina a subjetividade, o \"funciona na minha máquina\" e o \"jeitinho\". O Code Forge formaliza o método que usamos para construir software de alta qualidade: **exigir prova**.\n\nO projeto é open source. Se você valoriza o rigor, venha auditar o processo!"
+    }
+  },
+  {
+    "id": 17,
+    "created_at": "2025-12-14T20:03:22.513168+00:00",
+    "title": "UX | UI Sampa Invest Group",
+    "description": "UX | UI Sampa Invest Group",
+    "long_description": "O projeto de redesign da Sampa nasceu da necessidade de aprimorar a experiência mobile dos seus clientes, que, apesar de preferirem usar o site pelo celular, enfrentavam diversos erros de design. A iniciativa, impulsionada pelo feedback direto dos usuários e pelo desafio proposto pelo CEO, evoluiu de uma simples correção para uma completa revitalização visual e funcional do site, aplicando uma nova identidade à empresa. Para mim, essa empreitada representou uma oportunidade estimulante de ir além, desafiando meus conhecimentos em UI/UX, explorando novas técnicas e expandindo minhas habilidades, tudo isso enquanto contribuía diretamente para a evolução da Sampa e para uma experiência de usuário significativamente melhorada.",
+    "tags": [
+      "Figma"
+    ],
+    "images": [
+      "https://mir-s3-cdn-cf.behance.net/project_modules/disp/2bc480195162333.6608f3f1ae1db.jpg"
+    ],
+    "demo_link": "https://www.behance.net/gallery/195162333/UX-UI-Sampa-Invest-Group",
+    "github_link": null,
+    "order_index": 21,
+    "title_translations": {
+      "en-US": "UX | UI Sampa Invest Group",
+      "pt-BR": "UX | UI Sampa Invest Group"
+    },
+    "description_translations": {
+      "en-US": "UX | UI Sampa Invest Group",
+      "pt-BR": "UX | UI Sampa Invest Group"
+    },
+    "long_description_translations": {
+      "en-US": "The Sampa redesign project was born from the need to enhance the mobile experience for its customers, who, despite preferring to use the site on their cell phones, faced several design flaws. The initiative, driven by direct user feedback and the challenge set by the CEO, evolved from a simple fix to a complete visual and functional revitalization of the site, applying a new identity to the company. For me, this undertaking represented a stimulating opportunity to go further, challenging my knowledge in UI/UX, exploring new techniques, and expanding my skills, all while contributing directly to the evolution of Sampa and a significantly improved user experience.",
+      "pt-BR": "O projeto de redesign da Sampa nasceu da necessidade de aprimorar a experiência mobile dos seus clientes, que, apesar de preferirem usar o site pelo celular, enfrentavam diversos erros de design. A iniciativa, impulsionada pelo feedback direto dos usuários e pelo desafio proposto pelo CEO, evoluiu de uma simples correção para uma completa revitalização visual e funcional do site, aplicando uma nova identidade à empresa. Para mim, essa empreitada representou uma oportunidade estimulante de ir além, desafiando meus conhecimentos em UI/UX, explorando novas técnicas e expandindo minhas habilidades, tudo isso enquanto contribuía diretamente para a evolução da Sampa e para uma experiência de usuário significativamente melhorada."
+    }
+  },
+  {
+    "id": 15,
+    "created_at": "2025-12-14T20:03:22.51315+00:00",
+    "title": "Fluxora",
+    "description": "Fluxora",
+    "long_description": "Projeto criado para uso pessoal, sendo um simples gestor de gastos e lista de compras. Funções de criação de listas de planejamento financeiro com entradas e saídas registradas por categorias, e controle do que foi pago e o que ainda não. Já listas de compras com orçamento, cadastro de novos produtos no banco de dados, organização por categorias, controle do que foi comprado e o que ainda não, e cálculos automáticos de quantia x preço. Disponível para cadastro e uso, com criação de conta.",
+    "tags": [
+      "Vite",
+      "TailwindCSS",
+      "React",
+      "Supabase",
+      "Cursor"
+    ],
+    "images": [
+      "https://i.postimg.cc/bwYvzcHM/fluxora.png"
+    ],
+    "demo_link": "https://fluxora-plan.web.app/",
+    "github_link": "https://github.com/MierzwaMatheus/fluxora",
+    "order_index": 16,
+    "title_translations": {
+      "en-US": "Fluxora",
+      "pt-BR": "Fluxora"
+    },
+    "description_translations": {
+      "en-US": "Fluxora",
+      "pt-BR": "Fluxora"
+    },
+    "long_description_translations": {
+      "en-US": "This project was created for personal use as a simple expense tracker and shopping list manager. It features financial planning list creation with income and expenses recorded by category, and tracking of paid and unpaid items. Shopping lists include budgeting, new product registration in the database, organization by category, tracking of purchased and unpurchased items, and automatic quantity x price calculations. Registration and account creation are available for use.",
+      "pt-BR": "Projeto criado para uso pessoal, sendo um simples gestor de gastos e lista de compras. Funções de criação de listas de planejamento financeiro com entradas e saídas registradas por categorias, e controle do que foi pago e o que ainda não. Já listas de compras com orçamento, cadastro de novos produtos no banco de dados, organização por categorias, controle do que foi comprado e o que ainda não, e cálculos automáticos de quantia x preço. Disponível para cadastro e uso, com criação de conta."
+    }
+  },
+  {
+    "id": 10,
+    "created_at": "2025-12-14T20:03:22.513104+00:00",
+    "title": "Tucano - Organize suas finanças e controle suas compras",
+    "description": "Tucano - Organize suas finanças e controle suas compras",
+    "long_description": "Tucano é uma aplicação mobile-first, moderna e acessível que integra:\n\n    🛒 Gestão de listas de compras mensais\n    💰 Planejamento de receitas e despesas\n    💳 Controle inteligente de gastos no cartão de crédito\n    📊 Visualização por dashboards e filtros\n\nVocê poderá controlar o que compra, como paga e para onde seu dinheiro está indo — de forma limpa, sem planilhas complexas.",
+    "tags": [
+      "React",
+      "TypeScript",
+      "TailwindCSS",
+      "Vite",
+      "Firebase",
+      "GitHub",
+      "Cursor"
+    ],
+    "images": [
+      "https://i.postimg.cc/kMLz6myM/img0.png"
+    ],
+    "demo_link": "https://tucano-financas.web.app/shopping",
+    "github_link": "https://github.com/MierzwaMatheus/tucano/",
+    "order_index": 12,
+    "title_translations": {
+      "en-US": "Tucano - Organize Your Finances and Track Your Purchases",
+      "pt-BR": "Tucano - Organize suas finanças e controle suas compras"
+    },
+    "description_translations": {
+      "en-US": "Tucano - Organize Your Finances and Track Your Purchases",
+      "pt-BR": "Tucano - Organize suas finanças e controle suas compras"
+    },
+    "long_description_translations": {
+      "en-US": "Tucano is a modern, accessible, mobile-first application that integrates:\n\n    🛒 Monthly shopping list management\n    💰 Income and expense planning\n    💳 Smart credit card spending tracking\n    📊 Dashboard and filter-based visualization\n\nYou'll be able to control what you buy, how you pay, and where your money is going—in a clean way, without complex spreadsheets.",
+      "pt-BR": "Tucano é uma aplicação mobile-first, moderna e acessível que integra:\n\n    🛒 Gestão de listas de compras mensais\n    💰 Planejamento de receitas e despesas\n    💳 Controle inteligente de gastos no cartão de crédito\n    📊 Visualização por dashboards e filtros\n\nVocê poderá controlar o que compra, como paga e para onde seu dinheiro está indo — de forma limpa, sem planilhas complexas."
+    }
+  },
+  {
+    "id": 19,
+    "created_at": "2025-12-14T20:03:22.513185+00:00",
+    "title": "Nutri Kamarada Luna LP",
+    "description": "Nutri Kamarada Luna LP",
+    "long_description": "Landing Page desenvolvida para Luna Sardinha, uma nutricionista que precisava de uma página exclusiva para seu serviço como nutricionista. A página destaca a história da nutricionista, que tem um viés comunista e participa de lutas sociais em busca de igualdade. Também é destacado o programa de nutrição popular, onde ela realiza atendimentos nutricionais com valores populares, levando o acesso a nutrição a classes mais baixas da sociedade.",
+    "tags": [
+      "HTML5",
+      "JavaScript",
+      "CSS3"
+    ],
+    "images": [
+      "https://i.postimg.cc/6QK6H8YD/kmarada.png"
+    ],
+    "demo_link": "https://kamaradaluna.web.app/",
+    "github_link": null,
+    "order_index": 19,
+    "title_translations": {
+      "en-US": "Nutri Kamarada Luna SF",
+      "pt-BR": "Nutri Kamarada Luna LP"
+    },
+    "description_translations": {
+      "en-US": "Nutri Kamarada Luna SF",
+      "pt-BR": "Nutri Kamarada Luna LP"
+    },
+    "long_description_translations": {
+      "en-US": "Landing page developed for Luna Sardinha, a nutritionist who needed a dedicated page for her services. The page highlights the nutritionist's background, which has a communist leaning, and her involvement in social movements fighting for equality. It also highlights the popular nutrition program, through which she provides nutritional consultations at affordable prices, bringing access to nutrition to lower income segments of society.",
+      "pt-BR": "Landing Page desenvolvida para Luna Sardinha, uma nutricionista que precisava de uma página exclusiva para seu serviço como nutricionista. A página destaca a história da nutricionista, que tem um viés comunista e participa de lutas sociais em busca de igualdade. Também é destacado o programa de nutrição popular, onde ela realiza atendimentos nutricionais com valores populares, levando o acesso a nutrição a classes mais baixas da sociedade."
+    }
+  },
+  {
+    "id": 1,
+    "created_at": "2025-12-14T20:03:22.51296+00:00",
+    "title": "Agenda Fácil",
+    "description": "Plataforma SaaS completa para gerenciamento de agendamentos profissionais com integração WhatsApp e Stripe. (Sistema administrativo confidencial)",
+    "long_description": "Agenda Fácil é uma plataforma SaaS robusta desenvolvida para profissionais autônomos e pequenos negócios que precisam automatizar seu processo de agendamento. A solução oferece um dashboard intuitivo para gerenciar agendamentos em diferentes vistas (dia, semana, mês), com filtros por status e navegação inteligente. Profissionais podem criar e gerenciar serviços com duração customizável, preços e ícones, com limites variáveis conforme o plano. O sistema integra-se com WhatsApp para envio automático de confirmações, lembretes 24h e 1h antes, além de notificações de cancelamento com templates personalizáveis. Clientes acessam uma página pública de agendamento com seleção de serviços, calendário interativo e slots disponíveis calculados automaticamente. O backend utiliza Supabase com PostgreSQL, Edge Functions serverless e integração com Stripe para pagamentos recorrentes. Inclui relatórios analíticos, gerenciamento de clientes, equipe multi-profissional (plano Premium) e configurações avançadas de horários e buffers.",
+    "tags": [
+      "React",
+      "TypeScript",
+      "Vite",
+      "TailwindCSS",
+      "Framer Motion",
+      "Supabase",
+      "PostgreSQL",
+      "Stripe",
+      "REST API",
+      "Firebase"
+    ],
+    "images": [
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761692968-8n8lm.jpg",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761715087-camq4j.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761715087-x6xh2z.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761715088-2chz7y.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761715089-7p97bm.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761715090-odqja.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761715091-r8sshr.png"
+    ],
+    "demo_link": null,
+    "github_link": null,
+    "order_index": 6,
+    "title_translations": {
+      "en-US": "Easy Scheduling",
+      "pt-BR": "Agenda Fácil"
+    },
+    "description_translations": {
+      "en-US": "Comprehensive SaaS platform for managing professional appointments with WhatsApp and Stripe integration. (Confidential administrative system)",
+      "pt-BR": "Plataforma SaaS completa para gerenciamento de agendamentos profissionais com integração WhatsApp e Stripe. (Sistema administrativo confidencial)"
+    },
+    "long_description_translations": {
+      "en-US": "Agenda Fácil is a robust SaaS platform developed for freelancers and small businesses that need to automate their scheduling process. The solution offers an intuitive dashboard to manage appointments in different views (day, week, month), with status filters and smart navigation. Professionals can create and manage services with customizable durations, prices, and icons, with limits varying by plan. The system integrates with WhatsApp to automatically send confirmations and reminders 24 hours and 1 hour in advance, as well as cancellation notifications with customizable templates. Clients access a public scheduling page with service selection, an interactive calendar, and automatically calculated available time slots. The backend uses Supabase with PostgreSQL, serverless Edge Functions, and Stripe integration for recurring payments. It includes analytical reports, client management, multi-professional team (Premium plan), and advanced time and buffer settings.",
+      "pt-BR": "Agenda Fácil é uma plataforma SaaS robusta desenvolvida para profissionais autônomos e pequenos negócios que precisam automatizar seu processo de agendamento. A solução oferece um dashboard intuitivo para gerenciar agendamentos em diferentes vistas (dia, semana, mês), com filtros por status e navegação inteligente. Profissionais podem criar e gerenciar serviços com duração customizável, preços e ícones, com limites variáveis conforme o plano. O sistema integra-se com WhatsApp para envio automático de confirmações, lembretes 24h e 1h antes, além de notificações de cancelamento com templates personalizáveis. Clientes acessam uma página pública de agendamento com seleção de serviços, calendário interativo e slots disponíveis calculados automaticamente. O backend utiliza Supabase com PostgreSQL, Edge Functions serverless e integração com Stripe para pagamentos recorrentes. Inclui relatórios analíticos, gerenciamento de clientes, equipe multi-profissional (plano Premium) e configurações avançadas de horários e buffers."
+    }
+  },
+  {
+    "id": 16,
+    "created_at": "2025-12-14T20:03:22.513159+00:00",
+    "title": "UX | UI WildGuardian",
+    "description": "UX | UI WildGuardian",
+    "long_description": "Movido por uma profunda paixão por questões ambientais, especialmente pela preservação da nossa fauna, e observando os desafios financeiros enfrentados por ONGs e instituições de conservação, nasceu o projeto WildGuardian. A ideia é uma plataforma web inovadora que permite que entusiastas da natureza apadrinhem animais silvestres ou exóticos dessas instituições. Através de uma assinatura mensal, os apoiadores não só contribuem financeiramente para o resgate e cuidado desses animais, mas também ganham acesso a conteúdo exclusivo e oportunidades de interação, criando uma conexão mais próxima com a causa e os animais que ajudam a proteger.",
+    "tags": [
+      "Figma"
+    ],
+    "images": [
+      "https://mir-s3-cdn-cf.behance.net/project_modules/disp/3993ed196447187.661ff51311de9.jpg"
+    ],
+    "demo_link": "https://www.behance.net/gallery/196447187/UX-UI-WildGuardian",
+    "github_link": null,
+    "order_index": 20,
+    "title_translations": {
+      "en-US": "UX | UI WildGuardian",
+      "pt-BR": "UX | UI WildGuardian"
+    },
+    "description_translations": {
+      "en-US": "UX | UI WildGuardian",
+      "pt-BR": "UX | UI WildGuardian"
+    },
+    "long_description_translations": {
+      "en-US": "Driven by a deep passion for environmental issues, especially the preservation of our wildlife, and observing the financial challenges faced by NGOs and conservation institutions, the WildGuardian project was born. The idea is an innovative web platform that allows nature enthusiasts to sponsor wild or exotic animals from these institutions. Through a monthly subscription, supporters not only contribute financially to the rescue and care of these animals, but also gain access to exclusive content and interaction opportunities, creating a closer connection with the cause and the animals they help protect.",
+      "pt-BR": "Movido por uma profunda paixão por questões ambientais, especialmente pela preservação da nossa fauna, e observando os desafios financeiros enfrentados por ONGs e instituições de conservação, nasceu o projeto WildGuardian. A ideia é uma plataforma web inovadora que permite que entusiastas da natureza apadrinhem animais silvestres ou exóticos dessas instituições. Através de uma assinatura mensal, os apoiadores não só contribuem financeiramente para o resgate e cuidado desses animais, mas também ganham acesso a conteúdo exclusivo e oportunidades de interação, criando uma conexão mais próxima com a causa e os animais que ajudam a proteger."
+    }
+  },
+  {
+    "id": 18,
+    "created_at": "2025-12-14T20:03:22.513176+00:00",
+    "title": "Hard Rock Café LP",
+    "description": "Hard Rock Café LP",
+    "long_description": "Página criada para apresentar o novo chatBot da Hard Rock Curitiba, a Rocksy. Conta com elementos interativos, efeitos sonoros e animações feitas puramente com CSS e JS.",
+    "tags": [
+      "JavaScript",
+      "CSS3",
+      "HTML5"
+    ],
+    "images": [
+      "https://i.postimg.cc/R0TS2vYq/hard-rock.png"
+    ],
+    "demo_link": "https://hardrock-curitiba.web.app/",
+    "github_link": null,
+    "order_index": 18,
+    "title_translations": {
+      "en-US": "Hard Rock Cafe LP",
+      "pt-BR": "Hard Rock Café LP"
+    },
+    "description_translations": {
+      "en-US": "Hard Rock Cafe LP",
+      "pt-BR": "Hard Rock Café LP"
+    },
+    "long_description_translations": {
+      "en-US": "Page created to showcase Rocksy, Hard Rock Curitiba's new ChatBot. It features interactive elements, sound effects, and animations made purely with CSS and JS.",
+      "pt-BR": "Página criada para apresentar o novo chatBot da Hard Rock Curitiba, a Rocksy. Conta com elementos interativos, efeitos sonoros e animações feitas puramente com CSS e JS."
+    }
+  },
+  {
+    "id": 9,
+    "created_at": "2025-12-14T20:03:22.51309+00:00",
+    "title": "Gabhu - Portfólio Musical",
+    "description": "Site portfólio para compositor e ex-integrante do Raça Negra com galeria de shows, discografia e formulário de contato.",
+    "long_description": "Gabhu é um site portfólio profissional desenvolvido para Gabhu, compositor, cantor e produtor musical ex-integrante da banda Raça Negra. O site apresenta uma identidade visual moderna que reflete sua trajetória musical, com seção hero destacando seu nome, profissão e legado na música brasileira. A navegação principal inclui abas para Legado Raça Negra, Carreira Solo, Discografia, Galeria e Contato. Galeria de mídia com sistema de filtros para visualizar todos os 22 itens, shows recentes (6), era Raça Negra (8), bastidores (4) e entrevistas (4), permitindo explorar sua carreira de forma organizada. Seções de serviços incluem shows e apresentações ao vivo, produção musical com composição, arranjos, direção artística e consultoria, além de composições exclusivas para artistas, jingles, eventos especiais e trilhas sonoras. Formulário de contato completo com campos para nome, email, telefone, seleção de serviço, data do evento, local e mensagem, permitindo solicitar orçamentos para shows e produções. Informações de contato múltiplas (telefone, email, WhatsApp) e links para redes sociais (Instagram, TikTok, YouTube). Design responsivo com imagem de destaque profissional, paleta de cores quentes e acolhedoras, tipografia elegante e call-to-actions claras para contato e solicitações de orçamento.",
+    "tags": [
+      "React",
+      "Vite",
+      "TypeScript",
+      "TailwindCSS",
+      "Vercel"
+    ],
+    "images": [
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765762049557-k7sir9.jpg"
+    ],
+    "demo_link": "https://gabhu-page.vercel.app/",
+    "github_link": null,
+    "order_index": 15,
+    "title_translations": {
+      "en-US": "Gabhu - Music Portfolio",
+      "pt-BR": "Gabhu - Portfólio Musical"
+    },
+    "description_translations": {
+      "en-US": "Portfolio website for composer and former member of Raça Negra, featuring a gallery of performances, discography, and contact form.",
+      "pt-BR": "Site portfólio para compositor e ex-integrante do Raça Negra com galeria de shows, discografia e formulário de contato."
+    },
+    "long_description_translations": {
+      "en-US": "Gabhu is a professional portfolio website developed for Gabhu, a composer, singer, and music producer who was formerly a member of the band Raça Negra. The website features a modern visual identity that reflects his musical journey, with a hero section highlighting his name, profession, and legacy in Brazilian music. The main navigation includes tabs for Raça Negra Legacy, Solo Career, Discography, Gallery, and Contact. The media gallery has a filter system to view all 22 items, including recent shows (6), the Raça Negra era (8), behind the scenes (4), and interviews (4), allowing users to explore his career in an organized manner. Service sections include live shows and performances, music production encompassing composition, arrangements, artistic direction, and consulting, as well as exclusive compositions for artists, jingles, special events, and soundtracks. A comprehensive contact form includes fields for name, email, phone, service selection, event date, location, and message, enabling users to request quotes for shows and productions. Multiple contact options (phone, email, WhatsApp) and links to social media (Instagram, TikTok, YouTube) are provided. The responsive design features a professional hero image, a warm and inviting color palette, elegant typography, and clear call-to-actions for contact and quote requests.",
+      "pt-BR": "Gabhu é um site portfólio profissional desenvolvido para Gabhu, compositor, cantor e produtor musical ex-integrante da banda Raça Negra. O site apresenta uma identidade visual moderna que reflete sua trajetória musical, com seção hero destacando seu nome, profissão e legado na música brasileira. A navegação principal inclui abas para Legado Raça Negra, Carreira Solo, Discografia, Galeria e Contato. Galeria de mídia com sistema de filtros para visualizar todos os 22 itens, shows recentes (6), era Raça Negra (8), bastidores (4) e entrevistas (4), permitindo explorar sua carreira de forma organizada. Seções de serviços incluem shows e apresentações ao vivo, produção musical com composição, arranjos, direção artística e consultoria, além de composições exclusivas para artistas, jingles, eventos especiais e trilhas sonoras. Formulário de contato completo com campos para nome, email, telefone, seleção de serviço, data do evento, local e mensagem, permitindo solicitar orçamentos para shows e produções. Informações de contato múltiplas (telefone, email, WhatsApp) e links para redes sociais (Instagram, TikTok, YouTube). Design responsivo com imagem de destaque profissional, paleta de cores quentes e acolhedoras, tipografia elegante e call-to-actions claras para contato e solicitações de orçamento."
+    }
+  },
+  {
+    "id": 3,
+    "created_at": "2025-12-14T20:03:22.513019+00:00",
+    "title": "InBot Admin",
+    "description": "Plataforma administrativa completa para gerenciamento do sistema InBot com dashboards e análise de dados. (Sistema administrativo confidencial)",
+    "long_description": "InBot Admin é uma aplicação web moderna que fornece uma interface administrativa completa para o sistema InBot de chatbots e atendimento automatizado. O dashboard principal exibe métricas de conversas, usuários e taxa de resolução com gráficos interativos. O gerenciador de conteúdo permite criar, editar e publicar FAQs organizadas por categorias (Conta, Pagamento, Segurança, Técnico) com sistema de rascunho e publicação. A curadoria inclui gestão de avaliações com filtros avançados e tratativa em massa, além de gerenciamento de perguntas não respondidas (IDKs) com categorização automática. O dashboard de jornadas oferece um sistema de grid arrastável e redimensionável com cards de métricas personalizáveis, gráficos interativos e filtros avançados por fluxo e período. Inclui gerenciador de arquivos com suporte a múltiplos formatos, dashboard de atendimento com KPIs, banco de dados de eventos e configuração da personalidade do chatbot. Autenticação via Keycloak, integração com múltiplos endpoints de API e interface responsiva com tema claro/escuro.",
+    "tags": [
+      "React",
+      "TypeScript",
+      "Vite",
+      "TailwindCSS",
+      "Keycloak",
+      "React Query",
+      "Recharts",
+      "Zod",
+      "React Hook Form",
+      "REST API"
+    ],
+    "images": [
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761531662-b9feh.jpg",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761362771-jx7zr.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761362773-al6zcq.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761362774-htugq.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761362776-338emp.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761362777-hyqzd.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761362778-nvdzzn.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761362779-nwt59l.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761362780-e7w3qt.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761362780-j6bktg.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761362781-aq6x8m.png"
+    ],
+    "demo_link": null,
+    "github_link": null,
+    "order_index": 5,
+    "title_translations": {
+      "en-US": "InBot Admin",
+      "pt-BR": "InBot Admin"
+    },
+    "description_translations": {
+      "en-US": "Comprehensive administrative platform for managing the InBot system, featuring dashboards and data analytics. (Confidential administrative system)",
+      "pt-BR": "Plataforma administrativa completa para gerenciamento do sistema InBot com dashboards e análise de dados. (Sistema administrativo confidencial)"
+    },
+    "long_description_translations": {
+      "en-US": "InBot Admin is a modern web application that provides a comprehensive administrative interface for the InBot chatbot and automated service system. The main dashboard displays conversation metrics, user data, and resolution rates with interactive charts. The content manager allows users to create, edit, and publish FAQs organized by categories (Account, Payment, Security, Technical) with a draft and publish system. The curation features include management of evaluations with advanced filters and bulk processing, as well as management of unanswered questions (IDKs) with automatic categorization. The journey dashboard offers a drag-and-drop grid system with resizable, customizable metric cards, interactive charts, and advanced filters by flow and period. It includes a file manager with support for multiple formats, a service dashboard with KPIs, an event database, and chatbot personality configuration. Authentication is via Keycloak, with integration to multiple API endpoints and a responsive interface with light/dark themes.",
+      "pt-BR": "InBot Admin é uma aplicação web moderna que fornece uma interface administrativa completa para o sistema InBot de chatbots e atendimento automatizado. O dashboard principal exibe métricas de conversas, usuários e taxa de resolução com gráficos interativos. O gerenciador de conteúdo permite criar, editar e publicar FAQs organizadas por categorias (Conta, Pagamento, Segurança, Técnico) com sistema de rascunho e publicação. A curadoria inclui gestão de avaliações com filtros avançados e tratativa em massa, além de gerenciamento de perguntas não respondidas (IDKs) com categorização automática. O dashboard de jornadas oferece um sistema de grid arrastável e redimensionável com cards de métricas personalizáveis, gráficos interativos e filtros avançados por fluxo e período. Inclui gerenciador de arquivos com suporte a múltiplos formatos, dashboard de atendimento com KPIs, banco de dados de eventos e configuração da personalidade do chatbot. Autenticação via Keycloak, integração com múltiplos endpoints de API e interface responsiva com tema claro/escuro."
+    }
+  },
+  {
+    "id": 7,
+    "created_at": "2025-12-14T20:03:22.513067+00:00",
+    "title": "Festival de Inverno de Boituva",
+    "description": "Site responsivo para o 18º Festival de Inverno de Boituva 2025 com programação, personagens e integração com chatbot.",
+    "long_description": "Festival de Inverno de Boituva é um site moderno e responsivo desenvolvido para promover o 18º Festival de Inverno de Boituva 2025, um evento cultural que une arte, música, gastronomia e solidariedade. O site apresenta seções bem estruturadas incluindo página inicial com hero section destacando o evento (16 a 19 de julho, 2025), informações sobre o festival com histórico desde 2008 e números impressionantes (18 anos, 4 dias, 2 palcos). Programação detalhada com abas para música e oficinas, destacando artistas renomados como Edson Beltrami (flauta), Ellen Hummel (oboé) e outros músicos premiados. Seção de personagens que personificam o espírito do evento (Galan, Glacya, Nivélia, Elora) com descrições temáticas. Listagem de patrocinadores e entidades filantrópicas que apoiam o evento. Informações de localização com mapa integrado, endereço (Avenida Pereira Ignacio, 101, Boituva-SP), horários e dicas de acesso. Integração com chatbot assistente virtual (Galan) para suporte 24/7 com atendimento automatizado. Design responsivo com navegação intuitiva, animações suaves com flocos de neve, paleta de cores fria e acolhedora, e chamadas à ação claras para garantir lugar e conhecer o festival.",
+    "tags": [
+      "React",
+      "Vite",
+      "TypeScript",
+      "TailwindCSS",
+      "Framer Motion",
+      "Firebase"
+    ],
+    "images": [
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765761998562-y6tl2c.jpg"
+    ],
+    "demo_link": "https://festival-inverno.web.app/",
+    "github_link": null,
+    "order_index": 13,
+    "title_translations": {
+      "en-US": "Boituva Winter Festival",
+      "pt-BR": "Festival de Inverno de Boituva"
+    },
+    "description_translations": {
+      "en-US": "Responsive website for the 18th Boituva Winter Festival 2025, featuring the schedule, characters, and chatbot integration.",
+      "pt-BR": "Site responsivo para o 18º Festival de Inverno de Boituva 2025 com programação, personagens e integração com chatbot."
+    },
+    "long_description_translations": {
+      "en-US": "The Boituva Winter Festival website is a modern, responsive site developed to promote the 18th Boituva Winter Festival 2025, a cultural event that combines art, music, gastronomy, and community support. The site features well-structured sections, including a homepage with a hero section highlighting the event (July 16-19, 2025), festival information with a history dating back to 2008, and impressive numbers (18 years, 4 days, 2 stages). There is also a detailed schedule with tabs for music and workshops, highlighting renowned artists such as Edson Beltrami (flute), Ellen Hummel (oboe), and other award-winning musicians. A section on characters that embody the spirit of the event (Galan, Glacya, Nivélia, Elora) includes thematic descriptions. The site also lists sponsors and philanthropic entities that support the event, and provides location information with an integrated map, address (Avenida Pereira Ignacio, 101, Boituva-SP), hours, and access tips. Integration with a virtual assistant chatbot (Galan) offers 24/7 support with automated service. The responsive design features intuitive navigation, smooth animations with snowflakes, a cool and welcoming color palette, and clear calls to action to reserve a spot and learn about the festival.",
+      "pt-BR": "Festival de Inverno de Boituva é um site moderno e responsivo desenvolvido para promover o 18º Festival de Inverno de Boituva 2025, um evento cultural que une arte, música, gastronomia e solidariedade. O site apresenta seções bem estruturadas incluindo página inicial com hero section destacando o evento (16 a 19 de julho, 2025), informações sobre o festival com histórico desde 2008 e números impressionantes (18 anos, 4 dias, 2 palcos). Programação detalhada com abas para música e oficinas, destacando artistas renomados como Edson Beltrami (flauta), Ellen Hummel (oboé) e outros músicos premiados. Seção de personagens que personificam o espírito do evento (Galan, Glacya, Nivélia, Elora) com descrições temáticas. Listagem de patrocinadores e entidades filantrópicas que apoiam o evento. Informações de localização com mapa integrado, endereço (Avenida Pereira Ignacio, 101, Boituva-SP), horários e dicas de acesso. Integração com chatbot assistente virtual (Galan) para suporte 24/7 com atendimento automatizado. Design responsivo com navegação intuitiva, animações suaves com flocos de neve, paleta de cores fria e acolhedora, e chamadas à ação claras para garantir lugar e conhecer o festival."
+    }
+  },
+  {
+    "id": 20,
+    "created_at": "2025-12-20T05:50:48.600432+00:00",
+    "title": "OliBase: Micro BaaS",
+    "description": "O OliBase é a prova de que um projeto de estudos pode se transformar em um desafio arquitetural de alto nível. Inspirado em BaaS como Firebase e Supabase, este projeto MERN (MongoDB, Express, React, Node) foi construído do zero para dominar a criação de sistemas complexos, implementando autenticação multi-tenant, isolamento de dados rigoroso e Row Level Security (RLS), culminando em um BaaS funcional com dashboard de gerenciamento e um aplicativo cliente real (Eventum) para validar cada camada de segurança e arquitetura.\n",
+    "long_description": "A jornada começou com a imersão no MERN Stack (MongoDB, Express, React, Node). Embora os projetos pequenos fossem concluídos com sucesso, faltava um desafio que forçasse a tomada de decisões arquiteturais complexas. O objetivo era ir além do tutorial, abraçar a refatoração e entender o \"porquê\" das coisas.\n\nA inspiração veio dos Backends as a Service (BaaS) como Firebase e Supabase. A ideia foi construir um clone simplificado, o OliBase, usando MERN, não como produto comercial, mas como um projeto técnico profundo focado em aprendizado.\n\nO projeto nasceu com uma regra de ouro: ser multi-tenant de verdade. Isso exigiu a criação de dois sistemas de autenticação separados: um para os usuários do dashboard (administradores) e outro para os usuários finais das aplicações. A segurança foi garantida por API Keys vinculadas a projetos e JWTs com validação rígida de pertencimento. Essa fase forçou o estudo aprofundado de auth flows, segurança de APIs e separação de responsabilidades.\n\nO ponto de virada foi a implementação do Data Layer próprio, com Collections e Documents dinâmicos. O OliBase ganhou o Row Level Security (RLS), inspirado no Supabase, garantindo que usuários só acessassem seus próprios dados e que projetos nunca enxergassem os dados uns dos outros. Cada regra de RLS exigiu testes e ajustes de middleware, revelando a profundidade do backend \"de verdade\".\n\nPara gerenciar essa complexidade, foi criado um dashboard completo em React, consumindo a própria API construída em Node + Express e MongoDB. O dashboard permite o gerenciamento de projetos, usuários finais, collections, RLS e a visualização de logs de execução.\n\nA validação final veio com o Eventum, uma aplicação cliente real. O Eventum autentica usuários via OliBase, realiza operações CRUD protegidas por RLS e gera logs visíveis no dashboard. Isso provou que o OliBase não é apenas um backend teórico, mas um sistema funcional usado por uma aplicação real.\n\nO que começou como um projeto de estudos se tornou um BaaS funcional com autenticação robusta, isolamento multi-tenant, RLS e um app cliente real. Este projeto consolida o domínio prático de MongoDB, Express, React e Node, provando a capacidade de construir sistemas complexos.\n\nPost Completo no Blog: https://www.mmlo.com.br/blog/odisseia-do-olibase\n",
+    "tags": [
+      "MongoDB",
+      "Express",
+      "React",
+      "Node.js",
+      "Redis",
+      "REST API",
+      "TypeScript"
+    ],
+    "images": [
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/olibase/1766208121922-x2w9vf.jpg",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/olibase/1766209280177-e7l2g.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/olibase/1766209280178-5bfbmm.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/olibase/1766209280178-0hp64q.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/olibase/1766209280178-q8ovjp.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/olibase/1766209280178-aumk5f.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/olibase/1766209280178-i38ey8.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/olibase/1766209280179-tkkp3u.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/olibase/1766209280179-43esg8f.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/olibase/1766209280179-wsw41n.png",
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/portfolio/olibase/1766209280179-vmsgi.png"
+    ],
+    "demo_link": "https://youtu.be/Ryy0Fvo4A68",
+    "github_link": "https://github.com/MierzwaMatheus/OliBase",
+    "order_index": 2,
+    "title_translations": {
+      "en-US": "OliBase: Micro BaaS",
+      "pt-BR": "OliBase: Micro BaaS"
+    },
+    "description_translations": {
+      "en-US": "OliBase is proof that a study project can evolve into a high-level architectural undertaking. Inspired by BaaS solutions like Firebase and Supabase, this MERN (MongoDB, Express, React, Node) project was built from the ground up to master the creation of complex systems. It implements multi-tenant authentication, strict data isolation, and Row Level Security (RLS), culminating in a functional BaaS with a management dashboard and a real-world client application (Eventum) to validate each layer of security and architecture.",
+      "pt-BR": "O OliBase é a prova de que um projeto de estudos pode se transformar em um desafio arquitetural de alto nível. Inspirado em BaaS como Firebase e Supabase, este projeto MERN (MongoDB, Express, React, Node) foi construído do zero para dominar a criação de sistemas complexos, implementando autenticação multi-tenant, isolamento de dados rigoroso e Row Level Security (RLS), culminando em um BaaS funcional com dashboard de gerenciamento e um aplicativo cliente real (Eventum) para validar cada camada de segurança e arquitetura.\n"
+    },
+    "long_description_translations": {
+      "en-US": "The journey began with immersion in the MERN Stack (MongoDB, Express, React, Node). Although small projects were completed successfully, there was a lack of a challenge that would force complex architectural decisions. The goal was to go beyond the tutorial, embrace refactoring, and understand the \"why\" behind things.\n\nThe inspiration came from Backends as a Service (BaaS) like Firebase and Supabase. The idea was to build a simplified clone, OliBase, using MERN, not as a commercial product, but as a deep technical project focused on learning.\n\nThe project was born with a golden rule: to be truly multi-tenant. This required the creation of two separate authentication systems: one for dashboard users (administrators) and another for end-users of the applications. Security was ensured by API Keys linked to projects and JWTs with strict ownership validation. This phase forced an in-depth study of auth flows, API security, and separation of concerns.\n\nThe turning point was the implementation of our own Data Layer, with dynamic Collections and Documents. OliBase gained Row Level Security (RLS), inspired by Supabase, ensuring that users only accessed their own data and that projects never saw each other's data. Each RLS rule required middleware testing and adjustments, revealing the depth of a \"real\" backend.\n\nTo manage this complexity, a complete dashboard was created in React, consuming its own API built in Node + Express and MongoDB. The dashboard allows management of projects, end-users, collections, RLS, and viewing execution logs.\n\nThe final validation came with Eventum, a real client application. Eventum authenticates users via OliBase, performs CRUD operations protected by RLS, and generates logs visible in the dashboard. This proved that OliBase is not just a theoretical backend, but a functional system used by a real application.\n\nWhat started as a study project became a functional BaaS with robust authentication, multi-tenant isolation, RLS, and a real client app. This project consolidates the practical mastery of MongoDB, Express, React, and Node, proving the ability to build complex systems.\n\nFull Post on the Blog: https://www.mmlo.com.br/blog/odisseia-do-olibase",
+      "pt-BR": "A jornada começou com a imersão no MERN Stack (MongoDB, Express, React, Node). Embora os projetos pequenos fossem concluídos com sucesso, faltava um desafio que forçasse a tomada de decisões arquiteturais complexas. O objetivo era ir além do tutorial, abraçar a refatoração e entender o \"porquê\" das coisas.\n\nA inspiração veio dos Backends as a Service (BaaS) como Firebase e Supabase. A ideia foi construir um clone simplificado, o OliBase, usando MERN, não como produto comercial, mas como um projeto técnico profundo focado em aprendizado.\n\nO projeto nasceu com uma regra de ouro: ser multi-tenant de verdade. Isso exigiu a criação de dois sistemas de autenticação separados: um para os usuários do dashboard (administradores) e outro para os usuários finais das aplicações. A segurança foi garantida por API Keys vinculadas a projetos e JWTs com validação rígida de pertencimento. Essa fase forçou o estudo aprofundado de auth flows, segurança de APIs e separação de responsabilidades.\n\nO ponto de virada foi a implementação do Data Layer próprio, com Collections e Documents dinâmicos. O OliBase ganhou o Row Level Security (RLS), inspirado no Supabase, garantindo que usuários só acessassem seus próprios dados e que projetos nunca enxergassem os dados uns dos outros. Cada regra de RLS exigiu testes e ajustes de middleware, revelando a profundidade do backend \"de verdade\".\n\nPara gerenciar essa complexidade, foi criado um dashboard completo em React, consumindo a própria API construída em Node + Express e MongoDB. O dashboard permite o gerenciamento de projetos, usuários finais, collections, RLS e a visualização de logs de execução.\n\nA validação final veio com o Eventum, uma aplicação cliente real. O Eventum autentica usuários via OliBase, realiza operações CRUD protegidas por RLS e gera logs visíveis no dashboard. Isso provou que o OliBase não é apenas um backend teórico, mas um sistema funcional usado por uma aplicação real.\n\nO que começou como um projeto de estudos se tornou um BaaS funcional com autenticação robusta, isolamento multi-tenant, RLS e um app cliente real. Este projeto consolida o domínio prático de MongoDB, Express, React e Node, provando a capacidade de construir sistemas complexos.\n\nPost Completo no Blog: https://www.mmlo.com.br/blog/odisseia-do-olibase\n"
+    }
+  },
+  {
+    "id": 8,
+    "created_at": "2025-12-14T20:03:22.51308+00:00",
+    "title": "Conexão Familiar - Evento de Fé",
+    "description": "Site responsivo para evento religioso Conexão Familiar com programação, patrocinadores e assistente virtual.",
+    "long_description": "Conexão Familiar é um site responsivo desenvolvido para promover o 1º Conexão Familiar, um evento de fé e celebração organizado pela Paróquia São Francisco de Assis. O site apresenta uma proposta clara: fortalecer os laços de amor e fé em família através de uma imersão de 3 dias (1, 2 e 3 de agosto de 2025) com palestras, momentos de oração, shows de louvor e atividades para todas as idades. A página inicial destaca o tema do evento (\"Permanecei no Meu Amor\" - João 15,9) com chamadas à ação para garantir lugar e conhecer o evento. Programação organizada por abas para cada dia (sexta-feira, sábado, domingo) com horários de acolhida, louvor, abertura com Jesus Eucarístico e shows de comunidades católicas como Colo de Deus e Walmir Alencar. Seção de patrocinadores com logos de empresas locais que apoiam a evangelização familiar. Informações de localização no mesmo centro de eventos de Boituva com mapa, endereço, instruções de chegada, estacionamento gratuito e estrutura completa (missas, palestras, shows, espaço kids, praça de alimentação). Integração com assistente virtual Padre Marcos que oferece atendimento 24/7 para esclarecer dúvidas, auxiliar inscrições e fornecer orientações sobre programação. Design responsivo com paleta de cores em tons de azul e verde, navegação clara e animações suaves.",
+    "tags": [
+      "React",
+      "Vite",
+      "TypeScript",
+      "TailwindCSS",
+      "Firebase"
+    ],
+    "images": [
+      "https://lyspnjnmvrudbgqnfmqp.supabase.co/storage/v1/object/public/portfolio-images/1765762030419-c9pcp4.jpg"
+    ],
+    "demo_link": "https://evento-conexao-familiar.web.app/",
+    "github_link": null,
+    "order_index": 14,
+    "title_translations": {
+      "en-US": "Family Connection - Faith Event",
+      "pt-BR": "Conexão Familiar - Evento de Fé"
+    },
+    "description_translations": {
+      "en-US": "Responsive website for the Conexão Familiar religious event, featuring the schedule, sponsors, and a virtual assistant.",
+      "pt-BR": "Site responsivo para evento religioso Conexão Familiar com programação, patrocinadores e assistente virtual."
+    },
+    "long_description_translations": {
+      "en-US": "Conexão Familiar is a responsive website developed to promote the 1st Conexão Familiar, a faith-based celebration event organized by the São Francisco de Assis Parish. The website has a clear purpose: to strengthen family bonds of love and faith through a 3-day immersion (August 1, 2, and 3, 2025) featuring talks, moments of prayer, praise concerts, and activities for all ages. The homepage highlights the event's theme (\"Abide in My Love\" - John 15:9) with calls to action to secure a spot and learn more about the event. The schedule is organized by tabs for each day (Friday, Saturday, Sunday) with times for welcome, worship, opening with Eucharistic Jesus, and concerts by Catholic communities such as Colo de Deus and Walmir Alencar. There is also a sponsors section with logos of local companies that support family evangelization. Location information is provided for the same event center in Boituva, including a map, address, directions, free parking, and complete infrastructure (masses, talks, concerts, kids' area, food court). Integration with the Padre Marcos virtual assistant offers 24/7 support to answer questions, assist with registration, and provide program guidance. The responsive design features a color palette in shades of blue and green, clear navigation, and smooth animations.",
+      "pt-BR": "Conexão Familiar é um site responsivo desenvolvido para promover o 1º Conexão Familiar, um evento de fé e celebração organizado pela Paróquia São Francisco de Assis. O site apresenta uma proposta clara: fortalecer os laços de amor e fé em família através de uma imersão de 3 dias (1, 2 e 3 de agosto de 2025) com palestras, momentos de oração, shows de louvor e atividades para todas as idades. A página inicial destaca o tema do evento (\"Permanecei no Meu Amor\" - João 15,9) com chamadas à ação para garantir lugar e conhecer o evento. Programação organizada por abas para cada dia (sexta-feira, sábado, domingo) com horários de acolhida, louvor, abertura com Jesus Eucarístico e shows de comunidades católicas como Colo de Deus e Walmir Alencar. Seção de patrocinadores com logos de empresas locais que apoiam a evangelização familiar. Informações de localização no mesmo centro de eventos de Boituva com mapa, endereço, instruções de chegada, estacionamento gratuito e estrutura completa (missas, palestras, shows, espaço kids, praça de alimentação). Integração com assistente virtual Padre Marcos que oferece atendimento 24/7 para esclarecer dúvidas, auxiliar inscrições e fornecer orientações sobre programação. Design responsivo com paleta de cores em tons de azul e verde, navegação clara e animações suaves."
+    }
+  },
+  {
+    "id": 14,
+    "created_at": "2025-12-14T20:03:22.513142+00:00",
+    "title": "MagicMoon Tattoo",
+    "description": "MagicMoon Tattoo",
+    "long_description": "Site portfólio para a tatuadora Pietra. Com informações importantes, filtros de busca por estilos, mas principalmente, uma área administrativa acessada pela url /admin, com a senha \"admin\", nesta área, é possível adicionar tatuagens novas, que são salvas no realtimeDB do firebase. A versão abaixo é a versão de homologação, ainda não ligada com o firebase e com senha de acesso fraca, usada para aprovação do projeto, a versão de produção contém senha forte e todas as ligações com BD já feitas.",
+    "tags": [
+      "React",
+      "Vite",
+      "TailwindCSS",
+      "Firebase",
+      "Cursor"
+    ],
+    "images": [
+      "https://i.postimg.cc/8cMPKTdK/magicmoon.png"
+    ],
+    "demo_link": "https://magicmoon-tattoo-homolog.web.app/",
+    "github_link": "https://github.com/MierzwaMatheus/magicmoon-tattoo",
+    "order_index": 17,
+    "title_translations": {
+      "en-US": "MagicMoon Tattoo",
+      "pt-BR": "MagicMoon Tattoo"
+    },
+    "description_translations": {
+      "en-US": "MagicMoon Tattoo",
+      "pt-BR": "MagicMoon Tattoo"
+    },
+    "long_description_translations": {
+      "en-US": "Portfolio site for tattoo artist Pietra. Includes key information, style-based search filters, and most importantly, an administrative area accessible via the /admin URL with the password \"admin\". This area allows adding new tattoos, which are saved in Firebase's Realtime Database. The version below is the staging version, not yet connected to Firebase and with a weak access password, used for project approval. The production version contains a strong password and all database connections are already established.",
+      "pt-BR": "Site portfólio para a tatuadora Pietra. Com informações importantes, filtros de busca por estilos, mas principalmente, uma área administrativa acessada pela url /admin, com a senha \"admin\", nesta área, é possível adicionar tatuagens novas, que são salvas no realtimeDB do firebase. A versão abaixo é a versão de homologação, ainda não ligada com o firebase e com senha de acesso fraca, usada para aprovação do projeto, a versão de produção contém senha forte e todas as ligações com BD já feitas."
+    }
+  }
+]
