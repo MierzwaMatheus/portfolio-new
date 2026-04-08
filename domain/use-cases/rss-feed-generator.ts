@@ -21,6 +21,7 @@ interface RSSFeedConfig {
   authorEmail: string;
   language: string;
   rssUrl: string;
+  copyright?: string;
 }
 
 export class RSSFeedGenerator {
@@ -49,6 +50,7 @@ export class RSSFeedGenerator {
     <language>${this.config.language}</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     <atom:link href="${this.encodeUrl(this.config.rssUrl)}" rel="self" type="application/rss+xml"/>
+    ${this.config.copyright ? `<copyright>${this.escapeXml(this.config.copyright)}</copyright>` : ""}
     ${itemsXml}
   </channel>
 </rss>`;

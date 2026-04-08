@@ -18,6 +18,7 @@ const RSS_CONFIG = {
   authorName: "Matheus Mierzwa",
   authorEmail: "contato@matheusmierzwa.com",
   language: "pt-BR",
+  copyright: "Copyright © Matheus Mierzwa. Todos os direitos reservados.",
 };
 
 function generateRSSFeed(): void {
