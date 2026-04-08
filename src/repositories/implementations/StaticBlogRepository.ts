@@ -5,7 +5,13 @@ export class StaticBlogRepository implements BlogRepository {
     try {
       const response = await fetch("/data/blog.json");
       if (!response.ok) return [];
-      return await response.json();
+      const posts = await response.json();
+
+      return posts.sort(
+        (a: BlogPost, b: BlogPost) =>
+          new Date(b.published_at).getTime() -
+          new Date(a.published_at).getTime()
+      );
     } catch (error) {
       console.error("Error loading static blog data:", error);
       return [];
