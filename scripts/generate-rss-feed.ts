@@ -11,6 +11,7 @@ const OUTPUT_PATH = join(__dirname, "..", "public", "rss.xml");
 
 const RSS_CONFIG = {
   siteUrl: "https://matheusmierzwa.com",
+  rssUrl: "https://matheusmierzwa.com/rss.xml",
   siteTitle: "Matheus Mierzwa - Blog",
   siteDescription:
     "Artigos sobre tecnologia, desenvolvimento frontend, arquitetura de software e inovação digital",

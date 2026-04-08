@@ -19,6 +19,7 @@ interface RSSFeedConfig {
   authorName: string;
   authorEmail: string;
   language: string;
+  rssUrl: string;
 }
 
 export class RSSFeedGenerator {
@@ -39,14 +40,14 @@ export class RSSFeedGenerator {
       .join("\n    ");
 
     return `<?xml version="1.0" encoding="UTF-8" ?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:media="http://search.yahoo.com/mrss/">
   <channel>
     <title>${this.escapeXml(this.config.siteTitle)}</title>
-    <link>${this.config.siteUrl}</link>
+    <link>${this.encodeUrl(this.config.siteUrl)}</link>
     <description>${this.escapeXml(this.config.siteDescription)}</description>
     <language>${this.config.language}</language>
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-    <atom:link href="${this.config.siteUrl}/rss.xml" rel="self" type="application/rss+xml"/>
+    <atom:link href="${this.encodeUrl(this.config.rssUrl)}" rel="self" type="application/rss+xml"/>
     ${itemsXml}
   </channel>
 </rss>`;
@@ -61,11 +62,10 @@ export class RSSFeedGenerator {
       post.content_translations["en-US"] ||
       "";
     const description = this.escapeXml(this.stripHtml(contentHtml));
-    const contentEncoded = this.escapeXml(contentHtml);
-    const link = `${this.config.siteUrl}/blog/${post.slug}`;
+    const link = this.encodeUrl(`${this.config.siteUrl}/blog/${post.slug}`);
     const pubDate = new Date(post.published_at).toUTCString();
-    const guid = `${this.config.siteUrl}/blog/${post.slug}`;
-    const imageUrl = this.escapeXml(post.image);
+    const guid = this.encodeUrl(`${this.config.siteUrl}/blog/${post.slug}`);
+    const imageUrl = this.encodeUrl(post.image);
     const tags = post.tags
       .map(tag => `<category>${this.escapeXml(tag)}</category>`)
       .join("\n      ");
@@ -78,7 +78,7 @@ export class RSSFeedGenerator {
       <content:encoded><![CDATA[${contentHtml}]]></content:encoded>
       <pubDate>${pubDate}</pubDate>
       <dc:creator>${this.escapeXml(this.config.authorName)}</dc:creator>
-      <image>${imageUrl}</image>
+      <media:content url="${imageUrl}" medium="image" />
       ${tags}
     </item>`;
   }
@@ -90,6 +90,14 @@ export class RSSFeedGenerator {
       .replace(/>/g, "&gt;")
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&apos;");
+  }
+
+  private encodeUrl(url: string): string {
+    try {
+      return new URL(url).href;
+    } catch {
+      return url;
+    }
   }
 
   private stripHtml(html: string): string {
