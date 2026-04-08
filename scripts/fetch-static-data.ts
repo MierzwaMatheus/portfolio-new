@@ -109,6 +109,7 @@ async function generateSitemap(posts: any[], projects: any[]) {
     { path: "/curriculo", priority: "0.9", changefreq: "weekly" },
     { path: "/portfolio", priority: "0.9", changefreq: "weekly" },
     { path: "/blog", priority: "0.8", changefreq: "daily" },
+    { path: "/rss.xml", priority: "0.5", changefreq: "daily" },
   ];
 
   const postUrls =
