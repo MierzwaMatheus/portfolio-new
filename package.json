@@ -5,10 +5,11 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite --host",
-    "build": "tsx scripts/fetch-static-data.ts && vite build",
+    "build": "tsx scripts/fetch-static-data.ts && tsx scripts/generate-rss-feed.ts && vite build",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "generate:rss": "tsx scripts/generate-rss-feed.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

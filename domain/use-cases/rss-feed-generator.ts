@@ -1,0 +1,98 @@
+interface BlogPost {
+  id: string;
+  title: string;
+  subtitle: string;
+  slug: string;
+  image: string;
+  published_at: string;
+  created_at: string;
+  tags: string[];
+  title_translations: Record<string, string>;
+  subtitle_translations: Record<string, string>;
+  content_translations: Record<string, string>;
+}
+
+interface RSSFeedConfig {
+  siteUrl: string;
+  siteTitle: string;
+  siteDescription: string;
+  authorName: string;
+  authorEmail: string;
+  language: string;
+}
+
+export class RSSFeedGenerator {
+  private readonly config: RSSFeedConfig;
+
+  constructor(config: RSSFeedConfig) {
+    this.config = config;
+  }
+
+  generate(posts: BlogPost[]): string {
+    const sortedPosts = [...posts].sort(
+      (a, b) =>
+        new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
+    );
+
+    const itemsXml = sortedPosts
+      .map(post => this.generateItemXml(post))
+      .join("\n    ");
+
+    return `<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>${this.escapeXml(this.config.siteTitle)}</title>
+    <link>${this.config.siteUrl}</link>
+    <description>${this.escapeXml(this.config.siteDescription)}</description>
+    <language>${this.config.language}</language>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <atom:link href="${this.config.siteUrl}/rss.xml" rel="self" type="application/rss+xml"/>
+    ${itemsXml}
+  </channel>
+</rss>`;
+  }
+
+  private generateItemXml(post: BlogPost): string {
+    const title = this.escapeXml(
+      post.title_translations["pt-BR"] || post.title
+    );
+    const contentHtml =
+      post.content_translations["pt-BR"] ||
+      post.content_translations["en-US"] ||
+      "";
+    const description = this.escapeXml(this.stripHtml(contentHtml));
+    const contentEncoded = this.escapeXml(contentHtml);
+    const link = `${this.config.siteUrl}/blog/${post.slug}`;
+    const pubDate = new Date(post.published_at).toUTCString();
+    const guid = `${this.config.siteUrl}/blog/${post.slug}`;
+    const imageUrl = this.escapeXml(post.image);
+    const tags = post.tags
+      .map(tag => `<category>${this.escapeXml(tag)}</category>`)
+      .join("\n      ");
+
+    return `    <item>
+      <title>${title}</title>
+      <link>${link}</link>
+      <guid isPermaLink="true">${guid}</guid>
+      <description>${description}</description>
+      <content:encoded><![CDATA[${contentHtml}]]></content:encoded>
+      <pubDate>${pubDate}</pubDate>
+      <dc:creator>${this.escapeXml(this.config.authorName)}</dc:creator>
+      <image>${imageUrl}</image>
+      ${tags}
+    </item>`;
+  }
+
+  private escapeXml(text: string): string {
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&apos;");
+  }
+
+  private stripHtml(html: string): string {
+    return html.replace(/<[^>]*>/g, "").trim();
+  }
+}

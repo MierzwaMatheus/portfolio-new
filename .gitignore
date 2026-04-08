@@ -105,3 +105,9 @@ temp/
 *.db
 *.sqlite
 *.sqlite3
+
+# Build generated files
+public/data/
+public/sitemap.xml
+src/data/
+/public/rss.xml
