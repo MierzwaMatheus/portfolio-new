@@ -7,9 +7,10 @@ interface BlogPost {
   published_at: string;
   created_at: string;
   tags: string[];
+  content?: string;
+  content_translations: Record<string, string>;
   title_translations: Record<string, string>;
   subtitle_translations: Record<string, string>;
-  content_translations: Record<string, string>;
 }
 
 interface RSSFeedConfig {
@@ -60,6 +61,7 @@ export class RSSFeedGenerator {
     const rawContentHtml =
       post.content_translations["pt-BR"] ||
       post.content_translations["en-US"] ||
+      post.content ||
       "";
     const contentHtml = this.sanitizeHtml(rawContentHtml);
     const description = this.escapeXml(this.stripHtml(contentHtml));
