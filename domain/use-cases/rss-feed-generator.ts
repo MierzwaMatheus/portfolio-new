@@ -57,10 +57,11 @@ export class RSSFeedGenerator {
     const title = this.escapeXml(
       post.title_translations["pt-BR"] || post.title
     );
-    const contentHtml =
+    const rawContentHtml =
       post.content_translations["pt-BR"] ||
       post.content_translations["en-US"] ||
       "";
+    const contentHtml = this.sanitizeHtml(rawContentHtml);
     const description = this.escapeXml(this.stripHtml(contentHtml));
     const link = this.encodeUrl(`${this.config.siteUrl}/blog/${post.slug}`);
     const pubDate = new Date(post.published_at).toUTCString();
@@ -102,5 +103,50 @@ export class RSSFeedGenerator {
 
   private stripHtml(html: string): string {
     return html.replace(/<[^>]*>/g, "").trim();
+  }
+
+  private sanitizeHtml(html: string): string {
+    let sanitized = html;
+    sanitized = this.fixUnclosedPTags(sanitized);
+    sanitized = this.fixNamedEntities(sanitized);
+    return sanitized;
+  }
+
+  private fixUnclosedPTags(html: string): string {
+    const openPTags = (html.match(/<p(?![^>]*\/>)/g) || []).length;
+    const closePTags = (html.match(/<\/p>/g) || []).length;
+
+    if (openPTags > closePTags) {
+      const missingTags = openPTags - closePTags;
+      return html + "</p>".repeat(missingTags);
+    }
+
+    return html;
+  }
+
+  private fixNamedEntities(html: string): string {
+    const validEntities = [
+      "amp",
+      "lt",
+      "gt",
+      "quot",
+      "apos",
+      "nbsp",
+      "copy",
+      "reg",
+      "trade",
+      "mdash",
+      "ndash",
+      "lsquo",
+      "rsquo",
+      "ldquo",
+      "rdquo",
+      "hellip",
+    ];
+
+    return html.replace(
+      /&(?!(?:#(?:x[a-fA-F0-9]+|[0-9]+)|[a-zA-Z]+);)/g,
+      "&amp;"
+    );
   }
 }
