@@ -9,16 +9,18 @@ const __dirname = dirname(__filename);
 const BLOG_DATA_PATH = join(__dirname, "..", "public", "data", "blog.json");
 const OUTPUT_PATH = join(__dirname, "..", "public", "rss.xml");
 
+const SITE_URL = process.env.SITE_URL || "https://matheusmierzwa.com";
+
 const RSS_CONFIG = {
-  siteUrl: "https://matheusmierzwa.com",
-  rssUrl: "https://matheusmierzwa.com/rss.xml",
+  siteUrl: SITE_URL,
+  rssUrl: `${SITE_URL}/rss.xml`,
   siteTitle: "Matheus Mierzwa - Blog",
   siteDescription:
     "Artigos sobre tecnologia, desenvolvimento frontend, arquitetura de software e inovação digital",
   authorName: "Matheus Mierzwa",
   authorEmail: "contato@matheusmierzwa.com",
   language: "pt-BR",
-  copyright: "Copyright © Matheus Mierzwa. Todos os direitos reservados.",
+  copyright: `Copyright © Matheus Mierzwa. Todos os direitos reservados.`,
 };
 
 function generateRSSFeed(): void {
