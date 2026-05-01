@@ -16,6 +16,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
+import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
 
 type Post = {
   _id: Id<"posts">;
@@ -53,6 +54,7 @@ export default function AdminBlog() {
   const [isPublished, setIsPublished] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
 
+  const { translateFields, isTranslating } = useTranslateContent();
   const posts = postsData ?? [];
   const isLoading = postsData === undefined;
 
@@ -115,14 +117,21 @@ export default function AdminBlog() {
     const slug = slugify(titlePT);
 
     try {
+      const toastId = toast.loading('Traduzindo conteúdo...');
+      const fieldsToTranslate: Record<string, string> = { title: titlePT };
+      if (subtitlePT) fieldsToTranslate.subtitle = subtitlePT;
+      if (contentPT) fieldsToTranslate.content = contentPT;
+      const translated = await translateFields(fieldsToTranslate);
+      toast.dismiss(toastId);
+
       const baseData = {
         title: titlePT,
-        titleTranslations: { ptBR: titlePT, enUS: titlePT },
+        titleTranslations: { ptBR: titlePT, enUS: translated.title },
         subtitle: subtitlePT || undefined,
-        subtitleTranslations: subtitlePT ? { ptBR: subtitlePT, enUS: subtitlePT } : undefined,
+        subtitleTranslations: subtitlePT ? { ptBR: subtitlePT, enUS: translated.subtitle ?? subtitlePT } : undefined,
         slug,
         content: contentPT,
-        contentTranslations: contentPT ? { ptBR: contentPT, enUS: contentPT } : undefined,
+        contentTranslations: contentPT ? { ptBR: contentPT, enUS: translated.content ?? contentPT } : undefined,
         imageId: previewImageId,
         imageUrl: !previewImageId && previewImage ? previewImage : undefined,
         tags,
@@ -313,7 +322,7 @@ export default function AdminBlog() {
 
               <div className="flex justify-end gap-2 pt-4 pb-6 px-6 border-t border-white/10 shrink-0 mt-auto">
                 <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="text-gray-400">Cancelar</Button>
-                <Button type="submit" className="bg-neon-purple hover:bg-neon-purple/90 text-white">Salvar Artigo</Button>
+                <Button type="submit" disabled={isTranslating} className="bg-neon-purple hover:bg-neon-purple/90 text-white">{isTranslating ? 'Traduzindo...' : 'Salvar Artigo'}</Button>
               </div>
             </form>
           </DialogContent>

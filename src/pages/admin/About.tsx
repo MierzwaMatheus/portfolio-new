@@ -14,6 +14,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
+import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
 import { BentoGridPreview } from "@/components/admin/BentoGridPreview";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -103,6 +104,7 @@ function SortableFaqCard({ item, onEdit, onDelete, t }: { item: any, onEdit: (it
 
 export default function AdminAbout() {
   const { t } = useTranslation();
+  const { translateFields, isTranslating } = useTranslateContent();
 
   const dailyRoutineData = useQuery(api.aboutDailyRoutine.list, {});
   const faqData = useQuery(api.aboutFaq.list, {});
@@ -159,7 +161,10 @@ export default function AdminAbout() {
         const descriptionPT = formData.get("description") as string;
         const displayOrder = editingItem ? editingItem.displayOrder : dailyRoutine.length;
 
-        const descriptionTranslations = { ptBR: descriptionPT, enUS: descriptionPT };
+        const toastId = toast.loading('Traduzindo conteúdo...');
+        const translated = await translateFields({ description: descriptionPT });
+        toast.dismiss(toastId);
+        const descriptionTranslations = { ptBR: descriptionPT, enUS: translated.description };
 
         if (editingItem) {
           await updateDailyRoutine({
@@ -188,8 +193,11 @@ export default function AdminAbout() {
         const answerPT = formData.get("answer") as string;
         const displayOrder = editingItem ? editingItem.displayOrder : faq.length;
 
-        const questionTranslations = { ptBR: questionPT, enUS: questionPT };
-        const answerTranslations = { ptBR: answerPT, enUS: answerPT };
+        const toastId = toast.loading('Traduzindo conteúdo...');
+        const translated = await translateFields({ question: questionPT, answer: answerPT });
+        toast.dismiss(toastId);
+        const questionTranslations = { ptBR: questionPT, enUS: translated.question };
+        const answerTranslations = { ptBR: answerPT, enUS: translated.answer };
 
         if (editingItem) {
           await updateFaq({
@@ -444,7 +452,7 @@ export default function AdminAbout() {
 
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="ghost" onClick={handleCloseModal} className="text-gray-400">{t('common.cancel')}</Button>
-                <Button type="submit" className="bg-neon-purple hover:bg-neon-purple/90 text-white">{t('common.save')}</Button>
+                <Button type="submit" disabled={isTranslating} className="bg-neon-purple hover:bg-neon-purple/90 text-white">{isTranslating ? 'Traduzindo...' : t('common.save')}</Button>
               </div>
             </form>
           </DialogContent>

@@ -34,7 +34,10 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Layout } from "./components/Layout";
 import { PublicRoute } from "./components/PublicRoute";
 import { QueryProvider } from "./providers/QueryProvider";
-import { ConvexClientProvider } from "./providers/ConvexClientProvider";
+import { ConvexClientProvider, convex } from "./providers/ConvexClientProvider";
+import { ConvexTranslationService } from "./i18n/implementations/ConvexTranslationService";
+
+const translationService = new ConvexTranslationService(convex);
 
 function Router() {
   const [location] = useLocation();
@@ -178,7 +181,7 @@ function App() {
         <ConvexClientProvider>
           <QueryProvider>
             <AuthProvider>
-              <I18nProvider>
+              <I18nProvider translationService={translationService}>
                 <ThemeProvider defaultTheme="dark">
                   <TooltipProvider>
                     <Toaster />

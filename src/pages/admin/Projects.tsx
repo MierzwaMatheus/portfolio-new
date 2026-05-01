@@ -18,6 +18,7 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { toast } from "sonner";
+import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
 
 interface ProjectImage {
   _id: Id<"imageMetadata">;
@@ -163,6 +164,7 @@ export default function AdminProjects() {
   const [projectImages, setProjectImages] = useState<{ id: Id<"imageMetadata">; url: string | null }[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
+  const { translateFields, isTranslating } = useTranslateContent();
   const projects = projectsData ?? [];
   const isLoading = projectsData === undefined;
 
@@ -198,15 +200,21 @@ export default function AdminProjects() {
     const longDescriptionPT = formData.get('long_description') as string || '';
 
     try {
+      const toastId = toast.loading('Traduzindo conteúdo...');
+      const fieldsToTranslate: Record<string, string> = { title: titlePT, description: descriptionPT };
+      if (longDescriptionPT) fieldsToTranslate.longDescription = longDescriptionPT;
+      const translated = await translateFields(fieldsToTranslate);
+      toast.dismiss(toastId);
+
       const imageIds = projectImages.map((i) => i.id);
       const baseData = {
         title: titlePT,
-        titleTranslations: { ptBR: titlePT, enUS: titlePT },
+        titleTranslations: { ptBR: titlePT, enUS: translated.title },
         description: descriptionPT,
-        descriptionTranslations: { ptBR: descriptionPT, enUS: descriptionPT },
+        descriptionTranslations: { ptBR: descriptionPT, enUS: translated.description },
         longDescription: longDescriptionPT || undefined,
         longDescriptionTranslations: longDescriptionPT
-          ? { ptBR: longDescriptionPT, enUS: longDescriptionPT }
+          ? { ptBR: longDescriptionPT, enUS: translated.longDescription ?? longDescriptionPT }
           : undefined,
         tags: selectedTags,
         imageIds,
@@ -390,7 +398,7 @@ export default function AdminProjects() {
 
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="text-gray-400">Cancelar</Button>
-                <Button type="submit" className="bg-neon-purple hover:bg-neon-purple/90 text-white">Salvar</Button>
+                <Button type="submit" disabled={isTranslating} className="bg-neon-purple hover:bg-neon-purple/90 text-white">{isTranslating ? 'Traduzindo...' : 'Salvar'}</Button>
               </div>
             </form>
           </DialogContent>

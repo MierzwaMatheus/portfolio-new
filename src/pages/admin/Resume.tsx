@@ -15,6 +15,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
+import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -235,6 +236,7 @@ export default function AdminResume() {
   const removeItem = useMutation(api.resumeItems.remove);
   const reorderItems = useMutation(api.resumeItems.reorder);
 
+  const { translateFields, isTranslating } = useTranslateContent();
   const items = itemsData ?? [];
   const isLoading = itemsData === undefined;
 
@@ -315,7 +317,31 @@ export default function AdminResume() {
     }
 
     try {
-      const contentTranslations = { ptBR: content, enUS: content };
+      const toastId = toast.loading('Traduzindo conteúdo...');
+      let contentEN = { ...content };
+
+      if (activeModal === 'experience') {
+        const translated = await translateFields({
+          ...(content.role ? { role: content.role } : {}),
+          ...(content.description ? { description: content.description } : {}),
+        });
+        contentEN = { ...content, ...translated };
+      } else if (activeModal === 'education') {
+        const translated = await translateFields({
+          ...(content.degree ? { degree: content.degree } : {}),
+          ...(content.description ? { description: content.description } : {}),
+        });
+        contentEN = { ...content, ...translated };
+      } else if (activeModal === 'skill') {
+        const translated = await translateFields({
+          ...(content.name ? { name: content.name } : {}),
+        });
+        contentEN = { ...content, ...translated };
+      }
+      // language: name é substantivo próprio, level é enum — não traduzir
+
+      toast.dismiss(toastId);
+      const contentTranslations = { ptBR: content, enUS: contentEN };
 
       if (editingItem) {
         await updateItem({
@@ -370,8 +396,11 @@ export default function AdminResume() {
     if (!text.trim()) return;
 
     try {
+      const toastId = toast.loading('Traduzindo conteúdo...');
+      const translated = await translateFields({ text });
+      toast.dismiss(toastId);
       const content = { text };
-      const contentTranslations = { ptBR: content, enUS: content };
+      const contentTranslations = { ptBR: content, enUS: { text: translated.text } };
       const orderIndex = items.filter(i => i.type === type).length;
       await createItem({
         type,
@@ -405,8 +434,11 @@ export default function AdminResume() {
     }
 
     try {
+      const toastId = toast.loading('Traduzindo conteúdo...');
+      const translated = await translateFields({ text: editingSimpleText.trim() });
+      toast.dismiss(toastId);
       const content = { text: editingSimpleText.trim() };
-      const contentTranslations = { ptBR: content, enUS: content };
+      const contentTranslations = { ptBR: content, enUS: { text: translated.text } };
       const target = items.find(i => i._id === id);
       await updateItem({
         id,
@@ -794,7 +826,7 @@ export default function AdminResume() {
             </div>
             <div className="flex justify-end gap-2 pt-4 pb-6 px-6 border-t border-white/10 shrink-0">
               <Button type="button" variant="ghost" onClick={handleCloseModal} className="text-gray-400">Cancelar</Button>
-              <Button type="submit" form="resume-form" className="bg-neon-purple hover:bg-neon-purple/90 text-white">Salvar</Button>
+              <Button type="submit" form="resume-form" disabled={isTranslating} className="bg-neon-purple hover:bg-neon-purple/90 text-white">{isTranslating ? 'Traduzindo...' : 'Salvar'}</Button>
             </div>
           </DialogContent>
         </Dialog>

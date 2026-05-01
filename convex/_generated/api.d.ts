@@ -34,6 +34,7 @@ import type * as services from "../services.js";
 import type * as stats from "../stats.js";
 import type * as stripe from "../stripe.js";
 import type * as testimonials from "../testimonials.js";
+import type * as translation from "../translation.js";
 import type * as users from "../users.js";
 
 import type {
@@ -69,6 +70,7 @@ declare const fullApi: ApiFromModules<{
   stats: typeof stats;
   stripe: typeof stripe;
   testimonials: typeof testimonials;
+  translation: typeof translation;
   users: typeof users;
 }>;
 

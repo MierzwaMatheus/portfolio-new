@@ -16,6 +16,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
+import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
 
 export default function AdminHome() {
   const homeContentList = useQuery(api.homeContent.getAll);
@@ -30,6 +31,7 @@ export default function AdminHome() {
   const updateTestimonial = useMutation(api.testimonials.update);
   const removeTestimonial = useMutation(api.testimonials.remove);
 
+  const { translateFields, isTranslating } = useTranslateContent();
   const [aboutText, setAboutText] = useState("");
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -75,11 +77,15 @@ export default function AdminHome() {
         const titlePT = formData.get("title") as string;
         const descriptionPT = formData.get("description") as string;
 
+        const toastId = toast.loading('Traduzindo conteúdo...');
+        const translated = await translateFields({ title: titlePT, description: descriptionPT });
+        toast.dismiss(toastId);
+
         const payload = {
           title: titlePT,
           description: descriptionPT,
-          titleTranslations: { ptBR: titlePT, enUS: titlePT },
-          descriptionTranslations: { ptBR: descriptionPT, enUS: descriptionPT },
+          titleTranslations: { ptBR: titlePT, enUS: translated.title },
+          descriptionTranslations: { ptBR: descriptionPT, enUS: translated.description },
         };
 
         if (editingItem) {
@@ -92,12 +98,16 @@ export default function AdminHome() {
         const namePT = formData.get("name") as string;
         const rolePT = formData.get("role") as string;
 
+        const toastId = toast.loading('Traduzindo conteúdo...');
+        const translated = await translateFields({ role: rolePT, text: textPT });
+        toast.dismiss(toastId);
+
         const payload = {
           name: namePT,
           role: rolePT,
-          roleTranslations: { ptBR: rolePT, enUS: rolePT },
+          roleTranslations: { ptBR: rolePT, enUS: translated.role },
           text: textPT,
-          textTranslations: { ptBR: textPT, enUS: textPT },
+          textTranslations: { ptBR: textPT, enUS: translated.text },
           imageUrl: selectedImage || undefined,
         };
 
@@ -118,9 +128,12 @@ export default function AdminHome() {
 
   const handleSaveAbout = async () => {
     try {
+      const toastId = toast.loading('Traduzindo conteúdo...');
+      const translated = await translateFields({ aboutText });
+      toast.dismiss(toastId);
       await setHomeContent({
         key: "about_text",
-        value: { ptBR: aboutText, enUS: aboutText },
+        value: { ptBR: aboutText, enUS: translated.aboutText },
       });
       toast.success("Sobre mim salvo com sucesso!");
     } catch (error: any) {
@@ -171,8 +184,8 @@ export default function AdminHome() {
                   className="bg-white/5 border-white/10 text-white min-h-[150px]"
                 />
                 <div className="flex justify-end">
-                  <Button onClick={handleSaveAbout} className="bg-neon-purple hover:bg-neon-purple/90 text-white">
-                    Salvar
+                  <Button onClick={handleSaveAbout} disabled={isTranslating} className="bg-neon-purple hover:bg-neon-purple/90 text-white">
+                    {isTranslating ? 'Traduzindo...' : 'Salvar'}
                   </Button>
                 </div>
               </CardContent>
@@ -324,7 +337,7 @@ export default function AdminHome() {
 
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="ghost" onClick={handleCloseModal} className="text-gray-400">Cancelar</Button>
-                <Button type="submit" className="bg-neon-purple hover:bg-neon-purple/90 text-white">Salvar</Button>
+                <Button type="submit" disabled={isTranslating} className="bg-neon-purple hover:bg-neon-purple/90 text-white">{isTranslating ? 'Traduzindo...' : 'Salvar'}</Button>
               </div>
             </form>
           </DialogContent>
