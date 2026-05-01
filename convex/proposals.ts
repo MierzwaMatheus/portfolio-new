@@ -239,7 +239,7 @@ export const createSession = mutation({
     const now = Date.now();
     const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
-    return ctx.db.insert('proposalSessions', {
+    await ctx.db.insert('proposalSessions', {
       proposalId: proposal._id,
       token,
       ipAddress: args.ipAddress,
@@ -248,13 +248,15 @@ export const createSession = mutation({
       expiresAt: now + SEVEN_DAYS_MS,
       createdAt: now,
     });
+
+    return token;
   },
 });
 
 export const accept = mutation({
   args: {
     slug: v.string(),
-    token: v.string(),
+    token: v.optional(v.string()),
     clientName: v.string(),
     clientDocument: v.string(),
     clientEmail: v.string(),
@@ -276,18 +278,22 @@ export const accept = mutation({
     const now = Date.now();
     if (proposal.expiresAt < now) throw new Error('Proposal expired');
 
-    const session = await ctx.db
-      .query('proposalSessions')
-      .withIndex('by_token', (q) => q.eq('token', args.token))
-      .unique();
-    if (!session || session.proposalId !== proposal._id || session.expiresAt < now) {
-      throw new Error('Invalid or expired session');
+    let session = null;
+    if (proposal.password) {
+      if (!args.token) throw new Error('Invalid or expired session');
+      session = await ctx.db
+        .query('proposalSessions')
+        .withIndex('by_token', (q) => q.eq('token', args.token!))
+        .unique();
+      if (!session || session.proposalId !== proposal._id || session.expiresAt < now) {
+        throw new Error('Invalid or expired session');
+      }
     }
 
     const acceptanceId = await ctx.db.insert('proposalAcceptances', {
       proposalId: proposal._id,
       proposalVersion: proposal.version,
-      sessionId: session._id,
+      sessionId: session?._id,
       clientName: args.clientName,
       clientDocument: args.clientDocument,
       clientEmail: args.clientEmail,
@@ -307,7 +313,7 @@ export const accept = mutation({
       acceptedAt: now,
       updatedAt: now,
     });
-    await ctx.db.patch(session._id, { isUsed: true });
+    if (session) await ctx.db.patch(session._id, { isUsed: true });
 
     await logAudit(ctx, {
       eventType: 'proposal.accepted',

@@ -2,12 +2,15 @@ import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 
 export interface ProposalData {
   title?: string;
+  slug?: string;
+  version?: number;
   client_name: string;
   objective: string | string[];
   scope?: string | string[];
   timeline?: Array<{ step: string; period: string }>;
   delivery_date?: string;
   investment_value: number;
+  payment_methods?: string[];
   conditions?: string[];
   rescision_policy?: string;
 }
@@ -127,7 +130,9 @@ ${timelineText}${proposal.delivery_date ? `\n\nEntrega prevista: ${new Date(prop
   }
 
   // Cláusula 4 - Investimento e Formas de Pagamento
-  const paymentMethods = generatePaymentMethods(proposal.investment_value);
+  const paymentMethods = proposal.payment_methods?.length
+    ? proposal.payment_methods
+    : generatePaymentMethods(proposal.investment_value);
   const paymentMethodsText = paymentMethods.map((method) => `- ${method}`).join('\n');
 
   clauses.push(`### CLÁUSULA 4 – DO INVESTIMENTO E FORMAS DE PAGAMENTO

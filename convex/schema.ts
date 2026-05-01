@@ -353,7 +353,7 @@ export default defineSchema({
   proposalAcceptances: defineTable({
     proposalId: v.id('proposals'),
     proposalVersion: v.number(),
-    sessionId: v.id('proposalSessions'),
+    sessionId: v.optional(v.id('proposalSessions')),
     clientName: v.string(),
     clientDocument: v.string(),
     clientEmail: v.string(),

@@ -15,13 +15,14 @@ import { toast } from "sonner";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 import ReactMarkdown from "react-markdown";
 import { ContractModal } from "@/components/ContractModal";
-import { generateContractContent } from "@/utils/contractGenerator";
-import jsPDF from "jspdf";
+import { printContractPDF } from "@/utils/contractPDF";
 
 function toLegacyProposal(p: any) {
   if (!p) return null;
   return {
     id: p._id,
+    slug: p.slug,
+    version: p.version,
     client_name: p.clientName,
     title: p.title,
     objective: p.objective,
@@ -376,20 +377,20 @@ export default function ProposalAccept() {
           proposal={proposal}
           clientData={{
             client_name: clientName.trim(),
-            client_document: clientDocument.replace(/\D/g, ''),
+            client_document: formatDocument(clientDocument),
             client_email: clientEmail.trim(),
             client_role: clientRole.trim() || null,
             client_declaration: clientDeclaration.trim() || null,
           }}
           sessionToken={sessionToken}
-          onSign={handleDigitalSignature}
+          onSign={(sig) => handleDigitalSignature(sig)}
           isSigning={isSigning}
         />
       )}
     </div>
   );
 
-  async function handleDigitalSignature() {
+  async function handleDigitalSignature(signatureDataUrl: string) {
     if (!proposal || !rawProposal) return;
     if (!sessionToken) {
       toast.error("Sessão inválida. Recarregue a página.");
@@ -431,12 +432,12 @@ export default function ProposalAccept() {
         },
         acceptance: acceptanceForSnapshot,
       });
-      const contentHash = await generateContentHash(proposal, acceptanceForSnapshot);
+      const contentHash = await generateContentHash(contentSnapshot);
 
       try {
         await acceptMutation({
           slug: slugStr,
-          token: sessionToken,
+          token: sessionToken ?? undefined,
           clientName: clientName.trim(),
           clientDocument: clientDocument.replace(/\D/g, ''),
           clientEmail: clientEmail.trim(),
@@ -452,7 +453,10 @@ export default function ProposalAccept() {
         if (msg.includes('Already accepted') || msg.includes('já foi aceita')) {
           toast.error("Esta proposta já foi aceita anteriormente");
         } else if (msg.includes('Invalid or expired session') || msg.includes('Sessão inválida')) {
-          toast.error("Sessão expirada. Por favor, recarregue a página");
+          sessionStorage.removeItem(`proposal_session_slug_${slugStr}`);
+          setSessionToken(null);
+          toast.error("Sessão expirada. Acesse a proposta novamente para continuar.");
+          setTimeout(() => setLocation(`/proposta/${slugStr}`), 2500);
         } else {
           throw error;
         }
@@ -464,16 +468,16 @@ export default function ProposalAccept() {
         client_name: clientName.trim(),
         client_document: formatDocument(clientDocument),
         client_email: clientEmail.trim(),
-        client_role: clientRole.trim() || null,
-        client_declaration: clientDeclaration.trim() || null,
+        client_role: clientRole.trim() || undefined,
+        client_declaration: clientDeclaration.trim() || undefined,
         accepted_at: new Date(acceptedAtTs).toISOString(),
         ip_address: ipAddress || null,
         user_agent: userAgent || null,
         content_hash: contentHash,
-        proposal_version: '1.0',
+        proposal_version: String(rawProposal?.version ?? 1),
       };
 
-      await generateContractPDF(proposal, acceptanceData);
+      await printContractPDF(proposal, acceptanceData, signatureDataUrl);
 
       toast.success("Contrato assinado digitalmente e PDF gerado com sucesso!");
 
@@ -489,116 +493,12 @@ export default function ProposalAccept() {
     }
   }
 
-  async function generateContractPDF(proposal: any, acceptanceData: any) {
-    const doc = new jsPDF();
-    let yPos = 20;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 20;
-    const maxWidth = pageWidth - (margin * 2);
 
-    const checkPageBreak = (requiredSpace: number = 10) => {
-      if (yPos + requiredSpace > 270) {
-        doc.addPage();
-        yPos = 20;
-        return true;
-      }
-      return false;
-    };
-
-    const addText = (text: string, fontSize: number = 12, isBold: boolean = false, color: [number, number, number] = [0, 0, 0], lineHeight: number = 0.6) => {
-      if (!text || String(text).trim() === '') return;
-
-      doc.setFontSize(fontSize);
-      doc.setTextColor(color[0], color[1], color[2]);
-      doc.setFont('helvetica', isBold ? 'bold' : 'normal');
-
-      let cleanText = String(text)
-        .replace(/\r\n/g, '\n')
-        .replace(/\r/g, '\n')
-        .replace(/\*\*/g, '')
-        .replace(/#{1,6}\s/g, '')
-        .replace(/---/g, '')
-        .trim();
-
-      const lines = doc.splitTextToSize(cleanText, maxWidth);
-
-      lines.forEach((line: string) => {
-        checkPageBreak(fontSize * lineHeight + 2);
-        doc.text(line, margin, yPos);
-        yPos += fontSize * lineHeight;
-      });
-      yPos += 2;
-    };
-
-    const contractContent = generateContractContent(proposal, acceptanceData);
-
-    addText('CONTRATO ELETRÔNICO', 18, true, [0, 0, 0]);
-    yPos += 5;
-
-    const headerText = contractContent.header
-      .replace(/\*\*/g, '')
-      .replace(/---/g, '')
-      .trim();
-    addText(headerText, 12);
-    yPos += 5;
-
-    contractContent.clauses.forEach((clause) => {
-      let cleanClause = clause
-        .replace(/\*\*/g, '')
-        .replace(/#{1,6}\s/g, '')
-        .trim();
-
-      const titleMatch = cleanClause.match(/^(CLÁUSULA \d+[^:]*:)/);
-      if (titleMatch) {
-        addText(titleMatch[1], 12, true, [0, 0, 0], 0.7);
-        cleanClause = cleanClause.replace(titleMatch[1], '').trim();
-      }
-
-      if (cleanClause) {
-        addText(cleanClause, 11, false, [0, 0, 0], 0.6);
-      }
-      yPos += 3;
-    });
-
-    addText('ASSINATURA DIGITAL', 14, true);
-    addText(`Este contrato foi assinado digitalmente em ${new Date(acceptanceData.accepted_at).toLocaleString('pt-BR')}`, 11);
-    addText(`Nome: ${acceptanceData.client_name}`, 11);
-    addText(`Documento: ${acceptanceData.client_document}`, 11);
-    addText(`E-mail: ${acceptanceData.client_email}`, 11);
-    if (acceptanceData.client_role) {
-      addText(`Cargo/Função: ${acceptanceData.client_role}`, 11);
-    }
-    if (acceptanceData.client_declaration) {
-      addText(`Declaração: ${acceptanceData.client_declaration}`, 10);
-    }
-    yPos += 5;
-
-    addText('EVIDÊNCIAS TÉCNICAS', 12, true);
-    const hash = await generateContentHash(proposal, acceptanceData);
-    addText(`Hash SHA-256: ${hash}`, 9);
-    addText(`IP de Origem: ${acceptanceData.ip_address || 'N/A'}`, 9);
-    addText(`User-Agent: ${acceptanceData.user_agent || 'N/A'}`, 9);
-    addText(`Versão da Proposta: ${acceptanceData.proposal_version || '1.0'}`, 9);
-
-    const fileName = `Contrato_${proposal.client_name.replace(/\s+/g, '_')}_${new Date(acceptanceData.accepted_at).toISOString().split('T')[0]}.pdf`;
-    doc.save(fileName);
-  }
-
-  async function generateContentHash(proposal: any, acceptanceData: any): Promise<string> {
-    const content = JSON.stringify({
-      proposal_id: proposal.id,
-      client_name: acceptanceData.client_name,
-      client_document: acceptanceData.client_document,
-      accepted_at: acceptanceData.accepted_at,
-      investment_value: proposal.investment_value,
-    });
-
+  async function generateContentHash(contentSnapshot: string): Promise<string> {
     const encoder = new TextEncoder();
-    const data = encoder.encode(content);
+    const data = encoder.encode(contentSnapshot);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-    return hashHex;
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 }
