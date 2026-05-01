@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -29,10 +29,14 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { AdminLayout } from "./Dashboard";
-import { supabase } from "@/lib/supabase";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { Loader2, UserPlus, Users, Trash2, Eye, EyeOff } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+
+// TODO: Convex backend lacks a server-side admin createUser mutation; needs to be added before this page works.
 
 const formSchema = z.object({
     email: z.string().email("Email inválido"),
@@ -50,19 +54,15 @@ const formSchema = z.object({
     path: ["confirmPassword"],
 });
 
-interface User {
-    id: string;
-    email: string;
-    name: string;
-    role: string;
-    created_at: string;
-}
-
 export default function CreateUser() {
     const [isLoading, setIsLoading] = useState(false);
-    const [users, setUsers] = useState<User[]>([]);
-    const [isLoadingUsers, setIsLoadingUsers] = useState(true);
     const [showPassword, setShowPassword] = useState(false);
+
+    const usersData = useQuery(api.users.list, {});
+    const users = usersData ?? [];
+    const isLoadingUsers = usersData === undefined;
+
+    const removeRole = useMutation(api.users.removeRole);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -75,72 +75,18 @@ export default function CreateUser() {
         },
     });
 
-    const fetchUsers = async () => {
-        setIsLoadingUsers(true);
-        try {
-            const { data, error } = await supabase.functions.invoke('create-user', {
-                method: 'GET',
-            });
-
-            if (error) throw error;
-            if (data?.users) {
-                setUsers(data.users);
-            }
-        } catch (error) {
-            console.error("Error fetching users:", error);
-            toast.error("Erro ao carregar usuários");
-        } finally {
-            setIsLoadingUsers(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchUsers();
-    }, []);
-
-    async function onSubmit(values: z.infer<typeof formSchema>) {
-        setIsLoading(true);
-        try {
-            // If password is empty string, send undefined so the backend handles it (for existing users)
-            const payload = {
-                ...values,
-                password: values.password === "" ? undefined : values.password
-            };
-
-            const { data, error } = await supabase.functions.invoke('create-user', {
-                body: payload,
-                method: 'POST',
-            });
-
-            if (error) throw error;
-            if (data?.error) throw new Error(data.error);
-
-            toast.success(data.message || `Operação realizada com sucesso`);
-
-            form.reset();
-            fetchUsers(); // Refresh list
-        } catch (error) {
-            console.error("Error creating user:", error);
-            toast.error(error instanceof Error ? error.message : "Erro ao criar usuário");
-        } finally {
-            setIsLoading(false);
-        }
+    async function onSubmit(_values: z.infer<typeof formSchema>) {
+        // TODO: Convex backend lacks a server-side admin createUser mutation; needs to be added before this page works.
+        toast.error("Funcionalidade ainda não implementada no backend Convex");
+        setIsLoading(false);
     }
 
     const handleDelete = async (userId: string, userEmail: string) => {
         if (!confirm(`Tem certeza que deseja remover o acesso do usuário ${userEmail}?`)) return;
 
         try {
-            const { data, error } = await supabase.functions.invoke('create-user', {
-                body: { user_id: userId },
-                method: 'DELETE',
-            });
-
-            if (error) throw error;
-            if (data?.error) throw new Error(data.error);
-
+            await removeRole({ userId: userId as Id<"users"> });
             toast.success("Acesso do usuário removido com sucesso");
-            fetchUsers();
         } catch (error) {
             console.error("Error deleting user:", error);
             toast.error("Erro ao remover usuário");
@@ -168,6 +114,9 @@ export default function CreateUser() {
                             <UserPlus className="w-5 h-5 text-neon-purple" />
                             Novo Usuário
                         </h2>
+                        <p className="text-yellow-400 text-xs mb-4">
+                            Funcionalidade ainda não implementada no backend Convex.
+                        </p>
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                                 <FormField
@@ -313,26 +262,26 @@ export default function CreateUser() {
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
-                                            users.map((user) => (
-                                                <TableRow key={user.id} className="border-white/10 hover:bg-white/5">
+                                            users.map((user: any) => (
+                                                <TableRow key={user._id} className="border-white/10 hover:bg-white/5">
                                                     <TableCell className="font-medium text-white">
-                                                        <div>{user.name}</div>
+                                                        <div>{user.name ?? user.email}</div>
                                                         <div className="text-xs text-gray-400">{user.email}</div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-neon-purple/10 text-neon-purple border border-neon-purple/20">
-                                                            {user.role}
+                                                            {user.role ?? '—'}
                                                         </span>
                                                     </TableCell>
                                                     <TableCell className="text-gray-400 text-sm">
-                                                        {format(new Date(user.created_at), "dd/MM/yyyy", { locale: ptBR })}
+                                                        {user._creationTime ? format(new Date(user._creationTime), "dd/MM/yyyy", { locale: ptBR }) : '-'}
                                                     </TableCell>
                                                     <TableCell>
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
                                                             className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
-                                                            onClick={() => handleDelete(user.id, user.email)}
+                                                            onClick={() => handleDelete(user._id, user.email)}
                                                         >
                                                             <Trash2 className="h-4 w-4" />
                                                         </Button>

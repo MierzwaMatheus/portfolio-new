@@ -1,0 +1,164 @@
+import { v } from 'convex/values';
+import { mutation, query } from './_generated/server';
+import { requireRole } from './auth';
+import { markPendingChanges } from './publishStatus';
+
+export const list = query({
+  args: { tag: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    const projects = await ctx.db
+      .query('projects')
+      .withIndex('by_orderIndex')
+      .order('asc')
+      .collect();
+
+    const filtered = args.tag
+      ? projects.filter((p) => p.tags.includes(args.tag!))
+      : projects;
+
+    return Promise.all(
+      filtered.map(async (project) => {
+        const images: Array<Record<string, unknown>> = [];
+
+        // Add Convex Storage images
+        if (project.imageIds && project.imageIds.length > 0) {
+          for (const imgId of project.imageIds) {
+            const img = await ctx.db.get(imgId);
+            if (img) {
+              const url = await ctx.storage.getUrl(img.storageId);
+              images.push({ ...img, url });
+            }
+          }
+        }
+
+        // Add external URLs directly
+        if (project.externalImageUrls && project.externalImageUrls.length > 0) {
+          for (const url of project.externalImageUrls) {
+            if (typeof url === 'string' && url.trim()) {
+              images.push({ url });
+            }
+          }
+        }
+
+        return { ...project, images };
+      }),
+    );
+  },
+});
+
+export const getById = query({
+  args: { id: v.id('projects') },
+  handler: async (ctx, args) => {
+    const project = await ctx.db.get(args.id);
+    if (!project) return null;
+
+    const images: Array<Record<string, unknown>> = [];
+
+    // Add Convex Storage images
+    if (project.imageIds && project.imageIds.length > 0) {
+      for (const imgId of project.imageIds) {
+        const img = await ctx.db.get(imgId);
+        if (img) {
+          const url = await ctx.storage.getUrl(img.storageId);
+          images.push({ ...img, url });
+        }
+      }
+    }
+
+    // Add external URLs directly
+    if (project.externalImageUrls && project.externalImageUrls.length > 0) {
+      for (const url of project.externalImageUrls) {
+        if (typeof url === 'string' && url.trim()) {
+          images.push({ url });
+        }
+      }
+    }
+
+    return {
+      ...project,
+      images,
+    };
+  },
+});
+
+export const create = mutation({
+  args: {
+    title: v.string(),
+    titleTranslations: v.optional(
+      v.object({ 'ptBR': v.string(), 'enUS': v.optional(v.string()) }),
+    ),
+    description: v.string(),
+    descriptionTranslations: v.optional(
+      v.object({ 'ptBR': v.string(), 'enUS': v.optional(v.string()) }),
+    ),
+    longDescription: v.optional(v.string()),
+    longDescriptionTranslations: v.optional(
+      v.object({ 'ptBR': v.string(), 'enUS': v.optional(v.string()) }),
+    ),
+    tags: v.array(v.string()),
+    imageIds: v.array(v.id('imageMetadata')),
+    externalImageUrls: v.optional(v.array(v.string())),
+    demoLink: v.optional(v.string()),
+    githubLink: v.optional(v.string()),
+    orderIndex: v.number(),
+  },
+  handler: async (ctx, args) => {
+    await requireRole(ctx, ['root', 'admin']);
+    const now = Date.now();
+    const id = await ctx.db.insert('projects', { ...args, createdAt: now });
+    await markPendingChanges(ctx);
+    return id;
+  },
+});
+
+export const update = mutation({
+  args: {
+    id: v.id('projects'),
+    title: v.optional(v.string()),
+    titleTranslations: v.optional(
+      v.object({ 'ptBR': v.string(), 'enUS': v.optional(v.string()) }),
+    ),
+    description: v.optional(v.string()),
+    descriptionTranslations: v.optional(
+      v.object({ 'ptBR': v.string(), 'enUS': v.optional(v.string()) }),
+    ),
+    longDescription: v.optional(v.string()),
+    longDescriptionTranslations: v.optional(
+      v.object({ 'ptBR': v.string(), 'enUS': v.optional(v.string()) }),
+    ),
+    tags: v.optional(v.array(v.string())),
+    imageIds: v.optional(v.array(v.id('imageMetadata'))),
+    externalImageUrls: v.optional(v.array(v.string())),
+    demoLink: v.optional(v.string()),
+    githubLink: v.optional(v.string()),
+    orderIndex: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await requireRole(ctx, ['root', 'admin']);
+    const { id, ...fields } = args;
+    await ctx.db.patch(id, { ...fields, updatedAt: Date.now() });
+    await markPendingChanges(ctx);
+  },
+});
+
+export const remove = mutation({
+  args: { id: v.id('projects') },
+  handler: async (ctx, args) => {
+    await requireRole(ctx, ['root', 'admin']);
+    await ctx.db.delete(args.id);
+    await markPendingChanges(ctx);
+  },
+});
+
+export const reorder = mutation({
+  args: {
+    items: v.array(v.object({ id: v.id('projects'), orderIndex: v.number() })),
+  },
+  handler: async (ctx, args) => {
+    await requireRole(ctx, ['root', 'admin']);
+    for (const { id, orderIndex } of args.items) {
+      await ctx.db.patch(id, { orderIndex });
+    }
+    await markPendingChanges(ctx);
+  },
+});

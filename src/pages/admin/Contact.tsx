@@ -7,10 +7,15 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { Image as ImageIcon } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { toast } from "sonner";
 
 export default function AdminContact() {
-  const [loading, setLoading] = useState(true);
+  const data = useQuery(api.contactInfo.get, {});
+  const updateContactInfo = useMutation(api.contactInfo.update);
+  const loading = data === undefined;
+
   const [personalData, setPersonalData] = useState({
     name: "",
     role: "",
@@ -32,51 +37,28 @@ export default function AdminContact() {
   });
 
   useEffect(() => {
-    fetchContactInfo();
-  }, []);
-
-  const fetchContactInfo = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .schema('app_portfolio')
-        .from('contact_info')
-        .select('*')
-        .single();
-
-      if (error) throw error;
-
-      if (data) {
-        // Extrai role do JSONB ou fallback para campo direto
-        const rolePT = data.role_translations?.['pt-BR'] || data.role || "";
-        
-        setPersonalData({
-          name: data.name || "",
-          role: rolePT,
-          email: data.email || "",
-          showEmail: data.show_email,
-          phone: data.phone || "",
-          showPhone: data.show_phone,
-          birthDate: data.birth_date || "",
-          showBirthDate: data.show_birth_date,
-          location: data.location || "",
-          showLocation: data.show_location,
-          avatarUrl: data.avatar_url || ""
-        });
-
-        setSocialMedia({
-          linkedin: data.linkedin_url || "",
-          github: data.github_url || "",
-          behance: data.behance_url || ""
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching contact info:", error);
-      alert("Erro ao carregar informações de contato.");
-    } finally {
-      setLoading(false);
+    if (data) {
+      const rolePT = data.roleTranslations?.ptBR || data.role || "";
+      setPersonalData({
+        name: data.name || "",
+        role: rolePT,
+        email: data.email || "",
+        showEmail: data.showEmail ?? true,
+        phone: data.phone || "",
+        showPhone: data.showPhone ?? true,
+        birthDate: data.birthDate || "",
+        showBirthDate: data.showBirthDate ?? false,
+        location: data.location || "",
+        showLocation: data.showLocation ?? false,
+        avatarUrl: data.avatarUrl || ""
+      });
+      setSocialMedia({
+        linkedin: data.linkedinUrl || "",
+        github: data.githubUrl || "",
+        behance: data.behanceUrl || ""
+      });
     }
-  };
+  }, [data]);
 
   const handlePersonalChange = (field: string, value: any) => {
     setPersonalData(prev => ({ ...prev, [field]: value }));
@@ -89,87 +71,29 @@ export default function AdminContact() {
   const handleSave = async () => {
     try {
       const rolePT = personalData.role || '';
-
-      // Traduz role para inglês usando a Edge Function
-      let roleEN = rolePT;
-      if (rolePT.trim()) {
-        console.log('Traduzindo role:', rolePT);
-        const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
-          body: {
-            texts: [rolePT],
-            source: 'pt',
-            target: 'en',
-          },
-        });
-
-        console.log('Translation response:', { translateData, translateError });
-
-        if (translateError) {
-          console.error('Translation error:', translateError);
-          alert('Erro ao traduzir título profissional. Salvando apenas em português.');
-        } else {
-          roleEN = translateData?.translatedTexts?.[0] || rolePT;
-          console.log('Role traduzido:', roleEN);
-        }
-      } else {
-        console.log('Role vazio, não será traduzido');
-      }
-
-      const updates = {
+      await updateContactInfo({
         name: personalData.name,
         role: rolePT,
-        role_translations: rolePT ? {
-          'pt-BR': rolePT,
-          'en-US': roleEN,
-        } : null,
+        ...(rolePT
+          ? { roleTranslations: { ptBR: rolePT, enUS: rolePT } }
+          : {}),
         email: personalData.email,
-        show_email: personalData.showEmail,
+        showEmail: personalData.showEmail,
         phone: personalData.phone,
-        show_phone: personalData.showPhone,
-        birth_date: personalData.birthDate || null,
-        show_birth_date: personalData.showBirthDate,
+        showPhone: personalData.showPhone,
+        birthDate: personalData.birthDate || undefined,
+        showBirthDate: personalData.showBirthDate,
         location: personalData.location,
-        show_location: personalData.showLocation,
-        avatar_url: personalData.avatarUrl,
-        linkedin_url: socialMedia.linkedin,
-        github_url: socialMedia.github,
-        behance_url: socialMedia.behance,
-        updated_at: new Date().toISOString()
-      };
-
-      // We assume there's only one row, so we update where ID is not null (or fetch ID first)
-      // Since we used .single() earlier, we could store the ID, but for a singleton table, updating the first record is fine.
-      // Better: fetch the ID in the get request.
-
-      // Let's get the ID first or just update based on a known condition if we had one. 
-      // Since I didn't store ID, let's fetch it or just update all (there should be only one).
-      // But to be safe, let's use the ID from the fetch.
-
-      const { data: currentData } = await supabase.schema('app_portfolio').from('contact_info').select('id').single();
-
-      if (currentData?.id) {
-        const { error } = await supabase
-          .schema('app_portfolio')
-          .from('contact_info')
-          .update(updates)
-          .eq('id', currentData.id);
-
-        if (error) throw error;
-        alert("Alterações salvas com sucesso!");
-      } else {
-        // If no data exists, insert it
-        const { error } = await supabase
-          .schema('app_portfolio')
-          .from('contact_info')
-          .insert(updates);
-
-        if (error) throw error;
-        alert("Informações criadas com sucesso!");
-      }
-
+        showLocation: personalData.showLocation,
+        avatarUrl: personalData.avatarUrl,
+        linkedinUrl: socialMedia.linkedin,
+        githubUrl: socialMedia.github,
+        behanceUrl: socialMedia.behance,
+      });
+      toast.success("Alterações salvas com sucesso!");
     } catch (error) {
       console.error("Error saving contact info:", error);
-      alert("Erro ao salvar alterações.");
+      toast.error("Erro ao salvar alterações.");
     }
   };
 

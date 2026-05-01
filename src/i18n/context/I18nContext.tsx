@@ -1,13 +1,11 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
 import { LocaleDetector } from '../interfaces/LocaleDetector';
 import { TranslationsRepository } from '../repositories/TranslationsRepository';
-import { DatabaseTranslationsRepository } from '../interfaces/DatabaseTranslationsRepository';
 import { TranslationService } from '../interfaces/TranslationService';
 import { StaticTranslationsRepository } from '../implementations/StaticTranslationsRepository';
 import { BrowserLocaleDetector } from '../implementations/BrowserLocaleDetector';
-import { SupabaseTranslationService } from '../implementations/SupabaseTranslationService';
+import { NoopTranslationService } from '../implementations/NoopTranslationService';
 import { CachedTranslationService } from '../implementations/CachedTranslationService';
-import { AutoTranslatingRepository } from '../implementations/AutoTranslatingRepository';
 
 type Locale = 'pt-BR' | 'en-US';
 
@@ -15,8 +13,8 @@ interface I18nContextType {
   locale: Locale;
   setLocale: (locale: Locale) => void;
   t: (key: string) => string;
-  tValue: (key: string) => any; // Para arrays, objetos, etc
-  dbRepository: DatabaseTranslationsRepository;
+  tValue: (key: string) => any;
+  translationService: TranslationService;
   isLoading: boolean;
 }
 
@@ -29,8 +27,8 @@ interface I18nProviderProps {
   translationService?: TranslationService;
 }
 
-export function I18nProvider({ 
-  children, 
+export function I18nProvider({
+  children,
   localeDetector = new BrowserLocaleDetector(),
   translationsRepository = new StaticTranslationsRepository(),
   translationService,
@@ -38,21 +36,14 @@ export function I18nProvider({
   const [locale, setLocaleState] = useState<Locale>('en-US');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Cria o serviço de tradução com cache
   const cachedTranslationService = useMemo(() => {
-    const service = translationService || new SupabaseTranslationService();
+    const service = translationService || new NoopTranslationService();
     return new CachedTranslationService(service);
   }, [translationService]);
-
-  // Cria o repositório que traduz automaticamente
-  const dbRepository = useMemo(() => {
-    return new AutoTranslatingRepository(cachedTranslationService);
-  }, [cachedTranslationService]);
 
   useEffect(() => {
     const detectLocale = async () => {
       try {
-        // Verifica se há locale salvo
         const savedLocale = localStorage.getItem('locale') as Locale | null;
         if (savedLocale && (savedLocale === 'pt-BR' || savedLocale === 'en-US')) {
           setLocaleState(savedLocale);
@@ -60,7 +51,6 @@ export function I18nProvider({
           return;
         }
 
-        // Detecta automaticamente
         const detected = await localeDetector.detect();
         setLocaleState(detected as Locale);
       } catch (error) {
@@ -70,7 +60,7 @@ export function I18nProvider({
         setIsLoading(false);
       }
     };
-    
+
     detectLocale();
   }, [localeDetector]);
 
@@ -89,7 +79,16 @@ export function I18nProvider({
   };
 
   return (
-    <I18nContext.Provider value={{ locale, setLocale, t, tValue, dbRepository, isLoading }}>
+    <I18nContext.Provider
+      value={{
+        locale,
+        setLocale,
+        t,
+        tValue,
+        translationService: cachedTranslationService,
+        isLoading,
+      }}
+    >
       {children}
     </I18nContext.Provider>
   );
@@ -102,5 +101,3 @@ export function useI18n() {
   }
   return context;
 }
-
-

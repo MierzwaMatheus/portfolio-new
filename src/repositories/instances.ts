@@ -1,9 +1,9 @@
-import { SupabasePortfolioRepository } from "./implementations/SupabasePortfolioRepository";
-import { SupabaseBlogRepository } from "./implementations/SupabaseBlogRepository";
-import { SupabaseHomeRepository } from "./implementations/SupabaseHomeRepository";
-import { SupabaseAboutRepository } from "./implementations/SupabaseAboutRepository";
-import { SupabaseResumeRepository } from "./implementations/SupabaseResumeRepository";
-import { SupabaseSidebarRepository } from "./implementations/SupabaseSidebarRepository";
+import { ConvexPortfolioRepository } from "./implementations/ConvexPortfolioRepository";
+import { ConvexBlogRepository } from "./implementations/ConvexBlogRepository";
+import { ConvexHomeRepository } from "./implementations/ConvexHomeRepository";
+import { ConvexAboutRepository } from "./implementations/ConvexAboutRepository";
+import { ConvexResumeRepository } from "./implementations/ConvexResumeRepository";
+import { ConvexSidebarRepository } from "./implementations/ConvexSidebarRepository";
 
 import { StaticPortfolioRepository } from "./implementations/StaticPortfolioRepository";
 import { StaticBlogRepository } from "./implementations/StaticBlogRepository";
@@ -16,24 +16,24 @@ const isProduction = import.meta.env.PROD;
 
 export const portfolioRepository = isProduction
   ? new StaticPortfolioRepository()
-  : new SupabasePortfolioRepository();
+  : new ConvexPortfolioRepository();
 
 export const blogRepository = isProduction
   ? new StaticBlogRepository()
-  : new SupabaseBlogRepository();
+  : new ConvexBlogRepository();
 
 export const homeRepository = isProduction
   ? new StaticHomeRepository()
-  : new SupabaseHomeRepository();
+  : new ConvexHomeRepository();
 
 export const aboutRepository = isProduction
   ? new StaticAboutRepository()
-  : new SupabaseAboutRepository();
+  : new ConvexAboutRepository();
 
 export const resumeRepository = isProduction
   ? new StaticResumeRepository()
-  : new SupabaseResumeRepository();
+  : new ConvexResumeRepository();
 
 export const sidebarRepository = isProduction
   ? new StaticSidebarRepository()
-  : new SupabaseSidebarRepository();
+  : new ConvexSidebarRepository();

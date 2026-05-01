@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,23 +10,35 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, GripVertical, X } from "lucide-react";
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { supabase } from "@/lib/supabase";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { ProjectTagsInput } from "@/components/admin/ProjectTagsInput";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { toast } from "sonner";
 
+interface ProjectImage {
+  _id: Id<"imageMetadata">;
+  url: string | null;
+  displayName?: string;
+}
+
 interface Project {
-  id: number;
+  _id: Id<"projects">;
   title: string;
+  titleTranslations?: { ptBR: string; enUS?: string };
   description: string;
-  long_description: string;
+  descriptionTranslations?: { ptBR: string; enUS?: string };
+  longDescription?: string;
+  longDescriptionTranslations?: { ptBR: string; enUS?: string };
   tags: string[];
-  images: string[];
-  demo_link: string;
-  github_link: string;
-  order_index?: number;
+  imageIds: Id<"imageMetadata">[];
+  images: ProjectImage[];
+  demoLink?: string;
+  githubLink?: string;
+  orderIndex: number;
 }
 
 // Sortable Project Card Component
@@ -37,21 +49,23 @@ function SortableProjectCard({
 }: {
   project: Project;
   onEdit: (project: Project) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: Id<"projects">) => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: project.id });
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: project._id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
   };
 
+  const coverUrl = project.images?.[0]?.url || null;
+
   return (
     <div ref={setNodeRef} style={style}>
       <Card className="bg-card border-white/10 overflow-hidden group">
         <div className="relative h-48">
-          {project.images && project.images.length > 0 ? (
-            <img src={project.images[0]} alt={project.title} className="w-full h-full object-cover" />
+          {coverUrl ? (
+            <img src={coverUrl} alt={project.title} className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">Sem imagem</div>
           )}
@@ -62,7 +76,7 @@ function SortableProjectCard({
             <Button size="icon" variant="secondary" onClick={() => onEdit(project)}>
               <Pencil className="w-4 h-4" />
             </Button>
-            <Button size="icon" variant="destructive" onClick={() => onDelete(project.id)}>
+            <Button size="icon" variant="destructive" onClick={() => onDelete(project._id)}>
               <Trash2 className="w-4 h-4" />
             </Button>
           </div>
@@ -94,7 +108,7 @@ function SortableImageItem({
   index,
   onRemove
 }: {
-  img: string;
+  img: { id: Id<"imageMetadata">; url: string | null };
   index: number;
   onRemove: (index: number) => void;
 }) {
@@ -108,7 +122,11 @@ function SortableImageItem({
 
   return (
     <div ref={setNodeRef} style={style} className="relative group aspect-video rounded-md overflow-hidden border border-white/10">
-      <img src={img} alt={`Project ${index + 1}`} className="w-full h-full object-cover" />
+      {img.url ? (
+        <img src={img.url} alt={`Project ${index + 1}`} className="w-full h-full object-cover" />
+      ) : (
+        <div className="w-full h-full bg-white/5" />
+      )}
       <button
         type="button"
         onClick={() => onRemove(index)}
@@ -133,55 +151,41 @@ function SortableImageItem({
 }
 
 export default function AdminProjects() {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const projectsData = useQuery(api.projects.list, {}) as Project[] | undefined;
+  const createProject = useMutation(api.projects.create);
+  const updateProject = useMutation(api.projects.update);
+  const removeProject = useMutation(api.projects.remove);
+  const reorderProjects = useMutation(api.projects.reorder);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
-  const [projectImages, setProjectImages] = useState<string[]>([]);
+  // Track image picker selections as { id, url } pairs to render thumbnails locally
+  const [projectImages, setProjectImages] = useState<{ id: Id<"imageMetadata">; url: string | null }[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    fetchProjects();
-  }, []);
+  const projects = projectsData ?? [];
+  const isLoading = projectsData === undefined;
 
-  const fetchProjects = async () => {
-    try {
-      const { data, error } = await supabase
-        .schema('app_portfolio')
-        .from('projects')
-        .select('*')
-        .order('order_index', { ascending: true, nullsFirst: false });
-
-      if (error) throw error;
-
-      // Se não houver order_index, inicializar com base no id
-      const projectsWithOrder = (data || []).map((project, index) => ({
-        ...project,
-        order_index: project.order_index ?? index
-      }));
-
-      setProjects(projectsWithOrder);
-    } catch (error) {
-      console.error('Error fetching projects:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const getProjectField = (project: Project, field: "title" | "description" | "longDescription"): string => {
+    const translationsKey = `${field}Translations` as const;
+    const translations = (project as any)[translationsKey];
+    if (translations?.ptBR) return translations.ptBR;
+    return ((project as any)[field] as string) || '';
   };
 
   const handleOpenDialog = (project: Project | null = null) => {
     setEditingProject(project);
-    setProjectImages(project ? project.images : []);
-    setSelectedTags(project ? project.tags : []);
-    setIsDialogOpen(true);
-  };
-
-  // Helper para extrair valor do JSONB ou valor direto (fallback para compatibilidade)
-  const getProjectField = (project: any, field: string): string => {
-    const translationsField = `${field}_translations`;
-    if (project[translationsField] && project[translationsField]['pt-BR']) {
-      return project[translationsField]['pt-BR'];
+    if (project) {
+      const imgs = project.images
+        .filter((img) => !!img)
+        .map((img) => ({ id: img._id, url: img.url }));
+      setProjectImages(imgs);
+      setSelectedTags(project.tags || []);
+    } else {
+      setProjectImages([]);
+      setSelectedTags([]);
     }
-    return project[field] || '';
+    setIsDialogOpen(true);
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -194,77 +198,38 @@ export default function AdminProjects() {
     const longDescriptionPT = formData.get('long_description') as string || '';
 
     try {
-      // Traduz para inglês usando a Edge Function
-      const textsToTranslate = [titlePT, descriptionPT];
-      if (longDescriptionPT) {
-        textsToTranslate.push(longDescriptionPT);
-      }
-
-      const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
-        body: {
-          texts: textsToTranslate,
-          source: 'pt',
-          target: 'en',
-        },
-      });
-
-      if (translateError) {
-        console.error('Translation error:', translateError);
-        toast.error('Erro ao traduzir. Salvando apenas em português.');
-      }
-
-      const translatedTexts = translateData?.translatedTexts || textsToTranslate;
-      const titleEN = translatedTexts[0] || titlePT;
-      const descriptionEN = translatedTexts[1] || descriptionPT;
-      const longDescriptionEN = longDescriptionPT ? (translatedTexts[2] || longDescriptionPT) : '';
-
-      const projectData: any = {
+      const imageIds = projectImages.map((i) => i.id);
+      const baseData = {
         title: titlePT,
+        titleTranslations: { ptBR: titlePT, enUS: titlePT },
         description: descriptionPT,
-        long_description: longDescriptionPT || null,
-        title_translations: {
-          'pt-BR': titlePT,
-          'en-US': titleEN,
-        },
-        description_translations: {
-          'pt-BR': descriptionPT,
-          'en-US': descriptionEN,
-        },
-        long_description_translations: longDescriptionPT ? {
-          'pt-BR': longDescriptionPT,
-          'en-US': longDescriptionEN,
-        } : null,
+        descriptionTranslations: { ptBR: descriptionPT, enUS: descriptionPT },
+        longDescription: longDescriptionPT || undefined,
+        longDescriptionTranslations: longDescriptionPT
+          ? { ptBR: longDescriptionPT, enUS: longDescriptionPT }
+          : undefined,
         tags: selectedTags,
-        images: projectImages,
-        demo_link: formData.get('demo') as string || null,
-        github_link: formData.get('github') as string || null,
+        imageIds,
+        demoLink: (formData.get('demo') as string) || undefined,
+        githubLink: (formData.get('github') as string) || undefined,
       };
 
       if (editingProject) {
-        const { error } = await supabase
-          .schema('app_portfolio')
-          .from('projects')
-          .update(projectData)
-          .eq('id', editingProject.id);
-        if (error) throw error;
+        await updateProject({
+          id: editingProject._id,
+          ...baseData,
+          orderIndex: editingProject.orderIndex,
+        });
       } else {
-        // Ao criar novo projeto, adicionar no final da lista
         const maxOrder = projects.length > 0
-          ? Math.max(...projects.map(p => p.order_index ?? 0))
+          ? Math.max(...projects.map(p => p.orderIndex ?? 0))
           : -1;
-        projectData.order_index = maxOrder + 1;
-
-        // Garantir que o id não seja incluído para que o banco gere automaticamente
-        const { id, ...insertData } = projectData;
-        
-        const { error } = await supabase
-          .schema('app_portfolio')
-          .from('projects')
-          .insert([insertData]);
-        if (error) throw error;
+        await createProject({
+          ...baseData,
+          orderIndex: maxOrder + 1,
+        });
       }
 
-      await fetchProjects();
       setIsDialogOpen(false);
       setEditingProject(null);
       setProjectImages([]);
@@ -272,44 +237,27 @@ export default function AdminProjects() {
       toast.success(editingProject ? 'Projeto atualizado com sucesso' : 'Projeto criado com sucesso');
     } catch (error: any) {
       console.error('Error saving project:', error);
-      
-      // Verificar se é erro de chave duplicada (sequência desincronizada)
-      if (error?.code === '23505' || error?.message?.includes('duplicate key')) {
-        toast.error(
-          'Erro: ID duplicado. A sequência do banco de dados precisa ser sincronizada. ' +
-          'Execute no SQL Editor do Supabase: SELECT setval(\'app_portfolio.projects_id_seq\', (SELECT COALESCE(MAX(id), 0) + 1 FROM app_portfolio.projects));',
-          { duration: 10000 }
-        );
-      } else {
-        toast.error(error?.message || 'Erro ao salvar projeto');
-      }
+      toast.error(error?.message || 'Erro ao salvar projeto');
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const handleDelete = async (id: Id<"projects">) => {
     if (confirm("Tem certeza que deseja excluir este projeto?")) {
       try {
-        const { error } = await supabase
-          .schema('app_portfolio')
-          .from('projects')
-          .delete()
-          .eq('id', id);
-
-        if (error) throw error;
-        setProjects(projects.filter(p => p.id !== id));
+        await removeProject({ id });
+        toast.success("Projeto excluído com sucesso");
       } catch (error) {
         console.error('Error deleting project:', error);
-        alert('Erro ao excluir projeto');
+        toast.error('Erro ao excluir projeto');
       }
     }
   };
 
   const addImage = (url: string | string[]) => {
-    if (Array.isArray(url)) {
-      setProjectImages([...projectImages, ...url]);
-    } else {
-      setProjectImages([...projectImages, url]);
-    }
+    // ImagePicker passes Convex image IDs (as strings) per migration plan.
+    const incoming = Array.isArray(url) ? url : [url];
+    const additions = incoming.map((id) => ({ id: id as Id<"imageMetadata">, url: null }));
+    setProjectImages([...projectImages, ...additions]);
   };
 
   const removeImage = (index: number) => {
@@ -318,73 +266,39 @@ export default function AdminProjects() {
 
   const handleImageDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-
     if (over && active.id !== over.id) {
       const oldIndex = active.id as number;
       const newIndex = over.id as number;
-
       setProjectImages(arrayMove(projectImages, oldIndex, newIndex));
     }
   };
 
   const imageSensors = useSensors(
     useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const sensors = useSensors(
     useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event;
-
     if (over && active.id !== over.id) {
-      const oldIndex = projects.findIndex((project) => project.id === active.id);
-      const newIndex = projects.findIndex((project) => project.id === over.id);
-
+      const oldIndex = projects.findIndex((project) => project._id === active.id);
+      const newIndex = projects.findIndex((project) => project._id === over.id);
       if (oldIndex === -1 || newIndex === -1) return;
 
       const newOrder = arrayMove(projects, oldIndex, newIndex);
+      const items = newOrder.map((project, index) => ({ id: project._id, orderIndex: index }));
 
-      // Update order_index in the projects array
-      const updatedOrder = newOrder.map((project, index) => ({
-        ...project,
-        order_index: index
-      }));
-
-      // Optimistic update
-      setProjects(updatedOrder);
-
-      // Update in DB
       try {
-        const updatePromises = updatedOrder.map((project, index) =>
-          supabase
-            .schema("app_portfolio")
-            .from("projects")
-            .update({ order_index: index })
-            .eq("id", project.id)
-        );
-
-        const results = await Promise.all(updatePromises);
-        const hasError = results.some(result => result.error);
-
-        if (hasError) {
-          const errors = results.filter(r => r.error).map(r => r.error);
-          console.error("Error reordering projects:", errors);
-          throw new Error("Erro ao atualizar ordem dos projetos");
-        }
-
+        await reorderProjects({ items });
         toast.success("Ordem atualizada com sucesso");
       } catch (error) {
         console.error("Error reordering projects:", error);
         toast.error("Erro ao reordenar projetos");
-        fetchProjects(); // Revert on error
       }
     }
   };
@@ -426,7 +340,7 @@ export default function AdminProjects() {
 
               <div className="space-y-2">
                 <Label htmlFor="long_description" className="text-white">Descrição Longa</Label>
-                <Textarea name="long_description" id="long_description" defaultValue={editingProject ? getProjectField(editingProject, 'long_description') : ''} className="bg-white/5 border-white/10 text-white h-32" />
+                <Textarea name="long_description" id="long_description" defaultValue={editingProject ? getProjectField(editingProject, 'longDescription') : ''} className="bg-white/5 border-white/10 text-white h-32" />
               </div>
 
               <div className="space-y-2">
@@ -443,7 +357,7 @@ export default function AdminProjects() {
                     <div className="grid grid-cols-3 gap-4 mb-4">
                       {projectImages.map((img, index) => (
                         <SortableImageItem
-                          key={img}
+                          key={`${img.id}-${index}`}
                           img={img}
                           index={index}
                           onRemove={removeImage}
@@ -466,11 +380,11 @@ export default function AdminProjects() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="demo" className="text-white">Link Demo</Label>
-                  <Input name="demo" id="demo" defaultValue={editingProject?.demo_link} placeholder="https://" className="bg-white/5 border-white/10 text-white" />
+                  <Input name="demo" id="demo" defaultValue={editingProject?.demoLink} placeholder="https://" className="bg-white/5 border-white/10 text-white" />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="github" className="text-white">Link GitHub</Label>
-                  <Input name="github" id="github" defaultValue={editingProject?.github_link} placeholder="https://" className="bg-white/5 border-white/10 text-white" />
+                  <Input name="github" id="github" defaultValue={editingProject?.githubLink} placeholder="https://" className="bg-white/5 border-white/10 text-white" />
                 </div>
               </div>
 
@@ -491,13 +405,13 @@ export default function AdminProjects() {
             onDragEnd={handleDragEnd}
           >
             <SortableContext
-              items={projects.map(p => p.id)}
+              items={projects.map(p => p._id)}
               strategy={rectSortingStrategy}
             >
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {projects.map((project) => (
                   <SortableProjectCard
-                    key={project.id}
+                    key={project._id}
                     project={project}
                     onEdit={handleOpenDialog}
                     onDelete={handleDelete}

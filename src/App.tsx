@@ -34,6 +34,7 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Layout } from "./components/Layout";
 import { PublicRoute } from "./components/PublicRoute";
 import { QueryProvider } from "./providers/QueryProvider";
+import { ConvexClientProvider } from "./providers/ConvexClientProvider";
 
 function Router() {
   const [location] = useLocation();
@@ -174,20 +175,22 @@ function App() {
   return (
     <HelmetProvider>
       <ErrorBoundary>
-        <QueryProvider>
-          <AuthProvider>
-            <I18nProvider>
-              <ThemeProvider defaultTheme="dark">
-                <TooltipProvider>
-                  <Toaster />
-                  <Router />
-                  <Analytics />
-                  <SpeedInsights />
-                </TooltipProvider>
-              </ThemeProvider>
-            </I18nProvider>
-          </AuthProvider>
-        </QueryProvider>
+        <ConvexClientProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <I18nProvider>
+                <ThemeProvider defaultTheme="dark">
+                  <TooltipProvider>
+                    <Toaster />
+                    <Router />
+                    <Analytics />
+                    <SpeedInsights />
+                  </TooltipProvider>
+                </ThemeProvider>
+              </I18nProvider>
+            </AuthProvider>
+          </QueryProvider>
+        </ConvexClientProvider>
       </ErrorBoundary>
     </HelmetProvider>
   );

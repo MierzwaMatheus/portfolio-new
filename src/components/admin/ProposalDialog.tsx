@@ -5,8 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { supabase } from "@/lib/supabase";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { X } from "lucide-react";
+import { toast } from "sonner";
+import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 
 interface ProposalDialogProps {
     open: boolean;
@@ -16,6 +20,12 @@ interface ProposalDialogProps {
 }
 
 export function ProposalDialog({ open, onOpenChange, proposal, onSave }: ProposalDialogProps) {
+    const proposalsData = useQuery(api.proposals.listAdmin, { filter: "all" });
+    const proposals = proposalsData ?? [];
+
+    const createProposal = useMutation(api.proposals.create);
+    const updateProposal = useMutation(api.proposals.update);
+
     // Form State
     const [title, setTitle] = useState("");
     const [clientName, setClientName] = useState("");
@@ -45,17 +55,16 @@ export function ProposalDialog({ open, onOpenChange, proposal, onSave }: Proposa
         if (open) {
             if (proposal) {
                 setTitle(proposal.title || "");
-                setClientName(proposal.client_name || "");
+                setClientName(proposal.clientName || "");
                 setSlug(proposal.slug || "");
-                setCreatedAt(new Date(proposal.created_at).toISOString().split('T')[0]);
+                setCreatedAt(new Date(proposal.createdAt).toISOString().split('T')[0]);
                 setObjective(proposal.objective || "");
-                setDeliveryDate(proposal.delivery_date || "");
-                setInvestmentValue(proposal.investment_value?.toString().replace('.', ',') || "");
+                setDeliveryDate(proposal.deliveryDate || "");
+                setInvestmentValue(proposal.investmentValue?.toString().replace('.', ',') || "");
                 setScopeItems(Array.isArray(proposal.scope) ? proposal.scope : []);
                 setTimelineItems(Array.isArray(proposal.timeline) ? proposal.timeline : []);
 
-                // Carregar condições
-                const savedConditions = proposal.conditions || [];
+                const savedConditions: string[] = proposal.conditions || [];
                 const defaultConditions = [
                     "Revisões: até 2 rodadas incluídas por etapa. Alterações fora do escopo serão orçadas.",
                     "Garantia: correções de falhas por até 30 dias após entrega.",
@@ -68,11 +77,8 @@ export function ProposalDialog({ open, onOpenChange, proposal, onSave }: Proposa
                     checked: savedConditions.includes(defaultText)
                 })).concat(
                     savedConditions
-                        .filter((sc: string) => !defaultConditions.includes(sc))
-                        .map((customText: string) => ({
-                            text: customText,
-                            checked: true
-                        }))
+                        .filter((sc) => !defaultConditions.includes(sc))
+                        .map((customText) => ({ text: customText, checked: true }))
                 ));
             } else {
                 resetForm();
@@ -99,77 +105,59 @@ export function ProposalDialog({ open, onOpenChange, proposal, onSave }: Proposa
         ]);
     };
 
-    const checkSlugAvailability = async (slugToCheck: string) => {
+    const checkSlugAvailability = (slugToCheck: string) => {
         if (!slugToCheck) return;
-        let query = supabase
-            .schema('app_portfolio')
-            .from('proposals')
-            .select('id')
-            .eq('slug', slugToCheck);
-
-        if (proposal) {
-            query = query.neq('id', proposal.id);
-        }
-
-        const { data } = await query.maybeSingle();
-
-        if (data) {
-            setSlugError("Este slug já está em uso.");
-        } else {
-            setSlugError("");
-        }
+        const existing = proposals.find((p: any) =>
+            p.slug === slugToCheck && (!proposal || p._id !== proposal._id)
+        );
+        setSlugError(existing ? "Este slug já está em uso." : "");
     };
 
     const handleCreateProposal = async () => {
         if (slugError) return alert("Corrija o erro do slug antes de continuar.");
         if (!clientName || !slug) return alert("Preencha os campos obrigatórios.");
 
-        const selectedConditions = conditions
-            .filter(c => c.checked)
-            .map(c => c.text);
+        const selectedConditions = conditions.filter(c => c.checked).map(c => c.text);
+        const investment = parseFloat(investmentValue.replace(',', '.')) || 0;
 
-        const payload = {
-            title: title || null,
-            client_name: clientName,
-            slug,
-            created_at: new Date(createdAt).toISOString(),
-            objective,
-            scope: scopeItems,
-            timeline: timelineItems,
-            delivery_date: deliveryDate || null,
-            investment_value: parseFloat(investmentValue.replace(',', '.')) || 0,
-            conditions: selectedConditions
-        };
-
-        if (proposal) {
-            const { error } = await supabase
-                .schema('app_portfolio')
-                .from('proposals')
-                .update(payload)
-                .eq('id', proposal.id);
-
-            if (error) {
-                console.error("Error updating proposal:", error);
-                alert("Erro ao atualizar proposta.");
+        try {
+            if (proposal) {
+                await updateProposal({
+                    id: proposal._id as Id<"proposals">,
+                    clientName,
+                    title: title || "",
+                    objective,
+                    scope: scopeItems,
+                    timeline: timelineItems,
+                    deliveryDate: deliveryDate || "",
+                    investmentValue: investment,
+                    paymentMethods: proposal.paymentMethods ?? [],
+                    conditions: selectedConditions,
+                });
+                toast.success("Proposta atualizada com sucesso!");
+                onSave();
+                onOpenChange(false);
             } else {
-                alert("Proposta atualizada com sucesso!");
+                await createProposal({
+                    clientName,
+                    slug,
+                    title: title || "",
+                    objective,
+                    scope: scopeItems,
+                    timeline: timelineItems,
+                    deliveryDate: deliveryDate || "",
+                    investmentValue: investment,
+                    paymentMethods: [],
+                    conditions: selectedConditions,
+                    rescissionPolicy: DEFAULT_RESCISION_POLICY,
+                });
+                toast.success("Proposta criada com sucesso!");
                 onSave();
                 onOpenChange(false);
             }
-        } else {
-            const { error } = await supabase
-                .schema('app_portfolio')
-                .from('proposals')
-                .insert(payload);
-
-            if (error) {
-                console.error("Error creating proposal:", error);
-                alert("Erro ao criar proposta.");
-            } else {
-                alert("Proposta criada com sucesso!");
-                onSave();
-                onOpenChange(false);
-            }
+        } catch (error: any) {
+            console.error("Error saving proposal:", error);
+            toast.error(error?.message || "Erro ao salvar proposta.");
         }
     };
 

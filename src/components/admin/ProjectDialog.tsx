@@ -5,22 +5,33 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { supabase } from "@/lib/supabase";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { ProjectTagsInput } from "@/components/admin/ProjectTagsInput";
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { toast } from "sonner";
 import { X } from "lucide-react";
 
+interface ProjectImage {
+    _id: Id<"imageMetadata">;
+    url: string | null;
+}
+
 interface Project {
-    id: number;
+    _id: Id<"projects">;
     title: string;
+    titleTranslations?: { ptBR: string; enUS?: string };
     description: string;
-    long_description: string;
+    descriptionTranslations?: { ptBR: string; enUS?: string };
+    longDescription?: string;
+    longDescriptionTranslations?: { ptBR: string; enUS?: string };
     tags: string[];
-    images: string[];
-    demo_link: string;
-    github_link: string;
-    order_index?: number;
+    imageIds: Id<"imageMetadata">[];
+    images: ProjectImage[];
+    demoLink?: string;
+    githubLink?: string;
+    orderIndex: number;
 }
 
 interface ProjectDialogProps {
@@ -31,13 +42,24 @@ interface ProjectDialogProps {
 }
 
 export function ProjectDialog({ open, onOpenChange, project, onSave }: ProjectDialogProps) {
-    const [projectImages, setProjectImages] = useState<string[]>([]);
+    const allProjects = useQuery(api.projects.list, {}) as Project[] | undefined;
+    const createProject = useMutation(api.projects.create);
+    const updateProject = useMutation(api.projects.update);
+
+    const [projectImages, setProjectImages] = useState<{ id: Id<"imageMetadata">; url: string | null }[]>([]);
     const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
     useEffect(() => {
         if (open) {
-            setProjectImages(project ? project.images : []);
-            setSelectedTags(project ? project.tags : []);
+            if (project) {
+                setProjectImages(
+                    (project.images || []).map((img) => ({ id: img._id, url: img.url }))
+                );
+                setSelectedTags(project.tags || []);
+            } else {
+                setProjectImages([]);
+                setSelectedTags([]);
+            }
         }
     }, [open, project]);
 
@@ -51,80 +73,37 @@ export function ProjectDialog({ open, onOpenChange, project, onSave }: ProjectDi
         const longDescriptionPT = formData.get('long_description') as string || '';
 
         try {
-            // Traduz para inglês usando a Edge Function
-            const textsToTranslate = [titlePT, descriptionPT];
-            if (longDescriptionPT) {
-                textsToTranslate.push(longDescriptionPT);
-            }
-
-            const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
-                body: {
-                    texts: textsToTranslate,
-                    source: 'pt',
-                    target: 'en',
-                },
-            });
-
-            if (translateError) {
-                console.error('Translation error:', translateError);
-                toast.error('Erro ao traduzir. Salvando apenas em português.');
-            }
-
-            const translatedTexts = translateData?.translatedTexts || textsToTranslate;
-            const titleEN = translatedTexts[0] || titlePT;
-            const descriptionEN = translatedTexts[1] || descriptionPT;
-            const longDescriptionEN = longDescriptionPT ? (translatedTexts[2] || longDescriptionPT) : '';
-
-            const projectData: any = {
+            const imageIds = projectImages.map((i) => i.id);
+            const baseData = {
                 title: titlePT,
+                titleTranslations: { ptBR: titlePT, enUS: titlePT },
                 description: descriptionPT,
-                long_description: longDescriptionPT || null,
-                title_translations: {
-                    'pt-BR': titlePT,
-                    'en-US': titleEN,
-                },
-                description_translations: {
-                    'pt-BR': descriptionPT,
-                    'en-US': descriptionEN,
-                },
-                long_description_translations: longDescriptionPT ? {
-                    'pt-BR': longDescriptionPT,
-                    'en-US': longDescriptionEN,
-                } : null,
+                descriptionTranslations: { ptBR: descriptionPT, enUS: descriptionPT },
+                longDescription: longDescriptionPT || undefined,
+                longDescriptionTranslations: longDescriptionPT
+                    ? { ptBR: longDescriptionPT, enUS: longDescriptionPT }
+                    : undefined,
                 tags: selectedTags,
-                images: projectImages,
-                demo_link: formData.get('demo') as string || null,
-                github_link: formData.get('github') as string || null,
+                imageIds,
+                demoLink: (formData.get('demo') as string) || undefined,
+                githubLink: (formData.get('github') as string) || undefined,
             };
 
             if (project) {
-                const { error } = await supabase
-                    .schema('app_portfolio')
-                    .from('projects')
-                    .update(projectData)
-                    .eq('id', project.id);
-                if (error) throw error;
+                await updateProject({
+                    id: project._id,
+                    ...baseData,
+                    orderIndex: project.orderIndex,
+                });
             } else {
-                // Fetch current max order to append
-                const { data: projects } = await supabase
-                    .schema('app_portfolio')
-                    .from('projects')
-                    .select('order_index');
-
-                const maxOrder = projects && projects.length > 0
-                    ? Math.max(...projects.map((p: any) => p.order_index ?? 0))
+                const list = allProjects ?? [];
+                const maxOrder = list.length > 0
+                    ? Math.max(...list.map((p) => p.orderIndex ?? 0))
                     : -1;
-
-                projectData.order_index = maxOrder + 1;
-
-                // Garantir que o id não seja incluído para que o banco gere automaticamente
-                const { id, ...insertData } = projectData;
-
-                const { error } = await supabase
-                    .schema('app_portfolio')
-                    .from('projects')
-                    .insert([insertData]);
-                if (error) throw error;
+                await createProject({
+                    ...baseData,
+                    orderIndex: maxOrder + 1,
+                });
             }
 
             toast.success(project ? 'Projeto atualizado com sucesso' : 'Projeto criado com sucesso');
@@ -132,30 +111,25 @@ export function ProjectDialog({ open, onOpenChange, project, onSave }: ProjectDi
             onOpenChange(false);
         } catch (error: any) {
             console.error('Error saving project:', error);
-            
-            // Verificar se é erro de chave duplicada (sequência desincronizada)
-            if (error?.code === '23505' || error?.message?.includes('duplicate key')) {
-                toast.error(
-                    'Erro: ID duplicado. A sequência do banco de dados precisa ser sincronizada. ' +
-                    'Execute no SQL Editor do Supabase: SELECT setval(\'app_portfolio.projects_id_seq\', (SELECT COALESCE(MAX(id), 0) + 1 FROM app_portfolio.projects));',
-                    { duration: 10000 }
-                );
-            } else {
-                toast.error(error?.message || 'Erro ao salvar projeto');
-            }
+            toast.error(error?.message || 'Erro ao salvar projeto');
         }
     };
 
     const addImage = (url: string | string[]) => {
-        if (Array.isArray(url)) {
-            setProjectImages([...projectImages, ...url]);
-        } else {
-            setProjectImages([...projectImages, url]);
-        }
+        const incoming = Array.isArray(url) ? url : [url];
+        const additions = incoming.map((id) => ({ id: id as Id<"imageMetadata">, url: null }));
+        setProjectImages([...projectImages, ...additions]);
     };
 
     const removeImage = (index: number) => {
         setProjectImages(projectImages.filter((_, i) => i !== index));
+    };
+
+    const getField = (field: "title" | "description" | "longDescription"): string => {
+        if (!project) return '';
+        const t = (project as any)[`${field}Translations`];
+        if (t?.ptBR) return t.ptBR;
+        return ((project as any)[field] as string) || '';
     };
 
     return (
@@ -172,33 +146,33 @@ export function ProjectDialog({ open, onOpenChange, project, onSave }: ProjectDi
                 <form onSubmit={handleSave} className="space-y-6 mt-4">
                     <div className="space-y-2">
                         <Label htmlFor="title" className="text-white">Título</Label>
-                        <Input 
-                            name="title" 
-                            id="title" 
-                            defaultValue={project ? (project.title_translations?.['pt-BR'] || project.title || '') : ''} 
-                            className="bg-white/5 border-white/10 text-white" 
-                            required 
+                        <Input
+                            name="title"
+                            id="title"
+                            defaultValue={getField('title')}
+                            className="bg-white/5 border-white/10 text-white"
+                            required
                         />
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="description" className="text-white">Descrição Curta</Label>
-                        <Textarea 
-                            name="description" 
-                            id="description" 
-                            defaultValue={project ? (project.description_translations?.['pt-BR'] || project.description || '') : ''} 
-                            className="bg-white/5 border-white/10 text-white" 
-                            required 
+                        <Textarea
+                            name="description"
+                            id="description"
+                            defaultValue={getField('description')}
+                            className="bg-white/5 border-white/10 text-white"
+                            required
                         />
                     </div>
 
                     <div className="space-y-2">
                         <Label htmlFor="long_description" className="text-white">Descrição Longa</Label>
-                        <Textarea 
-                            name="long_description" 
-                            id="long_description" 
-                            defaultValue={project ? (project.long_description_translations?.['pt-BR'] || project.long_description || '') : ''} 
-                            className="bg-white/5 border-white/10 text-white h-32" 
+                        <Textarea
+                            name="long_description"
+                            id="long_description"
+                            defaultValue={getField('longDescription')}
+                            className="bg-white/5 border-white/10 text-white h-32"
                         />
                     </div>
 
@@ -206,8 +180,12 @@ export function ProjectDialog({ open, onOpenChange, project, onSave }: ProjectDi
                         <Label className="text-white">Galeria de Imagens</Label>
                         <div className="grid grid-cols-3 gap-4 mb-4">
                             {projectImages.map((img, index) => (
-                                <div key={index} className="relative group aspect-video rounded-md overflow-hidden border border-white/10">
-                                    <img src={img} alt={`Project ${index + 1}`} className="w-full h-full object-cover" />
+                                <div key={`${img.id}-${index}`} className="relative group aspect-video rounded-md overflow-hidden border border-white/10">
+                                    {img.url ? (
+                                        <img src={img.url} alt={`Project ${index + 1}`} className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="w-full h-full bg-white/5" />
+                                    )}
                                     <button
                                         type="button"
                                         onClick={() => removeImage(index)}
@@ -237,11 +215,11 @@ export function ProjectDialog({ open, onOpenChange, project, onSave }: ProjectDi
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="demo" className="text-white">Link Demo</Label>
-                            <Input name="demo" id="demo" defaultValue={project?.demo_link} placeholder="https://" className="bg-white/5 border-white/10 text-white" />
+                            <Input name="demo" id="demo" defaultValue={project?.demoLink} placeholder="https://" className="bg-white/5 border-white/10 text-white" />
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="github" className="text-white">Link GitHub</Label>
-                            <Input name="github" id="github" defaultValue={project?.github_link} placeholder="https://" className="bg-white/5 border-white/10 text-white" />
+                            <Input name="github" id="github" defaultValue={project?.githubLink} placeholder="https://" className="bg-white/5 border-white/10 text-white" />
                         </div>
                     </div>
 

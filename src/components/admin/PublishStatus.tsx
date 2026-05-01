@@ -1,68 +1,36 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { supabase } from "@/lib/supabase";
+import { useState } from "react";
+import { useQuery, useAction } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, AlertCircle, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 
 export function PublishStatus() {
-  const { data: status, isLoading } = useQuery({
-    queryKey: ["deploy-status"],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_deploy_status").single();
+  const status = useQuery(api.publishStatus.get);
+  const triggerDeploy = useAction(api.deploy.trigger);
+  const [isPending, setIsPending] = useState(false);
 
-      if (error) {
-        console.error("❌ Error fetching deploy status:", error);
-        throw error;
-      }
-
-      console.log("✅ Deploy status fetched:", data);
-      return data;
-    },
-    refetchInterval: 30000,
-  });
-
-  const triggerDeploy = useMutation({
-    mutationFn: async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session?.access_token) throw new Error("Not authenticated");
-
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/trigger-deploy`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to trigger deploy");
-      }
-
-      return response.json();
-    },
-    onSuccess: data => {
-      if (data.skipped) {
-        toast.info(data.message);
+  const handleTrigger = async () => {
+    setIsPending(true);
+    try {
+      const result = await triggerDeploy({});
+      if ((result as any)?.skipped) {
+        toast.info((result as any).message ?? "Deploy ignorado");
       } else {
         toast.success("Deploy iniciado com sucesso!");
       }
-    },
-    onError: error => {
-      toast.error(`Erro ao iniciar deploy: ${error.message}`);
-    },
-  });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      toast.error(`Erro ao iniciar deploy: ${message}`);
+    } finally {
+      setIsPending(false);
+    }
+  };
 
-  const formatTimeAgo = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  const formatTimeAgo = (timestamp: number) => {
+    const now = Date.now();
+    const seconds = Math.floor((now - timestamp) / 1000);
 
     const intervals = [
       { label: "ano", seconds: 31536000 },
@@ -82,31 +50,20 @@ export function PublishStatus() {
     return "agora mesmo";
   };
 
-  if (isLoading) return <Badge variant="secondary">Carregando...</Badge>;
+  if (status === undefined) return <Badge variant="secondary">Carregando...</Badge>;
 
-  console.log("🔍 PublishStatus render:", {
-    isLoading,
-    hasStatus: !!status,
-    pendingChanges: status?.pending_changes,
-    status,
-  });
-
-  if (status?.pending_changes) {
+  if (status?.pendingChanges) {
     return (
       <div className="flex items-center gap-3">
         <Badge variant="destructive" className="gap-1 animate-pulse">
           <AlertCircle className="w-3 h-3" />
           Alterações Não Publicadas
         </Badge>
-        <Button
-          size="sm"
-          onClick={() => triggerDeploy.mutate()}
-          disabled={triggerDeploy.isPending}
-        >
+        <Button size="sm" onClick={handleTrigger} disabled={isPending}>
           <RefreshCw
-            className={`w-3 h-3 mr-1 ${triggerDeploy.isPending ? "animate-spin" : ""}`}
+            className={`w-3 h-3 mr-1 ${isPending ? "animate-spin" : ""}`}
           />
-          {triggerDeploy.isPending ? "Publicando..." : "Publicar Agora"}
+          {isPending ? "Publicando..." : "Publicar Agora"}
         </Button>
       </div>
     );
@@ -116,8 +73,8 @@ export function PublishStatus() {
     <Badge variant="secondary" className="gap-1">
       <CheckCircle className="w-3 h-3" />
       Publicado{" "}
-      {status?.last_published_at
-        ? formatTimeAgo(status.last_published_at)
+      {status?.lastPublishedAt
+        ? formatTimeAgo(status.lastPublishedAt)
         : "recentemente"}
     </Badge>
   );

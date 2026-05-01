@@ -10,17 +10,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Copy, Trash2, Users, FileText, Receipt } from "lucide-react";
 import { toast } from "sonner";
-import { HttpAsaasApi } from "@/services/asaas/HttpAsaasApi";
+import { ConvexAsaasApi } from "@/services/asaas/ConvexAsaasApi";
 import { CreateCustomerUseCase } from "@/usecases/asaas/CreateCustomerUseCase";
 import { ListCustomersUseCase } from "@/usecases/asaas/ListCustomersUseCase";
 import { CreateChargeUseCase } from "@/usecases/asaas/CreateChargeUseCase";
 import { ListChargesUseCase } from "@/usecases/asaas/ListChargesUseCase";
 import { Customer, CreateCustomerInput, Charge, CreateChargeInput } from "@/types/asaas";
 import { CreateCheckoutInput } from "@/types/checkout";
-import { supabase } from "@/lib/supabase";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 
 export default function PaymentLinks() {
-  const asaasApi = new HttpAsaasApi();
+  const asaasApi = new ConvexAsaasApi();
   const createCustomerUseCase = new CreateCustomerUseCase(asaasApi);
   const listCustomersUseCase = new ListCustomersUseCase(asaasApi);
   const createChargeUseCase = new CreateChargeUseCase(asaasApi);
@@ -62,12 +64,14 @@ export default function PaymentLinks() {
     description: "",
   });
   const [checkoutLink, setCheckoutLink] = useState<string>("");
-  const [checkouts, setCheckouts] = useState<any[]>([]);
+
+  const checkoutsData = useQuery(api.checkouts.listAdmin, { limit: 100 });
+  const checkouts = checkoutsData ?? [];
+  const createCheckout = useMutation(api.checkouts.create);
 
   useEffect(() => {
     fetchCustomers();
     fetchCharges();
-    fetchCheckouts();
   }, []);
 
   const fetchCustomers = async () => {
@@ -228,28 +232,20 @@ export default function PaymentLinks() {
       }
 
       const uniqueLink = generateUniqueLink();
-      const checkoutData = {
-        unique_link: uniqueLink,
-        customer_id: checkoutForm.customer_id,
-        customer_name: customer.name,
-        customer_email: customer.email,
-        customer_cpf_cnpj: customer.cpfCnpj,
-        customer_mobile_phone: customer.mobilePhone,
+
+      await createCheckout({
+        uniqueLink,
+        customerName: customer.name,
+        customerEmail: customer.email ?? "",
+        customerCpfCnpj: customer.cpfCnpj ?? "",
+        customerMobilePhone: customer.mobilePhone || undefined,
+        customerCompany: customer.company || undefined,
+        customerPhone: (customer as any).phone || undefined,
         value: checkoutForm.value,
-        due_date: checkoutForm.due_date,
-        description: checkoutForm.description || null,
-        status: 'pending',
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-      };
-
-      const { error } = await supabase
-        .schema('app_portfolio')
-        .from('checkouts')
-        .insert(checkoutData)
-        .select()
-        .single();
-
-      if (error) throw error;
+        description: checkoutForm.description || undefined,
+        dueDate: checkoutForm.due_date,
+        expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+      });
 
       const link = `${window.location.origin}/checkout/${uniqueLink}`;
       setCheckoutLink(link);
@@ -261,7 +257,6 @@ export default function PaymentLinks() {
         due_date: "",
         description: "",
       });
-      await fetchCheckouts();
     } catch (error: any) {
       console.error("Error creating checkout:", error);
       toast.error(error.message || "Erro ao criar checkout");
@@ -277,21 +272,6 @@ export default function PaymentLinks() {
     return result;
   }
 
-  const fetchCheckouts = async () => {
-    try {
-      const { data, error } = await supabase
-        .schema('app_portfolio')
-        .from('checkouts')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setCheckouts(data || []);
-    } catch (error) {
-      console.error("Error fetching checkouts:", error);
-      toast.error("Erro ao carregar checkouts");
-    }
-  };
 
   return (
     <AdminLayout>
@@ -429,20 +409,20 @@ export default function PaymentLinks() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {checkouts.map((checkout) => (
+                    {checkouts.map((checkout: any) => (
                       <div
-                        key={checkout.id}
+                        key={checkout._id}
                         className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors"
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2 flex-wrap">
                             <span className="font-medium text-white">
-                              {checkout.customer_name}
+                              {checkout.customerName}
                             </span>
                             {getCheckoutStatusBadge(checkout.status)}
-                            {checkout.payment_method && (
+                            {checkout.paymentMethod && (
                               <Badge variant="outline" className="border-white/20">
-                                {checkout.payment_method === 'pix' ? 'PIX' : checkout.payment_method === 'boleto' ? 'Boleto' : 'Cartão'}
+                                {checkout.paymentMethod === 'pix' ? 'PIX' : checkout.paymentMethod === 'boleto' ? 'Boleto' : 'Cartão'}
                               </Badge>
                             )}
                             <Badge variant="outline" className="border-neon-purple/50 text-neon-purple bg-neon-purple/10">
@@ -450,9 +430,9 @@ export default function PaymentLinks() {
                             </Badge>
                           </div>
                           <div className="flex items-center gap-4 text-sm text-gray-400">
-                            <span>CPF/CNPJ: {formatCpfCnpj(checkout.customer_cpf_cnpj)}</span>
-                            <span>Vencimento: {formatDate(checkout.due_date)}</span>
-                            <span>Link: {checkout.unique_link.substring(0, 8)}...</span>
+                            <span>CPF/CNPJ: {formatCpfCnpj(checkout.customerCpfCnpj)}</span>
+                            <span>Vencimento: {formatDate(checkout.dueDate)}</span>
+                            <span>Link: {checkout.uniqueLink.substring(0, 8)}...</span>
                           </div>
                         </div>
                         <div className="flex gap-2 ml-4 shrink-0">
@@ -460,7 +440,7 @@ export default function PaymentLinks() {
                             size="sm"
                             variant="ghost"
                             onClick={() => {
-                              const link = `${window.location.origin}/checkout/${checkout.unique_link}`;
+                              const link = `${window.location.origin}/checkout/${checkout.uniqueLink}`;
                               navigator.clipboard.writeText(link);
                               toast.success("Link copiado!");
                             }}
@@ -471,7 +451,7 @@ export default function PaymentLinks() {
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => window.open(`${window.location.origin}/checkout/${checkout.unique_link}`, "_blank")}
+                            onClick={() => window.open(`${window.location.origin}/checkout/${checkout.uniqueLink}`, "_blank")}
                             title="Abrir checkout"
                           >
                             <FileText className="w-4 h-4" />

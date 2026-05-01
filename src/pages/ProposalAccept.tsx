@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { CheckCircle2, AlertTriangle, FileText, Scale, ChevronDown } from "lucide-react";
@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { supabase } from "@/lib/supabase";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 import ReactMarkdown from "react-markdown";
@@ -17,14 +18,31 @@ import { ContractModal } from "@/components/ContractModal";
 import { generateContractContent } from "@/utils/contractGenerator";
 import jsPDF from "jspdf";
 
+function toLegacyProposal(p: any) {
+  if (!p) return null;
+  return {
+    id: p._id,
+    client_name: p.clientName,
+    title: p.title,
+    objective: p.objective,
+    scope: p.scope,
+    timeline: p.timeline,
+    delivery_date: p.deliveryDate,
+    investment_value: p.investmentValue,
+    payment_methods: p.paymentMethods,
+    conditions: p.conditions,
+    rescision_policy: p.rescissionPolicy,
+    created_at: p.createdAt ? new Date(p.createdAt).toISOString() : undefined,
+    is_accepted: p.isAccepted,
+  };
+}
+
 export default function ProposalAccept() {
   const { slug } = useParams();
-  const [location, setLocation] = useLocation();
-  const [proposal, setProposal] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const slugStr = slug ?? "";
+  const [, setLocation] = useLocation();
   const [sessionToken, setSessionToken] = useState<string | null>(null);
-  
-  // Form data
+
   const [clientName, setClientName] = useState("");
   const [clientDocument, setClientDocument] = useState("");
   const [clientEmail, setClientEmail] = useState("");
@@ -32,140 +50,87 @@ export default function ProposalAccept() {
   const [clientDeclaration, setClientDeclaration] = useState("");
   const [hasConsent, setHasConsent] = useState(false);
   const [isRescisionOpen, setIsRescisionOpen] = useState(false);
-  
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [showContractModal, setShowContractModal] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
 
+  const acceptMutation = useMutation(api.proposals.accept);
+
+  // Recover token from sessionStorage
   useEffect(() => {
-    if (slug) {
-      fetchProposal();
+    if (slugStr) {
+      const stored = sessionStorage.getItem(`proposal_session_slug_${slugStr}`);
+      if (stored) setSessionToken(stored);
     }
-  }, [slug]);
+  }, [slugStr]);
 
-  const fetchProposal = async () => {
-    setIsLoading(true);
-    try {
-      const { data, error } = await supabase
-        .schema('app_portfolio')
-        .from('proposals')
-        .select('*')
-        .eq('slug', slug)
-        .single();
+  const queryResult = useQuery(
+    api.proposals.getPublic,
+    slugStr ? { slug: slugStr, token: sessionToken ?? undefined } : "skip" as any,
+  );
 
-      if (error) throw error;
+  const isLoading = queryResult === undefined;
+  const rawProposal: any = queryResult ?? null;
+  const proposal: any = useMemo(() => toLegacyProposal(rawProposal), [rawProposal]);
 
-      if (data) {
-        setProposal(data);
-        
-        // Tentar recuperar token da sessão do sessionStorage
-        const storedToken = sessionStorage.getItem(`proposal_session_${data.id}`);
-        if (storedToken) {
-          setSessionToken(storedToken);
-        } else {
-          // Se não tem token e não tem senha, criar sessão automaticamente
-          if (!data.password) {
-            await createSession(data.id);
-          } else {
-            // Se tem senha mas não tem token, redirecionar para página de visualização
-            toast.error("Acesso não autorizado. Por favor, acesse a proposta primeiro.");
-            setTimeout(() => {
-              setLocation(`/proposta/${slug}`);
-            }, 2000);
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching proposal:", error);
-      toast.error("Erro ao carregar proposta");
-    } finally {
-      setIsLoading(false);
+  // If proposal requires password and we have no token, redirect back to view
+  useEffect(() => {
+    if (!isLoading && rawProposal && rawProposal.requiresPassword && !sessionToken) {
+      toast.error("Acesso não autorizado. Por favor, acesse a proposta primeiro.");
+      const t = setTimeout(() => {
+        setLocation(`/proposta/${slugStr}`);
+      }, 2000);
+      return () => clearTimeout(t);
     }
-  };
-
-  const createSession = async (proposalId: string) => {
-    try {
-      // Obter IP e User-Agent do cliente
-      const ipAddress = await fetch('https://api.ipify.org?format=json')
-        .then(res => res.json())
-        .then(data => data.ip)
-        .catch(() => null);
-      
-      const userAgent = navigator.userAgent;
-
-      const { data, error } = await supabase.rpc('create_proposal_session', {
-        p_proposal_id: proposalId,
-        p_password: null,
-        p_ip_address: ipAddress || null,
-        p_user_agent: userAgent || null
-      });
-
-      if (error) {
-        throw error;
-      } else {
-        setSessionToken(data);
-        sessionStorage.setItem(`proposal_session_${proposalId}`, data);
-      }
-    } catch (error: any) {
-      console.error("Error creating session:", error);
-      toast.error(error.message || "Erro ao criar sessão");
-    }
-  };
+  }, [isLoading, rawProposal, sessionToken, slugStr, setLocation]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
   };
 
   const formatDocument = (doc: string) => {
-    // Remove caracteres não numéricos
     const numbers = doc.replace(/\D/g, '');
-    
-    // CPF: 11 dígitos
     if (numbers.length === 11) {
       return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
     }
-    
-    // CNPJ: 14 dígitos
     if (numbers.length === 14) {
       return numbers.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
     }
-    
     return doc;
   };
 
   const handleDocumentChange = (value: string) => {
-    const formatted = formatDocument(value);
-    setClientDocument(formatted);
+    setClientDocument(formatDocument(value));
   };
 
   const handleOpenContract = () => {
-    if (!sessionToken || !proposal) {
+    if (!rawProposal) {
+      toast.error("Proposta não disponível");
+      return;
+    }
+    // For non-password-protected proposals there's no token; accept will fail. We require token.
+    if (!sessionToken && rawProposal.requiresPassword) {
       toast.error("Sessão inválida");
       return;
     }
 
-    // Validações
     if (!clientName.trim()) {
       toast.error("Preencha o nome completo");
       return;
     }
-
     if (!clientDocument.trim()) {
       toast.error("Preencha o CPF ou CNPJ");
       return;
     }
-
     if (!clientEmail.trim() || !clientEmail.includes('@')) {
       toast.error("Preencha um e-mail válido");
       return;
     }
-
     if (!hasConsent) {
       toast.error("Você deve concordar com os termos para ler o contrato");
       return;
     }
 
-    // Abrir modal do contrato (sem aceitar ainda)
     setShowContractModal(true);
   };
 
@@ -180,7 +145,7 @@ export default function ProposalAccept() {
     );
   }
 
-  if (!proposal) {
+  if (!rawProposal) {
     return (
       <div className="min-h-screen bg-background text-white flex items-center justify-center">
         <div className="text-center">
@@ -192,8 +157,7 @@ export default function ProposalAccept() {
     );
   }
 
-  // Se não tem sessão válida, mostrar erro
-  if (!isLoading && !sessionToken) {
+  if (rawProposal.requiresPassword && !sessionToken) {
     return (
       <div className="min-h-screen bg-background text-white flex items-center justify-center p-4">
         <Card className="bg-card/50 backdrop-blur-sm border-white/10 max-w-md w-full">
@@ -203,8 +167,8 @@ export default function ProposalAccept() {
             <p className="text-gray-400 mb-4">
               Você precisa acessar a proposta primeiro antes de aceitá-la.
             </p>
-            <Button 
-              onClick={() => setLocation(`/proposta/${slug}`)}
+            <Button
+              onClick={() => setLocation(`/proposta/${slugStr}`)}
               className="bg-neon-purple hover:bg-neon-purple/90"
             >
               Voltar para Proposta
@@ -217,7 +181,6 @@ export default function ProposalAccept() {
 
   return (
     <div className="min-h-screen bg-background text-white font-sans">
-      {/* Background Elements */}
       <div className="fixed inset-0 z-0 pointer-events-none">
         <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-neon-purple/20 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-neon-green/10 rounded-full blur-[120px]" />
@@ -229,18 +192,16 @@ export default function ProposalAccept() {
           animate={{ opacity: 1, y: 0 }}
           className="space-y-8"
         >
-          {/* Header */}
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center gap-2 text-neon-purple mb-4">
               <Scale className="w-6 h-6" />
               <h1 className="text-3xl font-bold">Aceite Eletrônico de Proposta</h1>
             </div>
             <p className="text-xl text-gray-400">
-              Proposta: <span className="text-white font-semibold">{proposal.title || `Projeto para ${proposal.client_name}`}</span>
+              Proposta: <span className="text-white font-semibold">{rawProposal.title || `Projeto para ${rawProposal.clientName}`}</span>
             </p>
           </div>
 
-          {/* Cláusula de Aceite Eletrônico */}
           <Card className="bg-card/50 backdrop-blur-sm border-neon-purple/30">
             <CardContent className="p-6">
               <div className="flex items-start gap-3">
@@ -255,7 +216,6 @@ export default function ProposalAccept() {
             </CardContent>
           </Card>
 
-          {/* Dados do Cliente */}
           <Card className="bg-card/50 backdrop-blur-sm border-white/10">
             <CardContent className="p-6 space-y-6">
               <h2 className="text-xl font-bold flex items-center gap-2">
@@ -325,28 +285,26 @@ export default function ProposalAccept() {
             </CardContent>
           </Card>
 
-          {/* Resumo da Proposta */}
           <Card className="bg-card/50 backdrop-blur-sm border-white/10">
             <CardContent className="p-6 space-y-4">
               <h2 className="text-xl font-bold">Resumo da Proposta</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-400">Cliente:</span>
-                  <span className="ml-2 text-white">{proposal.client_name}</span>
+                  <span className="ml-2 text-white">{rawProposal.clientName}</span>
                 </div>
                 <div>
                   <span className="text-gray-400">Valor Total:</span>
-                  <span className="ml-2 text-white font-bold">{formatCurrency(proposal.investment_value)}</span>
+                  <span className="ml-2 text-white font-bold">{formatCurrency(rawProposal.investmentValue)}</span>
                 </div>
                 <div className="md:col-span-2">
                   <span className="text-gray-400">Objetivo:</span>
-                  <p className="mt-1 text-white">{proposal.objective}</p>
+                  <p className="mt-1 text-white">{rawProposal.objective}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Política de Rescisão */}
           <Card className="bg-card/50 backdrop-blur-sm border-white/10">
             <CardContent className="p-6">
               <Collapsible open={isRescisionOpen} onOpenChange={setIsRescisionOpen}>
@@ -357,7 +315,7 @@ export default function ProposalAccept() {
                 <CollapsibleContent className="mt-4">
                   <div className="prose prose-invert prose-headings:text-white prose-p:text-gray-300 prose-strong:text-white prose-ul:text-gray-300 prose-li:text-gray-300 prose-hr:border-white/10 max-w-none">
                     <ReactMarkdown>
-                      {proposal.rescision_policy || DEFAULT_RESCISION_POLICY}
+                      {rawProposal.rescissionPolicy || DEFAULT_RESCISION_POLICY}
                     </ReactMarkdown>
                   </div>
                 </CollapsibleContent>
@@ -365,7 +323,6 @@ export default function ProposalAccept() {
             </CardContent>
           </Card>
 
-          {/* Foro */}
           <Card className="bg-card/50 backdrop-blur-sm border-white/10">
             <CardContent className="p-6">
               <h2 className="text-lg font-bold mb-2">Foro</h2>
@@ -375,7 +332,6 @@ export default function ProposalAccept() {
             </CardContent>
           </Card>
 
-          {/* Checkbox de Consentimento */}
           <Card className="bg-card/50 backdrop-blur-sm border-white/10">
             <CardContent className="p-6">
               <div className="flex items-start gap-3">
@@ -392,7 +348,6 @@ export default function ProposalAccept() {
             </CardContent>
           </Card>
 
-          {/* Botão de Ler Contrato */}
           <div className="flex justify-center">
             <Button
               size="lg"
@@ -405,7 +360,6 @@ export default function ProposalAccept() {
             </Button>
           </div>
 
-          {/* Aviso Legal */}
           <div className="text-center text-sm text-gray-500">
             <p>
               Ao clicar em "Ler Contrato", você poderá visualizar o contrato completo.
@@ -415,7 +369,6 @@ export default function ProposalAccept() {
         </motion.div>
       </div>
 
-      {/* Modal do Contrato */}
       {proposal && clientName && clientDocument && clientEmail && (
         <ContractModal
           open={showContractModal}
@@ -437,35 +390,68 @@ export default function ProposalAccept() {
   );
 
   async function handleDigitalSignature() {
-    if (!proposal || !sessionToken) return;
+    if (!proposal || !rawProposal) return;
+    if (!sessionToken) {
+      toast.error("Sessão inválida. Recarregue a página.");
+      return;
+    }
 
     setIsSigning(true);
 
     try {
-      // Obter IP e User-Agent
       const ipAddress = await fetch('https://api.ipify.org?format=json')
         .then(res => res.json())
         .then(data => data.ip)
         .catch(() => null);
-      
+
       const userAgent = navigator.userAgent;
 
-      // Aceitar a proposta
-      const { data, error } = await supabase.rpc('register_proposal_acceptance', {
-        p_session_token: sessionToken,
-        p_client_name: clientName.trim(),
-        p_client_document: clientDocument.replace(/\D/g, ''),
-        p_client_email: clientEmail.trim(),
-        p_client_role: clientRole.trim() || null,
-        p_client_declaration: clientDeclaration.trim() || null,
-        p_ip_address: ipAddress || null,
-        p_user_agent: userAgent || null
+      // Build content snapshot/hash for the contract
+      const acceptedAtTs = Date.now();
+      const acceptanceForSnapshot = {
+        client_name: clientName.trim(),
+        client_document: clientDocument.replace(/\D/g, ''),
+        client_email: clientEmail.trim(),
+        client_role: clientRole.trim() || null,
+        client_declaration: clientDeclaration.trim() || null,
+        accepted_at: new Date(acceptedAtTs).toISOString(),
+        ip_address: ipAddress || null,
+        user_agent: userAgent || null,
+      };
+      const contentSnapshot = JSON.stringify({
+        proposal: {
+          id: proposal.id,
+          title: proposal.title,
+          objective: proposal.objective,
+          investment_value: proposal.investment_value,
+          scope: proposal.scope,
+          timeline: proposal.timeline,
+          conditions: proposal.conditions,
+          rescision_policy: proposal.rescision_policy,
+        },
+        acceptance: acceptanceForSnapshot,
       });
+      const contentHash = await generateContentHash(proposal, acceptanceForSnapshot);
 
-      if (error) {
-        if (error.message.includes('já foi aceita')) {
+      try {
+        await acceptMutation({
+          slug: slugStr,
+          token: sessionToken,
+          clientName: clientName.trim(),
+          clientDocument: clientDocument.replace(/\D/g, ''),
+          clientEmail: clientEmail.trim(),
+          clientRole: clientRole.trim() || undefined,
+          clientDeclaration: clientDeclaration.trim() || undefined,
+          contentSnapshot,
+          contentHash,
+          ipAddress: ipAddress || "0.0.0.0",
+          userAgent: userAgent || "unknown",
+        });
+      } catch (error: any) {
+        const msg = String(error?.message ?? "");
+        if (msg.includes('Already accepted') || msg.includes('já foi aceita')) {
           toast.error("Esta proposta já foi aceita anteriormente");
-        } else if (error.message.includes('Sessão inválida')) {
+        } else if (msg.includes('Invalid or expired session') || msg.includes('Sessão inválida')) {
           toast.error("Sessão expirada. Por favor, recarregue a página");
         } else {
           throw error;
@@ -474,37 +460,26 @@ export default function ProposalAccept() {
         return;
       }
 
-      // Buscar dados do aceite para gerar PDF
-      const { data: acceptance, error: acceptanceError } = await supabase.rpc('get_proposal_acceptance', {
-        p_proposal_id: proposal.id
-      });
-
-      if (acceptanceError || !acceptance || acceptance.length === 0) {
-        throw new Error("Erro ao buscar dados do aceite");
-      }
-
-      const acceptanceInfo = acceptance[0];
       const acceptanceData = {
         client_name: clientName.trim(),
         client_document: formatDocument(clientDocument),
         client_email: clientEmail.trim(),
         client_role: clientRole.trim() || null,
         client_declaration: clientDeclaration.trim() || null,
-        accepted_at: acceptanceInfo.accepted_at,
+        accepted_at: new Date(acceptedAtTs).toISOString(),
         ip_address: ipAddress || null,
         user_agent: userAgent || null,
-        content_hash: acceptanceInfo.content_hash || null,
-        proposal_version: acceptanceInfo.proposal_version || '1.0'
+        content_hash: contentHash,
+        proposal_version: '1.0',
       };
 
-      // Gerar PDF do contrato completo
       await generateContractPDF(proposal, acceptanceData);
 
       toast.success("Contrato assinado digitalmente e PDF gerado com sucesso!");
-      
+
       setTimeout(() => {
         setShowContractModal(false);
-        setLocation(`/proposta/${slug}`);
+        setLocation(`/proposta/${slugStr}`);
       }, 2000);
     } catch (error: any) {
       console.error("Error signing contract:", error);
@@ -521,7 +496,6 @@ export default function ProposalAccept() {
     const margin = 20;
     const maxWidth = pageWidth - (margin * 2);
 
-    // Função auxiliar para verificar se precisa de nova página
     const checkPageBreak = (requiredSpace: number = 10) => {
       if (yPos + requiredSpace > 270) {
         doc.addPage();
@@ -531,26 +505,23 @@ export default function ProposalAccept() {
       return false;
     };
 
-    // Função auxiliar para adicionar texto com quebra de linha
     const addText = (text: string, fontSize: number = 12, isBold: boolean = false, color: [number, number, number] = [0, 0, 0], lineHeight: number = 0.6) => {
       if (!text || String(text).trim() === '') return;
-      
+
       doc.setFontSize(fontSize);
       doc.setTextColor(color[0], color[1], color[2]);
       doc.setFont('helvetica', isBold ? 'bold' : 'normal');
-      
-      // Converter para string e limpar caracteres problemáticos
-      // Remover markdown mas manter estrutura
+
       let cleanText = String(text)
         .replace(/\r\n/g, '\n')
         .replace(/\r/g, '\n')
-        .replace(/\*\*/g, '') // Remove negrito markdown
-        .replace(/#{1,6}\s/g, '') // Remove headers markdown
-        .replace(/---/g, '') // Remove separadores markdown
+        .replace(/\*\*/g, '')
+        .replace(/#{1,6}\s/g, '')
+        .replace(/---/g, '')
         .trim();
-      
+
       const lines = doc.splitTextToSize(cleanText, maxWidth);
-      
+
       lines.forEach((line: string) => {
         checkPageBreak(fontSize * lineHeight + 2);
         doc.text(line, margin, yPos);
@@ -559,14 +530,11 @@ export default function ProposalAccept() {
       yPos += 2;
     };
 
-    // Gerar conteúdo do contrato
     const contractContent = generateContractContent(proposal, acceptanceData);
 
-    // Cabeçalho
     addText('CONTRATO ELETRÔNICO', 18, true, [0, 0, 0]);
     yPos += 5;
 
-    // Identificação das Partes
     const headerText = contractContent.header
       .replace(/\*\*/g, '')
       .replace(/---/g, '')
@@ -574,29 +542,24 @@ export default function ProposalAccept() {
     addText(headerText, 12);
     yPos += 5;
 
-    // Cláusulas - garantir que todas sejam incluídas
-    contractContent.clauses.forEach((clause, index) => {
-      // Processar cada cláusula mantendo a estrutura
+    contractContent.clauses.forEach((clause) => {
       let cleanClause = clause
-        .replace(/\*\*/g, '') // Remove negrito markdown
-        .replace(/#{1,6}\s/g, '') // Remove headers markdown
+        .replace(/\*\*/g, '')
+        .replace(/#{1,6}\s/g, '')
         .trim();
-      
-      // Adicionar título da cláusula em negrito se existir
+
       const titleMatch = cleanClause.match(/^(CLÁUSULA \d+[^:]*:)/);
       if (titleMatch) {
         addText(titleMatch[1], 12, true, [0, 0, 0], 0.7);
         cleanClause = cleanClause.replace(titleMatch[1], '').trim();
       }
-      
-      // Adicionar conteúdo da cláusula
+
       if (cleanClause) {
         addText(cleanClause, 11, false, [0, 0, 0], 0.6);
       }
       yPos += 3;
     });
 
-    // Assinatura Digital
     addText('ASSINATURA DIGITAL', 14, true);
     addText(`Este contrato foi assinado digitalmente em ${new Date(acceptanceData.accepted_at).toLocaleString('pt-BR')}`, 11);
     addText(`Nome: ${acceptanceData.client_name}`, 11);
@@ -610,7 +573,6 @@ export default function ProposalAccept() {
     }
     yPos += 5;
 
-    // Evidências Técnicas
     addText('EVIDÊNCIAS TÉCNICAS', 12, true);
     const hash = await generateContentHash(proposal, acceptanceData);
     addText(`Hash SHA-256: ${hash}`, 9);
@@ -618,29 +580,25 @@ export default function ProposalAccept() {
     addText(`User-Agent: ${acceptanceData.user_agent || 'N/A'}`, 9);
     addText(`Versão da Proposta: ${acceptanceData.proposal_version || '1.0'}`, 9);
 
-    // Salvar PDF
     const fileName = `Contrato_${proposal.client_name.replace(/\s+/g, '_')}_${new Date(acceptanceData.accepted_at).toISOString().split('T')[0]}.pdf`;
     doc.save(fileName);
   }
 
   async function generateContentHash(proposal: any, acceptanceData: any): Promise<string> {
-    // Criar hash do conteúdo do contrato para evidência técnica
     const content = JSON.stringify({
       proposal_id: proposal.id,
       client_name: acceptanceData.client_name,
       client_document: acceptanceData.client_document,
       accepted_at: acceptanceData.accepted_at,
-      investment_value: proposal.investment_value
+      investment_value: proposal.investment_value,
     });
 
-    // Usar Web Crypto API para gerar hash SHA-256
     const encoder = new TextEncoder();
     const data = encoder.encode(content);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    
+
     return hashHex;
   }
 }
-

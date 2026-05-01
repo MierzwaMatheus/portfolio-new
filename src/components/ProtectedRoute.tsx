@@ -3,7 +3,7 @@ import { Redirect, Route, RouteProps } from "wouter";
 import { Loader2 } from "lucide-react";
 
 export function ProtectedRoute({ component: Component, allowedRoles, ...props }: RouteProps & { allowedRoles?: string[]; component: React.ComponentType<any> }) {
-  const { user, isLoading, checkRole } = useAuth();
+  const { isAuthenticated, isLoading, checkRole } = useAuth();
 
   if (isLoading) {
     return (
@@ -13,7 +13,7 @@ export function ProtectedRoute({ component: Component, allowedRoles, ...props }:
     );
   }
 
-  if (!user) {
+  if (!isAuthenticated) {
     return <Redirect to="/login" />;
   }
 
@@ -39,5 +39,5 @@ export function ProtectedRoute({ component: Component, allowedRoles, ...props }:
     );
   }
 
-  return <Component />;
+  return <Component params={{}} />;
 }

@@ -27,6 +27,7 @@ import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useI18n } from "@/i18n/context/I18nContext";
 import { useSidebar } from "@/hooks/useSidebar";
 import { sidebarRepository } from "@/repositories/instances";
+import type { SidebarContactInfo } from "@/repositories/interfaces/SidebarRepository";
 
 const NAV_ITEMS_KEYS = [
   { key: "home", href: "/", icon: Home },
@@ -221,7 +222,7 @@ const NAV_ITEMS = NAV_ITEMS_KEYS.map(item => ({
             ) : (
               SOCIAL_CONFIG.map(social => {
                 const url = contactInfo?.[
-                  `${social.key}_url` as keyof ContactInfo
+                  `${social.key}_url` as keyof SidebarContactInfo
                 ] as string;
                 if (!url) return null;
 

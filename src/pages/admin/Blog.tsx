@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,66 +12,73 @@ import { ImagePicker } from "@/components/admin/ImagePicker";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { supabase } from "@/lib/supabase";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
 
+type Post = {
+  _id: Id<"posts">;
+  title: string;
+  titleTranslations?: { ptBR: string; enUS?: string };
+  subtitle?: string;
+  subtitleTranslations?: { ptBR: string; enUS?: string };
+  slug: string;
+  content?: string;
+  contentTranslations?: { ptBR: string; enUS?: string };
+  image?: { url: string | null } | null;
+  imageId?: Id<"imageMetadata">;
+  imageUrl?: string;
+  tags: string[];
+  featured: boolean;
+  status: "draft" | "published";
+  readTime?: string;
+  publishedAt?: number;
+  createdAt: number;
+};
+
 export default function AdminBlog() {
-  const [posts, setPosts] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const postsData = useQuery(api.posts.listAdmin, { limit: 100 }) as Post[] | undefined;
+  const createPost = useMutation(api.posts.create);
+  const updatePost = useMutation(api.posts.update);
+  const publishPost = useMutation(api.posts.publish);
+  const unpublishPost = useMutation(api.posts.unpublish);
+  const removePost = useMutation(api.posts.remove);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingPost, setEditingPost] = useState<any>(null);
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
   const [content, setContent] = useState("");
-  const [previewImage, setPreviewImage] = useState("");
+  const [previewImage, setPreviewImage] = useState<string>("");
+  const [previewImageId, setPreviewImageId] = useState<Id<"imageMetadata"> | undefined>(undefined);
   const [isPublished, setIsPublished] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
 
-  useEffect(() => {
-    fetchPosts();
-  }, []);
+  const posts = postsData ?? [];
+  const isLoading = postsData === undefined;
 
-  const fetchPosts = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .schema('app_portfolio')
-        .from('posts')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-
-      console.log('Posts fetched:', data?.length || 0);
-      setPosts(data || []);
-    } catch (error: any) {
-      console.error('Error fetching posts:', error);
-      toast.error(`Erro ao carregar posts: ${error?.message || 'Erro desconhecido'}`);
-      setPosts([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleOpenDialog = (post: any = null) => {
+  const handleOpenDialog = (post: Post | null = null) => {
     setEditingPost(post);
-    setPreviewImage(post ? post.image : "");
-    // Extrai conteúdo do JSONB ou fallback para campo direto
-    const contentPT = post?.content_translations?.['pt-BR'] || post?.content || "";
-    setContent(contentPT);
-    setIsPublished(post ? post.status === "published" : false);
-    setIsFeatured(post ? post.featured : false);
+    if (post) {
+      setPreviewImage(post.image?.url || post.imageUrl || "");
+      setPreviewImageId(post.imageId);
+      const contentPT = post.contentTranslations?.ptBR || post.content || "";
+      setContent(contentPT);
+      setIsPublished(post.status === "published");
+      setIsFeatured(post.featured);
+    } else {
+      setPreviewImage("");
+      setPreviewImageId(undefined);
+      setContent("");
+      setIsPublished(false);
+      setIsFeatured(false);
+    }
     setIsDialogOpen(true);
   };
 
-  // Helper para extrair valor do JSONB ou valor direto (fallback para compatibilidade)
-  const getPostField = (post: any, field: string): string => {
-    const translationsField = `${field}_translations`;
-    if (post[translationsField] && post[translationsField]['pt-BR']) {
-      return post[translationsField]['pt-BR'];
-    }
-    return post[field] || '';
+  const getPostField = (post: Post, field: "title" | "subtitle"): string => {
+    const t = (post as any)[`${field}Translations`];
+    if (t?.ptBR) return t.ptBR;
+    return ((post as any)[field] as string) || '';
   };
 
   const slugify = (text: string) => {
@@ -79,7 +86,7 @@ export default function AdminBlog() {
       .toString()
       .toLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[̀-ͯ]/g, '')
       .replace(/\s+/g, '-')
       .replace(/[^\w\-]+/g, '')
       .replace(/\-\-+/g, '-')
@@ -87,14 +94,20 @@ export default function AdminBlog() {
       .replace(/-+$/, '');
   };
 
+  const handleImagePicked = (url: string | string[]) => {
+    const picked = Array.isArray(url) ? url[0] : url;
+    // The picker returns a Convex image ID per migration plan.
+    setPreviewImageId(picked as Id<"imageMetadata">);
+    setPreviewImage("");
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     const formData = new FormData(e.target as HTMLFormElement);
 
     const titlePT = formData.get("title") as string;
-    const subtitlePT = formData.get("subtitle") as string || '';
-    const date = formData.get("date") as string;
-    const tagsStr = formData.get("tags") as string;
+    const subtitlePT = (formData.get("subtitle") as string) || '';
+    const tagsStr = (formData.get("tags") as string) || '';
     const status = isPublished ? "published" : "draft";
     const contentPT = content || '';
 
@@ -102,73 +115,38 @@ export default function AdminBlog() {
     const slug = slugify(titlePT);
 
     try {
-      // Traduz para inglês usando a Edge Function
-      const textsToTranslate = [titlePT];
-      if (subtitlePT) {
-        textsToTranslate.push(subtitlePT);
-      }
-      if (contentPT) {
-        textsToTranslate.push(contentPT);
-      }
-
-      const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
-        body: {
-          texts: textsToTranslate,
-          source: 'pt',
-          target: 'en',
-        },
-      });
-
-      if (translateError) {
-        console.error('Translation error:', translateError);
-        toast.error('Erro ao traduzir. Salvando apenas em português.');
-      }
-
-      const translatedTexts = translateData?.translatedTexts || textsToTranslate;
-      const titleEN = translatedTexts[0] || titlePT;
-      const subtitleEN = subtitlePT ? (translatedTexts[1] || subtitlePT) : '';
-      const contentEN = contentPT ? (translatedTexts[subtitlePT ? 2 : 1] || contentPT) : '';
-
-      const postData = {
+      const baseData = {
         title: titlePT,
-        subtitle: subtitlePT || null,
-        content: contentPT || null,
-        title_translations: {
-          'pt-BR': titlePT,
-          'en-US': titleEN,
-        },
-        subtitle_translations: subtitlePT ? {
-          'pt-BR': subtitlePT,
-          'en-US': subtitleEN,
-        } : null,
-        content_translations: contentPT ? {
-          'pt-BR': contentPT,
-          'en-US': contentEN,
-        } : null,
-        image: previewImage,
-        featured: isFeatured,
-        status,
-        published_at: date || null,
+        titleTranslations: { ptBR: titlePT, enUS: titlePT },
+        subtitle: subtitlePT || undefined,
+        subtitleTranslations: subtitlePT ? { ptBR: subtitlePT, enUS: subtitlePT } : undefined,
+        slug,
+        content: contentPT,
+        contentTranslations: contentPT ? { ptBR: contentPT, enUS: contentPT } : undefined,
+        imageId: previewImageId,
+        imageUrl: !previewImageId && previewImage ? previewImage : undefined,
         tags,
-        slug
+        featured: isFeatured,
+        readTime: undefined as string | undefined,
       };
 
       if (editingPost) {
-        const { error } = await supabase
-          .schema('app_portfolio')
-          .from('posts')
-          .update(postData)
-          .eq('id', editingPost.id);
-
-        if (error) throw error;
+        await updatePost({
+          id: editingPost._id,
+          ...baseData,
+        });
+        // Sync publish state if it changed
+        if (status === "published" && editingPost.status !== "published") {
+          await publishPost({ id: editingPost._id });
+        } else if (status === "draft" && editingPost.status === "published") {
+          await unpublishPost({ id: editingPost._id });
+        }
         toast.success("Post atualizado com sucesso!");
       } else {
-        const { error } = await supabase
-          .schema('app_portfolio')
-          .from('posts')
-          .insert([postData]);
-
-        if (error) throw error;
+        await createPost({
+          ...baseData,
+          status,
+        });
         toast.success("Post criado com sucesso!");
       }
 
@@ -176,27 +154,20 @@ export default function AdminBlog() {
       setEditingPost(null);
       setContent("");
       setPreviewImage("");
+      setPreviewImageId(undefined);
       setIsPublished(false);
       setIsFeatured(false);
-      fetchPosts();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving post:', error);
-      toast.error("Erro ao salvar post");
+      toast.error(error?.message || "Erro ao salvar post");
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: Id<"posts">) => {
     if (confirm("Tem certeza que deseja excluir este post?")) {
       try {
-        const { error } = await supabase
-          .schema('app_portfolio')
-          .from('posts')
-          .delete()
-          .eq('id', id);
-
-        if (error) throw error;
+        await removePost({ id });
         toast.success("Post excluído com sucesso!");
-        fetchPosts();
       } catch (error) {
         console.error('Error deleting post:', error);
         toast.error("Erro ao excluir post");
@@ -204,35 +175,39 @@ export default function AdminBlog() {
     }
   };
 
-  const toggleStatus = async (post: any) => {
-    const newStatus = post.status === "published" ? "draft" : "published";
+  const toggleStatus = async (post: Post) => {
     try {
-      const { error } = await supabase
-        .schema('app_portfolio')
-        .from('posts')
-        .update({ status: newStatus })
-        .eq('id', post.id);
-
-      if (error) throw error;
-      toast.success(`Post ${newStatus === 'published' ? 'publicado' : 'despublicado'}`);
-      fetchPosts();
+      if (post.status === "published") {
+        await unpublishPost({ id: post._id });
+        toast.success("Post despublicado");
+      } else {
+        await publishPost({ id: post._id });
+        toast.success("Post publicado");
+      }
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error("Erro ao atualizar status");
     }
   };
 
-  const toggleFeatured = async (post: any) => {
+  const toggleFeatured = async (post: Post) => {
     try {
-      const { error } = await supabase
-        .schema('app_portfolio')
-        .from('posts')
-        .update({ featured: !post.featured })
-        .eq('id', post.id);
-
-      if (error) throw error;
+      await updatePost({
+        id: post._id,
+        title: post.title,
+        titleTranslations: post.titleTranslations ?? { ptBR: post.title, enUS: post.title },
+        subtitle: post.subtitle,
+        subtitleTranslations: post.subtitleTranslations,
+        slug: post.slug,
+        content: post.content,
+        contentTranslations: post.contentTranslations,
+        imageId: post.imageId,
+        imageUrl: post.imageUrl,
+        tags: post.tags,
+        featured: !post.featured,
+        readTime: post.readTime,
+      });
       toast.success(`Destaque ${!post.featured ? 'adicionado' : 'removido'}`);
-      fetchPosts();
     } catch (error) {
       console.error('Error updating featured:', error);
       toast.error("Erro ao atualizar destaque");
@@ -277,10 +252,6 @@ export default function AdminBlog() {
                         <Input name="subtitle" id="subtitle" defaultValue={editingPost ? getPostField(editingPost, 'subtitle') : ''} className="bg-white/5 border-white/10 text-white" style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }} />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="date" className="text-white">Data de Publicação</Label>
-                        <Input name="date" id="date" type="date" defaultValue={editingPost?.published_at} className="bg-white/5 border-white/10 text-white" />
-                      </div>
-                      <div className="space-y-2">
                         <Label htmlFor="tags" className="text-white">Tags (separadas por vírgula)</Label>
                         <Input name="tags" id="tags" defaultValue={editingPost?.tags?.join(", ")} className="bg-white/5 border-white/10 text-white" style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }} />
                       </div>
@@ -292,14 +263,21 @@ export default function AdminBlog() {
                         <div className="border border-white/10 rounded-lg p-4 bg-white/5 flex flex-col items-center justify-center min-h-[200px] relative overflow-hidden">
                           {previewImage ? (
                             <>
-                              <img src={previewImage} alt="Preview" className="max-h-[180px] rounded object-cover w-full" style={{ wordBreak: 'break-all', overflowWrap: 'break-word' }} />
+                              <img src={previewImage} alt="Preview" className="max-h-[180px] rounded object-cover w-full" />
                               <div className="absolute bottom-2 right-2">
-                                <ImagePicker onSelect={(url) => setPreviewImage(Array.isArray(url) ? url[0] : url)} />
+                                <ImagePicker onSelect={handleImagePicked} />
+                              </div>
+                            </>
+                          ) : previewImageId ? (
+                            <>
+                              <div className="text-gray-400 text-sm">Imagem selecionada</div>
+                              <div className="absolute bottom-2 right-2">
+                                <ImagePicker onSelect={handleImagePicked} />
                               </div>
                             </>
                           ) : (
                             <div className="text-center">
-                              <ImagePicker onSelect={(url) => setPreviewImage(Array.isArray(url) ? url[0] : url)} />
+                              <ImagePicker onSelect={handleImagePicked} />
                             </div>
                           )}
                         </div>
@@ -358,81 +336,87 @@ export default function AdminBlog() {
           ) : posts.length === 0 ? (
             <div className="text-center text-gray-400 py-10">Nenhum post encontrado.</div>
           ) : (
-            posts.map((post) => (
-              <Card key={post.id} className="bg-card border-white/10 hover:border-neon-purple/30 transition-colors">
-                <div className="flex flex-col md:flex-row gap-4 p-4">
-                  <img src={post.image || "https://via.placeholder.com/300x200"} alt={post.title} className="w-full md:w-48 h-32 object-cover rounded-lg" />
-                  <div className="flex-1 space-y-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                          {post.title}
-                          {post.featured && <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />}
-                        </h3>
-                        <p className="text-gray-400 text-sm">{post.subtitle}</p>
+            posts.map((post) => {
+              const imageSrc = post.image?.url || post.imageUrl || "https://via.placeholder.com/300x200";
+              const publishedDate = post.publishedAt
+                ? new Date(post.publishedAt).toISOString().slice(0, 10)
+                : '';
+              return (
+                <Card key={post._id} className="bg-card border-white/10 hover:border-neon-purple/30 transition-colors">
+                  <div className="flex flex-col md:flex-row gap-4 p-4">
+                    <img src={imageSrc} alt={post.title} className="w-full md:w-48 h-32 object-cover rounded-lg" />
+                    <div className="flex-1 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                            {post.title}
+                            {post.featured && <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />}
+                          </h3>
+                          <p className="text-gray-400 text-sm">{post.subtitle}</p>
+                        </div>
+                        <div className="flex gap-2">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => toggleFeatured(post)}
+                                  className={post.featured ? "text-yellow-400" : "text-gray-500"}
+                                >
+                                  <Star className={`w-4 h-4 ${post.featured ? "fill-yellow-400" : ""}`} />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{post.featured ? "Remover destaque" : "Destacar post"}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => toggleStatus(post)}
+                                  className={post.status === "published" ? "text-green-400" : "text-gray-500"}
+                                >
+                                  {post.status === "published" ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{post.status === "published" ? "Despublicar" : "Publicar"}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          <Button size="icon" variant="ghost" onClick={() => handleOpenDialog(post)}>
+                            <Pencil className="w-4 h-4 text-blue-400" />
+                          </Button>
+                          <Button size="icon" variant="ghost" onClick={() => handleDelete(post._id)}>
+                            <Trash2 className="w-4 h-4 text-red-400" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex gap-2">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => toggleFeatured(post)}
-                                className={post.featured ? "text-yellow-400" : "text-gray-500"}
-                              >
-                                <Star className={`w-4 h-4 ${post.featured ? "fill-yellow-400" : ""}`} />
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{post.featured ? "Remover destaque" : "Destacar post"}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
 
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                onClick={() => toggleStatus(post)}
-                                className={post.status === "published" ? "text-green-400" : "text-gray-500"}
-                              >
-                                {post.status === "published" ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>{post.status === "published" ? "Despublicar" : "Publicar"}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-
-                        <Button size="icon" variant="ghost" onClick={() => handleOpenDialog(post)}>
-                          <Pencil className="w-4 h-4 text-blue-400" />
-                        </Button>
-                        <Button size="icon" variant="ghost" onClick={() => handleDelete(post.id)}>
-                          <Trash2 className="w-4 h-4 text-red-400" />
-                        </Button>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {post.tags?.map((tag: string) => (
+                          <Badge key={tag} variant="secondary" className="bg-white/5 text-gray-300 border-white/10">{tag}</Badge>
+                        ))}
                       </div>
-                    </div>
 
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {post.tags?.map((tag: string) => (
-                        <Badge key={tag} variant="secondary" className="bg-white/5 text-gray-300 border-white/10">{tag}</Badge>
-                      ))}
-                    </div>
-
-                    <div className="flex items-center gap-4 text-sm text-gray-500 mt-auto pt-2">
-                      <span>{post.published_at}</span>
-                      <span className={`flex items-center gap-1 ${post.status === "published" ? "text-green-400" : "text-gray-500"}`}>
-                        {post.status === "published" ? "Publicado" : "Rascunho"}
-                      </span>
+                      <div className="flex items-center gap-4 text-sm text-gray-500 mt-auto pt-2">
+                        <span>{publishedDate}</span>
+                        <span className={`flex items-center gap-1 ${post.status === "published" ? "text-green-400" : "text-gray-500"}`}>
+                          {post.status === "published" ? "Publicado" : "Rascunho"}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </Card>
-            ))
+                </Card>
+              );
+            })
           )}
         </div>
       </div>

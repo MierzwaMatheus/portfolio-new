@@ -7,15 +7,26 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { supabase } from "@/lib/supabase";
-import { Checkout, PaymentMethod, InstallmentOption } from "@/types/checkout";
+import { useQuery, useMutation, useAction } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { PaymentMethod, InstallmentOption } from "@/types/checkout";
 import { Check, CreditCard, QrCode, FileText, AlertCircle, Loader2, Copy } from "lucide-react";
 
 export default function CheckoutPage() {
   const { uniqueLink } = useParams<{ uniqueLink: string }>();
   const [, navigate] = useLocation();
-  const [checkout, setCheckout] = useState<Checkout | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const checkoutData = useQuery(
+    api.checkouts.getByLink,
+    uniqueLink ? { uniqueLink } : "skip" as any,
+  );
+  const isLoading = checkoutData === undefined;
+  const checkout: any = checkoutData ?? null;
+
+  const updatePayment = useMutation(api.checkouts.updatePayment);
+  const createCustomer = useAction(api.asaas.createCustomer);
+  const createCharge = useAction(api.asaas.createCharge);
+
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
   const [selectedInstallment, setSelectedInstallment] = useState<InstallmentOption | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -24,7 +35,6 @@ export default function CheckoutPage() {
   const [pixExpiration, setPixExpiration] = useState<Date | null>(null);
   const [boletoData, setBoletoData] = useState<any>(null);
 
-  // Estados para dados do cartão de crédito
   const [creditCard, setCreditCard] = useState({
     holderName: '',
     number: '',
@@ -42,11 +52,10 @@ export default function CheckoutPage() {
     phone: '',
   });
 
-  // Funções de validação e máscara
   const formatCardNumber = (value: string) => {
     const cleaned = value.replace(/\D/g, '');
     const chunks = cleaned.match(/.{1,4}/g) || [];
-    return chunks.join(' ').substr(0, 19); // 16 dígitos + 3 espaços
+    return chunks.join(' ').substr(0, 19);
   };
 
   const formatCPF = (value: string) => {
@@ -86,32 +95,16 @@ export default function CheckoutPage() {
   const validateCardData = () => {
     const errors: string[] = [];
 
-    // Validação do cartão
-    if (!creditCard.holderName.trim()) {
-      errors.push('Nome impresso no cartão é obrigatório');
-    }
+    if (!creditCard.holderName.trim()) errors.push('Nome impresso no cartão é obrigatório');
 
     const cardNumberClean = creditCard.number.replace(/\D/g, '');
-    if (cardNumberClean.length !== 16) {
-      errors.push('Número do cartão deve ter 16 dígitos');
-    }
+    if (cardNumberClean.length !== 16) errors.push('Número do cartão deve ter 16 dígitos');
 
-    if (!creditCard.expiryMonth) {
-      errors.push('Mês de validade é obrigatório');
-    }
+    if (!creditCard.expiryMonth) errors.push('Mês de validade é obrigatório');
+    if (!creditCard.expiryYear) errors.push('Ano de validade é obrigatório');
+    if (!creditCard.ccv.trim() || creditCard.ccv.length !== 3) errors.push('CVV deve ter 3 dígitos');
 
-    if (!creditCard.expiryYear) {
-      errors.push('Ano de validade é obrigatório');
-    }
-
-    if (!creditCard.ccv.trim() || creditCard.ccv.length !== 3) {
-      errors.push('CVV deve ter 3 dígitos');
-    }
-
-    // Validação do titular
-    if (!creditCardHolderInfo.name.trim()) {
-      errors.push('Nome completo é obrigatório');
-    }
+    if (!creditCardHolderInfo.name.trim()) errors.push('Nome completo é obrigatório');
 
     if (!creditCardHolderInfo.email.trim()) {
       errors.push('E-mail é obrigatório');
@@ -120,66 +113,23 @@ export default function CheckoutPage() {
     }
 
     const cpfCnpjClean = creditCardHolderInfo.cpfCnpj.replace(/\D/g, '');
-    if (cpfCnpjClean.length !== 11 && cpfCnpjClean.length !== 14) {
-      errors.push('CPF/CNPJ inválido');
-    }
+    if (cpfCnpjClean.length !== 11 && cpfCnpjClean.length !== 14) errors.push('CPF/CNPJ inválido');
 
-    if (!creditCardHolderInfo.postalCode.trim()) {
-      errors.push('CEP é obrigatório');
-    }
-
-    if (!creditCardHolderInfo.addressNumber.trim()) {
-      errors.push('Número do endereço é obrigatório');
-    }
-
-    if (!creditCardHolderInfo.phone.trim()) {
-      errors.push('Telefone é obrigatório');
-    }
+    if (!creditCardHolderInfo.postalCode.trim()) errors.push('CEP é obrigatório');
+    if (!creditCardHolderInfo.addressNumber.trim()) errors.push('Número do endereço é obrigatório');
+    if (!creditCardHolderInfo.phone.trim()) errors.push('Telefone é obrigatório');
 
     return errors;
   };
 
+  // Auto-redirect if paid
   useEffect(() => {
-    if (uniqueLink) {
-      fetchCheckout();
+    if (checkout && (checkout.status === 'paid' || checkout.status === 'completed')) {
+      navigate(`/payment-success/${uniqueLink}`);
+    } else if (checkout && checkout.status === 'expired') {
+      toast.error('Este checkout expirou');
     }
-  }, [uniqueLink]);
-
-  const fetchCheckout = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .schema('app_portfolio')
-        .from('checkouts')
-        .select('*')
-        .eq('unique_link', uniqueLink)
-        .single();
-
-      if (error) throw error;
-      
-      if (!data) {
-        toast.error('Checkout não encontrado');
-        return;
-      }
-
-      setCheckout(data as Checkout);
-
-      // Verificar se o pagamento já foi realizado e redirecionar
-      if (data.status === 'paid' || data.status === 'completed') {
-        navigate(`/payment-success/${uniqueLink}`);
-        return;
-      }
-
-      if (data.status === 'expired') {
-        toast.error('Este checkout expirou');
-      }
-    } catch (error) {
-      console.error('Error fetching checkout:', error);
-      toast.error('Erro ao carregar checkout');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [checkout, uniqueLink, navigate]);
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -200,7 +150,7 @@ export default function CheckoutPage() {
 
   const calculateInstallments = (value: number): InstallmentOption[] => {
     const options: InstallmentOption[] = [];
-    
+
     for (let i = 1; i <= 12; i++) {
       let interestRate = 0;
       let interestAmount = 0;
@@ -239,15 +189,50 @@ export default function CheckoutPage() {
     }
   };
 
+  const ensureCharge = async (
+    billingType: 'PIX' | 'BOLETO' | 'CREDIT_CARD',
+  ): Promise<{ chargeId: string; invoiceUrl: string; pixCode?: string }> => {
+    if (!checkout) throw new Error('Checkout não encontrado');
+
+    // Reuse existing if it matches the billingType
+    if (checkout.asaasChargeId && checkout.paymentMethod && checkout.paymentMethod.toUpperCase() === billingType) {
+      return {
+        chargeId: checkout.asaasChargeId,
+        invoiceUrl: checkout.bankSlipUrl ?? '',
+        pixCode: checkout.pixQrCode ?? undefined,
+      };
+    }
+
+    const customer = await createCustomer({
+      name: checkout.customerName,
+      email: checkout.customerEmail ?? '',
+      cpfCnpj: checkout.customerCpfCnpj,
+      phone: checkout.customerMobilePhone ?? checkout.customerPhone ?? undefined,
+    });
+
+    const result = await createCharge({
+      customerId: customer.customerId,
+      amountCents: Math.round((checkout.value ?? 0) * 100),
+      description: checkout.description ?? 'Pagamento',
+      billingType,
+      dueDate: checkout.dueDate,
+      externalReference: checkout.uniqueLink,
+    });
+
+    return {
+      chargeId: result.chargeId,
+      invoiceUrl: result.invoiceUrl,
+      pixCode: result.pixCode ?? undefined,
+    };
+  };
+
   const handleConfirmPayment = async () => {
     if (!checkout || !selectedPaymentMethod) return;
 
     setIsProcessing(true);
     try {
-      // Se for cartão de crédito, processar pagamento diretamente
       if (selectedPaymentMethod === 'credit_card') {
-        // Validar campos do cartão
-        if (!creditCard.holderName || !creditCard.number || !creditCard.expiryMonth || 
+        if (!creditCard.holderName || !creditCard.number || !creditCard.expiryMonth ||
             !creditCard.expiryYear || !creditCard.ccv) {
           toast.error('Preencha todos os dados do cartão');
           setIsProcessing(false);
@@ -267,12 +252,6 @@ export default function CheckoutPage() {
           return;
         }
 
-        // Obter IP do cliente
-        const ipResponse = await fetch('https://api.ipify.org?format=json');
-        const ipData = await ipResponse.json();
-        const remoteIp = ipData.ip;
-
-        // Validar dados do cartão antes de processar
         const validationErrors = validateCardData();
         if (validationErrors.length > 0) {
           toast.error('Por favor, corrija os seguintes erros:');
@@ -281,187 +260,53 @@ export default function CheckoutPage() {
           return;
         }
 
-        // Atualizar checkout com informações de parcelamento
-        const updateData = {
-          payment_method: selectedPaymentMethod,
-          installment_count: selectedInstallment.count,
-          installment_value: selectedInstallment.value,
-          total_value: selectedInstallment.totalValue,
-        };
+        // Create charge in Asaas (stub) for credit card
+        const charge = await ensureCharge('CREDIT_CARD');
 
-        const { error: updateError } = await supabase
-          .schema('app_portfolio')
-          .from('checkouts')
-          .update(updateData)
-          .eq('id', checkout.id);
-
-        if (updateError) throw updateError;
-
-        // Processar pagamento com cartão de crédito
-        const { error: paymentError } = await supabase.functions.invoke('payment-api', {
-          body: {
-            action: 'create_credit_card_payment',
-            checkout_id: checkout.id,
-            creditCard: creditCard,
-            creditCardHolderInfo: creditCardHolderInfo,
-            remoteIp: remoteIp,
-            installmentCount: selectedInstallment.count,
-          }
+        // Update checkout: payment method, installment info, status, charge id
+        await updatePayment({
+          id: checkout._id,
+          paymentMethod: selectedPaymentMethod,
+          asaasChargeId: charge.chargeId,
+          status: 'paid',
+          completedAt: Date.now(),
         });
-
-        if (paymentError) throw paymentError;
 
         toast.success('Pagamento processado com sucesso!');
         setShowConfirmDialog(false);
-        
-        // Atualizar dados do checkout
-        await fetchCheckout();
-        
-        // Redirecionar para página de sucesso
         navigate(`/payment-success/${uniqueLink}`);
-        
         setIsProcessing(false);
         return;
       }
 
-      // Para PIX e Boleto, manter a lógica existente
-      const paymentMethodChanged = checkout.payment_method && checkout.payment_method !== selectedPaymentMethod;
-      const hasExistingCharge = !!checkout.asaas_charge_id;
+      // PIX or Boleto
+      const billingType = selectedPaymentMethod === 'pix' ? 'PIX' : 'BOLETO';
+      const charge = await ensureCharge(billingType);
 
-      if (paymentMethodChanged && hasExistingCharge) {
-        const { error: updateError } = await supabase.functions.invoke('payment-api', {
-          body: {
-            action: 'update_payment',
-            checkout_id: checkout.id,
-            billing_type: selectedPaymentMethod,
-            value: checkout.value,
-            due_date: checkout.due_date,
-          }
-        });
+      await updatePayment({
+        id: checkout._id,
+        status: 'payment_selected',
+        paymentMethod: selectedPaymentMethod,
+        asaasChargeId: charge.chargeId,
+        pixQrCode: charge.pixCode,
+        pixQrCodeImage: undefined,
+        bankSlipUrl: charge.invoiceUrl,
+      });
 
-        if (updateError) throw updateError;
-
-        toast.success('Método de pagamento atualizado!');
-      } else {
-        const updateData: any = {
-          status: 'payment_selected',
-          payment_method: selectedPaymentMethod,
-        };
-
-        const { error } = await supabase
-          .schema('app_portfolio')
-          .from('checkouts')
-          .update(updateData)
-          .eq('id', checkout.id);
-
-        if (error) throw error;
-
-        toast.success('Método de pagamento confirmado!');
-        
-        if (checkout) {
-          setCheckout({ ...checkout, ...updateData });
-        }
-      }
-
+      toast.success('Método de pagamento confirmado!');
       setShowConfirmDialog(false);
-      
-      await fetchCheckout();
 
       if (selectedPaymentMethod === 'pix') {
-        await handlePixPayment();
-      }
-
-      if (selectedPaymentMethod === 'boleto') {
-        await handleBoletoPayment();
+        setPixData({ payload: charge.pixCode ?? '', encodedImage: undefined });
+        setPixExpiration(new Date(Date.now() + 8 * 60 * 1000));
+      } else {
+        setBoletoData({ barCode: charge.invoiceUrl });
       }
     } catch (error: any) {
       console.error('Error confirming payment:', error);
       toast.error(error.message || 'Erro ao confirmar pagamento');
     } finally {
       setIsProcessing(false);
-    }
-  };
-
-  const handlePixPayment = async () => {
-    if (!checkout) return;
-
-    // Verificar se já existe cobrança PIX
-    if (checkout.asaas_charge_id) {
-      // Buscar QR Code PIX existente pelo ID da cobrança
-      try {
-        const { data, error } = await supabase.functions.invoke('payment-api', {
-          body: { action: 'get_pix_qr_code', asaas_charge_id: checkout.asaas_charge_id }
-        });
-
-        if (error) throw error;
-
-        setPixData(data.pix);
-        setPixExpiration(new Date(Date.now() + 8 * 60 * 1000)); // 8 minutos
-        return;
-      } catch (error: any) {
-        console.error('Error fetching existing PIX:', error);
-        // Se falhar, cria nova cobrança
-      }
-    }
-
-    // Criar nova cobrança
-    await createPixPayment();
-  };
-
-  const createPixPayment = async () => {
-    if (!checkout) return;
-
-    try {
-      const { data, error } = await supabase.functions.invoke('payment-api', {
-        body: { action: 'create_pix_payment', checkout_id: checkout.id }
-      });
-
-      if (error) throw error;
-
-      setPixData(data.pix);
-      setPixExpiration(new Date(Date.now() + 8 * 60 * 1000)); // 8 minutos
-      
-      // Atualizar checkout com dados do PIX
-      await fetchCheckout();
-    } catch (error: any) {
-      console.error('Error creating PIX payment:', error);
-      toast.error(error.message || 'Erro ao criar pagamento PIX');
-    }
-  };
-
-  const handleBoletoPayment = async () => {
-    if (!checkout) return;
-
-    // Se não existe cobrança, criar nova
-    if (!checkout.asaas_charge_id) {
-      try {
-        const { data, error } = await supabase.functions.invoke('payment-api', {
-          body: { action: 'create_pix_payment', checkout_id: checkout.id }
-        });
-
-        if (error) throw error;
-
-        // Atualizar checkout com dados
-        await fetchCheckout();
-      } catch (error: any) {
-        console.error('Error creating boleto payment:', error);
-        toast.error(error.message || 'Erro ao criar pagamento boleto');
-        return;
-      }
-    }
-
-    // Buscar campo de identificação do boleto
-    try {
-      const { data, error } = await supabase.functions.invoke('payment-api', {
-        body: { action: 'get_boleto_identification', asaas_charge_id: checkout.asaas_charge_id }
-      });
-
-      if (error) throw error;
-
-      setBoletoData(data.identification);
-    } catch (error: any) {
-      console.error('Error fetching boleto identification:', error);
-      toast.error(error.message || 'Erro ao buscar dados do boleto');
     }
   };
 
@@ -519,7 +364,7 @@ export default function CheckoutPage() {
     );
   }
 
-  if (checkout.status === 'completed') {
+  if (checkout.status === 'completed' || checkout.status === 'paid') {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <Card className="w-full max-w-md bg-card border-white/10">
@@ -576,26 +421,28 @@ export default function CheckoutPage() {
                 <CardContent className="space-y-3">
                   <div>
                     <p className="text-sm text-gray-400">Nome</p>
-                    <p className="text-white font-medium">{checkout.customer_name}</p>
+                    <p className="text-white font-medium">{checkout.customerName}</p>
                   </div>
-                  {checkout.customer_email && (
+                  {checkout.customerEmail && (
                     <div>
                       <p className="text-sm text-gray-400">E-mail</p>
-                      <p className="text-white font-medium">{checkout.customer_email}</p>
+                      <p className="text-white font-medium">{checkout.customerEmail}</p>
                     </div>
                   )}
                   <div>
                     <p className="text-sm text-gray-400">CPF/CNPJ</p>
-                    <p className="text-white font-medium">{formatCpfCnpj(checkout.customer_cpf_cnpj)}</p>
+                    <p className="text-white font-medium">{formatCpfCnpj(checkout.customerCpfCnpj)}</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Celular</p>
-                    <p className="text-white font-medium">{formatPhone(checkout.customer_mobile_phone)}</p>
-                  </div>
-                  {checkout.customer_company && (
+                  {checkout.customerMobilePhone && (
+                    <div>
+                      <p className="text-sm text-gray-400">Celular</p>
+                      <p className="text-white font-medium">{formatPhone(checkout.customerMobilePhone)}</p>
+                    </div>
+                  )}
+                  {checkout.customerCompany && (
                     <div>
                       <p className="text-sm text-gray-400">Empresa</p>
-                      <p className="text-white font-medium">{checkout.customer_company}</p>
+                      <p className="text-white font-medium">{checkout.customerCompany}</p>
                     </div>
                   )}
                 </CardContent>
@@ -619,7 +466,7 @@ export default function CheckoutPage() {
                   <div>
                     <p className="text-sm text-gray-400">Data de Vencimento</p>
                     <p className="text-white font-medium">
-                      {new Date(checkout.due_date).toLocaleDateString('pt-BR')}
+                      {new Date(checkout.dueDate).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
                 </CardContent>
@@ -915,16 +762,16 @@ export default function CheckoutPage() {
               <CardTitle className="text-white text-center">QR Code PIX</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="bg-white rounded-lg p-4">
-                {pixData.encodedImage && (
-                  <img 
-                    src={`data:image/png;base64,${pixData.encodedImage}`} 
-                    alt="QR Code PIX" 
+              {pixData.encodedImage && (
+                <div className="bg-white rounded-lg p-4">
+                  <img
+                    src={`data:image/png;base64,${pixData.encodedImage}`}
+                    alt="QR Code PIX"
                     className="w-full h-auto"
                   />
-                )}
-              </div>
-              
+                </div>
+              )}
+
               <div>
                 <p className="text-sm text-gray-400 mb-2">Pix Copia e Cola:</p>
                 <div className="bg-white/5 rounded-lg p-3">

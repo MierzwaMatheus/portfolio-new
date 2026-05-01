@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams } from "wouter";
 import { motion } from "framer-motion";
 import { CheckCircle2, Clock, Calendar, DollarSign, Download, AlertTriangle, FileCheck, Lock, ChevronDown, FileText } from "lucide-react";
@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { supabase } from "@/lib/supabase";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
@@ -17,172 +18,128 @@ import jsPDF from "jspdf";
 import { ContractModal } from "@/components/ContractModal";
 import { generateContractContent, generatePaymentMethods } from "@/utils/contractGenerator";
 
+// Build a snake_case adapter so existing utils (contractGenerator, ContractModal) still work
+function toLegacyProposal(p: any) {
+  if (!p) return null;
+  return {
+    id: p._id,
+    client_name: p.clientName,
+    title: p.title,
+    objective: p.objective,
+    scope: p.scope,
+    timeline: p.timeline,
+    delivery_date: p.deliveryDate,
+    investment_value: p.investmentValue,
+    payment_methods: p.paymentMethods,
+    conditions: p.conditions,
+    rescision_policy: p.rescissionPolicy,
+    created_at: p.createdAt ? new Date(p.createdAt).toISOString() : undefined,
+    is_accepted: p.isAccepted,
+  };
+}
+
 export default function Proposal() {
   const { id } = useParams(); // This is the slug
-  const [location, setLocation] = useLocation();
+  const slug = id ?? "";
+  const [, setLocation] = useLocation();
   const [isVisible, setIsVisible] = useState(false);
-  const [proposal, setProposal] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isExpired, setIsExpired] = useState(false);
-  const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [password, setPassword] = useState("");
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [isRescisionOpen, setIsRescisionOpen] = useState(false);
-  const [acceptanceData, setAcceptanceData] = useState<any>(null);
   const [showContractModal, setShowContractModal] = useState(false);
 
+  const createSessionMutation = useMutation(api.proposals.createSession);
+
+  // Try recover token from sessionStorage on slug change
   useEffect(() => {
     setIsVisible(true);
-    if (id) {
-      fetchProposal(id);
+    if (slug) {
+      const stored = sessionStorage.getItem(`proposal_session_slug_${slug}`);
+      if (stored) setSessionToken(stored);
     }
-  }, [id]);
+  }, [slug]);
 
-  const fetchProposal = async (slug: string) => {
-    setIsLoading(true);
-    const { data, error } = await supabase
-      .schema('app_portfolio')
-      .from('proposals')
-      .select('*')
-      .eq('slug', slug)
-      .single();
+  // Live query
+  const queryResult = useQuery(
+    api.proposals.getPublic,
+    slug ? { slug, token: sessionToken ?? undefined } : "skip" as any
+  );
 
-    if (error) {
-      console.error("Error fetching proposal:", error);
-    } else if (data) {
-      setProposal(data);
-      checkExpiration(data.created_at);
-      
-      // Se proposta foi aceita, buscar dados do aceite
-      if (data.is_accepted) {
-        console.log("Proposta aceita detectada, buscando dados do aceite...", data.id);
-        await fetchAcceptanceData(data.id);
-      } else {
-        console.log("Proposta não aceita", data.is_accepted);
-      }
-      
-      // Se tem senha, mostrar formulário de senha
-      if (data.password) {
-        setShowPasswordForm(true);
-      } else {
-        // Se não tem senha, criar sessão automaticamente
-        await createSession(data.id);
-      }
-    }
-    setIsLoading(false);
-  };
+  const isLoading = queryResult === undefined;
+  const rawProposal: any = queryResult ?? null;
 
-  const fetchAcceptanceData = async (proposalId: string | undefined) => {
-    if (!proposalId) return;
-    try {
-      // Usar função RPC para evitar problemas de RLS
-      const { data, error } = await supabase.rpc('get_proposal_acceptance', {
-        p_proposal_id: proposalId
-      });
+  // requiresPassword and gating
+  const requiresPassword = !!rawProposal?.requiresPassword;
+  const hasValidSession = !!rawProposal?.hasValidSession;
+  const showPasswordForm = requiresPassword && !hasValidSession && !sessionToken;
 
-      if (error) {
-        console.error("Error fetching acceptance data:", error);
-      } else if (data && data.length > 0) {
-        setAcceptanceData(data[0]);
-      }
-    } catch (error) {
-      console.error("Error fetching acceptance data:", error);
-    }
-  };
+  // Adapt to legacy snake_case for utils
+  const proposal: any = useMemo(() => toLegacyProposal(rawProposal), [rawProposal]);
 
-  const createSession = async (proposalId: string) => {
-    try {
-      // Obter IP e User-Agent do cliente
-      const ipAddress = await fetch('https://api.ipify.org?format=json')
-        .then(res => res.json())
-        .then(data => data.ip)
-        .catch(() => null);
-      
-      const userAgent = navigator.userAgent;
+  // acceptanceData may come from getPublic (per spec) — try snake_case fallback for util compatibility
+  const acceptanceDataRaw: any = rawProposal?.acceptanceData ?? null;
+  const acceptanceData: any = useMemo(() => {
+    if (!acceptanceDataRaw) return null;
+    return {
+      client_name: acceptanceDataRaw.clientName ?? acceptanceDataRaw.client_name,
+      client_document: acceptanceDataRaw.clientDocument ?? acceptanceDataRaw.client_document,
+      client_email: acceptanceDataRaw.clientEmail ?? acceptanceDataRaw.client_email,
+      client_role: acceptanceDataRaw.clientRole ?? acceptanceDataRaw.client_role ?? null,
+      client_declaration: acceptanceDataRaw.clientDeclaration ?? acceptanceDataRaw.client_declaration ?? null,
+      accepted_at: typeof (acceptanceDataRaw.acceptedAt ?? acceptanceDataRaw.accepted_at) === "number"
+        ? new Date(acceptanceDataRaw.acceptedAt ?? acceptanceDataRaw.accepted_at).toISOString()
+        : (acceptanceDataRaw.accepted_at ?? acceptanceDataRaw.acceptedAt),
+      ip_address: acceptanceDataRaw.ipAddress ?? acceptanceDataRaw.ip_address ?? null,
+      user_agent: acceptanceDataRaw.userAgent ?? acceptanceDataRaw.user_agent ?? null,
+      content_hash: acceptanceDataRaw.contentHash ?? acceptanceDataRaw.content_hash ?? null,
+      proposal_version: acceptanceDataRaw.proposalVersion ?? acceptanceDataRaw.proposal_version ?? "1.0",
+    };
+  }, [acceptanceDataRaw]);
 
-      // Chamar função RPC usando SQL direto já que está em schema diferente
-      const { data, error } = await supabase.rpc('create_proposal_session', {
-        p_proposal_id: proposalId,
-        p_password: password || null,
-        p_ip_address: ipAddress || null,
-        p_user_agent: userAgent || null
-      });
-
-      if (error) {
-        if (error.message.includes('Senha incorreta') || error.message.includes('incorreta')) {
-          toast.error("Senha incorreta");
-        } else {
-          console.error("Error creating session:", error);
-          // Se não conseguir criar sessão, ainda permite visualizar (modo leitura)
-        }
-      } else {
-        setSessionToken(data);
-        setShowPasswordForm(false);
-        // Armazenar token na sessionStorage para usar na página de aceite
-        if (data) {
-          sessionStorage.setItem(`proposal_session_${proposalId}`, data);
-        }
-      }
-    } catch (error: any) {
-      console.error("Error creating session:", error);
-      // Em caso de erro, ainda permite visualizar a proposta
-    }
-  };
+  const isExpired = !!rawProposal?.isExpired;
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!proposal) return;
-    
+    if (!slug) return;
+
     try {
-      // Obter IP e User-Agent do cliente
       const ipAddress = await fetch('https://api.ipify.org?format=json')
         .then(res => res.json())
         .then(data => data.ip)
         .catch(() => null);
-      
+
       const userAgent = navigator.userAgent;
 
-      const { data, error } = await supabase.rpc('create_proposal_session', {
-        p_proposal_id: proposal.id,
-        p_password: password,
-        p_ip_address: ipAddress || null,
-        p_user_agent: userAgent || null
+      const result: any = await createSessionMutation({
+        slug,
+        password,
+        ipAddress: ipAddress || undefined,
+        userAgent: userAgent || undefined,
       });
 
-      if (error) {
-        if (error.message.includes('Senha incorreta') || error.message.includes('incorreta')) {
-          toast.error("Senha incorreta");
-        } else {
-          console.error("Error creating session:", error);
-          toast.error("Erro ao criar sessão");
-        }
-      } else {
-        setSessionToken(data);
-        setShowPasswordForm(false);
-        // Armazenar token na sessionStorage para usar na página de aceite
-        if (data) {
-          sessionStorage.setItem(`proposal_session_${proposal.id}`, data);
-        }
+      // Convex returns either a token string or { token } depending on impl
+      const token: string | undefined = typeof result === "string" ? result : result?.token;
+      if (token) {
+        setSessionToken(token);
+        sessionStorage.setItem(`proposal_session_slug_${slug}`, token);
         toast.success("Acesso autorizado");
+      } else {
+        toast.error("Erro ao criar sessão");
       }
     } catch (error: any) {
-      console.error("Error creating session:", error);
-      toast.error(error.message || "Erro ao criar sessão");
+      const msg = String(error?.message ?? "");
+      if (msg.toLowerCase().includes("invalid password") || msg.includes("incorreta")) {
+        toast.error("Senha incorreta");
+      } else {
+        console.error("Error creating session:", error);
+        toast.error(msg || "Erro ao criar sessão");
+      }
     }
   };
 
-  const checkExpiration = (createdAt: string) => {
-    const created = new Date(createdAt);
-    const validUntil = new Date(created);
-    validUntil.setDate(validUntil.getDate() + 10);
-    const now = new Date();
-    if (now > validUntil) {
-      setIsExpired(true);
-    }
-  };
-
-  const calculateValidUntil = (createdAt: string) => {
-    const date = new Date(createdAt);
+  const calculateValidUntil = (createdAt: string | number | undefined) => {
+    if (!createdAt) return "";
+    const date = typeof createdAt === "number" ? new Date(createdAt) : new Date(createdAt);
     date.setDate(date.getDate() + 10);
     return date.toLocaleDateString('pt-BR');
   };
@@ -193,228 +150,12 @@ export default function Proposal() {
 
   const handleDownloadPDF = async () => {
     if (!proposal || !acceptanceData) return;
-    
     try {
-      // Usar a função atualizada que inclui todas as cláusulas
       await generateContractPDF(proposal, acceptanceData);
     } catch (error: any) {
       console.error("Error generating PDF:", error);
       toast.error(error.message || "Erro ao gerar PDF");
     }
-  };
-
-  const handleDownloadPDFOld = () => {
-    // Encontrar o container principal
-    const content = document.querySelector('.relative.z-10') as HTMLElement;
-    if (!content) return;
-
-    // Salvar estilos originais para restaurar depois
-    const originalStyles: Map<HTMLElement, string> = new Map();
-
-    // Função para aplicar estilos inline diretamente nos elementos
-    const applyPrintStyles = (element: HTMLElement) => {
-      const tagName = element.tagName.toLowerCase();
-      const classList = Array.from(element.classList);
-      
-      // Salvar estilo original se existir
-      if (element.style.cssText) {
-        originalStyles.set(element, element.style.cssText);
-      }
-
-      // Ocultar elementos que não devem ser impressos
-      if (classList.some(c => c.includes('no-print'))) {
-        element.style.display = 'none';
-        return;
-      }
-
-      // Forçar fundo branco em containers
-      if (['div', 'section', 'article', 'header', 'footer', 'card'].includes(tagName) || 
-          classList.some(c => c.includes('Card') || c.includes('card'))) {
-        element.style.setProperty('background', '#ffffff', 'important');
-        element.style.setProperty('background-color', '#ffffff', 'important');
-      }
-
-      // Forçar cores de texto escuras - verificar cor computada
-      const computedStyle = window.getComputedStyle(element);
-      const computedColor = computedStyle.color;
-      const textElements = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'li', 'td', 'th', 'div', 'a', 'strong', 'b', 'em', 'i', 'label'];
-      
-      if (textElements.includes(tagName) || element.textContent?.trim()) {
-        // Se tem classe de texto branco ou cinza claro, forçar preto
-        if (classList.some(c => c.includes('text-white') || c.includes('text-gray-100') || 
-                                c.includes('text-gray-200') || c.includes('text-gray-300') || 
-                                c.includes('text-gray-400'))) {
-          element.style.setProperty('color', '#000000', 'important');
-        } 
-        // Se tem classe de texto cinza médio, usar cinza escuro
-        else if (classList.some(c => c.includes('text-gray-500'))) {
-          element.style.setProperty('color', '#333333', 'important');
-        }
-        // Se tem classe de texto cinza escuro
-        else if (classList.some(c => c.includes('text-gray-600'))) {
-          element.style.setProperty('color', '#555555', 'important');
-        }
-        // Verificar cor computada - se for muito clara, forçar escura
-        else if (computedColor) {
-          // Extrair valores RGB
-          const rgbMatch = computedColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
-          if (rgbMatch) {
-            const r = parseInt(rgbMatch[1]);
-            const g = parseInt(rgbMatch[2]);
-            const b = parseInt(rgbMatch[3]);
-            // Se qualquer canal RGB for > 200, é muito claro - forçar escuro
-            if (r > 200 && g > 200 && b > 200) {
-              element.style.setProperty('color', '#000000', 'important');
-            }
-            // Se estiver entre 150-200, usar cinza escuro
-            else if (r > 150 && g > 150 && b > 150) {
-              element.style.setProperty('color', '#333333', 'important');
-            }
-          }
-        }
-      }
-
-      // SVGs - forçar cor escura
-      if (tagName === 'svg') {
-        element.style.setProperty('color', '#666666', 'important');
-        element.style.setProperty('fill', '#666666', 'important');
-        element.style.setProperty('stroke', '#666666', 'important');
-      }
-
-      // Badges
-      if (classList.some(c => c.includes('Badge') || c.includes('badge'))) {
-        element.style.setProperty('background', '#f5f5f5', 'important');
-        element.style.setProperty('border-color', '#cccccc', 'important');
-        element.style.setProperty('color', '#000000', 'important');
-      }
-
-      // Bordas - garantir que sejam visíveis
-      const borderColor = window.getComputedStyle(element).borderColor;
-      if (borderColor && (borderColor.includes('rgba(255') || borderColor.includes('rgb(255'))) {
-        element.style.setProperty('border-color', '#dddddd', 'important');
-      }
-
-      // Remover gradientes de texto
-      if (classList.some(c => c.includes('bg-clip-text') || c.includes('bg-gradient'))) {
-        element.style.setProperty('-webkit-background-clip', 'unset', 'important');
-        element.style.setProperty('background-clip', 'unset', 'important');
-        element.style.setProperty('background', 'transparent', 'important');
-        element.style.setProperty('color', '#000000', 'important');
-      }
-
-      // Processar filhos recursivamente
-      Array.from(element.children).forEach(child => {
-        applyPrintStyles(child as HTMLElement);
-      });
-    };
-
-    // Adicionar classe de print
-    content.classList.add('print-content');
-
-    // Aplicar estilos inline
-    applyPrintStyles(content);
-
-    // Adicionar estilos CSS de impressão
-    const style = document.createElement('style');
-    style.id = 'print-styles';
-    style.textContent = `
-      @media print {
-        @page {
-          margin: 2cm;
-          size: A4;
-        }
-        
-        body * {
-          visibility: hidden;
-        }
-        
-        .print-content,
-        .print-content * {
-          visibility: visible !important;
-        }
-        
-        .no-print,
-        .no-print * {
-          display: none !important;
-          visibility: hidden !important;
-        }
-        
-        .print-content {
-          position: absolute;
-          left: 0;
-          top: 0;
-          width: 100%;
-          background: #ffffff !important;
-        }
-        
-        .print-content .fixed,
-        .print-content [class*="blur"],
-        .print-content [class*="shadow"],
-        .print-content [class*="gradient"],
-        .print-content [class*="from-"],
-        .print-content [class*="to-"],
-        .print-content [class*="absolute"][class*="inset"] {
-          display: none !important;
-        }
-        
-        .print-content .grid {
-          display: block !important;
-        }
-        
-        .print-content .grid > * {
-          margin-bottom: 1.5rem !important;
-        }
-        
-        .print-content h1,
-        .print-content h2,
-        .print-content h3 {
-          page-break-after: avoid !important;
-        }
-        
-        .print-content section,
-        .print-content [class*="Card"] {
-          page-break-inside: avoid !important;
-        }
-        
-        .print-content * {
-          animation: none !important;
-          transition: none !important;
-        }
-      }
-    `;
-    
-    const existingStyle = document.getElementById('print-styles');
-    if (existingStyle) {
-      existingStyle.remove();
-    }
-    
-    document.head.appendChild(style);
-
-    // Aguardar antes de imprimir
-    setTimeout(() => {
-      window.print();
-    }, 100);
-
-    // Cleanup após impressão
-    const cleanup = () => {
-      // Remover estilos inline aplicados
-      originalStyles.forEach((originalStyle, element) => {
-        element.style.cssText = originalStyle;
-      });
-      originalStyles.clear();
-
-      // Remover estilos CSS
-      const styleEl = document.getElementById('print-styles');
-      if (styleEl) {
-        styleEl.remove();
-      }
-      
-      // Remover classe
-      content.classList.remove('print-content');
-    };
-
-    window.addEventListener('afterprint', cleanup, { once: true });
-    setTimeout(cleanup, 2000);
   };
 
   const containerVariants = {
@@ -438,12 +179,11 @@ export default function Proposal() {
     return <div className="min-h-screen bg-background text-white flex items-center justify-center">Carregando proposta...</div>;
   }
 
-  if (!proposal) {
+  if (!rawProposal) {
     return <div className="min-h-screen bg-background text-white flex items-center justify-center">Proposta não encontrada.</div>;
   }
 
-  // Se precisa de senha e ainda não tem sessão válida
-  if (showPasswordForm && !sessionToken) {
+  if (showPasswordForm) {
     return (
       <div className="min-h-screen bg-background text-white flex items-center justify-center p-4">
         <Card className="bg-card/50 backdrop-blur-sm border-white/10 max-w-md w-full">
@@ -478,7 +218,6 @@ export default function Proposal() {
 
   return (
     <div className="min-h-screen bg-background text-white font-sans selection:bg-neon-purple selection:text-white overflow-x-hidden">
-      {/* Background Elements */}
       <div className="fixed inset-0 z-0 pointer-events-none no-print">
         <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-neon-purple/20 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] left-[-5%] w-[500px] h-[500px] bg-neon-green/10 rounded-full blur-[120px]" />
@@ -486,7 +225,7 @@ export default function Proposal() {
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 md:py-20">
-        {(proposal.is_accepted === true || proposal.is_accepted) && (
+        {rawProposal.isAccepted && (
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -524,7 +263,7 @@ export default function Proposal() {
             className="bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-lg mb-8 flex items-center gap-3"
           >
             <AlertTriangle className="w-5 h-5" />
-            <p className="font-medium">Atenção: Esta proposta expirou em {calculateValidUntil(proposal.created_at)}.</p>
+            <p className="font-medium">Atenção: Esta proposta expirou em {calculateValidUntil(rawProposal.createdAt)}.</p>
           </motion.div>
         )}
 
@@ -534,31 +273,29 @@ export default function Proposal() {
           variants={containerVariants}
           className="space-y-16"
         >
-          {/* Header */}
           <motion.header variants={itemVariants} className="text-center space-y-6">
             <Badge variant="outline" className="border-neon-purple text-neon-purple px-4 py-1 text-sm uppercase tracking-widest">
               Proposta Comercial
             </Badge>
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-200 to-gray-400">
-              {proposal.title || `Projeto para ${proposal.client_name}`}
+              {rawProposal.title || `Projeto para ${rawProposal.clientName}`}
             </h1>
             <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-              Preparado especialmente para <span className="text-white font-semibold">{proposal.client_name}</span>
+              Preparado especialmente para <span className="text-white font-semibold">{rawProposal.clientName}</span>
             </p>
 
             <div className="flex flex-wrap justify-center gap-4 text-sm text-gray-500 mt-4">
               <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
                 <Calendar className="w-4 h-4 text-neon-purple" />
-                <span>Criado em: {new Date(proposal.created_at).toLocaleDateString('pt-BR')}</span>
+                <span>Criado em: {new Date(rawProposal.createdAt).toLocaleDateString('pt-BR')}</span>
               </div>
               <div className="flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10">
                 <Clock className={`w-4 h-4 ${isExpired ? "text-red-500" : "text-neon-green"}`} />
-                <span className={isExpired ? "text-red-400" : ""}>Válido até: {calculateValidUntil(proposal.created_at)}</span>
+                <span className={isExpired ? "text-red-400" : ""}>Válido até: {calculateValidUntil(rawProposal.createdAt)}</span>
               </div>
             </div>
           </motion.header>
 
-          {/* Apresentação */}
           <motion.section variants={itemVariants}>
             <Card className="bg-card/50 backdrop-blur-sm border-white/10 overflow-hidden relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-neon-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -568,9 +305,7 @@ export default function Proposal() {
                   Apresentação
                 </h2>
                 <div className="text-lg text-gray-300 leading-relaxed space-y-4">
-                  <p>
-                    Olá, tudo bem?
-                  </p>
+                  <p>Olá, tudo bem?</p>
                   <p>
                   Antes de tudo, agradeço o interesse! Sou Matheus Mierzwa, Arquiteto de Soluções Digitais e Tech Lead Frontend com mais de 4 anos de experiência transformando desafios complexos em ecossistemas digitais robustos.
                   </p>
@@ -585,7 +320,6 @@ export default function Proposal() {
             </Card>
           </motion.section>
 
-          {/* Objective */}
           <motion.section variants={itemVariants}>
             <Card className="bg-card/50 backdrop-blur-sm border-white/10 overflow-hidden relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-neon-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -595,15 +329,13 @@ export default function Proposal() {
                   Objetivo do Projeto
                 </h2>
                 <p className="text-lg text-gray-300 leading-relaxed">
-                  {proposal.objective}
+                  {rawProposal.objective}
                 </p>
               </CardContent>
             </Card>
           </motion.section>
 
-          {/* Scope & Timeline Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Scope */}
             <motion.section variants={itemVariants}>
               <Card className="h-full bg-card/50 backdrop-blur-sm border-white/10 hover:border-neon-purple/30 transition-colors duration-300">
                 <CardContent className="p-8 space-y-6">
@@ -612,7 +344,7 @@ export default function Proposal() {
                     Escopo dos Serviços
                   </h2>
                   <ul className="space-y-4">
-                    {proposal.scope?.map((item: string, index: number) => (
+                    {rawProposal.scope?.map((item: string, index: number) => (
                       <li key={index} className="flex items-start gap-3 text-gray-300 group">
                         <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-neon-purple group-hover:scale-150 transition-transform" />
                         <span className="group-hover:text-white transition-colors w-[95%]">{item}</span>
@@ -623,7 +355,6 @@ export default function Proposal() {
               </Card>
             </motion.section>
 
-            {/* Timeline */}
             <motion.section variants={itemVariants}>
               <Card className="h-full bg-card/50 backdrop-blur-sm border-white/10 hover:border-neon-green/30 transition-colors duration-300">
                 <CardContent className="p-8 space-y-6">
@@ -632,11 +363,9 @@ export default function Proposal() {
                     Cronograma Estimado
                   </h2>
                   <div className="relative pl-6">
-                    {/* Linha vertical contínua e discreta */}
                     <div className="absolute left-[11px] top-2 bottom-2 w-px bg-neon-lime" />
-                    
                     <div className="space-y-8">
-                      {proposal.timeline?.map((item: any, index: number) => (
+                      {rawProposal.timeline?.map((item: any, index: number) => (
                         <motion.div
                           key={index}
                           initial={{ opacity: 0, x: -20 }}
@@ -645,14 +374,11 @@ export default function Proposal() {
                           className="group relative"
                         >
                           <div className="flex items-start gap-4">
-                            {/* Ponto da timeline */}
                             <div className="relative shrink-0">
                               <div className="absolute left-[-18px] top-1.5 w-3 h-3 rounded-full bg-border border border-neon-green/40 group-hover:border-neon-green transition-all duration-300 flex items-center justify-center">
                                 <div className="w-1.5 h-1.5 rounded-full bg-neon-lime/50 group-hover:bg-neon-lime group-hover:scale-125 transition-all duration-300" />
                               </div>
                             </div>
-                            
-                            {/* Conteúdo */}
                             <div className="flex-1 pt-0.5 space-y-1">
                               <h4 className="text-white font-semibold text-base group-hover:text-neon-green transition-colors duration-300">
                                 {item.step}
@@ -664,9 +390,9 @@ export default function Proposal() {
                       ))}
                     </div>
                   </div>
-                  {proposal.delivery_date && (
+                  {rawProposal.deliveryDate && (
                     <div className="mt-4 pt-4 border-t border-white/10">
-                      <p className="text-sm text-gray-400">Entrega prevista: <span className="text-white">{new Date(proposal.delivery_date).toLocaleDateString('pt-BR')}</span></p>
+                      <p className="text-sm text-gray-400">Entrega prevista: <span className="text-white">{new Date(rawProposal.deliveryDate).toLocaleDateString('pt-BR')}</span></p>
                     </div>
                   )}
                 </CardContent>
@@ -674,7 +400,6 @@ export default function Proposal() {
             </motion.section>
           </div>
 
-          {/* Investment */}
           <motion.section variants={itemVariants}>
             <Card className="bg-gradient-to-br from-card to-black border-white/10 overflow-hidden relative">
               <div className="absolute top-0 right-0 w-64 h-64 bg-neon-purple/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2" />
@@ -688,7 +413,7 @@ export default function Proposal() {
                   </div>
                   <div className="text-center">
                     <div className="text-5xl md:text-6xl font-bold text-white tracking-tighter mb-2">
-                      {formatCurrency(proposal.investment_value)}
+                      {formatCurrency(rawProposal.investmentValue)}
                     </div>
                     <Badge className="bg-neon-green/10 text-neon-green hover:bg-neon-green/20 border-neon-green/20">
                       Pagamento Facilitado
@@ -703,7 +428,7 @@ export default function Proposal() {
                       Formas de Pagamento
                     </h3>
                     <ul className="space-y-2">
-                      {generatePaymentMethods(proposal.investment_value).map((method: string, idx: number) => (
+                      {generatePaymentMethods(rawProposal.investmentValue).map((method: string, idx: number) => (
                         <li key={idx} className="text-gray-400 flex items-center gap-2">
                           <div className="w-1 h-1 bg-gray-500 rounded-full" />
                           {method}
@@ -717,7 +442,7 @@ export default function Proposal() {
                       Condições Gerais
                     </h3>
                     <ul className="space-y-2">
-                      {proposal.conditions?.map((condition: string, idx: number) => (
+                      {rawProposal.conditions?.map((condition: string, idx: number) => (
                         <li key={idx} className="text-gray-400 flex items-center gap-2">
                           <div className="w-1 h-1 bg-gray-500 rounded-full" />
                           {condition}
@@ -730,7 +455,6 @@ export default function Proposal() {
             </Card>
           </motion.section>
 
-          {/* Política de Rescisão */}
           <motion.section variants={itemVariants}>
             <Card className="bg-card/50 backdrop-blur-sm border-white/10 overflow-hidden relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-neon-purple/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
@@ -746,7 +470,7 @@ export default function Proposal() {
                   <CollapsibleContent className="mt-4">
                     <div className="prose prose-invert prose-headings:text-white prose-p:text-gray-300 prose-strong:text-white prose-ul:text-gray-300 prose-li:text-gray-300 prose-hr:border-white/10 max-w-none">
                       <ReactMarkdown>
-                        {proposal.rescision_policy || DEFAULT_RESCISION_POLICY}
+                        {rawProposal.rescissionPolicy || DEFAULT_RESCISION_POLICY}
                       </ReactMarkdown>
                     </div>
                   </CollapsibleContent>
@@ -755,16 +479,14 @@ export default function Proposal() {
             </Card>
           </motion.section>
 
-          {/* CTA Actions */}
-          {!proposal.is_accepted && (
+          {!rawProposal.isAccepted && (
             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4 pb-12">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="bg-neon-purple hover:bg-neon-purple/90 text-white h-14 px-8 w-full sm:w-auto"
                 onClick={() => {
-                  // Passar o token da sessão via URL ou sessionStorage
                   if (sessionToken) {
-                    sessionStorage.setItem(`proposal_session_${proposal.id}`, sessionToken);
+                    sessionStorage.setItem(`proposal_session_slug_${slug}`, sessionToken);
                   }
                   setLocation(`/proposta/${id}/aceitar`);
                 }}
@@ -775,11 +497,10 @@ export default function Proposal() {
             </motion.div>
           )}
 
-          {/* Botão Ler Contrato quando já aceito */}
-          {proposal.is_accepted && acceptanceData && (
+          {rawProposal.isAccepted && acceptanceData && (
             <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4 pb-12">
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
                 className="bg-neon-purple hover:bg-neon-purple/90 text-white h-14 px-8 w-full sm:w-auto"
                 onClick={() => setShowContractModal(true)}
               >
@@ -789,7 +510,6 @@ export default function Proposal() {
             </motion.div>
           )}
 
-          {/* Footer */}
           <motion.footer variants={itemVariants} className="text-center border-t border-white/10 pt-8 pb-4">
             <p className="text-gray-500 text-sm">
               © 2025 Matheus Mierzwa. Todos os direitos reservados.
@@ -801,8 +521,7 @@ export default function Proposal() {
         </motion.div>
       </div>
 
-      {/* Modal do Contrato */}
-      {proposal.is_accepted && acceptanceData && (
+      {rawProposal.isAccepted && acceptanceData && (
         <ContractModal
           open={showContractModal}
           onOpenChange={setShowContractModal}
@@ -824,9 +543,7 @@ export default function Proposal() {
 
   async function handleDigitalSignature() {
     if (!proposal || !acceptanceData) return;
-
     try {
-      // Gerar PDF do contrato completo usando a função utilitária
       await generateContractPDF(proposal, acceptanceData);
       toast.success("PDF do contrato gerado com sucesso!");
     } catch (error: any) {
@@ -842,7 +559,6 @@ export default function Proposal() {
     const margin = 20;
     const maxWidth = pageWidth - (margin * 2);
 
-    // Função auxiliar para verificar se precisa de nova página
     const checkPageBreak = (requiredSpace: number = 10) => {
       if (yPos + requiredSpace > 270) {
         doc.addPage();
@@ -852,26 +568,23 @@ export default function Proposal() {
       return false;
     };
 
-    // Função auxiliar para adicionar texto com quebra de linha
     const addText = (text: string, fontSize: number = 12, isBold: boolean = false, color: [number, number, number] = [0, 0, 0], lineHeight: number = 0.6) => {
       if (!text || String(text).trim() === '') return;
-      
+
       doc.setFontSize(fontSize);
       doc.setTextColor(color[0], color[1], color[2]);
       doc.setFont('helvetica', isBold ? 'bold' : 'normal');
-      
-      // Converter para string e limpar caracteres problemáticos
-      // Remover markdown mas manter estrutura
+
       let cleanText = String(text)
         .replace(/\r\n/g, '\n')
         .replace(/\r/g, '\n')
-        .replace(/\*\*/g, '') // Remove negrito markdown
-        .replace(/#{1,6}\s/g, '') // Remove headers markdown
-        .replace(/---/g, '') // Remove separadores markdown
+        .replace(/\*\*/g, '')
+        .replace(/#{1,6}\s/g, '')
+        .replace(/---/g, '')
         .trim();
-      
+
       const lines = doc.splitTextToSize(cleanText, maxWidth);
-      
+
       lines.forEach((line: string) => {
         checkPageBreak(fontSize * lineHeight + 2);
         doc.text(line, margin, yPos);
@@ -880,14 +593,11 @@ export default function Proposal() {
       yPos += 2;
     };
 
-    // Gerar conteúdo do contrato usando a função utilitária
     const contractContent = generateContractContent(proposal, acceptanceData);
 
-    // Cabeçalho
     addText('CONTRATO ELETRÔNICO', 18, true, [0, 0, 0]);
     yPos += 5;
 
-    // Identificação das Partes
     const headerText = contractContent.header
       .replace(/\*\*/g, '')
       .replace(/---/g, '')
@@ -895,29 +605,24 @@ export default function Proposal() {
     addText(headerText, 12);
     yPos += 5;
 
-    // Cláusulas - garantir que todas sejam incluídas
-    contractContent.clauses.forEach((clause, index) => {
-      // Processar cada cláusula mantendo a estrutura
+    contractContent.clauses.forEach((clause) => {
       let cleanClause = clause
-        .replace(/\*\*/g, '') // Remove negrito markdown
-        .replace(/#{1,6}\s/g, '') // Remove headers markdown
+        .replace(/\*\*/g, '')
+        .replace(/#{1,6}\s/g, '')
         .trim();
-      
-      // Adicionar título da cláusula em negrito se existir
+
       const titleMatch = cleanClause.match(/^(CLÁUSULA \d+[^:]*:)/);
       if (titleMatch) {
         addText(titleMatch[1], 12, true, [0, 0, 0], 0.7);
         cleanClause = cleanClause.replace(titleMatch[1], '').trim();
       }
-      
-      // Adicionar conteúdo da cláusula
+
       if (cleanClause) {
         addText(cleanClause, 11, false, [0, 0, 0], 0.6);
       }
       yPos += 3;
     });
 
-    // Assinatura Digital
     addText('ASSINATURA DIGITAL', 14, true);
     addText(`Este contrato foi assinado digitalmente em ${new Date(acceptanceData.accepted_at).toLocaleString('pt-BR')}`, 11);
     addText(`Nome: ${acceptanceData.client_name}`, 11);
@@ -931,14 +636,12 @@ export default function Proposal() {
     }
     yPos += 5;
 
-    // Evidências Técnicas
     addText('EVIDÊNCIAS TÉCNICAS', 12, true);
     addText(`Hash SHA-256: ${acceptanceData.content_hash || 'N/A'}`, 9);
     addText(`IP de Origem: ${acceptanceData.ip_address || 'N/A'}`, 9);
     addText(`User-Agent: ${acceptanceData.user_agent || 'N/A'}`, 9);
     addText(`Versão da Proposta: ${acceptanceData.proposal_version || '1.0'}`, 9);
 
-    // Salvar PDF
     const fileName = `Contrato_${proposal.client_name.replace(/\s+/g, '_')}_${new Date(acceptanceData.accepted_at).toISOString().split('T')[0]}.pdf`;
     doc.save(fileName);
   }

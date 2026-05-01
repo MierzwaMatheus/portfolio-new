@@ -18,9 +18,10 @@ import {
   Plus,
   CreditCard,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/lib/supabase";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { ProjectDialog } from "@/components/admin/ProjectDialog";
 import { ProposalDialog } from "@/components/admin/ProposalDialog";
 import { ResumeExperienceDialog } from "@/components/admin/ResumeExperienceDialog";
@@ -174,53 +175,15 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
 // Dashboard Page
 export default function Dashboard() {
-  const [stats, setStats] = useState({
-    projects: 0,
-    articles: 0,
-    proposals: 0,
-  });
-  const [isLoading, setIsLoading] = useState(true);
+  const stats = useQuery(api.stats.getDashboard);
+  const isLoading = stats === undefined;
+  const projectsCount = stats?.projects.total ?? 0;
+  const articlesCount = (stats?.posts.published ?? 0) + (stats?.posts.draft ?? 0);
+  const proposalsCount = stats?.proposals.total ?? 0;
+
   const [isProjectOpen, setIsProjectOpen] = useState(false);
   const [isProposalOpen, setIsProposalOpen] = useState(false);
   const [isExperienceOpen, setIsExperienceOpen] = useState(false);
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
-    try {
-      setIsLoading(true);
-
-      // Buscar contagem de projetos
-      const { count: projectsCount } = await supabase
-        .schema("app_portfolio")
-        .from("projects")
-        .select("*", { count: "exact", head: true });
-
-      // Buscar contagem de artigos (posts)
-      const { count: articlesCount } = await supabase
-        .schema("app_portfolio")
-        .from("posts")
-        .select("*", { count: "exact", head: true });
-
-      // Buscar contagem de propostas
-      const { count: proposalsCount } = await supabase
-        .schema("app_portfolio")
-        .from("proposals")
-        .select("*", { count: "exact", head: true });
-
-      setStats({
-        projects: projectsCount || 0,
-        articles: articlesCount || 0,
-        proposals: proposalsCount || 0,
-      });
-    } catch (error) {
-      console.error("Error fetching stats:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <AdminLayout>
@@ -239,21 +202,21 @@ export default function Dashboard() {
           {[
             {
               title: "Projetos",
-              count: stats.projects,
+              count: projectsCount,
               icon: FolderKanban,
               color: "text-blue-400",
               bg: "bg-blue-400/10",
             },
             {
               title: "Artigos",
-              count: stats.articles,
+              count: articlesCount,
               icon: FileText,
               color: "text-green-400",
               bg: "bg-green-400/10",
             },
             {
               title: "Propostas",
-              count: stats.proposals,
+              count: proposalsCount,
               icon: FileSignature,
               color: "text-purple-400",
               bg: "bg-purple-400/10",
@@ -324,13 +287,13 @@ export default function Dashboard() {
         <ProjectDialog
           open={isProjectOpen}
           onOpenChange={setIsProjectOpen}
-          onSave={fetchStats}
+          onSave={() => {}}
         />
 
         <ProposalDialog
           open={isProposalOpen}
           onOpenChange={setIsProposalOpen}
-          onSave={fetchStats}
+          onSave={() => {}}
         />
 
         <ResumeExperienceDialog

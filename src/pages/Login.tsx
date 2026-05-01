@@ -1,26 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lock, Loader2 } from "lucide-react";
-import { supabase } from "@/lib/supabase";
 import { useLocation } from "wouter";
 
 export default function Login() {
-  const { user } = useAuth();
+  const { isAuthenticated, isLoading: isAuthLoading, roles } = useAuth();
+  const { signIn } = useAuthActions();
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Redirect if already logged in
-  if (user) {
-    setLocation("/admin/dashboard");
-    return null;
-  }
+  // Redirect after login resolves authenticated state with role
+  useEffect(() => {
+    if (!isAuthLoading && isAuthenticated) {
+      if (roles.includes("root") || roles.includes("admin")) {
+        setLocation("/admin/dashboard");
+      } else if (roles.includes("proposal-editor")) {
+        setLocation("/admin/proposals");
+      } else {
+        setLocation("/admin/dashboard");
+      }
+    }
+  }, [isAuthLoading, isAuthenticated, roles, setLocation]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,38 +36,10 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setError("Credenciais inválidas. Verifique seu email e senha.");
-      } else {
-        // AuthContext will handle state update and redirection via useEffect
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          // Check user roles
-          const { data: roles } = await supabase
-            .from("user_app_roles")
-            .select("role")
-            .eq("user_id", user.id)
-            .eq("app_key", "app_portfolio");
-
-          const userRoles = roles?.map(r => r.role) || [];
-
-          if (userRoles.includes("root") || userRoles.includes("admin")) {
-            setLocation("/admin/dashboard");
-          } else if (userRoles.includes("proposal-editor")) {
-            setLocation("/admin/proposals");
-          } else {
-            // Default fallback
-            setLocation("/admin/dashboard");
-          }
-        }
-      }
+      await signIn("password", { email, password, flow: "signIn" });
+      // AuthContext + the useEffect above will handle redirect once role resolves
     } catch (err) {
-      setError("Ocorreu um erro ao tentar fazer login.");
+      setError("Credenciais inválidas. Verifique seu email e senha.");
       console.error(err);
     } finally {
       setIsLoading(false);

@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams, useLocation } from "wouter";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Check, Home } from "lucide-react";
-import { supabase } from "@/lib/supabase";
-import { Checkout } from "@/types/checkout";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('pt-BR', {
@@ -17,40 +17,19 @@ const formatCurrency = (value: number) => {
 export default function PaymentSuccessPage() {
   const { uniqueLink } = useParams<{ uniqueLink: string }>();
   const [, navigate] = useLocation();
-  const [checkout, setCheckout] = useState<Checkout | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+
+  const checkout = useQuery(
+    api.checkouts.getByLink,
+    uniqueLink ? { uniqueLink } : "skip" as any,
+  );
+
+  const isLoading = checkout === undefined;
 
   useEffect(() => {
-    if (uniqueLink) {
-      fetchCheckout();
-    }
-  }, [uniqueLink]);
-
-  const fetchCheckout = async () => {
-    try {
-      setIsLoading(true);
-      const { data, error } = await supabase
-        .schema('app_portfolio')
-        .from('checkouts')
-        .select('*')
-        .eq('unique_link', uniqueLink)
-        .single();
-
-      if (error) throw error;
-
-      if (!data) {
-        navigate('/');
-        return;
-      }
-
-      setCheckout(data);
-    } catch (error) {
-      console.error('Error fetching checkout:', error);
+    if (!isLoading && checkout === null) {
       navigate('/');
-    } finally {
-      setIsLoading(false);
     }
-  };
+  }, [isLoading, checkout, navigate]);
 
   if (isLoading) {
     return (
@@ -98,36 +77,36 @@ export default function PaymentSuccessPage() {
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">Valor Total:</span>
                 <span className="text-2xl font-bold text-neon-purple">
-                  {formatCurrency(checkout.total_value || checkout.value || 0)}
+                  {formatCurrency(((checkout as any).totalValue as number | undefined) ?? checkout.value ?? 0)}
                 </span>
               </div>
 
-              {checkout.payment_method && (
+              {(checkout as any).paymentMethod && (
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Método de Pagamento:</span>
                   <span className="text-white font-medium capitalize">
-                    {checkout.payment_method === 'pix' ? 'PIX' :
-                     checkout.payment_method === 'boleto' ? 'Boleto' :
-                     checkout.payment_method === 'credit_card' ? 'Cartão de Crédito' :
-                     checkout.payment_method}
+                    {(checkout as any).paymentMethod === 'pix' ? 'PIX' :
+                     (checkout as any).paymentMethod === 'boleto' ? 'Boleto' :
+                     (checkout as any).paymentMethod === 'credit_card' ? 'Cartão de Crédito' :
+                     (checkout as any).paymentMethod}
                   </span>
                 </div>
               )}
 
-                    {checkout.installment_count && checkout.installment_count > 1 && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-400">Parcelamento:</span>
-                        <span className="text-white font-medium">
-                          {checkout.installment_count}x de {formatCurrency(checkout.installment_value || 0)}
-                        </span>
-                      </div>
-                    )}
+              {(checkout as any).installmentCount && (checkout as any).installmentCount > 1 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-400">Parcelamento:</span>
+                  <span className="text-white font-medium">
+                    {(checkout as any).installmentCount}x de {formatCurrency((checkout as any).installmentValue || 0)}
+                  </span>
+                </div>
+              )}
 
-              {checkout.due_date && (
+              {checkout.dueDate && (
                 <div className="flex justify-between items-center">
                   <span className="text-gray-400">Data:</span>
                   <span className="text-white font-medium">
-                    {new Date(checkout.due_date).toLocaleDateString('pt-BR')}
+                    {new Date(checkout.dueDate).toLocaleDateString('pt-BR')}
                   </span>
                 </div>
               )}

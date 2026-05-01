@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
-import { supabase } from "@/lib/supabase";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { toast } from "sonner";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 
@@ -16,6 +17,8 @@ interface ResumeExperienceDialogProps {
 
 export function ResumeExperienceDialog({ open, onOpenChange, onSave }: ResumeExperienceDialogProps) {
     const [description, setDescription] = useState("");
+    const allItems = useQuery(api.resumeItems.listAll, {}) as Array<{ type: string }> | undefined;
+    const createItem = useMutation(api.resumeItems.create);
 
     const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -28,23 +31,13 @@ export function ResumeExperienceDialog({ open, onOpenChange, onSave }: ResumeExp
         content.description = description;
 
         try {
-            // Get current count to set order
-            const { count } = await supabase
-                .schema("app_portfolio")
-                .from("resume_items")
-                .select("*", { count: 'exact', head: true })
-                .eq('type', 'experience');
-
-            const { error } = await supabase
-                .schema("app_portfolio")
-                .from("resume_items")
-                .insert([{
-                    type: 'experience',
-                    content,
-                    order_index: count || 0
-                }]);
-
-            if (error) throw error;
+            const orderIndex = (allItems ?? []).filter((i) => i.type === 'experience').length;
+            await createItem({
+                type: 'experience',
+                content,
+                contentTranslations: { ptBR: content, enUS: content },
+                orderIndex,
+            });
             toast.success("Experiência adicionada com sucesso");
             onSave();
             onOpenChange(false);

@@ -3,6 +3,7 @@ import {
   DailyRoutineItem,
   FAQItem,
 } from "../interfaces/AboutRepository";
+import { mapDailyRoutineItem, mapFAQItem } from "../mappers/convexMappers";
 
 export class StaticAboutRepository implements AboutRepository {
   async getDailyRoutineItems(): Promise<DailyRoutineItem[]> {
@@ -10,7 +11,12 @@ export class StaticAboutRepository implements AboutRepository {
       const response = await fetch("/data/about.json");
       if (!response.ok) return [];
       const data = await response.json();
-      return data.daily_routine || [];
+      const list = Array.isArray(data?.dailyRoutine)
+        ? data.dailyRoutine
+        : Array.isArray(data?.daily_routine)
+        ? data.daily_routine
+        : [];
+      return list.map(mapDailyRoutineItem);
     } catch (error) {
       console.error("Error loading static about data:", error);
       return [];
@@ -22,7 +28,8 @@ export class StaticAboutRepository implements AboutRepository {
       const response = await fetch("/data/about.json");
       if (!response.ok) return [];
       const data = await response.json();
-      return data.faq || [];
+      const list = Array.isArray(data?.faq) ? data.faq : [];
+      return list.map(mapFAQItem);
     } catch (error) {
       console.error("Error loading static about data:", error);
       return [];

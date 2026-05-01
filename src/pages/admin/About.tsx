@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,17 +10,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2, Pencil, Image as ImageIcon, GripVertical } from "lucide-react";
 import { ImagePicker } from "@/components/admin/ImagePicker";
-import { supabase } from "@/lib/supabase";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
-import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
 import { BentoGridPreview } from "@/components/admin/BentoGridPreview";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { toast } from "sonner";
+
+type SpanSize = "1x1" | "1x2" | "2x1";
 
 function SortableDailyRoutineCard({ item, onEdit, onDelete, t }: { item: any, onEdit: (item: any) => void, onDelete: (id: string) => void, t: (key: string) => string }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item._id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -32,31 +35,26 @@ function SortableDailyRoutineCard({ item, onEdit, onDelete, t }: { item: any, on
       <Card className="bg-card border-white/10 group">
         <CardContent className="pt-6 space-y-4">
           <div className="relative aspect-video rounded-lg overflow-hidden border border-white/10">
-            <img src={item.image_url} alt={item.description} className="w-full h-full object-cover" />
+            {item.image?.url && (
+              <img src={item.image.url} alt={item.description} className="w-full h-full object-cover" />
+            )}
           </div>
           <div>
             <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
               <div {...attributes} {...listeners} className="cursor-move">
                 <GripVertical className="w-4 h-4 text-gray-500 hover:text-white" />
               </div>
-              {item.description_translations?.['pt-BR'] || item.description}
+              {item.descriptionTranslations?.ptBR || item.description}
             </h3>
-            <div className="flex flex-wrap gap-2 mb-2">
-              {item.tags?.map((tag: string, idx: number) => (
-                <Badge key={idx} className="bg-neon-purple/20 text-neon-purple border-none text-xs">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
             <p className="text-gray-400 text-xs">
-              {t('admin.about.spanSize')}: {item.span_size}
+              {t('admin.about.spanSize')}: {item.spanSize}
             </p>
           </div>
           <div className="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <Button variant="ghost" size="sm" onClick={() => onEdit(item)} className="text-white hover:text-neon-purple">
               <Pencil className="w-4 h-4 mr-2" /> {t('common.edit')}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => onDelete(item.id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
+            <Button variant="ghost" size="sm" onClick={() => onDelete(item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
               <Trash2 className="w-4 h-4 mr-2" /> {t('common.delete')}
             </Button>
           </div>
@@ -67,7 +65,7 @@ function SortableDailyRoutineCard({ item, onEdit, onDelete, t }: { item: any, on
 }
 
 function SortableFaqCard({ item, onEdit, onDelete, t }: { item: any, onEdit: (item: any) => void, onDelete: (id: string) => void, t: (key: string) => string }) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item.id });
+  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item._id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -83,17 +81,17 @@ function SortableFaqCard({ item, onEdit, onDelete, t }: { item: any, onEdit: (it
               <div {...attributes} {...listeners} className="cursor-move">
                 <GripVertical className="w-4 h-4 text-gray-500 hover:text-white" />
               </div>
-              {item.question_translations?.['pt-BR'] || item.question}
+              {item.questionTranslations?.ptBR || item.question}
             </h3>
             <p className="text-gray-400 text-sm leading-relaxed">
-              {item.answer_translations?.['pt-BR'] || item.answer}
+              {item.answerTranslations?.ptBR || item.answer}
             </p>
           </div>
           <div className="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <Button variant="ghost" size="sm" onClick={() => onEdit(item)} className="text-white hover:text-neon-purple">
               <Pencil className="w-4 h-4 mr-2" /> {t('common.edit')}
             </Button>
-            <Button variant="ghost" size="sm" onClick={() => onDelete(item.id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
+            <Button variant="ghost" size="sm" onClick={() => onDelete(item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
               <Trash2 className="w-4 h-4 mr-2" /> {t('common.delete')}
             </Button>
           </div>
@@ -105,92 +103,50 @@ function SortableFaqCard({ item, onEdit, onDelete, t }: { item: any, onEdit: (it
 
 export default function AdminAbout() {
   const { t } = useTranslation();
-  const [dailyRoutine, setDailyRoutine] = useState<any[]>([]);
-  const [faq, setFaq] = useState<any[]>([]);
+
+  const dailyRoutineData = useQuery(api.aboutDailyRoutine.list, {});
+  const faqData = useQuery(api.aboutFaq.list, {});
+  const dailyRoutine = dailyRoutineData ?? [];
+  const faq = faqData ?? [];
+
+  const createDailyRoutine = useMutation(api.aboutDailyRoutine.create);
+  const updateDailyRoutine = useMutation(api.aboutDailyRoutine.update);
+  const removeDailyRoutine = useMutation(api.aboutDailyRoutine.remove);
+  const createFaq = useMutation(api.aboutFaq.create);
+  const updateFaq = useMutation(api.aboutFaq.update);
+  const removeFaq = useMutation(api.aboutFaq.remove);
 
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
-  const [selectedImage, setSelectedImage] = useState<string>("");
-  const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState<string>("");
-  const [spanSize, setSpanSize] = useState<string>("1x1");
+  const [selectedImageId, setSelectedImageId] = useState<string>("");
+  const [selectedImageUrl, setSelectedImageUrl] = useState<string>("");
+  const [spanSize, setSpanSize] = useState<SpanSize>("1x1");
 
   const sensors = useSensors(
     useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      // Fetch Daily Routine Items
-      const { data: dailyData, error: dailyError } = await supabase
-        .schema('app_portfolio')
-        .from('daily_routine_items')
-        .select('*')
-        .order('display_order', { ascending: true });
-
-      if (dailyError) {
-        console.error('Error fetching daily routine:', dailyError);
-      } else if (dailyData) {
-        setDailyRoutine(dailyData);
-      }
-
-      // Fetch FAQ Items
-      const { data: faqData, error: faqError } = await supabase
-        .schema('app_portfolio')
-        .from('faq_items')
-        .select('*')
-        .order('display_order', { ascending: true });
-
-      if (faqError) {
-        console.error('Error fetching FAQ:', faqError);
-      } else if (faqData) {
-        setFaq(faqData);
-      }
-    } catch (error) {
-      console.error('Unexpected error fetching data:', error);
-    }
-  };
 
   const handleOpenModal = (type: string, item: any = null) => {
     setActiveModal(type);
     setEditingItem(item);
     if (type === "dailyRoutine" && item) {
-      setSelectedImage(item.image_url || "");
-      setTags(item.tags || []);
-      setSpanSize(item.span_size || "1x1");
+      setSelectedImageId(item.imageId || "");
+      setSelectedImageUrl(item.image?.url || "");
+      setSpanSize((item.spanSize as SpanSize) || "1x1");
     } else {
-      setSelectedImage("");
-      setTags([]);
+      setSelectedImageId("");
+      setSelectedImageUrl("");
       setSpanSize("1x1");
     }
-    setTagInput("");
   };
 
   const handleCloseModal = () => {
     setActiveModal(null);
     setEditingItem(null);
-    setSelectedImage("");
-    setTags([]);
-    setTagInput("");
+    setSelectedImageId("");
+    setSelectedImageUrl("");
     setSpanSize("1x1");
-  };
-
-  const handleAddTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput("");
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -201,92 +157,65 @@ export default function AdminAbout() {
     try {
       if (activeModal === "dailyRoutine") {
         const descriptionPT = formData.get("description") as string;
-        const displayOrder = editingItem ? editingItem.display_order : dailyRoutine.length;
+        const displayOrder = editingItem ? editingItem.displayOrder : dailyRoutine.length;
 
-        // Traduz descrição usando a Edge Function
-        const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
-          body: {
-            texts: [descriptionPT],
-            source: 'pt',
-            target: 'en',
-          },
-        });
-
-        if (translateError) {
-          console.error('Translation error:', translateError);
-          alert('Erro ao traduzir. Salvando apenas em português.');
-        }
-
-        const translatedTexts = translateData?.translatedTexts || [descriptionPT];
-        const descriptionEN = translatedTexts[0] || descriptionPT;
-
-        const data = {
-          image_url: selectedImage,
-          tags: tags,
-          description: descriptionPT,
-          description_translations: {
-            'pt-BR': descriptionPT,
-            'en-US': descriptionEN,
-          },
-          span_size: spanSize,
-          display_order: displayOrder,
-        };
+        const descriptionTranslations = { ptBR: descriptionPT, enUS: descriptionPT };
 
         if (editingItem) {
-          await supabase.schema('app_portfolio').from('daily_routine_items').update(data).eq('id', editingItem.id);
+          await updateDailyRoutine({
+            id: editingItem._id as Id<"aboutDailyRoutine">,
+            imageId: selectedImageId ? (selectedImageId as Id<"imageMetadata">) : undefined,
+            description: descriptionPT,
+            descriptionTranslations,
+            spanSize,
+            displayOrder,
+          });
         } else {
-          await supabase.schema('app_portfolio').from('daily_routine_items').insert(data);
+          if (!selectedImageId) {
+            toast.error("Selecione uma imagem");
+            return;
+          }
+          await createDailyRoutine({
+            imageId: selectedImageId as Id<"imageMetadata">,
+            description: descriptionPT,
+            descriptionTranslations,
+            spanSize,
+            displayOrder,
+          });
         }
       } else if (activeModal === "faq") {
         const questionPT = formData.get("question") as string;
         const answerPT = formData.get("answer") as string;
-        const displayOrder = editingItem ? editingItem.display_order : faq.length;
+        const displayOrder = editingItem ? editingItem.displayOrder : faq.length;
 
-        // Traduz pergunta e resposta usando a Edge Function
-        const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
-          body: {
-            texts: [questionPT, answerPT],
-            source: 'pt',
-            target: 'en',
-          },
-        });
-
-        if (translateError) {
-          console.error('Translation error:', translateError);
-          alert('Erro ao traduzir. Salvando apenas em português.');
-        }
-
-        const translatedTexts = translateData?.translatedTexts || [questionPT, answerPT];
-        const questionEN = translatedTexts[0] || questionPT;
-        const answerEN = translatedTexts[1] || answerPT;
-
-        const data = {
-          question: questionPT,
-          question_translations: {
-            'pt-BR': questionPT,
-            'en-US': questionEN,
-          },
-          answer: answerPT,
-          answer_translations: {
-            'pt-BR': answerPT,
-            'en-US': answerEN,
-          },
-          display_order: displayOrder,
-        };
+        const questionTranslations = { ptBR: questionPT, enUS: questionPT };
+        const answerTranslations = { ptBR: answerPT, enUS: answerPT };
 
         if (editingItem) {
-          await supabase.schema('app_portfolio').from('faq_items').update(data).eq('id', editingItem.id);
+          await updateFaq({
+            id: editingItem._id as Id<"aboutFaq">,
+            question: questionPT,
+            questionTranslations,
+            answer: answerPT,
+            answerTranslations,
+            displayOrder,
+          });
         } else {
-          await supabase.schema('app_portfolio').from('faq_items').insert(data);
+          await createFaq({
+            question: questionPT,
+            questionTranslations,
+            answer: answerPT,
+            answerTranslations,
+            displayOrder,
+          });
         }
       }
 
-      await fetchData();
       handleCloseModal();
-      alert(t('admin.about.saveSuccess'));
+      toast.success(t('admin.about.saveSuccess'));
     } catch (error) {
       console.error("Error saving:", error);
-      alert(t('admin.about.saveError'));
+      toast.error(t('admin.about.saveError'));
     }
   };
 
@@ -294,70 +223,53 @@ export default function AdminAbout() {
     if (confirm(t('admin.about.deleteConfirm'))) {
       try {
         if (type === "dailyRoutine") {
-          await supabase.schema('app_portfolio').from('daily_routine_items').delete().eq('id', id);
+          await removeDailyRoutine({ id: id as Id<"aboutDailyRoutine"> });
         }
         if (type === "faq") {
-          await supabase.schema('app_portfolio').from('faq_items').delete().eq('id', id);
+          await removeFaq({ id: id as Id<"aboutFaq"> });
         }
-        await fetchData();
       } catch (error) {
         console.error("Error deleting:", error);
-        alert(t('admin.about.deleteError'));
+        toast.error(t('admin.about.deleteError'));
       }
     }
   };
 
   const handleDragEnd = async (event: DragEndEvent, type: string) => {
     const { active, over } = event;
+    if (!over || active.id === over.id) return;
 
-    if (over && active.id !== over.id) {
-      const items = type === "dailyRoutine" ? dailyRoutine : faq;
-      const sortedItems = [...items].sort((a, b) => a.display_order - b.display_order);
-      const oldIndex = sortedItems.findIndex((item) => item.id === active.id);
-      const newIndex = sortedItems.findIndex((item) => item.id === over.id);
+    const items = type === "dailyRoutine" ? dailyRoutine : faq;
+    const sortedItems = [...items].sort((a: any, b: any) => a.displayOrder - b.displayOrder);
+    const oldIndex = sortedItems.findIndex((item: any) => item._id === active.id);
+    const newIndex = sortedItems.findIndex((item: any) => item._id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
 
-      if (oldIndex === -1 || newIndex === -1) return;
+    const newOrder = arrayMove(sortedItems, oldIndex, newIndex);
 
-      const newOrder = arrayMove(sortedItems, oldIndex, newIndex);
-
-      const updatedOrder = newOrder.map((item, index) => ({
-        ...item,
-        display_order: index
-      }));
-
+    try {
       if (type === "dailyRoutine") {
-        setDailyRoutine(updatedOrder);
+        await Promise.all(newOrder.map((item: any, index: number) =>
+          updateDailyRoutine({ id: item._id as Id<"aboutDailyRoutine">, displayOrder: index })
+        ));
       } else {
-        setFaq(updatedOrder);
+        await Promise.all(newOrder.map((item: any, index: number) =>
+          updateFaq({ id: item._id as Id<"aboutFaq">, displayOrder: index })
+        ));
       }
-
-      try {
-        const tableName = type === "dailyRoutine" ? "daily_routine_items" : "faq_items";
-        const updatePromises = updatedOrder.map((item, index) =>
-          supabase
-            .schema("app_portfolio")
-            .from(tableName)
-            .update({ display_order: index })
-            .eq("id", item.id)
-        );
-
-        const results = await Promise.all(updatePromises);
-        const hasError = results.some(result => result.error);
-
-        if (hasError) {
-          const errors = results.filter(r => r.error).map(r => r.error);
-          console.error("Error reordering items:", errors);
-          throw new Error("Erro ao atualizar ordem dos itens");
-        }
-
-        alert("Ordem atualizada com sucesso");
-      } catch (error) {
-        console.error("Error reordering items:", error);
-        alert("Erro ao reordenar itens");
-        fetchData();
-      }
+      toast.success("Ordem atualizada com sucesso");
+    } catch (error) {
+      console.error("Error reordering items:", error);
+      toast.error("Erro ao reordenar itens");
     }
   };
+
+  // Adapt for BentoGridPreview which expects { id, span_size, display_order }
+  const previewItems = dailyRoutine.map((item: any) => ({
+    id: item._id,
+    span_size: item.spanSize,
+    display_order: item.displayOrder,
+  }));
 
   return (
     <AdminLayout>
@@ -380,26 +292,25 @@ export default function AdminAbout() {
               </Button>
             </div>
 
-            {/* Preview do Layout */}
             <Card className="bg-card border-white/10">
               <CardHeader>
                 <CardTitle className="text-white text-lg">Preview do Layout</CardTitle>
               </CardHeader>
               <CardContent>
                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'dailyRoutine')}>
-                  <SortableContext items={dailyRoutine.map(i => i.id)} strategy={rectSortingStrategy}>
-                    <BentoGridPreview items={dailyRoutine} />
+                  <SortableContext items={dailyRoutine.map((i: any) => i._id)} strategy={rectSortingStrategy}>
+                    <BentoGridPreview items={previewItems as any} />
                   </SortableContext>
                 </DndContext>
               </CardContent>
             </Card>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'dailyRoutine')}>
-              <SortableContext items={dailyRoutine.map(i => i.id)} strategy={verticalListSortingStrategy}>
+              <SortableContext items={dailyRoutine.map((i: any) => i._id)} strategy={verticalListSortingStrategy}>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {dailyRoutine.map(item => (
+                  {dailyRoutine.map((item: any) => (
                     <SortableDailyRoutineCard
-                      key={item.id}
+                      key={item._id}
                       item={item}
                       onEdit={(item) => handleOpenModal("dailyRoutine", item)}
                       onDelete={(id) => handleDelete("dailyRoutine", id)}
@@ -420,11 +331,11 @@ export default function AdminAbout() {
             </div>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'faq')}>
-              <SortableContext items={faq.map(i => i.id)} strategy={verticalListSortingStrategy}>
+              <SortableContext items={faq.map((i: any) => i._id)} strategy={verticalListSortingStrategy}>
                 <div className="space-y-4">
-                  {faq.map(item => (
+                  {faq.map((item: any) => (
                     <SortableFaqCard
-                      key={item.id}
+                      key={item._id}
                       item={item}
                       onEdit={(item) => handleOpenModal("faq", item)}
                       onDelete={(id) => handleDelete("faq", id)}
@@ -444,7 +355,7 @@ export default function AdminAbout() {
                 {editingItem ? t('common.edit') : t('common.add')} {activeModal === "dailyRoutine" ? t('admin.about.dailyRoutine') : t('admin.about.faq')}
               </DialogTitle>
               <DialogDescription className="text-gray-400">
-                {activeModal === "dailyRoutine" 
+                {activeModal === "dailyRoutine"
                   ? t('admin.about.editDailyRoutine')
                   : t('admin.about.editFaq')}
               </DialogDescription>
@@ -455,17 +366,23 @@ export default function AdminAbout() {
                   <div className="space-y-2">
                     <Label className="text-white">{t('admin.about.imageUrl')}</Label>
                     <div className="flex items-center gap-4">
-                      {selectedImage && (
+                      {selectedImageUrl && (
                         <div className="w-32 h-32 rounded-lg overflow-hidden border border-white/10">
-                          <img src={selectedImage} alt="Preview" className="w-full h-full object-cover" />
+                          <img src={selectedImageUrl} alt="Preview" className="w-full h-full object-cover" />
                         </div>
                       )}
                       <ImagePicker
-                        onSelect={(url) => setSelectedImage(Array.isArray(url) ? url[0] : url)}
+                        onSelect={(value) => {
+                          // ImagePicker still returns URL strings; treat returned value as imageId placeholder
+                          // until ImagePicker is migrated to return the imageMetadata id.
+                          const v = Array.isArray(value) ? value[0] : value;
+                          setSelectedImageId(v);
+                          setSelectedImageUrl(v);
+                        }}
                         trigger={
                           <Button type="button" variant="outline" className="border-white/10 hover:bg-white/5 text-white">
                             <ImageIcon className="w-4 h-4 mr-2" />
-                            {selectedImage ? t('admin.home.changeImage') : t('admin.home.selectImage')}
+                            {selectedImageUrl ? t('admin.home.changeImage') : t('admin.home.selectImage')}
                           </Button>
                         }
                       />
@@ -473,45 +390,10 @@ export default function AdminAbout() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="text-white">{t('admin.about.tags')}</Label>
-                    <div className="flex gap-2 flex-wrap mb-2">
-                      {tags.map((tag, idx) => (
-                        <Badge key={idx} className="bg-neon-purple/20 text-neon-purple border-none">
-                          {tag}
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveTag(tag)}
-                            className="ml-2 hover:text-red-400"
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </Badge>
-                      ))}
-                    </div>
-                    <div className="flex gap-2">
-                      <Input
-                        value={tagInput}
-                        onChange={(e) => setTagInput(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddTag();
-                          }
-                        }}
-                        placeholder="Digite uma tag e pressione Enter"
-                        className="bg-white/5 border-white/10 text-white"
-                      />
-                      <Button type="button" onClick={handleAddTag} variant="outline" className="border-white/10 hover:bg-white/5 text-white">
-                        {t('common.add')}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
                     <Label className="text-white">{t('admin.about.description')}</Label>
                     <Textarea
                       name="description"
-                      defaultValue={editingItem?.description_translations?.['pt-BR'] || editingItem?.description}
+                      defaultValue={editingItem?.descriptionTranslations?.ptBR || editingItem?.description}
                       className="bg-white/5 border-white/10 text-white min-h-[100px]"
                       required
                     />
@@ -520,7 +402,7 @@ export default function AdminAbout() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label className="text-white">{t('admin.about.spanSize')}</Label>
-                      <Select value={spanSize} onValueChange={setSpanSize}>
+                      <Select value={spanSize} onValueChange={(v) => setSpanSize(v as SpanSize)}>
                         <SelectTrigger className="bg-white/5 border-white/10 text-white">
                           <SelectValue />
                         </SelectTrigger>
@@ -528,7 +410,6 @@ export default function AdminAbout() {
                           <SelectItem value="1x1">1x1</SelectItem>
                           <SelectItem value="1x2">1x2</SelectItem>
                           <SelectItem value="2x1">2x1</SelectItem>
-                          <SelectItem value="2x2">2x2</SelectItem>
                         </SelectContent>
                       </Select>
                       <input type="hidden" name="spanSize" value={spanSize} />
@@ -543,7 +424,7 @@ export default function AdminAbout() {
                     <Label className="text-white">{t('admin.about.question')}</Label>
                     <Input
                       name="question"
-                      defaultValue={editingItem?.question_translations?.['pt-BR'] || editingItem?.question}
+                      defaultValue={editingItem?.questionTranslations?.ptBR || editingItem?.question}
                       className="bg-white/5 border-white/10 text-white"
                       required
                     />
@@ -553,7 +434,7 @@ export default function AdminAbout() {
                     <Label className="text-white">{t('admin.about.answer')}</Label>
                     <Textarea
                       name="answer"
-                      defaultValue={editingItem?.answer_translations?.['pt-BR'] || editingItem?.answer}
+                      defaultValue={editingItem?.answerTranslations?.ptBR || editingItem?.answer}
                       className="bg-white/5 border-white/10 text-white min-h-[150px]"
                       required
                     />
@@ -572,4 +453,3 @@ export default function AdminAbout() {
     </AdminLayout>
   );
 }
-

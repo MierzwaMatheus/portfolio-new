@@ -5,13 +5,20 @@ import {
   Service,
   Testimonial,
 } from "../interfaces/HomeRepository";
+import {
+  mapContactInfo,
+  mapService,
+  mapTestimonial,
+  mapTranslations,
+} from "../mappers/convexMappers";
 
 export class StaticHomeRepository implements HomeRepository {
   async getContactInfo(): Promise<ContactInfo | null> {
     try {
       const response = await fetch("/data/sidebar.json");
       if (!response.ok) return null;
-      return await response.json();
+      const raw = await response.json();
+      return mapContactInfo(raw);
     } catch (error) {
       console.error("Error loading static sidebar data:", error);
       return null;
@@ -23,7 +30,9 @@ export class StaticHomeRepository implements HomeRepository {
       const response = await fetch("/data/home.json");
       if (!response.ok) return null;
       const data = await response.json();
-      return { value: data.about_text || {} };
+      const aboutText =
+        data?.about_text ?? data?.aboutText ?? data?.["about-text"] ?? {};
+      return { value: mapTranslations(aboutText) ?? {} };
     } catch (error) {
       console.error("Error loading static home data:", error);
       return null;
@@ -32,24 +41,26 @@ export class StaticHomeRepository implements HomeRepository {
 
   async getServices(): Promise<Service[]> {
     try {
-      const response = await fetch("/data/home.json");
+      const response = await fetch("/data/about.json");
       if (!response.ok) return [];
       const data = await response.json();
-      return data.services || [];
+      const list = Array.isArray(data?.services) ? data.services : [];
+      return list.map(mapService);
     } catch (error) {
-      console.error("Error loading static home data:", error);
+      console.error("Error loading static about data:", error);
       return [];
     }
   }
 
   async getTestimonials(): Promise<Testimonial[]> {
     try {
-      const response = await fetch("/data/home.json");
+      const response = await fetch("/data/about.json");
       if (!response.ok) return [];
       const data = await response.json();
-      return data.testimonials || [];
+      const list = Array.isArray(data?.testimonials) ? data.testimonials : [];
+      return list.map(mapTestimonial);
     } catch (error) {
-      console.error("Error loading static home data:", error);
+      console.error("Error loading static about data:", error);
       return [];
     }
   }

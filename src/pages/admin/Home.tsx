@@ -12,59 +12,48 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Plus, Trash2, Pencil, Image as ImageIcon } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { ImagePicker } from "@/components/admin/ImagePicker";
-import { supabase } from "@/lib/supabase";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
+import { toast } from "sonner";
 
 export default function AdminHome() {
-  const [aboutText, setAboutText] = useState("");
-  const [services, setServices] = useState<any[]>([]);
-  const [testimonials, setTestimonials] = useState<any[]>([]);
+  const homeContentList = useQuery(api.homeContent.getAll);
+  const services = useQuery(api.services.list, {}) ?? [];
+  const testimonials = useQuery(api.testimonials.list, {}) ?? [];
 
+  const setHomeContent = useMutation(api.homeContent.set);
+  const createService = useMutation(api.services.create);
+  const updateService = useMutation(api.services.update);
+  const removeService = useMutation(api.services.remove);
+  const createTestimonial = useMutation(api.testimonials.create);
+  const updateTestimonial = useMutation(api.testimonials.update);
+  const removeTestimonial = useMutation(api.testimonials.remove);
+
+  const [aboutText, setAboutText] = useState("");
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [selectedImage, setSelectedImage] = useState<string>("");
 
   useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      // Fetch About - value é JSONB
-      const { data: aboutData, error: aboutError } = await supabase.schema('app_portfolio').from('content').select('value').eq('key', 'about_text').single();
-      if (aboutError) {
-        console.error('Error fetching about:', aboutError);
-      } else if (aboutData) {
-        const value = aboutData.value;
-        if (typeof value === 'object' && value !== null && 'pt-BR' in value) {
-          setAboutText(value['pt-BR'] || '');
+    if (homeContentList) {
+      const aboutEntry = homeContentList.find((c: any) => c.key === "about_text");
+      if (aboutEntry) {
+        const value = aboutEntry.value;
+        if (typeof value === "object" && value !== null && "ptBR" in value) {
+          setAboutText(value.ptBR || "");
         } else {
-          setAboutText(typeof value === 'string' ? value : '');
+          setAboutText(typeof value === "string" ? value : "");
         }
       }
-
-      const { data: servicesData, error: servicesError } = await supabase.schema('app_portfolio').from('services').select('*').order('created_at');
-      if (servicesError) {
-        console.error('Error fetching services:', servicesError);
-      } else if (servicesData) {
-        setServices(servicesData);
-      }
-
-      const { data: testimonialsData, error: testimonialsError } = await supabase.schema('app_portfolio').from('testimonials').select('*').order('created_at');
-      if (testimonialsError) {
-        console.error('Error fetching testimonials:', testimonialsError);
-      } else if (testimonialsData) {
-        setTestimonials(testimonialsData);
-      }
-    } catch (error) {
-      console.error('Unexpected error fetching data:', error);
     }
-  };
+  }, [homeContentList]);
 
   const handleOpenModal = (type: string, item: any = null) => {
     setActiveModal(type);
     setEditingItem(item);
     if (type === "testimonial" && item) {
-      setSelectedImage(item.image_url || item.image || "");
+      setSelectedImage(item.imageUrl || "");
     } else {
       setSelectedImage("");
     }
@@ -86,127 +75,57 @@ export default function AdminHome() {
         const titlePT = formData.get("title") as string;
         const descriptionPT = formData.get("description") as string;
 
-        // Traduz para inglês usando a Edge Function
-        const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
-          body: {
-            texts: [titlePT, descriptionPT],
-            source: 'pt',
-            target: 'en',
-          },
-        });
-
-        if (translateError) {
-          console.error('Translation error:', translateError);
-          alert('Erro ao traduzir. Salvando apenas em português.');
-        }
-
-        const translatedTexts = translateData?.translatedTexts || [titlePT, descriptionPT];
-        const titleEN = translatedTexts[0] || titlePT;
-        const descriptionEN = translatedTexts[1] || descriptionPT;
-
-        const data = {
+        const payload = {
           title: titlePT,
           description: descriptionPT,
-          title_translations: {
-            'pt-BR': titlePT,
-            'en-US': titleEN,
-          },
-          description_translations: {
-            'pt-BR': descriptionPT,
-            'en-US': descriptionEN,
-          },
+          titleTranslations: { ptBR: titlePT, enUS: titlePT },
+          descriptionTranslations: { ptBR: descriptionPT, enUS: descriptionPT },
         };
 
         if (editingItem) {
-          await supabase.schema('app_portfolio').from('services').update(data).eq('id', editingItem.id);
+          await updateService({ id: editingItem._id as Id<"services">, ...payload });
         } else {
-          await supabase.schema('app_portfolio').from('services').insert(data);
+          await createService(payload);
         }
       } else if (activeModal === "testimonial") {
         const textPT = formData.get("text") as string;
+        const namePT = formData.get("name") as string;
+        const rolePT = formData.get("role") as string;
 
-        // Traduz apenas o texto do depoimento usando a Edge Function
-        const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
-          body: {
-            texts: [textPT],
-            source: 'pt',
-            target: 'en',
-          },
-        });
-
-        if (translateError) {
-          console.error('Translation error:', translateError);
-          alert('Erro ao traduzir. Salvando apenas em português.');
-        }
-
-        const translatedTexts = translateData?.translatedTexts || [textPT];
-        const textEN = translatedTexts[0] || textPT;
-
-        const data = {
-          name: formData.get("name"),
-          role: formData.get("role"),
+        const payload = {
+          name: namePT,
+          role: rolePT,
+          roleTranslations: { ptBR: rolePT, enUS: rolePT },
           text: textPT,
-          image_url: selectedImage,
-          text_translations: {
-            'pt-BR': textPT,
-            'en-US': textEN,
-          },
+          textTranslations: { ptBR: textPT, enUS: textPT },
+          imageUrl: selectedImage || undefined,
         };
 
         if (editingItem) {
-          await supabase.schema('app_portfolio').from('testimonials').update(data).eq('id', editingItem.id);
+          await updateTestimonial({ id: editingItem._id as Id<"testimonials">, ...payload });
         } else {
-          await supabase.schema('app_portfolio').from('testimonials').insert(data);
+          await createTestimonial(payload);
         }
       }
 
-      await fetchData();
       handleCloseModal();
+      toast.success("Salvo com sucesso!");
     } catch (error) {
       console.error("Error saving:", error);
-      alert("Erro ao salvar. Verifique o console.");
+      toast.error("Erro ao salvar. Verifique o console.");
     }
   };
 
   const handleSaveAbout = async () => {
     try {
-      // Traduz para inglês usando a Edge Function
-      const { data: translateData, error: translateError } = await supabase.functions.invoke('translate-and-save', {
-        body: {
-          texts: [aboutText],
-          source: 'pt',
-          target: 'en',
-        },
+      await setHomeContent({
+        key: "about_text",
+        value: { ptBR: aboutText, enUS: aboutText },
       });
-
-      if (translateError) {
-        console.error('Translation error:', translateError);
-        alert('Erro ao traduzir. Salvando apenas em português.');
-      }
-
-      const translatedTexts = translateData?.translatedTexts || [aboutText];
-      const aboutEN = translatedTexts[0] || aboutText;
-
-      // Salva em JSONB
-      const { error } = await supabase.schema('app_portfolio').from('content').upsert({
-        key: 'about_text',
-        value: {
-          'pt-BR': aboutText,
-          'en-US': aboutEN,
-        }
-      });
-
-      if (error) {
-        console.error("Error saving about:", error);
-        alert(`Erro ao salvar 'Sobre Mim': ${error.message}`);
-        throw error;
-      }
-      alert("Sobre mim salvo com sucesso!");
+      toast.success("Sobre mim salvo com sucesso!");
     } catch (error: any) {
       console.error("Error saving about:", error);
-      if (!error.message) {
-        alert("Erro ao salvar 'Sobre Mim'. Verifique o console.");
-      }
+      toast.error("Erro ao salvar 'Sobre Mim'.");
     }
   };
 
@@ -214,15 +133,14 @@ export default function AdminHome() {
     if (confirm("Tem certeza que deseja excluir este item?")) {
       try {
         if (type === "service") {
-          await supabase.schema('app_portfolio').from('services').delete().eq('id', id);
+          await removeService({ id: id as Id<"services"> });
         }
         if (type === "testimonial") {
-          await supabase.schema('app_portfolio').from('testimonials').delete().eq('id', id);
+          await removeTestimonial({ id: id as Id<"testimonials"> });
         }
-        await fetchData();
       } catch (error) {
         console.error("Error deleting:", error);
-        alert("Erro ao excluir.");
+        toast.error("Erro ao excluir.");
       }
     }
   };
@@ -270,19 +188,19 @@ export default function AdminHome() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {services.map(item => (
-                  <Card key={item.id} className="bg-card border-white/10 group">
+                  <Card key={item._id} className="bg-card border-white/10 group">
                     <CardContent className="pt-6 space-y-4">
                       <h3 className="text-lg font-semibold text-white">
-                        {item.title_translations?.['pt-BR'] || item.title}
+                        {item.titleTranslations?.ptBR || item.title}
                       </h3>
                       <p className="text-gray-400 text-sm leading-relaxed">
-                        {item.description_translations?.['pt-BR'] || item.description}
+                        {item.descriptionTranslations?.ptBR || item.description}
                       </p>
                       <div className="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button variant="ghost" size="sm" onClick={() => handleOpenModal("service", item)} className="text-white hover:text-neon-purple">
                           <Pencil className="w-4 h-4 mr-2" /> Editar
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete("service", item.id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
+                        <Button variant="ghost" size="sm" onClick={() => handleDelete("service", item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
                           <Trash2 className="w-4 h-4 mr-2" /> Excluir
                         </Button>
                       </div>
@@ -303,23 +221,23 @@ export default function AdminHome() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {testimonials.map(item => (
-                <Card key={item.id} className="bg-card border-white/10 group">
+                <Card key={item._id} className="bg-card border-white/10 group">
                   <CardContent className="pt-6 space-y-4">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full bg-white/10 overflow-hidden">
-                        <img src={item.image_url || item.image} alt={item.name} className="w-full h-full object-cover" />
+                        {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />}
                       </div>
                       <div>
                         <h4 className="text-white font-medium">{item.name}</h4>
-                        <p className="text-gray-400 text-xs">{item.role}</p>
+                        <p className="text-gray-400 text-xs">{item.roleTranslations?.ptBR || item.role}</p>
                       </div>
                     </div>
-                    <p className="text-gray-300 text-sm italic">"{item.text_translations?.['pt-BR'] || item.text}"</p>
+                    <p className="text-gray-300 text-sm italic">"{item.textTranslations?.ptBR || item.text}"</p>
                     <div className="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="sm" onClick={() => handleOpenModal("testimonial", item)} className="text-white hover:text-neon-purple">
                         <Pencil className="w-4 h-4 mr-2" /> Editar
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => handleDelete("testimonial", item.id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
+                      <Button variant="ghost" size="sm" onClick={() => handleDelete("testimonial", item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
                         <Trash2 className="w-4 h-4 mr-2" /> Excluir
                       </Button>
                     </div>
@@ -345,18 +263,18 @@ export default function AdminHome() {
                 <>
                   <div className="space-y-2">
                     <Label className="text-white">Título</Label>
-                    <Input 
-                      name="title" 
-                      defaultValue={editingItem?.title_translations?.['pt-BR'] || editingItem?.title} 
-                      className="bg-white/5 border-white/10 text-white" 
+                    <Input
+                      name="title"
+                      defaultValue={editingItem?.titleTranslations?.ptBR || editingItem?.title}
+                      className="bg-white/5 border-white/10 text-white"
                     />
                   </div>
                   <div className="space-y-2">
                     <Label className="text-white">Descrição</Label>
-                    <Textarea 
-                      name="description" 
-                      defaultValue={editingItem?.description_translations?.['pt-BR'] || editingItem?.description} 
-                      className="bg-white/5 border-white/10 text-white min-h-[100px]" 
+                    <Textarea
+                      name="description"
+                      defaultValue={editingItem?.descriptionTranslations?.ptBR || editingItem?.description}
+                      className="bg-white/5 border-white/10 text-white min-h-[100px]"
                     />
                   </div>
                 </>
@@ -371,7 +289,7 @@ export default function AdminHome() {
                     </div>
                     <div className="space-y-2">
                       <Label className="text-white">Cargo/Empresa</Label>
-                      <Input name="role" defaultValue={editingItem?.role} className="bg-white/5 border-white/10 text-white" />
+                      <Input name="role" defaultValue={editingItem?.roleTranslations?.ptBR || editingItem?.role} className="bg-white/5 border-white/10 text-white" />
                     </div>
                   </div>
                   <div className="space-y-2">
@@ -395,10 +313,10 @@ export default function AdminHome() {
                   </div>
                   <div className="space-y-2">
                     <Label className="text-white">Depoimento</Label>
-                    <Textarea 
-                      name="text" 
-                      defaultValue={editingItem?.text_translations?.['pt-BR'] || editingItem?.text} 
-                      className="bg-white/5 border-white/10 text-white min-h-[100px]" 
+                    <Textarea
+                      name="text"
+                      defaultValue={editingItem?.textTranslations?.ptBR || editingItem?.text}
+                      className="bg-white/5 border-white/10 text-white min-h-[100px]"
                     />
                   </div>
                 </>
