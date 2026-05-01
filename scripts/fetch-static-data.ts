@@ -5,6 +5,9 @@
  * Requires CONVEX_DEPLOY_KEY and CONVEX_URL in environment.
  */
 
+import { config } from 'dotenv';
+config({ path: '.env.local' });
+
 import { ConvexHttpClient } from 'convex/browser';
 import { api } from '../convex/_generated/api';
 import { writeFileSync, mkdirSync } from 'fs';

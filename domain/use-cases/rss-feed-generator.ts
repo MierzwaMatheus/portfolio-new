@@ -58,11 +58,11 @@ export class RSSFeedGenerator {
 
   private generateItemXml(post: BlogPost): string {
     const title = this.escapeXml(
-      post.title_translations["pt-BR"] || post.title
+      post.title_translations?.["pt-BR"] || post.title
     );
     const rawContentHtml =
-      post.content_translations["pt-BR"] ||
-      post.content_translations["en-US"] ||
+      post.content_translations?.["pt-BR"] ||
+      post.content_translations?.["en-US"] ||
       post.content ||
       "";
     const contentHtml = this.sanitizeHtml(rawContentHtml);
