@@ -77,15 +77,16 @@ Your task: compare a candidate's CV against a structured job analysis and produc
 OUTPUT RULES:
 - Return ONLY a valid JSON object, no text before or after
 - No markdown code blocks, no comments, no explanations
-- fitComment must NOT use personal pronouns (I, my, me, we, our) or em dashes (—)
-- fitComment must NOT use AI buzzwords (innovative, cutting-edge, leverage, synergy, game-changing, etc.)
+- fitComment, strengths, weaknesses MUST always be written in Brazilian Portuguese (pt-BR), regardless of the CV locale
+- fitComment must NOT use personal pronouns (eu, minha, meu, me, nós, nosso, nossa) or em dashes (—)
+- fitComment must NOT use AI buzzwords (inovador, cutting-edge, alavancar, sinergia, game-changing, etc.)
 
 JSON structure:
 {
   "fitScore": number (0-100, integer),
-  "fitComment": "string (2-4 sentences, no personal pronouns, no em dash)",
-  "strengths": ["string (specific match points between CV and job)"],
-  "weaknesses": ["string (specific gaps between CV and job)"],
+  "fitComment": "string (2-4 sentences in pt-BR, no personal pronouns, no em dash)",
+  "strengths": ["string in pt-BR (specific match points between CV and job)"],
+  "weaknesses": ["string in pt-BR (specific gaps between CV and job)"],
   "prioritizedSkills": ["string (skills from CV that most match the job, in priority order)"],
   "experiencesToHighlight": ["string (specific experiences from CV to emphasize for this job)"],
   "keywordsToIncorporate": ["string (job keywords that appear in or can be adapted from the CV)"]
