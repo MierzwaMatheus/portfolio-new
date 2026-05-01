@@ -26,8 +26,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useI18n } from "@/i18n/context/I18nContext";
 import { useSidebar } from "@/hooks/useSidebar";
-import { sidebarRepository } from "@/repositories/instances";
+import { useResume } from "@/hooks/useResume";
+import { usePortfolio } from "@/hooks/usePortfolio";
+import { sidebarRepository, resumeRepository, portfolioRepository } from "@/repositories/instances";
 import type { SidebarContactInfo } from "@/repositories/interfaces/SidebarRepository";
+import { generateCV } from "@/utils/cvPDF";
 
 const NAV_ITEMS_KEYS = [
   { key: "home", href: "/", icon: Home },
@@ -60,6 +63,8 @@ export function Sidebar() {
   const { locale, setLocale } = useI18n();
   const [location] = useLocation();
   const { contactInfo, isLoading } = useSidebar(sidebarRepository);
+  const { items: resumeItems } = useResume(resumeRepository);
+  const { projects } = usePortfolio(portfolioRepository);
 
 const NAV_ITEMS = NAV_ITEMS_KEYS.map(item => ({
     ...item,
@@ -68,6 +73,16 @@ const NAV_ITEMS = NAV_ITEMS_KEYS.map(item => ({
 
   const handleLanguageChange = (checked: boolean) => {
     setLocale(checked ? 'en-US' : 'pt-BR');
+  };
+
+  const handleDownloadCV = () => {
+    if (!contactInfo) return;
+    generateCV(
+      contactInfo,
+      resumeItems,
+      projects,
+      locale === "en-US" ? "en-US" : "pt-BR",
+    );
   };
 
   const SidebarContent = () => {
@@ -271,21 +286,15 @@ const NAV_ITEMS = NAV_ITEMS_KEYS.map(item => ({
             </div>
           </div>
 
-          <a
-            href="/archives/CV - Matheus Mierzwa.pdf"
-            download="CV - Matheus Mierzwa.pdf"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block"
+          <Button
+            variant="outline"
+            onClick={handleDownloadCV}
+            disabled={!contactInfo}
+            className="w-full border-neon-lime/50 text-neon-lime hover:bg-neon-lime/10 hover:text-neon-lime h-9 text-xs uppercase tracking-wider"
           >
-            <Button
-              variant="outline"
-              className="w-full border-neon-lime/50 text-neon-lime hover:bg-neon-lime/10 hover:text-neon-lime h-9 text-xs uppercase tracking-wider"
-            >
-              <FileText className="mr-2 h-3 w-3" />
-              {t("sidebar.downloadCV")}
-            </Button>
-          </a>
+            <FileText className="mr-2 h-3 w-3" />
+            {t("sidebar.downloadCV")}
+          </Button>
         </div>
       </div>
     );

@@ -23,11 +23,23 @@ export function useResume(repository: ResumeRepository) {
       // Helper function to get translated content based on locale
       let translatedContent = item.content;
       if (item.content_translations) {
-        // Tenta usar a tradução para o locale atual, depois pt-BR como fallback, depois content original
-        translatedContent =
+        const raw =
           item.content_translations[locale as "pt-BR" | "en-US"] ||
           item.content_translations["pt-BR"] ||
           item.content;
+
+        // Simple types store translations as plain strings; re-wrap into content shape
+        if (typeof raw === "string" && item.content && typeof item.content === "object") {
+          if ("text" in item.content) {
+            translatedContent = { ...item.content, text: raw };
+          } else if ("name" in item.content) {
+            translatedContent = { ...item.content, name: raw };
+          } else {
+            translatedContent = raw;
+          }
+        } else {
+          translatedContent = raw;
+        }
       }
 
       return {
