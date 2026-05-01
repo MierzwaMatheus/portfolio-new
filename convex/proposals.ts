@@ -64,6 +64,37 @@ export const getPublic = query({
   },
 });
 
+export const generateSignatureUploadUrl = mutation({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+export const getAcceptance = query({
+  args: { slug: v.string() },
+  handler: async (ctx, args) => {
+    const proposal = await ctx.db
+      .query('proposals')
+      .withIndex('by_slug', (q) => q.eq('slug', args.slug))
+      .unique();
+    if (!proposal || !proposal.isAccepted) return null;
+
+    const acceptance = await ctx.db
+      .query('proposalAcceptances')
+      .withIndex('by_proposalId', (q) => q.eq('proposalId', proposal._id))
+      .order('desc')
+      .first();
+    if (!acceptance) return null;
+
+    const signatureUrl = acceptance.signatureStorageId
+      ? await ctx.storage.getUrl(acceptance.signatureStorageId)
+      : null;
+
+    return { ...acceptance, signatureUrl };
+  },
+});
+
 export const checkSession = query({
   args: { token: v.string() },
   handler: async (ctx, args) => {
@@ -266,6 +297,7 @@ export const accept = mutation({
     contentHash: v.string(),
     ipAddress: v.string(),
     userAgent: v.string(),
+    signatureStorageId: v.optional(v.id('_storage')),
   },
   handler: async (ctx, args) => {
     const proposal = await ctx.db
@@ -304,6 +336,7 @@ export const accept = mutation({
       contentHash: args.contentHash,
       ipAddress: args.ipAddress,
       userAgent: args.userAgent.substring(0, 512),
+      signatureStorageId: args.signatureStorageId,
       acceptedAt: now,
       createdAt: now,
     });

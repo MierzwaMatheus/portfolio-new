@@ -56,6 +56,8 @@ export default function ProposalAccept() {
   const [isSigning, setIsSigning] = useState(false);
 
   const acceptMutation = useMutation(api.proposals.accept);
+  const generateUploadUrl = useMutation(api.proposals.generateSignatureUploadUrl);
+  const contactInfo = useQuery(api.contactInfo.get);
 
   // Recover token from sessionStorage
   useEffect(() => {
@@ -434,6 +436,22 @@ export default function ProposalAccept() {
       });
       const contentHash = await generateContentHash(contentSnapshot);
 
+      // Upload signature to Convex storage
+      let signatureStorageId: string | undefined;
+      try {
+        const uploadUrl = await generateUploadUrl();
+        const blob = await (await fetch(signatureDataUrl)).blob();
+        const uploadRes = await fetch(uploadUrl, {
+          method: "POST",
+          headers: { "Content-Type": "image/png" },
+          body: blob,
+        });
+        const { storageId } = await uploadRes.json();
+        signatureStorageId = storageId;
+      } catch {
+        // Non-fatal: proceed without stored signature
+      }
+
       try {
         await acceptMutation({
           slug: slugStr,
@@ -447,6 +465,7 @@ export default function ProposalAccept() {
           contentHash,
           ipAddress: ipAddress || "0.0.0.0",
           userAgent: userAgent || "unknown",
+          signatureStorageId: signatureStorageId as any,
         });
       } catch (error: any) {
         const msg = String(error?.message ?? "");
@@ -477,7 +496,7 @@ export default function ProposalAccept() {
         proposal_version: String(rawProposal?.version ?? 1),
       };
 
-      await printContractPDF(proposal, acceptanceData, signatureDataUrl);
+      await printContractPDF(proposal, acceptanceData, signatureDataUrl, contactInfo ?? undefined);
 
       toast.success("Contrato assinado digitalmente e PDF gerado com sucesso!");
 

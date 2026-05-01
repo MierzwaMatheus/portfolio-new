@@ -7,6 +7,15 @@ export interface PDFAcceptanceData extends AcceptanceData {
   proposal_version?: string;
 }
 
+export interface ContactInfo {
+  name?: string;
+  email?: string;
+  phone?: string;
+  location?: string;
+  linkedinUrl?: string;
+  githubUrl?: string;
+}
+
 function formatClauseContent(text: string): string {
   return text
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
@@ -35,7 +44,8 @@ function extractClauseTitle(clause: string): { title: string; body: string } {
 export function generateContractHTML(
   proposal: ProposalData,
   acceptanceData: PDFAcceptanceData,
-  signatureDataUrl: string
+  signatureDataUrl: string,
+  contactInfo?: ContactInfo
 ): string {
   const contractContent = generateContractContent(proposal, acceptanceData);
   const signedAt = new Date(acceptanceData.accepted_at).toLocaleString("pt-BR", {
@@ -49,6 +59,13 @@ export function generateContractHTML(
   });
   const contractId = (proposal as any).slug?.toUpperCase() ?? "—";
   const contractVersion = (proposal as any).version ?? 1;
+
+  const ci = contactInfo ?? {};
+  const displayName = ci.name || "MATHEUS MIERZWA";
+  const displayEmail = ci.email || "";
+  const displayLocation = ci.location || "Barueri/SP";
+  const displayLinkedin = ci.linkedinUrl ? ci.linkedinUrl.replace(/^https?:\/\/(www\.)?/, "") : "";
+  const displayGithub = ci.githubUrl ? ci.githubUrl.replace(/^https?:\/\/(www\.)?/, "") : "";
 
   const clausesHTML = contractContent.clauses
     .map((clause) => {
@@ -285,21 +302,21 @@ export function generateContractHTML(
 
   <div class="header">
     <div class="header-left">
-      <h1>MATHEUS MIERZWA</h1>
+      <h1>${displayName.toUpperCase()}</h1>
       <p>Desenvolvimento de Software · CNPJ 57.900.589/0001-00</p>
-      <p>Rua do Ouvidor, 480, Jd Califórnia — Barueri/SP</p>
+      ${displayLocation ? `<p>${displayLocation}</p>` : ""}
     </div>
     <div class="header-right">
-      <div>contato@mierzwa.dev</div>
-      <div>linkedin.com/in/mierzwamatheus</div>
-      <div>github.com/MierzwaMatheus</div>
+      ${displayEmail ? `<div>${displayEmail}</div>` : ""}
+      ${displayLinkedin ? `<div>${displayLinkedin}</div>` : ""}
+      ${displayGithub ? `<div>${displayGithub}</div>` : ""}
     </div>
   </div>
 
   <div class="title-band">
-    <h2>Contrato Eletrônico de Prestação de Serviços de Desenvolvimento</h2>
+    <h2>Contrato de Prestação de Serviços de Desenvolvimento${(proposal as any).title ? ` — ${(proposal as any).title}` : ""}</h2>
     <div class="meta">
-      Contrato Nº <strong>${contractId}</strong> &nbsp;·&nbsp;
+      Cliente: <strong>${proposal.client_name}</strong> &nbsp;·&nbsp;
       Versão <strong>${contractVersion}</strong> &nbsp;·&nbsp;
       ${new Date(acceptanceData.accepted_at).toLocaleDateString("pt-BR")}
     </div>
@@ -348,6 +365,10 @@ export function generateContractHTML(
         <td>${acceptanceData.proposal_version ?? "1"}</td>
       </tr>
       <tr>
+        <td>Ref. Interna:</td>
+        <td>${contractId}</td>
+      </tr>
+      <tr>
         <td>Gerado em (UTC):</td>
         <td>${new Date(acceptanceData.accepted_at).toISOString()}</td>
       </tr>
@@ -366,9 +387,10 @@ export function generateContractHTML(
 export async function printContractPDF(
   proposal: ProposalData,
   acceptanceData: PDFAcceptanceData,
-  signatureDataUrl: string
+  signatureDataUrl: string,
+  contactInfo?: ContactInfo
 ): Promise<void> {
-  const html = generateContractHTML(proposal, acceptanceData, signatureDataUrl);
+  const html = generateContractHTML(proposal, acceptanceData, signatureDataUrl, contactInfo);
   const blob = new Blob([html], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const win = window.open(url, "_blank");

@@ -14,9 +14,9 @@ import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 import ReactMarkdown from "react-markdown";
-import jsPDF from "jspdf";
 import { ContractModal } from "@/components/ContractModal";
-import { generateContractContent, generatePaymentMethods } from "@/utils/contractGenerator";
+import { generatePaymentMethods } from "@/utils/contractGenerator";
+import { printContractPDF } from "@/utils/contractPDF";
 
 // Build a snake_case adapter so existing utils (contractGenerator, ContractModal) still work
 function toLegacyProposal(p: any) {
@@ -76,23 +76,25 @@ export default function Proposal() {
   // Adapt to legacy snake_case for utils
   const proposal: any = useMemo(() => toLegacyProposal(rawProposal), [rawProposal]);
 
-  // acceptanceData may come from getPublic (per spec) — try snake_case fallback for util compatibility
-  const acceptanceDataRaw: any = rawProposal?.acceptanceData ?? null;
+  const acceptanceDataRaw: any = useQuery(
+    api.proposals.getAcceptance,
+    rawProposal?.isAccepted && slug ? { slug } : "skip" as any
+  ) ?? null;
+  const contactInfo = useQuery(api.contactInfo.get);
+
   const acceptanceData: any = useMemo(() => {
     if (!acceptanceDataRaw) return null;
     return {
-      client_name: acceptanceDataRaw.clientName ?? acceptanceDataRaw.client_name,
-      client_document: acceptanceDataRaw.clientDocument ?? acceptanceDataRaw.client_document,
-      client_email: acceptanceDataRaw.clientEmail ?? acceptanceDataRaw.client_email,
-      client_role: acceptanceDataRaw.clientRole ?? acceptanceDataRaw.client_role ?? null,
-      client_declaration: acceptanceDataRaw.clientDeclaration ?? acceptanceDataRaw.client_declaration ?? null,
-      accepted_at: typeof (acceptanceDataRaw.acceptedAt ?? acceptanceDataRaw.accepted_at) === "number"
-        ? new Date(acceptanceDataRaw.acceptedAt ?? acceptanceDataRaw.accepted_at).toISOString()
-        : (acceptanceDataRaw.accepted_at ?? acceptanceDataRaw.acceptedAt),
-      ip_address: acceptanceDataRaw.ipAddress ?? acceptanceDataRaw.ip_address ?? null,
-      user_agent: acceptanceDataRaw.userAgent ?? acceptanceDataRaw.user_agent ?? null,
-      content_hash: acceptanceDataRaw.contentHash ?? acceptanceDataRaw.content_hash ?? null,
-      proposal_version: acceptanceDataRaw.proposalVersion ?? acceptanceDataRaw.proposal_version ?? "1.0",
+      client_name: acceptanceDataRaw.clientName,
+      client_document: acceptanceDataRaw.clientDocument,
+      client_email: acceptanceDataRaw.clientEmail,
+      client_role: acceptanceDataRaw.clientRole ?? null,
+      client_declaration: acceptanceDataRaw.clientDeclaration ?? null,
+      accepted_at: new Date(acceptanceDataRaw.acceptedAt).toISOString(),
+      ip_address: acceptanceDataRaw.ipAddress ?? null,
+      user_agent: acceptanceDataRaw.userAgent ?? null,
+      content_hash: acceptanceDataRaw.contentHash ?? null,
+      proposal_version: String(acceptanceDataRaw.proposalVersion ?? 1),
     };
   }, [acceptanceDataRaw]);
 
@@ -151,7 +153,8 @@ export default function Proposal() {
   const handleDownloadPDF = async () => {
     if (!proposal || !acceptanceData) return;
     try {
-      await generateContractPDF(proposal, acceptanceData);
+      const signatureUrl = acceptanceDataRaw?.signatureUrl ?? "";
+      await printContractPDF(proposal, acceptanceData, signatureUrl, contactInfo ?? undefined);
     } catch (error: any) {
       console.error("Error generating PDF:", error);
       toast.error(error.message || "Erro ao gerar PDF");
@@ -541,108 +544,14 @@ export default function Proposal() {
     </div>
   );
 
-  async function handleDigitalSignature() {
+  async function handleDigitalSignature(signatureDataUrl: string) {
     if (!proposal || !acceptanceData) return;
     try {
-      await generateContractPDF(proposal, acceptanceData);
+      await printContractPDF(proposal, acceptanceData, signatureDataUrl, contactInfo ?? undefined);
       toast.success("PDF do contrato gerado com sucesso!");
     } catch (error: any) {
       console.error("Error generating PDF:", error);
       toast.error(error.message || "Erro ao gerar PDF");
     }
-  }
-
-  async function generateContractPDF(proposal: any, acceptanceData: any) {
-    const doc = new jsPDF();
-    let yPos = 20;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 20;
-    const maxWidth = pageWidth - (margin * 2);
-
-    const checkPageBreak = (requiredSpace: number = 10) => {
-      if (yPos + requiredSpace > 270) {
-        doc.addPage();
-        yPos = 20;
-        return true;
-      }
-      return false;
-    };
-
-    const addText = (text: string, fontSize: number = 12, isBold: boolean = false, color: [number, number, number] = [0, 0, 0], lineHeight: number = 0.6) => {
-      if (!text || String(text).trim() === '') return;
-
-      doc.setFontSize(fontSize);
-      doc.setTextColor(color[0], color[1], color[2]);
-      doc.setFont('helvetica', isBold ? 'bold' : 'normal');
-
-      let cleanText = String(text)
-        .replace(/\r\n/g, '\n')
-        .replace(/\r/g, '\n')
-        .replace(/\*\*/g, '')
-        .replace(/#{1,6}\s/g, '')
-        .replace(/---/g, '')
-        .trim();
-
-      const lines = doc.splitTextToSize(cleanText, maxWidth);
-
-      lines.forEach((line: string) => {
-        checkPageBreak(fontSize * lineHeight + 2);
-        doc.text(line, margin, yPos);
-        yPos += fontSize * lineHeight;
-      });
-      yPos += 2;
-    };
-
-    const contractContent = generateContractContent(proposal, acceptanceData);
-
-    addText('CONTRATO ELETRÔNICO', 18, true, [0, 0, 0]);
-    yPos += 5;
-
-    const headerText = contractContent.header
-      .replace(/\*\*/g, '')
-      .replace(/---/g, '')
-      .trim();
-    addText(headerText, 12);
-    yPos += 5;
-
-    contractContent.clauses.forEach((clause) => {
-      let cleanClause = clause
-        .replace(/\*\*/g, '')
-        .replace(/#{1,6}\s/g, '')
-        .trim();
-
-      const titleMatch = cleanClause.match(/^(CLÁUSULA \d+[^:]*:)/);
-      if (titleMatch) {
-        addText(titleMatch[1], 12, true, [0, 0, 0], 0.7);
-        cleanClause = cleanClause.replace(titleMatch[1], '').trim();
-      }
-
-      if (cleanClause) {
-        addText(cleanClause, 11, false, [0, 0, 0], 0.6);
-      }
-      yPos += 3;
-    });
-
-    addText('ASSINATURA DIGITAL', 14, true);
-    addText(`Este contrato foi assinado digitalmente em ${new Date(acceptanceData.accepted_at).toLocaleString('pt-BR')}`, 11);
-    addText(`Nome: ${acceptanceData.client_name}`, 11);
-    addText(`Documento: ${acceptanceData.client_document}`, 11);
-    addText(`E-mail: ${acceptanceData.client_email}`, 11);
-    if (acceptanceData.client_role) {
-      addText(`Cargo/Função: ${acceptanceData.client_role}`, 11);
-    }
-    if (acceptanceData.client_declaration) {
-      addText(`Declaração: ${acceptanceData.client_declaration}`, 10);
-    }
-    yPos += 5;
-
-    addText('EVIDÊNCIAS TÉCNICAS', 12, true);
-    addText(`Hash SHA-256: ${acceptanceData.content_hash || 'N/A'}`, 9);
-    addText(`IP de Origem: ${acceptanceData.ip_address || 'N/A'}`, 9);
-    addText(`User-Agent: ${acceptanceData.user_agent || 'N/A'}`, 9);
-    addText(`Versão da Proposta: ${acceptanceData.proposal_version || '1.0'}`, 9);
-
-    const fileName = `Contrato_${proposal.client_name.replace(/\s+/g, '_')}_${new Date(acceptanceData.accepted_at).toISOString().split('T')[0]}.pdf`;
-    doc.save(fileName);
   }
 }

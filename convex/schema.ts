@@ -364,6 +364,7 @@ export default defineSchema({
     contentHash: v.string(),
     ipAddress: v.string(),
     userAgent: v.string(),
+    signatureStorageId: v.optional(v.id('_storage')),
     acceptedAt: v.number(),
     createdAt: v.number(),
     anonymizedAt: v.optional(v.number()),

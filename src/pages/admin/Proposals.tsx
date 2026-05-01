@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Pencil, Trash2, RefreshCw, Link as LinkIcon, X, Copy, KeyRound, Upload } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Link as LinkIcon, X, Copy, KeyRound, Upload, Download } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 import { useQuery, useMutation } from "convex/react";
@@ -16,6 +16,7 @@ import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 import { toast } from "sonner";
+import { printContractPDF } from "@/utils/contractPDF";
 
 const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
 
@@ -107,6 +108,58 @@ O sucesso desta proposta é crucial para a aquisição de um cliente de alto val
 }
 \`\`\`
 `;
+
+function DownloadContractButton({ proposal }: { proposal: any }) {
+  const [loading, setLoading] = useState(false);
+  const acceptanceRaw = useQuery(api.proposals.getAcceptance, { slug: proposal.slug });
+  const contactInfo = useQuery(api.contactInfo.get);
+
+  const handleDownload = async () => {
+    if (!acceptanceRaw) { toast.error("Dados do aceite não encontrados"); return; }
+    setLoading(true);
+    try {
+      const legacyProposal = {
+        id: proposal._id, slug: proposal.slug, version: proposal.version,
+        client_name: proposal.clientName, title: proposal.title,
+        objective: proposal.objective, scope: proposal.scope,
+        timeline: proposal.timeline, delivery_date: proposal.deliveryDate,
+        investment_value: proposal.investmentValue, payment_methods: proposal.paymentMethods,
+        conditions: proposal.conditions, rescision_policy: proposal.rescissionPolicy,
+      };
+      const legacyAcceptance = {
+        client_name: acceptanceRaw.clientName,
+        client_document: acceptanceRaw.clientDocument,
+        client_email: acceptanceRaw.clientEmail,
+        client_role: acceptanceRaw.clientRole ?? undefined,
+        client_declaration: acceptanceRaw.clientDeclaration ?? undefined,
+        accepted_at: new Date(acceptanceRaw.acceptedAt).toISOString(),
+        ip_address: acceptanceRaw.ipAddress ?? null,
+        user_agent: acceptanceRaw.userAgent ?? null,
+        content_hash: acceptanceRaw.contentHash ?? undefined,
+        proposal_version: String(acceptanceRaw.proposalVersion ?? 1),
+      };
+      const signatureUrl = (acceptanceRaw as any).signatureUrl ?? "";
+      await printContractPDF(legacyProposal, legacyAcceptance, signatureUrl, contactInfo ?? undefined);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao gerar PDF");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button
+      variant="ghost"
+      size="icon"
+      className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
+      onClick={handleDownload}
+      disabled={loading || !acceptanceRaw}
+      title="Baixar contrato"
+    >
+      <Download className="h-4 w-4" />
+    </Button>
+  );
+}
 
 export default function AdminProposals() {
   const proposalsData = useQuery(api.proposals.listAdmin, { filter: "all" });
@@ -980,6 +1033,7 @@ export default function AdminProposals() {
                           >
                             <LinkIcon className="h-4 w-4" />
                           </Button>
+                          <DownloadContractButton proposal={proposal} />
                         </div>
                       </TableCell>
                     </TableRow>
