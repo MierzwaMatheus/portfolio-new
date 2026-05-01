@@ -124,6 +124,12 @@ export default function AdminAbout() {
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>("");
   const [spanSize, setSpanSize] = useState<SpanSize>("1x1");
 
+  const pickedImageQuery = useQuery(
+    api.images.getById,
+    selectedImageId && !selectedImageUrl ? { id: selectedImageId as Id<"imageMetadata"> } : "skip"
+  );
+  const displayImageUrl = pickedImageQuery?.url ?? selectedImageUrl;
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
@@ -374,23 +380,21 @@ export default function AdminAbout() {
                   <div className="space-y-2">
                     <Label className="text-white">{t('admin.about.imageUrl')}</Label>
                     <div className="flex items-center gap-4">
-                      {selectedImageUrl && (
+                      {displayImageUrl && (
                         <div className="w-32 h-32 rounded-lg overflow-hidden border border-white/10">
-                          <img src={selectedImageUrl} alt="Preview" className="w-full h-full object-cover" />
+                          <img src={displayImageUrl} alt="Preview" className="w-full h-full object-cover" />
                         </div>
                       )}
                       <ImagePicker
                         onSelect={(value) => {
-                          // ImagePicker still returns URL strings; treat returned value as imageId placeholder
-                          // until ImagePicker is migrated to return the imageMetadata id.
                           const v = Array.isArray(value) ? value[0] : value;
                           setSelectedImageId(v);
-                          setSelectedImageUrl(v);
+                          setSelectedImageUrl("");
                         }}
                         trigger={
                           <Button type="button" variant="outline" className="border-white/10 hover:bg-white/5 text-white">
                             <ImageIcon className="w-4 h-4 mr-2" />
-                            {selectedImageUrl ? t('admin.home.changeImage') : t('admin.home.selectImage')}
+                            {displayImageUrl ? t('admin.home.changeImage') : t('admin.home.selectImage')}
                           </Button>
                         }
                       />

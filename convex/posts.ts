@@ -8,11 +8,22 @@ import { getAuthUserId } from '@convex-dev/auth/server';
 export const listAllPublished = query({
   args: {},
   handler: async (ctx) => {
-    return ctx.db
+    const posts = await ctx.db
       .query('posts')
       .withIndex('by_status_and_publishedAt', (q) => q.eq('status', 'published'))
       .order('desc')
       .collect();
+
+    return Promise.all(
+      posts.map(async (post) => ({
+        ...post,
+        imageUrl: post.imageId
+          ? await ctx.db
+              .get(post.imageId)
+              .then((img) => (img ? ctx.storage.getUrl(img.storageId) : post.imageUrl))
+          : post.imageUrl,
+      })),
+    );
   },
 });
 
@@ -52,11 +63,22 @@ export const listAdmin = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
     await requireRole(ctx, ['root', 'admin']);
-    return ctx.db
+    const posts = await ctx.db
       .query('posts')
       .withIndex('by_status_and_publishedAt')
       .order('desc')
       .take(args.limit ?? 50);
+
+    return Promise.all(
+      posts.map(async (post) => ({
+        ...post,
+        imageUrl: post.imageId
+          ? await ctx.db
+              .get(post.imageId)
+              .then((img) => (img ? ctx.storage.getUrl(img.storageId) : post.imageUrl))
+          : post.imageUrl,
+      })),
+    );
   },
 });
 

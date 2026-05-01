@@ -173,15 +173,15 @@ export function ImagePicker({ onSelect, trigger, multiple: initialMultiple = fal
   const handleSelect = (image: ImageMetadata) => {
     if (multipleMode) {
       setSelectedImages((prev) => {
-        if (prev.includes(image.url)) {
-          return prev.filter((url) => url !== image.url);
+        if (prev.includes(image._id)) {
+          return prev.filter((id) => id !== image._id);
         } else {
-          return [...prev, image.url];
+          return [...prev, image._id];
         }
       });
     } else {
       setSelectedImage(image.url);
-      onSelect(image.url);
+      onSelect(image._id);
       setIsOpen(false);
     }
   };
@@ -280,7 +280,7 @@ export function ImagePicker({ onSelect, trigger, multiple: initialMultiple = fal
         setSelectedImage(null);
       }
       if (multipleMode) {
-        setSelectedImages((prev) => prev.filter((url) => url !== image.url));
+        setSelectedImages((prev) => prev.filter((id) => id !== image._id));
       }
       toast.success("Imagem excluída.");
     } catch (error: any) {
@@ -508,7 +508,7 @@ export function ImagePicker({ onSelect, trigger, multiple: initialMultiple = fal
                   className="bg-purple-600 hover:bg-purple-700 text-white"
                   onClick={() => {
                     const selectedImageObjects = images.filter((img) =>
-                      selectedImages.includes(img.url)
+                      selectedImages.includes(img._id)
                     );
                     setMovingImages(selectedImageObjects);
                   }}
@@ -528,7 +528,7 @@ export function ImagePicker({ onSelect, trigger, multiple: initialMultiple = fal
                       return;
 
                     const selectedImageObjects = images.filter((img) =>
-                      selectedImages.includes(img.url)
+                      selectedImages.includes(img._id)
                     );
                     setIsProcessing(true);
                     try {
@@ -641,7 +641,7 @@ export function ImagePicker({ onSelect, trigger, multiple: initialMultiple = fal
                 {/* Imagens */}
                 {images.map((img) => {
                   const isSelected = multipleMode
-                    ? selectedImages.includes(img.url)
+                    ? selectedImages.includes(img._id)
                     : selectedImage === img.url;
                   const folderName = img.folderId
                     ? folderById.get(img.folderId as string)?.name

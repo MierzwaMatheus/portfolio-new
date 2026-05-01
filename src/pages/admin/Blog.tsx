@@ -54,6 +54,9 @@ export default function AdminBlog() {
   const [isPublished, setIsPublished] = useState(false);
   const [isFeatured, setIsFeatured] = useState(false);
 
+  const pickedImageQuery = useQuery(api.images.getById, previewImageId ? { id: previewImageId } : "skip");
+  const coverImageUrl = pickedImageQuery?.url ?? previewImage ?? null;
+
   const { translateFields, isTranslating } = useTranslateContent();
   const posts = postsData ?? [];
   const isLoading = postsData === undefined;
@@ -96,9 +99,8 @@ export default function AdminBlog() {
       .replace(/-+$/, '');
   };
 
-  const handleImagePicked = (url: string | string[]) => {
-    const picked = Array.isArray(url) ? url[0] : url;
-    // The picker returns a Convex image ID per migration plan.
+  const handleImagePicked = (id: string | string[]) => {
+    const picked = Array.isArray(id) ? id[0] : id;
     setPreviewImageId(picked as Id<"imageMetadata">);
     setPreviewImage("");
   };
@@ -270,16 +272,9 @@ export default function AdminBlog() {
                       <div className="space-y-2">
                         <Label className="text-white">Imagem de Destaque</Label>
                         <div className="border border-white/10 rounded-lg p-4 bg-white/5 flex flex-col items-center justify-center min-h-[200px] relative overflow-hidden">
-                          {previewImage ? (
+                          {coverImageUrl ? (
                             <>
-                              <img src={previewImage} alt="Preview" className="max-h-[180px] rounded object-cover w-full" />
-                              <div className="absolute bottom-2 right-2">
-                                <ImagePicker onSelect={handleImagePicked} />
-                              </div>
-                            </>
-                          ) : previewImageId ? (
-                            <>
-                              <div className="text-gray-400 text-sm">Imagem selecionada</div>
+                              <img src={coverImageUrl} alt="Preview" className="max-h-[180px] rounded object-cover w-full" />
                               <div className="absolute bottom-2 right-2">
                                 <ImagePicker onSelect={handleImagePicked} />
                               </div>

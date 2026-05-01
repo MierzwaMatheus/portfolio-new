@@ -9,12 +9,19 @@ import { ImagePicker } from "@/components/admin/ImagePicker";
 import { Image as ImageIcon } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
 
 export default function AdminContact() {
   const data = useQuery(api.contactInfo.get, {});
   const updateContactInfo = useMutation(api.contactInfo.update);
   const loading = data === undefined;
+
+  const [pickedAvatarId, setPickedAvatarId] = useState<string>("");
+  const pickedAvatarQuery = useQuery(
+    api.images.getById,
+    pickedAvatarId ? { id: pickedAvatarId as Id<"imageMetadata"> } : "skip"
+  );
 
   const [personalData, setPersonalData] = useState({
     name: "",
@@ -85,7 +92,7 @@ export default function AdminContact() {
         showBirthDate: personalData.showBirthDate,
         location: personalData.location,
         showLocation: personalData.showLocation,
-        avatarUrl: personalData.avatarUrl,
+        avatarUrl: pickedAvatarQuery?.url || personalData.avatarUrl,
         linkedinUrl: socialMedia.linkedin,
         githubUrl: socialMedia.github,
         behanceUrl: socialMedia.behance,
@@ -131,18 +138,18 @@ export default function AdminContact() {
               <div className="space-y-2">
                 <Label className="text-white">Imagem de Perfil</Label>
                 <div className="flex items-center gap-4">
-                  {personalData.avatarUrl && (
+                  {(pickedAvatarQuery?.url || personalData.avatarUrl) && (
                     <div className="w-16 h-16 rounded-full overflow-hidden border border-white/10">
-                      <img src={personalData.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
+                      <img src={pickedAvatarQuery?.url || personalData.avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                     </div>
                   )}
                   <div className="flex-1">
                     <ImagePicker
-                      onSelect={(url) => handlePersonalChange("avatarUrl", Array.isArray(url) ? url[0] : url)}
+                      onSelect={(id) => setPickedAvatarId(Array.isArray(id) ? id[0] : id)}
                       trigger={
                         <Button type="button" variant="outline" className="border-white/10 hover:bg-white/5 text-white">
                           <ImageIcon className="w-4 h-4 mr-2" />
-                          {personalData.avatarUrl ? "Alterar Imagem" : "Selecionar Imagem"}
+                          {pickedAvatarQuery?.url || personalData.avatarUrl ? "Alterar Imagem" : "Selecionar Imagem"}
                         </Button>
                       }
                     />
