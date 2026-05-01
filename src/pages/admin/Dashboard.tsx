@@ -17,6 +17,7 @@ import {
   Briefcase,
   Plus,
   CreditCard,
+  Sparkles,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -87,6 +88,12 @@ function AdminSidebar() {
       icon: CreditCard,
       label: "Links de Pagamento",
       path: "/admin/payment-links",
+      roles: ["root", "admin"],
+    },
+    {
+      icon: Sparkles,
+      label: "CV com IA",
+      path: "/admin/ai-resumes",
       roles: ["root", "admin"],
     },
     {

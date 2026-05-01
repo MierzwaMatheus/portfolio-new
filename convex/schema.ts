@@ -448,6 +448,20 @@ export default defineSchema({
     .index('by_key', ['key'])
     .index('by_expiresAt', ['expiresAt']),
 
+  // ── aiGeneratedResumes ────────────────────────────────────────────────────
+  aiGeneratedResumes: defineTable({
+    title: v.string(),
+    locale: v.union(v.literal('pt-BR'), v.literal('en-US')),
+    jobDescription: v.string(),
+    fitScore: v.number(),
+    fitComment: v.string(),
+    strengths: v.array(v.string()),
+    weaknesses: v.array(v.string()),
+    cvData: v.any(),
+    createdBy: v.id('users'),
+    createdAt: v.number(),
+  }).index('by_createdAt', ['createdAt']),
+
   // ── auditLog ───────────────────────────────────────────────────────────────
   auditLog: defineTable({
     eventType: v.string(),

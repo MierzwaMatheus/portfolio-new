@@ -10,6 +10,8 @@
 
 import type * as aboutDailyRoutine from "../aboutDailyRoutine.js";
 import type * as aboutFaq from "../aboutFaq.js";
+import type * as aiResumes from "../aiResumes.js";
+import type * as aiResumesAction from "../aiResumesAction.js";
 import type * as asaas from "../asaas.js";
 import type * as audit from "../audit.js";
 import type * as auth from "../auth.js";
@@ -46,6 +48,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   aboutDailyRoutine: typeof aboutDailyRoutine;
   aboutFaq: typeof aboutFaq;
+  aiResumes: typeof aiResumes;
+  aiResumesAction: typeof aiResumesAction;
   asaas: typeof asaas;
   audit: typeof audit;
   auth: typeof auth;

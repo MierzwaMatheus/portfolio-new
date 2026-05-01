@@ -17,6 +17,7 @@ import AdminProposals from "./pages/admin/Proposals";
 import AdminCreateUser from "./pages/admin/CreateUser";
 import AdminPaymentLinks from "./pages/admin/PaymentLinks";
 import AdminAbout from "./pages/admin/About";
+import AdminAiResumes from "./pages/admin/AiResumes";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { I18nProvider } from "./i18n/context/I18nContext";
@@ -103,6 +104,12 @@ function Router() {
         <Route path="/admin/payment-links">
           <ProtectedRoute
             component={AdminPaymentLinks}
+            allowedRoles={["root", "admin"]}
+          />
+        </Route>
+        <Route path="/admin/ai-resumes">
+          <ProtectedRoute
+            component={AdminAiResumes}
             allowedRoles={["root", "admin"]}
           />
         </Route>
