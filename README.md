@@ -553,7 +553,8 @@ Todas as rotas administrativas são protegidas e requerem autenticação:
 - `/admin/contact` - Gerenciamento de contato (root, admin)
 - `/admin/payment-links` - Links de pagamento Stripe (root, admin)
 - `/admin/ai-resumes` - Gerador de currículo com IA (root, admin)
-- `/admin/audit` - Logs de auditoria (root, admin)
+- `/admin/logs` - Logs de auditoria (root)
+- `/admin/lgpd` - Gestão de titulares LGPD — exportação e anonimização (apenas root)
 - `/admin/users/new` - Criar usuário (apenas root)
 
 ## 🔒 Sistema de Autenticação
@@ -822,9 +823,31 @@ O sistema executa rotinas automáticas via cron jobs do Convex para manter o ban
 
 ---
 
-### Conformidade com LGPD nas Propostas
+### Gestão de Titulares LGPD (`/admin/lgpd`)
 
-O módulo de propostas tem dois recursos de conformidade com a LGPD: o titular dos dados pode solicitar o **apagamento dos seus dados pessoais** de uma proposta aceita, e também pode requisitar a **exportação de todos os seus dados** armazenados no sistema. Ambas as ações são rastreadas nos logs de auditoria.
+Painel exclusivo para `root` que centraliza o cumprimento dos direitos dos titulares previstos na Lei 13.709/18.
+
+#### Busca
+O titular é identificado por **e-mail** e/ou **CPF/CNPJ** — qualquer um dos dois é suficiente para localizar registros. A busca retorna um resumo de quantos registros com dados pessoais existem em cada tabela.
+
+#### Exportação de dados (Art. 18, II — direito de acesso)
+O botão **Exportar JSON** gera um arquivo com todos os dados do titular encontrados nas seguintes tabelas:
+
+| Tabela | Dados exportados |
+|--------|-----------------|
+| `proposalAcceptances` | nome, CPF/CNPJ, e-mail, cargo, declaração, assinatura, hash SHA-256 |
+| `contactRequests` | nome, e-mail, telefone, LinkedIn, empresa, respostas do wizard |
+| `testimonialSubmissions` | nome, e-mail, empresa, texto do depoimento |
+| `checkouts` | nome, e-mail, CPF/CNPJ, valor pago, status |
+
+#### Anonimização (Art. 18, VI — direito de eliminação)
+O botão **Anonimizar tudo** exibe um diálogo de confirmação e, após aprovação, substitui todos os dados pessoais do titular por `[ANONIMIZADO]` nas mesmas tabelas acima, além de anonimizar referências ao e-mail nos logs de auditoria. A operação:
+
+- **Preserva a integridade contratual**: o `contentHash` SHA-256 original da proposta é mantido intacto como prova criptográfica de que o contrato existiu; apenas os campos de identificação dentro do `contentSnapshot` são substituídos
+- **Abrange CPF/CNPJ**: o `clientDocument` e o CPF dentro do snapshot JSON do contrato são anonimizados
+- **Marca o registro**: adiciona `anonymizedAt` (timestamp) e `_anonymizedAt` no snapshot para rastreabilidade
+- **É irreversível**: registros em si são preservados para integridade, mas sem identificação pessoal
+- **Gera auditoria**: toda execução é registrada no log com o identificador usado (e-mail ou CPF) e a contagem de registros afetados
 
 ---
 
