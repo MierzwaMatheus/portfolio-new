@@ -25,8 +25,9 @@ async function verifyStripeSignature(payload: string, header: string, secret: st
     const v1 = parts['v1'];
     if (!timestamp || !v1) return false;
 
-    // Reject replays older than 5 minutes
-    if (Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) return false;
+    // Reject replays older than 5 minutes; guard against NaN timestamp
+    const ts = Number(timestamp);
+    if (!Number.isFinite(ts) || Math.abs(Date.now() / 1000 - ts) > 300) return false;
 
     const signedPayload = `${timestamp}.${payload}`;
     const key = await crypto.subtle.importKey(
@@ -182,11 +183,10 @@ http.route({
   method: 'POST',
   handler: httpAction(async (ctx, req) => {
     const asaasToken = process.env.ASAAS_WEBHOOK_TOKEN;
-    if (asaasToken) {
-      const receivedToken = req.headers.get('asaas-access-token');
-      if (!timingSafeEqual(receivedToken ?? '', asaasToken)) {
-        return new Response('Unauthorized', { status: 401 });
-      }
+    if (!asaasToken) return new Response('ASAAS_WEBHOOK_TOKEN not configured', { status: 500 });
+    const receivedToken = req.headers.get('asaas-access-token') ?? '';
+    if (!timingSafeEqual(receivedToken, asaasToken)) {
+      return new Response('Unauthorized', { status: 401 });
     }
 
     const body = await req.text();

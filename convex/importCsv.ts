@@ -500,9 +500,14 @@ export const _linkImages = internalMutation({
 function checkSecret(req: Request): Response | null {
   const secret = process.env.IMPORT_SECRET;
   if (!secret) return new Response('IMPORT_SECRET not set', { status: 500 });
-  if (req.headers.get('x-import-secret') !== secret) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+  const provided = req.headers.get('x-import-secret') ?? '';
+  // Timing-safe comparison to prevent secret enumeration via timing attack
+  const aBytes = new TextEncoder().encode(provided);
+  const bBytes = new TextEncoder().encode(secret);
+  let diff = aBytes.length !== bBytes.length ? 1 : 0;
+  const len = Math.min(aBytes.length, bBytes.length);
+  for (let i = 0; i < len; i++) diff |= aBytes[i] ^ bBytes[i];
+  if (diff !== 0) return new Response('Unauthorized', { status: 401 });
   return null;
 }
 

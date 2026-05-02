@@ -1,10 +1,7 @@
 import { v } from 'convex/values';
 import { mutation, query, internalAction, internalQuery } from './_generated/server';
-
-function escapeTgHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
 import { internal } from './_generated/api';
+import { escapeTgHtml } from './lib/security';
 import { requireRole, requireAuth } from './auth';
 import { logAudit } from './audit';
 import { requirePlugin } from './plugins';

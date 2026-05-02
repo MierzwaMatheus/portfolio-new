@@ -7,6 +7,7 @@ import { checkRateLimit, recordRateLimitAttempt, resetRateLimit } from './rateLi
 import { getAuthUserId } from '@convex-dev/auth/server';
 import { requirePlugin, isPluginEnabled } from './plugins';
 import { softDeleteDoc, restoreDoc } from './lib/softDelete';
+import { escapeTgHtml } from './lib/security';
 
 async function hashPassword(password: string): Promise<string> {
   const salt = crypto.getRandomValues(new Uint8Array(16));
@@ -36,10 +37,6 @@ async function verifyPassword(password: string, stored: string): Promise<boolean
 }
 
 const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
-
-function escapeTgHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
 
 const timelineItemValidator = v.object({ step: v.string(), period: v.string() });
 
@@ -122,7 +119,7 @@ export const generateSignatureUploadUrl = mutation({
         .query('proposalSessions')
         .withIndex('by_token', (q) => q.eq('token', args.token!))
         .unique();
-      if (!session || session.proposalId !== proposal._id || session.expiresAt < now) {
+      if (!session || session.proposalId !== proposal._id || session.expiresAt < now || session.isUsed) {
         throw new Error('Invalid or expired session');
       }
     }
@@ -130,14 +127,50 @@ export const generateSignatureUploadUrl = mutation({
   },
 });
 
+// Admin-only: full acceptance data including PII. Used by the admin panel.
 export const getAcceptance = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
+    await requireRole(ctx, ['root', 'admin', 'proposal-editor']);
+
     const proposal = await ctx.db
       .query('proposals')
       .withIndex('by_slug', (q) => q.eq('slug', args.slug))
       .unique();
     if (!proposal || !proposal.isAccepted) return null;
+
+    const acceptance = await ctx.db
+      .query('proposalAcceptances')
+      .withIndex('by_proposalId', (q) => q.eq('proposalId', proposal._id))
+      .order('desc')
+      .first();
+    if (!acceptance) return null;
+
+    const signatureUrl = acceptance.signatureStorageId
+      ? await ctx.storage.getUrl(acceptance.signatureStorageId)
+      : null;
+
+    return { ...acceptance, signatureUrl };
+  },
+});
+
+// Client-facing: requires a valid proposal session token. Returns full acceptance data
+// so the client can download the contract PDF after accepting.
+export const getAcceptanceByToken = query({
+  args: { slug: v.string(), token: v.string() },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const proposal = await ctx.db
+      .query('proposals')
+      .withIndex('by_slug', (q) => q.eq('slug', args.slug))
+      .unique();
+    if (!proposal || !proposal.isAccepted) return null;
+
+    const session = await ctx.db
+      .query('proposalSessions')
+      .withIndex('by_token', (q) => q.eq('token', args.token))
+      .unique();
+    if (!session || session.proposalId !== proposal._id || session.expiresAt < now) return null;
 
     const acceptance = await ctx.db
       .query('proposalAcceptances')
@@ -273,6 +306,11 @@ export const update = mutation({
       version: newVersion,
       updatedAt: Date.now(),
     });
+
+    // Invalidate all existing sessions when the password changes
+    if (hashedPassword !== undefined) {
+      await ctx.scheduler.runAfter(0, internal.proposals.invalidateSessions, { proposalId: id });
+    }
 
     await logAudit(ctx, {
       eventType: 'admin.update',
@@ -533,6 +571,22 @@ export const requestErasure = mutation({
       });
     }
 
+    // Also anonymize auditLog entries that reference this client's email
+    const emailSet = new Set(acceptances.map((a) => a.clientEmail));
+    const clientEmails = Array.from(emailSet);
+    for (const email of clientEmails) {
+      const auditEntries = await ctx.db
+        .query('auditLog')
+        .withIndex('by_actorId', (q) => q.eq('actorId', email))
+        .collect();
+      for (const entry of auditEntries) {
+        await ctx.db.patch(entry._id, {
+          actorId: '[ANONIMIZADO]',
+          metadata: { ...((entry.metadata as Record<string, unknown>) ?? {}), email: '[ANONIMIZADO]', clientName: '[ANONIMIZADO]' },
+        });
+      }
+    }
+
     await logAudit(ctx, {
       eventType: 'lgpd.erasure_executed',
       actorType: 'user',
@@ -575,6 +629,9 @@ export const resetPassword = mutation({
       updatedAt: Date.now(),
     });
 
+    // Invalidate all sessions when password changes
+    await ctx.scheduler.runAfter(0, internal.proposals.invalidateSessions, { proposalId: args.id });
+
     await logAudit(ctx, {
       eventType: 'admin.update',
       actorType: 'user',
@@ -584,6 +641,19 @@ export const resetPassword = mutation({
       metadata: { action: 'password_reset', hadPassword: !!args.newPassword },
       success: true,
     });
+  },
+});
+
+export const invalidateSessions = internalMutation({
+  args: { proposalId: v.id('proposals') },
+  handler: async (ctx, args) => {
+    const sessions = await ctx.db
+      .query('proposalSessions')
+      .withIndex('by_proposalId', (q) => q.eq('proposalId', args.proposalId))
+      .collect();
+    for (const session of sessions) {
+      await ctx.db.delete(session._id);
+    }
   },
 });
 

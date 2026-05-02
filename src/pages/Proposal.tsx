@@ -77,8 +77,8 @@ export default function Proposal() {
   const proposal: any = useMemo(() => toLegacyProposal(rawProposal), [rawProposal]);
 
   const acceptanceDataRaw: any = useQuery(
-    api.proposals.getAcceptance,
-    rawProposal?.isAccepted && slug ? { slug } : "skip" as any
+    api.proposals.getAcceptanceByToken,
+    rawProposal?.isAccepted && slug && sessionToken ? { slug, token: sessionToken } : "skip" as any
   ) ?? null;
   const contactInfo = useQuery(api.contactInfo.get);
 

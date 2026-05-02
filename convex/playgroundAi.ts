@@ -4,7 +4,8 @@ import { internal } from './_generated/api';
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 async function hmacKeyFingerprint(apiKey: string): Promise<string> {
-  const pepper = process.env.PLAYGROUND_KEY_PEPPER ?? 'dev-pepper';
+  const pepper = process.env.PLAYGROUND_KEY_PEPPER;
+  if (!pepper) throw new Error('PLAYGROUND_KEY_PEPPER not configured');
   const keyMaterial = await crypto.subtle.importKey(
     'raw', new TextEncoder().encode(pepper), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
   );
@@ -159,10 +160,9 @@ const ALLOWED_ORIGINS = new Set([
   'http://localhost:5174',
 ]);
 
-function corsHeaders(origin: string | null): Record<string, string> {
-  const allowedOrigin = origin && ALLOWED_ORIGINS.has(origin) ? origin : 'https://portfolio.mierzwa.dev';
+function corsHeaders(origin: string): Record<string, string> {
   return {
-    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Session-Id',
     'Vary': 'Origin',
@@ -170,14 +170,19 @@ function corsHeaders(origin: string | null): Record<string, string> {
 }
 
 function json(body: unknown, status = 200, origin: string | null = null) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' },
-  });
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (origin) Object.assign(headers, corsHeaders(origin));
+  return new Response(JSON.stringify(body), { status, headers });
 }
 
 export const aiProxy = httpAction(async (ctx, req) => {
   const origin = req.headers.get('origin');
+
+  // Block requests from disallowed origins (server-to-server bypasses browser CORS)
+  if (!origin || !ALLOWED_ORIGINS.has(origin)) {
+    return new Response('Forbidden', { status: 403 });
+  }
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 204, headers: corsHeaders(origin) });
   }

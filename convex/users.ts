@@ -264,6 +264,11 @@ export const adminCreateUser = action({
 export const bootstrapRootUser = mutation({
   args: {},
   handler: async (ctx) => {
+    // Guard: bootstrap must be explicitly enabled via env var to prevent accidental escalation
+    if (process.env.BOOTSTRAP_ALLOWED !== 'true') {
+      throw new Error('Bootstrap is not enabled');
+    }
+
     const existingRoot = await ctx.db
       .query('userRoles')
       .withIndex('by_role', (q) => q.eq('role', 'root'))

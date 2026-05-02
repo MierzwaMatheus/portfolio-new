@@ -2,10 +2,7 @@ import { v } from 'convex/values';
 import { action, internalMutation, internalQuery, mutation, query } from './_generated/server';
 import { internal } from './_generated/api';
 import { requireRole } from './auth';
-
-function escapeTgHtml(s: string): string {
-  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
+import { escapeTgHtml } from './lib/security';
 import { logAudit } from './audit';
 import { requirePlugin, isPluginEnabled } from './plugins';
 import { softDeleteDoc, restoreDoc } from './lib/softDelete';
