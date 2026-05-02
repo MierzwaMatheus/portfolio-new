@@ -26,6 +26,7 @@ import Resume from "./pages/Resume";
 import Portfolio from "./pages/Portfolio";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
+import ProjectCaseStudy from "./pages/ProjectCaseStudy";
 import Proposal from "./pages/Proposal";
 import ProposalAccept from "./pages/ProposalAccept";
 import About from "./pages/About";
@@ -149,6 +150,11 @@ function Router() {
         <Route path="/portfolio">
           <PublicRoute>
             <Portfolio />
+          </PublicRoute>
+        </Route>
+        <Route path="/portfolio/:slug">
+          <PublicRoute>
+            <ProjectCaseStudy />
           </PublicRoute>
         </Route>
         <Route path="/blog">

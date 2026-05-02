@@ -143,12 +143,33 @@ export default defineSchema({
     externalImageUrls: v.optional(v.array(v.string())),
     demoLink: v.optional(v.string()),
     githubLink: v.optional(v.string()),
+    slug: v.optional(v.string()),
+    caseStudy: v.optional(v.object({
+      problem: v.string(),
+      solution: v.string(),
+      results: v.string(),
+      metrics: v.array(v.object({
+        label: v.string(),
+        value: v.string(),
+        icon: v.optional(v.string()),
+      })),
+      testimonial: v.optional(v.object({
+        text: v.string(),
+        author: v.string(),
+        role: v.optional(v.string()),
+      })),
+    })),
+    caseStudyTranslations: v.optional(v.object({
+      ptBR: v.optional(v.object({ problem: v.string(), solution: v.string(), results: v.string() })),
+      enUS: v.optional(v.object({ problem: v.string(), solution: v.string(), results: v.string() })),
+    })),
     orderIndex: v.number(),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   })
     .index('by_orderIndex', ['orderIndex'])
-    .index('by_createdAt', ['createdAt']),
+    .index('by_createdAt', ['createdAt'])
+    .index('by_slug', ['slug']),
 
   // ── posts ──────────────────────────────────────────────────────────────────
   posts: defineTable({

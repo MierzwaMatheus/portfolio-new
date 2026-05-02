@@ -47,6 +47,39 @@ export const list = query({
   },
 });
 
+export const getBySlug = query({
+  args: { slug: v.string() },
+  handler: async (ctx, args) => {
+    const project = await ctx.db
+      .query('projects')
+      .withIndex('by_slug', (q) => q.eq('slug', args.slug))
+      .unique();
+    if (!project) return null;
+
+    const images: Array<Record<string, unknown>> = [];
+
+    if (project.imageIds && project.imageIds.length > 0) {
+      for (const imgId of project.imageIds) {
+        const img = await ctx.db.get(imgId);
+        if (img) {
+          const url = await ctx.storage.getUrl(img.storageId);
+          images.push({ ...img, url });
+        }
+      }
+    }
+
+    if (project.externalImageUrls && project.externalImageUrls.length > 0) {
+      for (const url of project.externalImageUrls) {
+        if (typeof url === 'string' && url.trim()) {
+          images.push({ url });
+        }
+      }
+    }
+
+    return { ...project, images };
+  },
+});
+
 export const getById = query({
   args: { id: v.id('projects') },
   handler: async (ctx, args) => {
@@ -101,6 +134,18 @@ export const create = mutation({
     externalImageUrls: v.optional(v.array(v.string())),
     demoLink: v.optional(v.string()),
     githubLink: v.optional(v.string()),
+    slug: v.optional(v.string()),
+    caseStudy: v.optional(v.object({
+      problem: v.string(),
+      solution: v.string(),
+      results: v.string(),
+      metrics: v.array(v.object({ label: v.string(), value: v.string(), icon: v.optional(v.string()) })),
+      testimonial: v.optional(v.object({ text: v.string(), author: v.string(), role: v.optional(v.string()) })),
+    })),
+    caseStudyTranslations: v.optional(v.object({
+      ptBR: v.optional(v.object({ problem: v.string(), solution: v.string(), results: v.string() })),
+      enUS: v.optional(v.object({ problem: v.string(), solution: v.string(), results: v.string() })),
+    })),
     orderIndex: v.number(),
   },
   handler: async (ctx, args) => {
@@ -133,6 +178,18 @@ export const update = mutation({
     externalImageUrls: v.optional(v.array(v.string())),
     demoLink: v.optional(v.string()),
     githubLink: v.optional(v.string()),
+    slug: v.optional(v.string()),
+    caseStudy: v.optional(v.object({
+      problem: v.string(),
+      solution: v.string(),
+      results: v.string(),
+      metrics: v.array(v.object({ label: v.string(), value: v.string(), icon: v.optional(v.string()) })),
+      testimonial: v.optional(v.object({ text: v.string(), author: v.string(), role: v.optional(v.string()) })),
+    })),
+    caseStudyTranslations: v.optional(v.object({
+      ptBR: v.optional(v.object({ problem: v.string(), solution: v.string(), results: v.string() })),
+      enUS: v.optional(v.object({ problem: v.string(), solution: v.string(), results: v.string() })),
+    })),
     orderIndex: v.optional(v.number()),
   },
   handler: async (ctx, args) => {

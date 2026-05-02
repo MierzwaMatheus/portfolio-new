@@ -16,4 +16,9 @@ export class StaticPortfolioRepository implements PortfolioRepository {
       return [];
     }
   }
+
+  async getBySlug(slug: string): Promise<Project | null> {
+    const all = await this.list();
+    return all.find((p) => p.slug === slug) ?? null;
+  }
 }

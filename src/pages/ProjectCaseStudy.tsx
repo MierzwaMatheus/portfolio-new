@@ -1,0 +1,327 @@
+import { PageSkeleton } from "@/components/PageSkeleton";
+import { SEO } from "@/components/SEO";
+import { useState, useEffect } from "react";
+import { useRoute, Link } from "wouter";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  ArrowLeft,
+  ExternalLink,
+  Github,
+  AlertTriangle,
+  Lightbulb,
+  TrendingUp,
+  ZoomIn,
+  X,
+  ChevronLeft,
+  ChevronRight,
+  Quote,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { useI18n } from "@/i18n/context/I18nContext";
+import { useTranslation } from "@/i18n/hooks/useTranslation";
+import { useProjectBySlug } from "@/hooks/usePortfolio";
+import { portfolioRepository } from "@/repositories/instances";
+
+const narrativeSections = [
+  {
+    key: "problem" as const,
+    icon: AlertTriangle,
+    iconColor: "text-red-400",
+    borderColor: "border-red-400/30",
+    bgColor: "bg-red-400/5",
+    labelKey: "portfolio.problem",
+  },
+  {
+    key: "solution" as const,
+    icon: Lightbulb,
+    iconColor: "text-neon-lime",
+    borderColor: "border-neon-lime/30",
+    bgColor: "bg-neon-lime/5",
+    labelKey: "portfolio.solution",
+  },
+  {
+    key: "results" as const,
+    icon: TrendingUp,
+    iconColor: "text-green-400",
+    borderColor: "border-green-400/30",
+    bgColor: "bg-green-400/5",
+    labelKey: "portfolio.results",
+  },
+];
+
+export default function ProjectCaseStudy() {
+  const { t } = useTranslation();
+  const { isLoading: i18nLoading } = useI18n();
+  const [, params] = useRoute("/portfolio/:slug");
+  const { project, isLoading } = useProjectBySlug(portfolioRepository, params?.slug);
+  const [expandedImage, setExpandedImage] = useState<{
+    url: string;
+    index: number;
+    images: string[];
+  } | null>(null);
+
+  useEffect(() => {
+    if (!expandedImage || expandedImage.images.length <= 1) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        const prev = expandedImage.index > 0 ? expandedImage.index - 1 : expandedImage.images.length - 1;
+        setExpandedImage({ ...expandedImage, index: prev, url: expandedImage.images[prev] });
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        const next = expandedImage.index < expandedImage.images.length - 1 ? expandedImage.index + 1 : 0;
+        setExpandedImage({ ...expandedImage, index: next, url: expandedImage.images[next] });
+      } else if (e.key === "Escape") {
+        setExpandedImage(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [expandedImage]);
+
+  if (isLoading || i18nLoading) return <PageSkeleton />;
+
+  if (!project) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
+        <h1 className="text-3xl font-bold text-white">{t("portfolio.projectNotFound")}</h1>
+        <p className="text-gray-400">{t("portfolio.projectNotFoundDescription")}</p>
+        <Link href="/portfolio">
+          <Button variant="outline" className="mt-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t("portfolio.backToPortfolio")}
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const cs = project.case_study;
+
+  return (
+    <>
+      <SEO
+        title={`${project.title} — ${t("portfolio.caseStudy")}`}
+        description={project.description}
+      />
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-4xl mx-auto pb-16 space-y-12"
+      >
+        {/* Back link */}
+        <Link href="/portfolio">
+          <Button variant="ghost" className="text-gray-400 hover:text-white -ml-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            {t("portfolio.backToPortfolio")}
+          </Button>
+        </Link>
+
+        {/* Hero */}
+        <div className="relative rounded-2xl overflow-hidden border border-white/10">
+          {project.images && project.images.length > 0 ? (
+            <img
+              src={project.images[0]}
+              alt={project.title}
+              className="w-full h-64 md:h-80 object-cover"
+            />
+          ) : (
+            <div className="w-full h-64 md:h-80 bg-white/5 flex items-center justify-center text-gray-500">
+              {t("portfolio.noImage")}
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
+            <h1 className="text-3xl md:text-5xl font-bold text-white mb-3">{project.title}</h1>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {project.tags?.map((tag: string) => (
+                <Badge
+                  key={tag}
+                  variant="outline"
+                  className="bg-neon-purple/20 text-neon-purple border-neon-purple/30"
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+            <div className="flex gap-3">
+              {project.demo_link && (
+                <a href={project.demo_link} target="_blank" rel="noopener noreferrer">
+                  <Button size="sm" className="bg-neon-purple hover:bg-neon-purple/80 text-white">
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    {t("portfolio.liveDemo")}
+                  </Button>
+                </a>
+              )}
+              {project.github_link && (
+                <a href={project.github_link} target="_blank" rel="noopener noreferrer">
+                  <Button size="sm" variant="outline" className="border-white/20 text-white hover:bg-white/10">
+                    <Github className="mr-2 h-4 w-4" />
+                    {t("portfolio.code")}
+                  </Button>
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Narrative sections */}
+        {cs && (
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={{ visible: { transition: { staggerChildren: 0.12 } } }}
+            className="space-y-6"
+          >
+            {narrativeSections.map(({ key, icon: Icon, iconColor, borderColor, bgColor, labelKey }) => (
+              <motion.div
+                key={key}
+                variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
+                className={`rounded-xl border ${borderColor} ${bgColor} p-6`}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <Icon className={`h-5 w-5 ${iconColor}`} />
+                  <h2 className="text-lg font-semibold text-white">{t(labelKey)}</h2>
+                </div>
+                <p className="text-gray-300 leading-relaxed whitespace-pre-line">{cs[key]}</p>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
+
+        {/* Metrics */}
+        {cs && cs.metrics && cs.metrics.length > 0 && (
+          <div>
+            <h2 className="text-xl font-bold text-white mb-4">{t("portfolio.metrics")}</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {cs.metrics.map((metric, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.07 }}
+                  className="bg-white/5 border border-white/10 rounded-xl p-6 text-center"
+                >
+                  <div className="text-3xl font-bold text-neon-purple mb-1">{metric.value}</div>
+                  <div className="text-sm text-gray-400">{metric.label}</div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Screenshots carousel */}
+        {project.images && project.images.length > 0 && (
+          <div>
+            <h2 className="text-xl font-bold text-white mb-4">{t("portfolio.screenshots")}</h2>
+            <Carousel className="w-full">
+              <CarouselContent>
+                {project.images.map((img: string, idx: number) => (
+                  <CarouselItem key={idx} className="md:basis-1/2">
+                    <div className="aspect-video rounded-lg overflow-hidden border border-white/10 relative group">
+                      <img
+                        src={img}
+                        alt={`${project.title} - ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <button
+                        onClick={() => setExpandedImage({ url: img, index: idx, images: project.images })}
+                        className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"
+                        aria-label={t("portfolio.expandImage")}
+                      >
+                        <div className="bg-background/80 backdrop-blur-sm p-3 rounded-full border border-white/20 hover:border-neon-purple transition-colors">
+                          <ZoomIn className="w-5 h-5 text-white" />
+                        </div>
+                      </button>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="left-2 bg-background/50 border-white/10 text-white hover:bg-neon-purple hover:border-neon-purple" />
+              <CarouselNext className="right-2 bg-background/50 border-white/10 text-white hover:bg-neon-purple hover:border-neon-purple" />
+            </Carousel>
+          </div>
+        )}
+
+        {/* Testimonial */}
+        {cs?.testimonial && (
+          <div className="border-l-4 border-neon-purple bg-white/5 rounded-r-xl p-6">
+            <h2 className="text-lg font-semibold text-white mb-3 flex items-center gap-2">
+              <Quote className="h-5 w-5 text-neon-purple" />
+              {t("portfolio.testimonial")}
+            </h2>
+            <p className="text-gray-300 italic leading-relaxed mb-3">"{cs.testimonial.text}"</p>
+            <p className="text-neon-purple font-medium">{cs.testimonial.author}</p>
+            {cs.testimonial.role && (
+              <p className="text-gray-500 text-sm">{cs.testimonial.role}</p>
+            )}
+          </div>
+        )}
+      </motion.div>
+
+      {/* Fullscreen image */}
+      <AnimatePresence>
+        {expandedImage && (
+          <Dialog open onOpenChange={() => setExpandedImage(null)}>
+            <DialogContent className="max-w-5xl bg-black/95 border-white/10 p-2">
+              <VisuallyHidden>
+                <span>{t("portfolio.expandImage")}</span>
+              </VisuallyHidden>
+              <div className="relative">
+                <img
+                  src={expandedImage.url}
+                  alt=""
+                  className="w-full max-h-[80vh] object-contain rounded-lg"
+                />
+                <button
+                  onClick={() => setExpandedImage(null)}
+                  className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                {expandedImage.images.length > 1 && (
+                  <>
+                    <button
+                      onClick={() => {
+                        const prev = expandedImage.index > 0 ? expandedImage.index - 1 : expandedImage.images.length - 1;
+                        setExpandedImage({ ...expandedImage, index: prev, url: expandedImage.images[prev] });
+                      }}
+                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-colors"
+                      aria-label={t("portfolio.previousImage")}
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        const next = expandedImage.index < expandedImage.images.length - 1 ? expandedImage.index + 1 : 0;
+                        setExpandedImage({ ...expandedImage, index: next, url: expandedImage.images[next] });
+                      }}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-colors"
+                      aria-label={t("portfolio.nextImage")}
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </>
+                )}
+                <div className="text-center text-gray-400 text-sm mt-2">
+                  {expandedImage.index + 1} {t("portfolio.of")} {expandedImage.images.length}
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </AnimatePresence>
+    </>
+  );
+}

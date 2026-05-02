@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, GripVertical, X } from "lucide-react";
+import { Plus, Pencil, Trash2, GripVertical, X, Upload, Copy, Check } from "lucide-react";
+import { CASE_STUDY_AI_PROMPT } from "@/constants/caseStudyPrompt";
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useQuery, useMutation } from "convex/react";
@@ -27,6 +30,12 @@ interface ProjectImage {
   displayName?: string;
 }
 
+interface CaseStudyMetric {
+  label: string;
+  value: string;
+  icon?: string;
+}
+
 interface Project {
   _id: Id<"projects">;
   title: string;
@@ -40,6 +49,18 @@ interface Project {
   images: ProjectImage[];
   demoLink?: string;
   githubLink?: string;
+  slug?: string;
+  caseStudy?: {
+    problem: string;
+    solution: string;
+    results: string;
+    metrics: CaseStudyMetric[];
+    testimonial?: { text: string; author: string; role?: string };
+  };
+  caseStudyTranslations?: {
+    ptBR?: { problem: string; solution: string; results: string };
+    enUS?: { problem: string; solution: string; results: string };
+  };
   orderIndex: number;
 }
 
@@ -165,6 +186,24 @@ export default function AdminProjects() {
   const [projectImages, setProjectImages] = useState<{ id: Id<"imageMetadata">; url: string | null }[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
+  // Case study state
+  const [slug, setSlug] = useState('');
+  const [caseStudyProblem, setCaseStudyProblem] = useState('');
+  const [caseStudySolution, setCaseStudySolution] = useState('');
+  const [caseStudyResults, setCaseStudyResults] = useState('');
+  const [metrics, setMetrics] = useState<CaseStudyMetric[]>([]);
+  const [testimonialEnabled, setTestimonialEnabled] = useState(false);
+  const [testimonialText, setTestimonialText] = useState('');
+  const [testimonialAuthor, setTestimonialAuthor] = useState('');
+  const [testimonialRole, setTestimonialRole] = useState('');
+
+  // JSON import state
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [importJson, setImportJson] = useState('');
+  const [importError, setImportError] = useState('');
+  const [promptCopied, setPromptCopied] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { translateFields, isTranslating } = useTranslateContent();
   const projects = projectsData ?? [];
   const isLoading = projectsData === undefined;
@@ -184,12 +223,35 @@ export default function AdminProjects() {
         .map((img) => ({ id: img._id, url: img.url }));
       setProjectImages(imgs);
       setSelectedTags(project.tags || []);
+      setSlug(project.slug || '');
+      const cs = project.caseStudy;
+      const csT = project.caseStudyTranslations?.ptBR;
+      setCaseStudyProblem(csT?.problem ?? cs?.problem ?? '');
+      setCaseStudySolution(csT?.solution ?? cs?.solution ?? '');
+      setCaseStudyResults(csT?.results ?? cs?.results ?? '');
+      setMetrics(cs?.metrics ?? []);
+      setTestimonialEnabled(!!cs?.testimonial);
+      setTestimonialText(cs?.testimonial?.text ?? '');
+      setTestimonialAuthor(cs?.testimonial?.author ?? '');
+      setTestimonialRole(cs?.testimonial?.role ?? '');
     } else {
       setProjectImages([]);
       setSelectedTags([]);
+      setSlug('');
+      setCaseStudyProblem('');
+      setCaseStudySolution('');
+      setCaseStudyResults('');
+      setMetrics([]);
+      setTestimonialEnabled(false);
+      setTestimonialText('');
+      setTestimonialAuthor('');
+      setTestimonialRole('');
     }
     setIsDialogOpen(true);
   };
+
+  const generateSlug = (title: string) =>
+    title.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -203,6 +265,9 @@ export default function AdminProjects() {
     try {
       const allFields: Record<string, string> = { title: titlePT, description: descriptionPT };
       if (longDescriptionPT) allFields.longDescription = longDescriptionPT;
+      if (caseStudyProblem) allFields.caseStudyProblem = caseStudyProblem;
+      if (caseStudySolution) allFields.caseStudySolution = caseStudySolution;
+      if (caseStudyResults) allFields.caseStudyResults = caseStudyResults;
 
       const existingTranslations = {
         title: editingProject?.titleTranslations,
@@ -225,7 +290,21 @@ export default function AdminProjects() {
         title: partialTranslated.title ?? editingProject?.titleTranslations?.enUS ?? titlePT,
         description: partialTranslated.description ?? editingProject?.descriptionTranslations?.enUS ?? descriptionPT,
         longDescription: partialTranslated.longDescription ?? editingProject?.longDescriptionTranslations?.enUS ?? longDescriptionPT,
+        caseStudyProblem: partialTranslated.caseStudyProblem ?? editingProject?.caseStudyTranslations?.enUS?.problem ?? caseStudyProblem,
+        caseStudySolution: partialTranslated.caseStudySolution ?? editingProject?.caseStudyTranslations?.enUS?.solution ?? caseStudySolution,
+        caseStudyResults: partialTranslated.caseStudyResults ?? editingProject?.caseStudyTranslations?.enUS?.results ?? caseStudyResults,
       };
+
+      const hasCaseStudy = !!(caseStudyProblem || caseStudySolution || caseStudyResults);
+      const caseStudyData = hasCaseStudy ? {
+        problem: caseStudyProblem,
+        solution: caseStudySolution,
+        results: caseStudyResults,
+        metrics,
+        testimonial: testimonialEnabled && testimonialText && testimonialAuthor
+          ? { text: testimonialText, author: testimonialAuthor, role: testimonialRole || undefined }
+          : undefined,
+      } : undefined;
 
       const imageIds = projectImages.map((i) => i.id);
       const baseData = {
@@ -241,6 +320,12 @@ export default function AdminProjects() {
         imageIds,
         demoLink: (formData.get('demo') as string) || undefined,
         githubLink: (formData.get('github') as string) || undefined,
+        slug: slug || undefined,
+        caseStudy: caseStudyData,
+        caseStudyTranslations: hasCaseStudy ? {
+          ptBR: { problem: caseStudyProblem, solution: caseStudySolution, results: caseStudyResults },
+          enUS: { problem: translated.caseStudyProblem, solution: translated.caseStudySolution, results: translated.caseStudyResults },
+        } : undefined,
       };
 
       if (editingProject) {
@@ -332,6 +417,65 @@ export default function AdminProjects() {
     }
   };
 
+  const processJsonImport = async (jsonStr: string) => {
+    setImportError('');
+    let data: any;
+    try {
+      data = JSON.parse(jsonStr);
+    } catch {
+      setImportError('JSON inválido. Verifique a formatação.');
+      return;
+    }
+
+    if (!data.title) { setImportError('Campo obrigatório ausente: title'); return; }
+    if (!data.slug) { setImportError('Campo obrigatório ausente: slug'); return; }
+    const existingSlug = projects.find(p => (p as any).slug === data.slug);
+    if (existingSlug) { setImportError(`Slug "${data.slug}" já está em uso pelo projeto "${existingSlug.title}".`); return; }
+
+    try {
+      const maxOrder = projects.length > 0 ? Math.max(...projects.map(p => p.orderIndex ?? 0)) : -1;
+      await createProject({
+        title: data.title,
+        titleTranslations: data.titleTranslations ? { ptBR: data.titleTranslations.ptBR ?? data.title, enUS: data.titleTranslations.enUS } : undefined,
+        description: data.description ?? '',
+        descriptionTranslations: data.descriptionTranslations ? { ptBR: data.descriptionTranslations.ptBR ?? data.description ?? '', enUS: data.descriptionTranslations.enUS } : undefined,
+        longDescription: data.longDescription,
+        longDescriptionTranslations: data.longDescriptionTranslations ? { ptBR: data.longDescriptionTranslations.ptBR ?? data.longDescription ?? '', enUS: data.longDescriptionTranslations.enUS } : undefined,
+        tags: Array.isArray(data.tags) ? data.tags : [],
+        imageIds: [],
+        externalImageUrls: Array.isArray(data.externalImageUrls) ? data.externalImageUrls : [],
+        demoLink: data.demoLink || undefined,
+        githubLink: data.githubLink || undefined,
+        slug: data.slug,
+        caseStudy: data.caseStudy && (data.caseStudy.problem || data.caseStudy.solution || data.caseStudy.results)
+          ? { problem: data.caseStudy.problem ?? '', solution: data.caseStudy.solution ?? '', results: data.caseStudy.results ?? '', metrics: Array.isArray(data.caseStudy.metrics) ? data.caseStudy.metrics : [], testimonial: data.caseStudy.testimonial ?? undefined }
+          : undefined,
+        caseStudyTranslations: data.caseStudyTranslations ?? undefined,
+        orderIndex: maxOrder + 1,
+      });
+      toast.success(`Projeto "${data.title}" importado com sucesso!`);
+      setIsImportOpen(false);
+      setImportJson('');
+    } catch (err: any) {
+      setImportError(err?.message || 'Erro ao importar projeto.');
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => setImportJson(ev.target?.result as string ?? '');
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
+  const copyPrompt = () => {
+    navigator.clipboard.writeText(CASE_STUDY_AI_PROMPT);
+    setPromptCopied(true);
+    setTimeout(() => setPromptCopied(false), 2000);
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -340,10 +484,16 @@ export default function AdminProjects() {
             <h1 className="text-3xl font-bold text-white">Projetos</h1>
             <p className="text-gray-400">Gerencie os projetos exibidos no seu portfólio</p>
           </div>
-          <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white" onClick={() => handleOpenDialog()}>
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Projeto
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" className="border-white/10 text-white hover:bg-white/5" onClick={() => setIsImportOpen(true)}>
+              <Upload className="w-4 h-4 mr-2" />
+              Importar JSON
+            </Button>
+            <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white" onClick={() => handleOpenDialog()}>
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Projeto
+            </Button>
+          </div>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -360,6 +510,33 @@ export default function AdminProjects() {
               <div className="space-y-2">
                 <Label htmlFor="title" className="text-white">Título</Label>
                 <Input name="title" id="title" defaultValue={editingProject ? getProjectField(editingProject, 'title') : ''} className="bg-white/5 border-white/10 text-white" required />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="slug" className="text-white">Slug (URL)</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="slug"
+                    value={slug}
+                    onChange={e => setSlug(e.target.value)}
+                    placeholder="meu-projeto"
+                    className="bg-white/5 border-white/10 text-white"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-white/10 text-gray-400 hover:text-white whitespace-nowrap"
+                    onClick={() => {
+                      const titleEl = document.getElementById('title') as HTMLInputElement;
+                      if (titleEl?.value) setSlug(generateSlug(titleEl.value));
+                    }}
+                  >
+                    Gerar do título
+                  </Button>
+                </div>
+                {slug && (
+                  <p className="text-xs text-gray-500">/portfolio/{slug}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -417,6 +594,116 @@ export default function AdminProjects() {
                 </div>
               </div>
 
+              <Accordion type="single" collapsible>
+                <AccordionItem value="case-study" className="border-white/10">
+                  <AccordionTrigger className="text-white hover:text-neon-purple">
+                    Case Study (opcional)
+                  </AccordionTrigger>
+                  <AccordionContent className="space-y-4 pt-2">
+                    <div className="space-y-2">
+                      <Label className="text-white">O Problema</Label>
+                      <Textarea
+                        value={caseStudyProblem}
+                        onChange={e => setCaseStudyProblem(e.target.value)}
+                        placeholder="Descreva o contexto e o desafio que motivou o projeto..."
+                        className="bg-white/5 border-white/10 text-white h-24"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white">A Solução</Label>
+                      <Textarea
+                        value={caseStudySolution}
+                        onChange={e => setCaseStudySolution(e.target.value)}
+                        placeholder="Como o problema foi resolvido, arquitetura e decisões técnicas..."
+                        className="bg-white/5 border-white/10 text-white h-24"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-white">Os Resultados</Label>
+                      <Textarea
+                        value={caseStudyResults}
+                        onChange={e => setCaseStudyResults(e.target.value)}
+                        placeholder="Impacto, métricas, feedback obtido..."
+                        className="bg-white/5 border-white/10 text-white h-20"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-white">Métricas</Label>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="border-white/10 text-gray-400 hover:text-white"
+                          onClick={() => setMetrics([...metrics, { label: '', value: '', icon: '' }])}
+                        >
+                          <Plus className="w-3 h-3 mr-1" /> Adicionar
+                        </Button>
+                      </div>
+                      {metrics.map((m, i) => (
+                        <div key={i} className="flex gap-2 items-center">
+                          <Input
+                            value={m.value}
+                            onChange={e => setMetrics(metrics.map((x, idx) => idx === i ? { ...x, value: e.target.value } : x))}
+                            placeholder="Ex: 70%"
+                            className="bg-white/5 border-white/10 text-white w-24"
+                          />
+                          <Input
+                            value={m.label}
+                            onChange={e => setMetrics(metrics.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x))}
+                            placeholder="Rótulo"
+                            className="bg-white/5 border-white/10 text-white flex-1"
+                          />
+                          <Input
+                            value={m.icon ?? ''}
+                            onChange={e => setMetrics(metrics.map((x, idx) => idx === i ? { ...x, icon: e.target.value } : x))}
+                            placeholder="Ícone (ex: Zap)"
+                            className="bg-white/5 border-white/10 text-white w-28"
+                          />
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-400 hover:text-red-300"
+                            onClick={() => setMetrics(metrics.filter((_, idx) => idx !== i))}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="testimonial-enabled"
+                          checked={testimonialEnabled}
+                          onChange={e => setTestimonialEnabled(e.target.checked)}
+                          className="rounded border-white/20"
+                        />
+                        <Label htmlFor="testimonial-enabled" className="text-white cursor-pointer">Incluir depoimento</Label>
+                      </div>
+                      {testimonialEnabled && (
+                        <div className="space-y-2 pl-6 border-l border-white/10">
+                          <Textarea
+                            value={testimonialText}
+                            onChange={e => setTestimonialText(e.target.value)}
+                            placeholder="Texto do depoimento..."
+                            className="bg-white/5 border-white/10 text-white h-20"
+                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            <Input value={testimonialAuthor} onChange={e => setTestimonialAuthor(e.target.value)} placeholder="Nome do autor" className="bg-white/5 border-white/10 text-white" />
+                            <Input value={testimonialRole} onChange={e => setTestimonialRole(e.target.value)} placeholder="Cargo / empresa" className="bg-white/5 border-white/10 text-white" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+
               <div className="flex justify-end gap-2 pt-4">
                 <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="text-gray-400">Cancelar</Button>
                 <Button type="submit" disabled={isTranslating} className="bg-neon-purple hover:bg-neon-purple/90 text-white">{isTranslating ? 'Traduzindo...' : 'Salvar'}</Button>
@@ -451,6 +738,71 @@ export default function AdminProjects() {
           </DndContext>
         )}
       </div>
+
+      {/* JSON Import Dialog */}
+      <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+        <DialogContent className="bg-background border-white/10 max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-white">Importar Projeto via JSON</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-4">
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="border-white/10 text-gray-400 hover:text-white"
+                onClick={copyPrompt}
+              >
+                {promptCopied ? <Check className="w-4 h-4 mr-2 text-green-400" /> : <Copy className="w-4 h-4 mr-2" />}
+                {promptCopied ? 'Copiado!' : 'Copiar Prompt para IA'}
+              </Button>
+              <p className="text-xs text-gray-500 self-center">Gere o JSON com ChatGPT, Claude ou Gemini</p>
+            </div>
+
+            <Tabs defaultValue="paste">
+              <TabsList className="bg-white/5 border border-white/10">
+                <TabsTrigger value="paste" className="text-gray-400 data-[state=active]:text-white">Colar JSON</TabsTrigger>
+                <TabsTrigger value="upload" className="text-gray-400 data-[state=active]:text-white">Upload de Arquivo</TabsTrigger>
+              </TabsList>
+              <TabsContent value="paste" className="mt-3">
+                <Textarea
+                  value={importJson}
+                  onChange={e => { setImportJson(e.target.value); setImportError(''); }}
+                  placeholder='{ "title": "Meu Projeto", "slug": "meu-projeto", ... }'
+                  className="bg-white/5 border-white/10 text-white font-mono text-xs h-48"
+                />
+              </TabsContent>
+              <TabsContent value="upload" className="mt-3">
+                <div
+                  className="border-2 border-dashed border-white/20 rounded-lg p-8 text-center cursor-pointer hover:border-neon-purple/50 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="w-8 h-8 text-gray-500 mx-auto mb-2" />
+                  <p className="text-gray-400 text-sm">Clique para selecionar um arquivo .json</p>
+                  {importJson && <p className="text-green-400 text-xs mt-2">Arquivo carregado ✓</p>}
+                </div>
+                <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleFileUpload} />
+              </TabsContent>
+            </Tabs>
+
+            {importError && (
+              <p className="text-red-400 text-sm bg-red-400/10 border border-red-400/20 rounded p-3">{importError}</p>
+            )}
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="ghost" onClick={() => { setIsImportOpen(false); setImportJson(''); setImportError(''); }} className="text-gray-400">Cancelar</Button>
+              <Button
+                type="button"
+                onClick={() => processJsonImport(importJson)}
+                disabled={!importJson.trim()}
+                className="bg-neon-purple hover:bg-neon-purple/90 text-white"
+              >
+                Importar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }

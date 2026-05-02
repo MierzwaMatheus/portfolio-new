@@ -64,6 +64,9 @@ export function mapProject(c: any): Project {
       c.longDescriptionTranslations ?? c.long_description_translations
     ),
     order_index: c.orderIndex ?? c.order_index,
+    slug: c.slug ?? undefined,
+    case_study: c.caseStudy ?? c.case_study ?? undefined,
+    case_study_translations: mapTranslationsObj(c.caseStudyTranslations ?? c.case_study_translations),
   } as Project;
 }
 

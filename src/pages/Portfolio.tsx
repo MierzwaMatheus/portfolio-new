@@ -30,6 +30,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { Link } from "wouter";
 import { useI18n } from "@/i18n/context/I18nContext";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { usePortfolio } from "@/hooks/usePortfolio";
@@ -215,6 +216,14 @@ export default function Portfolio() {
                     )}
                   </div>
 
+                  <div className="space-y-2">
+                    {project.slug && (
+                      <Link href={`/portfolio/${project.slug}`} className="block">
+                        <Button className="w-full bg-neon-purple/10 hover:bg-neon-purple text-neon-purple hover:text-white border border-neon-purple/30 transition-all duration-300">
+                          {t("portfolio.viewCaseStudy")}
+                        </Button>
+                      </Link>
+                    )}
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button
@@ -340,6 +349,7 @@ export default function Portfolio() {
                       </div>
                     </DialogContent>
                   </Dialog>
+                  </div>
                 </div>
               </motion.div>
             ))}
