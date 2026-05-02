@@ -19,6 +19,8 @@ const EVENT_TYPES = [
   "admin.unpublish",
   "user.role_assigned",
   "user.role_removed",
+  "contact.submitted",
+  "contact.status_changed",
 ];
 
 const TARGET_TYPES = [
@@ -32,6 +34,7 @@ const TARGET_TYPES = [
   "proposal",
   "checkout",
   "user",
+  "contactRequest",
 ];
 
 const EVENT_BADGE_VARIANTS: Record<string, string> = {
@@ -43,6 +46,8 @@ const EVENT_BADGE_VARIANTS: Record<string, string> = {
   "admin.unpublish": "bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400",
   "user.role_assigned": "bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400",
   "user.role_removed": "bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400",
+  "contact.submitted": "bg-neon-purple/20 text-purple-300 border border-purple-700/30",
+  "contact.status_changed": "bg-blue-900/20 text-blue-300 border border-blue-700/30",
 };
 
 export default function AdminLogs() {
@@ -156,6 +161,13 @@ export default function AdminLogs() {
                     <TableCell className="text-xs text-muted-foreground">
                       {log.actorType === "system" ? (
                         <Badge variant="outline">sistema</Badge>
+                      ) : log.actorType === "external" ? (
+                        <span className="flex flex-col gap-0.5">
+                          <Badge variant="outline" className="text-[10px] w-fit">externo</Badge>
+                          {(log.metadata as Record<string, unknown> | null)?.contactEmail ? (
+                            <span className="text-xs">{String((log.metadata as Record<string, unknown>).contactEmail)}</span>
+                          ) : null}
+                        </span>
                       ) : log.actorEmail ? (
                         <span>{log.actorEmail}</span>
                       ) : log.actorId ? (

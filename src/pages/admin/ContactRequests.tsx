@@ -42,11 +42,35 @@ const TYPE_LABELS: Record<FlowType, string> = {
 };
 
 const ANSWER_KEYS: Record<FlowType, Record<string, string>> = {
-  project: { projectType: "Tipo", timeline: "Prazo", budget: "Orçamento", description: "Descrição" },
-  job: { contractType: "Contrato", modality: "Modalidade", area: "Área", jobCompany: "Empresa", jobRole: "Cargo" },
+  project: { projectType: "Tipo de projeto", timeline: "Prazo estimado", budget: "Orçamento estimado", description: "Descrição" },
+  job: { contractType: "Tipo de contrato", modality: "Modalidade", area: "Área", jobCompany: "Empresa", jobRole: "Cargo" },
   networking: { howFound: "Como encontrou", topic: "Assunto" },
   feedback: { about: "Sobre", message: "Mensagem" },
 };
+
+const BUDGET_VALUES: Record<string, string> = {
+  small: "Até R$ 5.000",
+  medium: "R$ 5.000 – R$ 15.000",
+  large: "R$ 15.000 – R$ 30.000",
+  enterprise: "Acima de R$ 30.000",
+  unknown: "Ainda não sei",
+};
+
+const ANSWER_VALUES: Record<string, string> = {
+  webapp: "Web App / SaaS", mobile: "Mobile", landing: "Landing Page",
+  system: "Sistema Interno", consulting: "Consultoria Técnica", other: "Outro",
+  urgent: "Urgente (< 1 mês)", short: "Curto (1–3 meses)", medium: "Médio (3–6 meses)", flexible: "Sem pressa",
+  clt: "CLT", pj: "PJ / Contrato", freelance: "Freelance",
+  remote: "Remoto", hybrid: "Híbrido", onsite: "Presencial",
+  frontend: "Frontend", fullstack: "Full Stack", techlead: "Tech Lead / Arquitetura",
+  blog: "Blog / Artigos", linkedin: "LinkedIn", referral: "Indicação", portfolio: "Portfólio",
+  post: "Post do blog", project: "Projeto específico", general: "Portfolio em geral",
+};
+
+function resolveValue(key: string, value: string): string {
+  if (key === "budget") return BUDGET_VALUES[value] ?? value;
+  return ANSWER_VALUES[value] ?? value;
+}
 
 export default function AdminContactRequests() {
   const [statusFilter, setStatusFilter] = useState<string | undefined>(undefined);
@@ -189,7 +213,7 @@ export default function AdminContactRequests() {
 
       {/* Detail Sheet */}
       <Sheet open={!!selectedId} onOpenChange={(open) => { if (!open) setSelectedId(null); }}>
-        <SheetContent className="w-full sm:max-w-lg bg-background border-l border-white/10 overflow-y-auto">
+        <SheetContent className="w-full sm:max-w-lg bg-background border-l border-white/10 overflow-y-auto p-6">
           {selected && (
             <>
               <SheetHeader className="mb-6">
@@ -221,7 +245,7 @@ export default function AdminContactRequests() {
                     {Object.entries(selected.answers as Record<string, string> ?? {}).map(([k, v]) => (
                       <div key={k} className="flex gap-2">
                         <span className="text-gray-500 shrink-0">{ANSWER_KEYS[selected.type as FlowType]?.[k] ?? k}:</span>
-                        <span className="text-white">{v}</span>
+                        <span className="text-white">{resolveValue(k, v)}</span>
                       </div>
                     ))}
                   </div>

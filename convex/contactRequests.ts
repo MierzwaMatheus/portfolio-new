@@ -25,7 +25,8 @@ const ANSWER_LABELS: Record<string, Record<string, string>> = {
     contractType: 'Tipo de contrato',
     modality: 'Modalidade',
     area: 'Área',
-    company: 'Empresa / Cargo',
+    jobCompany: 'Empresa',
+    jobRole: 'Cargo',
   },
   networking: {
     howFound: 'Como me encontrou',
@@ -36,6 +37,71 @@ const ANSWER_LABELS: Record<string, Record<string, string>> = {
     message: 'Mensagem',
   },
 };
+
+const STATUS_LABELS_PT: Record<string, string> = {
+  new: 'Novo',
+  read: 'Lido',
+  contacted: 'Contatado',
+  in_progress: 'Em andamento',
+  closed: 'Encerrado',
+  archived: 'Arquivado',
+};
+
+// Human-readable labels for option values
+const ANSWER_VALUES: Record<string, string> = {
+  // project type
+  webapp: 'Web App / SaaS',
+  mobile: 'Mobile',
+  landing: 'Landing Page',
+  system: 'Sistema Interno',
+  consulting: 'Consultoria Técnica',
+  other: 'Outro',
+  // timeline
+  urgent: 'Urgente (< 1 mês)',
+  short: 'Curto (1–3 meses)',
+  medium: 'Médio (3–6 meses)',
+  flexible: 'Sem pressa',
+  // budget
+  small: 'Até R$ 5.000',
+  large: 'R$ 15.000 – R$ 30.000',
+  enterprise: 'Acima de R$ 30.000',
+  unknown: 'Ainda não sei',
+  // job contract
+  clt: 'CLT',
+  pj: 'PJ / Contrato',
+  freelance: 'Freelance',
+  // modality
+  remote: 'Remoto',
+  hybrid: 'Híbrido',
+  onsite: 'Presencial',
+  // area
+  frontend: 'Frontend',
+  fullstack: 'Full Stack',
+  techlead: 'Tech Lead / Arquitetura',
+  // how found
+  blog: 'Blog / Artigos',
+  linkedin: 'LinkedIn',
+  referral: 'Indicação',
+  portfolio: 'Portfólio',
+  // feedback about
+  post: 'Post do blog',
+  project: 'Projeto específico',
+  general: 'Portfolio em geral',
+};
+
+// "medium" conflicts between timeline and budget, so budget needs explicit entry
+const BUDGET_VALUES: Record<string, string> = {
+  small: 'Até R$ 5.000',
+  medium: 'R$ 5.000 – R$ 15.000',
+  large: 'R$ 15.000 – R$ 30.000',
+  enterprise: 'Acima de R$ 30.000',
+  unknown: 'Ainda não sei',
+};
+
+function resolveAnswerValue(key: string, value: string): string {
+  if (key === 'budget') return BUDGET_VALUES[value] ?? value;
+  return ANSWER_VALUES[value] ?? value;
+}
 
 export const submit = mutation({
   args: {
@@ -124,7 +190,13 @@ export const submit = mutation({
       actorType: 'external',
       targetType: 'contactRequest',
       targetId: id,
-      metadata: { type: args.type, sourceContext: args.sourceContext },
+      metadata: {
+        label: `${args.contactInfo.name} (${TYPE_LABELS[args.type] ?? args.type}) via ${args.sourceContext ?? 'desconhecido'}`,
+        type: args.type,
+        sourceContext: args.sourceContext,
+        contactName: args.contactInfo.name,
+        contactEmail: args.contactInfo.email,
+      },
       ipAddress: args.ipAddress,
       userAgent: args.userAgent,
       success: true,
@@ -147,7 +219,7 @@ export const sendNotification = internalAction({
     const answers = doc.answers as Record<string, string> ?? {};
 
     const answersBlock = Object.entries(answers)
-      .map(([k, v]) => `<b>${answerLabels[k] ?? k}:</b> ${v}`)
+      .map(([k, v]) => `<b>${answerLabels[k] ?? k}:</b> ${resolveAnswerValue(k, v)}`)
       .join('\n');
 
     const ts = new Date(doc.createdAt).toLocaleString('pt-BR', {
@@ -261,7 +333,13 @@ export const updateStatus = mutation({
       actorId: userId,
       targetType: 'contactRequest',
       targetId: id,
-      metadata: { from: prev, to: status },
+      metadata: {
+        label: `${doc.contactInfo.name} → ${STATUS_LABELS_PT[status] ?? status}`,
+        from: prev,
+        to: status,
+        contactName: doc.contactInfo.name,
+        contactEmail: doc.contactInfo.email,
+      },
       success: true,
     });
   },
