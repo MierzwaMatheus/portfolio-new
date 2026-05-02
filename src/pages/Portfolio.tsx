@@ -37,8 +37,7 @@ import { usePortfolio } from "@/hooks/usePortfolio";
 import { portfolioRepository } from "@/repositories/instances";
 import { Project } from "@/repositories/interfaces/PortfolioRepository";
 import { useContactWizard } from "@/contexts/ContactWizardContext";
-import { useQuery } from "@tanstack/react-query";
-import { homeRepository } from "@/repositories/instances";
+import { usePlugin } from "@/contexts/PluginsContext";
 import { MessageSquare } from "lucide-react";
 
 export default function Portfolio() {
@@ -46,11 +45,7 @@ export default function Portfolio() {
   const { isLoading: i18nLoading } = useI18n();
   const { projects, isLoading } = usePortfolio(portfolioRepository);
   const { openWizard } = useContactWizard();
-  const { data: wizardEnabled = true } = useQuery({
-    queryKey: ["home", "contact_wizard_enabled"],
-    queryFn: () => homeRepository.getContactWizardEnabled(),
-    staleTime: Infinity,
-  });
+  const wizardEnabled = usePlugin('contact-wizard');
   const [activeFilter, setActiveFilter] = useState(t("portfolio.all"));
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [expandedImage, setExpandedImage] = useState<{

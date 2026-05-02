@@ -96,13 +96,13 @@ export default function AdminContactRequests() {
   const updateStatus = useMutation(api.contactRequests.updateStatus);
   const addNote = useMutation(api.contactRequests.addNote);
 
-  const enabledSetting = useQuery(api.homeContent.getByKey, { key: "contact_wizard_enabled" });
-  const setContent = useMutation(api.homeContent.set);
-  const wizardEnabled = enabledSetting === undefined ? true : (enabledSetting === null ? true : enabledSetting.value !== false);
+  const pluginStates = useQuery(api.plugins.getPluginStates);
+  const setPluginEnabled = useMutation(api.plugins.setPluginEnabled);
+  const wizardEnabled = pluginStates === undefined ? true : (pluginStates["contact-wizard"] ?? true);
 
   const handleToggleWizard = async () => {
     try {
-      await setContent({ key: "contact_wizard_enabled", value: !wizardEnabled });
+      await setPluginEnabled({ pluginId: "contact-wizard", enabled: !wizardEnabled });
       toast.success(wizardEnabled ? "Wizard de contato desativado" : "Wizard de contato ativado");
     } catch {
       toast.error("Erro ao alterar configuração");

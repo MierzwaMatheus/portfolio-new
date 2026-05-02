@@ -70,7 +70,7 @@ export function Sidebar() {
   const { locale, setLocale } = useI18n();
   const { openWizard } = useContactWizard();
   const { isEnabled } = usePlugins();
-  const { contactWizardEnabled: wizardEnabled } = useHome(homeRepository);
+  const wizardEnabled = isEnabled('contact-wizard');
   const [location] = useLocation();
   const { contactInfo, isLoading } = useSidebar(sidebarRepository);
   const { items: resumeItems } = useResume(resumeRepository);

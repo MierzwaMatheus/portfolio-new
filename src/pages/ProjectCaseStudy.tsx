@@ -32,8 +32,7 @@ import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useProjectBySlug } from "@/hooks/usePortfolio";
 import { portfolioRepository } from "@/repositories/instances";
 import { useContactWizard } from "@/contexts/ContactWizardContext";
-import { useQuery } from "@tanstack/react-query";
-import { homeRepository } from "@/repositories/instances";
+import { usePlugin } from "@/contexts/PluginsContext";
 import { MessageSquare } from "lucide-react";
 
 function DynamicIcon({ name, className }: { name?: string; className?: string }) {
@@ -76,11 +75,7 @@ export default function ProjectCaseStudy() {
   const [, params] = useRoute("/portfolio/:slug");
   const { project, isLoading } = useProjectBySlug(portfolioRepository, params?.slug);
   const { openWizard } = useContactWizard();
-  const { data: wizardEnabled = true } = useQuery({
-    queryKey: ["home", "contact_wizard_enabled"],
-    queryFn: () => homeRepository.getContactWizardEnabled(),
-    staleTime: Infinity,
-  });
+  const wizardEnabled = usePlugin('contact-wizard');
   const [expandedImage, setExpandedImage] = useState<{
     url: string;
     index: number;
