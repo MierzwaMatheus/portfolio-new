@@ -17,7 +17,7 @@ import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
 import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
-import { hasTranslatableChanges } from "@/i18n/utils/hasTranslatableChanges";
+import { getChangedTranslatableFields } from "@/i18n/utils/hasTranslatableChanges";
 
 export default function AdminHome() {
   const homeContentList = useQuery(api.homeContent.getAll);
@@ -79,22 +79,20 @@ export default function AdminHome() {
         const descriptionPT = formData.get("description") as string;
 
         const serviceFields = { title: titlePT, description: descriptionPT };
-        const needsTranslation = !editingItem || hasTranslatableChanges(serviceFields, {
-          title: editingItem.titleTranslations,
-          description: editingItem.descriptionTranslations,
-        });
+        const changedService = editingItem
+          ? getChangedTranslatableFields(serviceFields, { title: editingItem.titleTranslations, description: editingItem.descriptionTranslations })
+          : serviceFields;
 
-        let translated: Record<string, string>;
-        if (needsTranslation) {
+        let partialService: Record<string, string> = {};
+        if (Object.keys(changedService).length > 0) {
           const toastId = toast.loading('Traduzindo conteúdo...');
-          translated = await translateFields(serviceFields);
+          partialService = await translateFields(changedService);
           toast.dismiss(toastId);
-        } else {
-          translated = {
-            title: editingItem.titleTranslations?.enUS ?? titlePT,
-            description: editingItem.descriptionTranslations?.enUS ?? descriptionPT,
-          };
         }
+        const translated = {
+          title: partialService.title ?? editingItem?.titleTranslations?.enUS ?? titlePT,
+          description: partialService.description ?? editingItem?.descriptionTranslations?.enUS ?? descriptionPT,
+        };
 
         const payload = {
           title: titlePT,
@@ -114,22 +112,20 @@ export default function AdminHome() {
         const rolePT = formData.get("role") as string;
 
         const testimonialFields = { role: rolePT, text: textPT };
-        const needsTranslation = !editingItem || hasTranslatableChanges(testimonialFields, {
-          role: editingItem.roleTranslations,
-          text: editingItem.textTranslations,
-        });
+        const changedTestimonial = editingItem
+          ? getChangedTranslatableFields(testimonialFields, { role: editingItem.roleTranslations, text: editingItem.textTranslations })
+          : testimonialFields;
 
-        let translated: Record<string, string>;
-        if (needsTranslation) {
+        let partialTestimonial: Record<string, string> = {};
+        if (Object.keys(changedTestimonial).length > 0) {
           const toastId = toast.loading('Traduzindo conteúdo...');
-          translated = await translateFields(testimonialFields);
+          partialTestimonial = await translateFields(changedTestimonial);
           toast.dismiss(toastId);
-        } else {
-          translated = {
-            role: editingItem.roleTranslations?.enUS ?? rolePT,
-            text: editingItem.textTranslations?.enUS ?? textPT,
-          };
         }
+        const translated = {
+          role: partialTestimonial.role ?? editingItem?.roleTranslations?.enUS ?? rolePT,
+          text: partialTestimonial.text ?? editingItem?.textTranslations?.enUS ?? textPT,
+        };
 
         const payload = {
           name: namePT,

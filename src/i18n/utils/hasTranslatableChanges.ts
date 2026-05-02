@@ -1,9 +1,11 @@
-export function hasTranslatableChanges(
+export function getChangedTranslatableFields(
   newValues: Record<string, string>,
   existing: Record<string, { ptBR: string; enUS?: string } | undefined>
-): boolean {
-  return Object.entries(newValues).some(([key, newVal]) => {
-    const saved = existing[key]?.ptBR ?? '';
-    return newVal.trim() !== saved.trim();
-  });
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(newValues).filter(([key, newVal]) => {
+      const saved = existing[key]?.ptBR ?? '';
+      return newVal.trim() !== saved.trim();
+    })
+  );
 }

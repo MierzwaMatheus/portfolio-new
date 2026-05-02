@@ -16,7 +16,7 @@ import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
 import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
-import { hasTranslatableChanges } from "@/i18n/utils/hasTranslatableChanges";
+import { getChangedTranslatableFields } from "@/i18n/utils/hasTranslatableChanges";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -323,19 +323,19 @@ export default function AdminResume() {
       const existingPT = editingItem?.contentTranslations?.ptBR ?? {};
       const existingEN = editingItem?.contentTranslations?.enUS ?? {};
 
+      const makeExistingMap = (keys: string[]) =>
+        Object.fromEntries(keys.map(k => [k, existingPT[k] != null ? { ptBR: existingPT[k], enUS: existingEN[k] } : undefined]));
+
       if (activeModal === 'experience') {
         const fields: Record<string, string> = {};
         if (content.role) fields.role = content.role;
         if (content.description) fields.description = content.description;
-        const needsTranslation = !editingItem || hasTranslatableChanges(fields, {
-          role: existingPT.role != null ? { ptBR: existingPT.role, enUS: existingEN.role } : undefined,
-          description: existingPT.description != null ? { ptBR: existingPT.description, enUS: existingEN.description } : undefined,
-        });
-        if (needsTranslation) {
+        const changed = editingItem ? getChangedTranslatableFields(fields, makeExistingMap(['role', 'description'])) : fields;
+        if (Object.keys(changed).length > 0) {
           const toastId = toast.loading('Traduzindo conteúdo...');
-          const translated = await translateFields(fields);
+          const translated = await translateFields(changed);
           toast.dismiss(toastId);
-          contentEN = { ...content, ...translated };
+          contentEN = { ...content, role: translated.role ?? existingEN.role ?? content.role, description: translated.description ?? existingEN.description ?? content.description };
         } else {
           contentEN = { ...content, role: existingEN.role ?? content.role, description: existingEN.description ?? content.description };
         }
@@ -343,29 +343,24 @@ export default function AdminResume() {
         const fields: Record<string, string> = {};
         if (content.degree) fields.degree = content.degree;
         if (content.description) fields.description = content.description;
-        const needsTranslation = !editingItem || hasTranslatableChanges(fields, {
-          degree: existingPT.degree != null ? { ptBR: existingPT.degree, enUS: existingEN.degree } : undefined,
-          description: existingPT.description != null ? { ptBR: existingPT.description, enUS: existingEN.description } : undefined,
-        });
-        if (needsTranslation) {
+        const changed = editingItem ? getChangedTranslatableFields(fields, makeExistingMap(['degree', 'description'])) : fields;
+        if (Object.keys(changed).length > 0) {
           const toastId = toast.loading('Traduzindo conteúdo...');
-          const translated = await translateFields(fields);
+          const translated = await translateFields(changed);
           toast.dismiss(toastId);
-          contentEN = { ...content, ...translated };
+          contentEN = { ...content, degree: translated.degree ?? existingEN.degree ?? content.degree, description: translated.description ?? existingEN.description ?? content.description };
         } else {
           contentEN = { ...content, degree: existingEN.degree ?? content.degree, description: existingEN.description ?? content.description };
         }
       } else if (activeModal === 'skill') {
         const fields: Record<string, string> = {};
         if (content.name) fields.name = content.name;
-        const needsTranslation = !editingItem || hasTranslatableChanges(fields, {
-          name: existingPT.name != null ? { ptBR: existingPT.name, enUS: existingEN.name } : undefined,
-        });
-        if (needsTranslation) {
+        const changed = editingItem ? getChangedTranslatableFields(fields, makeExistingMap(['name'])) : fields;
+        if (Object.keys(changed).length > 0) {
           const toastId = toast.loading('Traduzindo conteúdo...');
-          const translated = await translateFields(fields);
+          const translated = await translateFields(changed);
           toast.dismiss(toastId);
-          contentEN = { ...content, ...translated };
+          contentEN = { ...content, name: translated.name ?? existingEN.name ?? content.name };
         } else {
           contentEN = { ...content, name: existingEN.name ?? content.name };
         }

@@ -19,7 +19,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStr
 import { CSS } from '@dnd-kit/utilities';
 import { toast } from "sonner";
 import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
-import { hasTranslatableChanges } from "@/i18n/utils/hasTranslatableChanges";
+import { getChangedTranslatableFields } from "@/i18n/utils/hasTranslatableChanges";
 
 interface ProjectImage {
   _id: Id<"imageMetadata">;
@@ -201,27 +201,31 @@ export default function AdminProjects() {
     const longDescriptionPT = formData.get('long_description') as string || '';
 
     try {
-      const fieldsToTranslate: Record<string, string> = { title: titlePT, description: descriptionPT };
-      if (longDescriptionPT) fieldsToTranslate.longDescription = longDescriptionPT;
+      const allFields: Record<string, string> = { title: titlePT, description: descriptionPT };
+      if (longDescriptionPT) allFields.longDescription = longDescriptionPT;
 
-      const needsTranslation = !editingProject || hasTranslatableChanges(fieldsToTranslate, {
-        title: editingProject.titleTranslations,
-        description: editingProject.descriptionTranslations,
-        longDescription: editingProject.longDescriptionTranslations,
-      });
+      const existingTranslations = {
+        title: editingProject?.titleTranslations,
+        description: editingProject?.descriptionTranslations,
+        longDescription: editingProject?.longDescriptionTranslations,
+      };
 
-      let translated: Record<string, string>;
-      if (needsTranslation) {
+      const changedFields = editingProject
+        ? getChangedTranslatableFields(allFields, existingTranslations)
+        : allFields;
+
+      let partialTranslated: Record<string, string> = {};
+      if (Object.keys(changedFields).length > 0) {
         const toastId = toast.loading('Traduzindo conteúdo...');
-        translated = await translateFields(fieldsToTranslate);
+        partialTranslated = await translateFields(changedFields);
         toast.dismiss(toastId);
-      } else {
-        translated = {
-          title: editingProject!.titleTranslations?.enUS ?? titlePT,
-          description: editingProject!.descriptionTranslations?.enUS ?? descriptionPT,
-          longDescription: editingProject!.longDescriptionTranslations?.enUS ?? longDescriptionPT,
-        };
       }
+
+      const translated = {
+        title: partialTranslated.title ?? editingProject?.titleTranslations?.enUS ?? titlePT,
+        description: partialTranslated.description ?? editingProject?.descriptionTranslations?.enUS ?? descriptionPT,
+        longDescription: partialTranslated.longDescription ?? editingProject?.longDescriptionTranslations?.enUS ?? longDescriptionPT,
+      };
 
       const imageIds = projectImages.map((i) => i.id);
       const baseData = {

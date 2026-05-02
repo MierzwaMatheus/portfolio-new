@@ -15,7 +15,7 @@ import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
-import { hasTranslatableChanges } from "@/i18n/utils/hasTranslatableChanges";
+import { getChangedTranslatableFields } from "@/i18n/utils/hasTranslatableChanges";
 import { BentoGridPreview } from "@/components/admin/BentoGridPreview";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -169,18 +169,18 @@ export default function AdminAbout() {
         const displayOrder = editingItem ? editingItem.displayOrder : dailyRoutine.length;
 
         const drFields = { description: descriptionPT };
-        const needsTranslation = !editingItem || hasTranslatableChanges(drFields, {
-          description: editingItem.descriptionTranslations,
-        });
+        const changedDR = editingItem
+          ? getChangedTranslatableFields(drFields, { description: editingItem.descriptionTranslations })
+          : drFields;
 
         let translatedDesc: string;
-        if (needsTranslation) {
+        if (Object.keys(changedDR).length > 0) {
           const toastId = toast.loading('Traduzindo conteúdo...');
-          const translated = await translateFields(drFields);
+          const translated = await translateFields(changedDR);
           toast.dismiss(toastId);
           translatedDesc = translated.description;
         } else {
-          translatedDesc = editingItem.descriptionTranslations?.enUS ?? descriptionPT;
+          translatedDesc = editingItem?.descriptionTranslations?.enUS ?? descriptionPT;
         }
         const descriptionTranslations = { ptBR: descriptionPT, enUS: translatedDesc };
 
@@ -212,22 +212,18 @@ export default function AdminAbout() {
         const displayOrder = editingItem ? editingItem.displayOrder : faq.length;
 
         const faqFields = { question: questionPT, answer: answerPT };
-        const needsTranslation = !editingItem || hasTranslatableChanges(faqFields, {
-          question: editingItem.questionTranslations,
-          answer: editingItem.answerTranslations,
-        });
+        const changedFaq = editingItem
+          ? getChangedTranslatableFields(faqFields, { question: editingItem.questionTranslations, answer: editingItem.answerTranslations })
+          : faqFields;
 
-        let translatedQ: string, translatedA: string;
-        if (needsTranslation) {
+        let partialFaq: Record<string, string> = {};
+        if (Object.keys(changedFaq).length > 0) {
           const toastId = toast.loading('Traduzindo conteúdo...');
-          const translated = await translateFields(faqFields);
+          partialFaq = await translateFields(changedFaq);
           toast.dismiss(toastId);
-          translatedQ = translated.question;
-          translatedA = translated.answer;
-        } else {
-          translatedQ = editingItem.questionTranslations?.enUS ?? questionPT;
-          translatedA = editingItem.answerTranslations?.enUS ?? answerPT;
         }
+        const translatedQ = partialFaq.question ?? editingItem?.questionTranslations?.enUS ?? questionPT;
+        const translatedA = partialFaq.answer ?? editingItem?.answerTranslations?.enUS ?? answerPT;
         const questionTranslations = { ptBR: questionPT, enUS: translatedQ };
         const answerTranslations = { ptBR: answerPT, enUS: translatedA };
 
