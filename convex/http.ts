@@ -222,7 +222,7 @@ http.route({
     const secret = req.headers.get('x-webhook-secret');
     const expectedSecret = process.env.VERCEL_WEBHOOK_SECRET;
 
-    if (expectedSecret && !timingSafeEqual(secret ?? '', expectedSecret)) {
+    if (!expectedSecret || !timingSafeEqual(secret ?? '', expectedSecret)) {
       return new Response('Unauthorized', { status: 401 });
     }
 

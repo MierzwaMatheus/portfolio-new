@@ -5,8 +5,18 @@ import { Password } from "@convex-dev/auth/providers/Password";
 import { Id } from "./_generated/dataModel";
 import { QueryCtx, MutationCtx } from "./_generated/server";
 
+// sign-up bloqueado: apenas root/admin criam usuários via users.adminCreateUser
+const PasswordNoSignUp = Password({
+  profile(params) {
+    if ((params as { flow?: string }).flow === "signUp") {
+      throw new Error("Cadastro público desabilitado");
+    }
+    return { email: params.email as string };
+  },
+});
+
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
-  providers: [Password],
+  providers: [PasswordNoSignUp],
 });
 
 export const getAuthUser = query({
@@ -37,6 +47,25 @@ export const getUserRoleQuery = internalQuery({
       .withIndex("by_userId", q => q.eq("userId", args.userId))
       .unique();
     return roleDoc;
+  },
+});
+
+export const requireRoleQuery = internalQuery({
+  args: { allowedRoles: v.array(v.string()) },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Unauthorized");
+    const user = await ctx.db.get(userId);
+    if (!user) throw new Error("User not found");
+    const roleDoc = await ctx.db
+      .query("userRoles")
+      .withIndex("by_userId", q => q.eq("userId", userId))
+      .unique();
+    const role = roleDoc?.role ?? null;
+    if (!role || !args.allowedRoles.includes(role)) {
+      throw new Error("Forbidden: insufficient permissions");
+    }
+    return { userId, user, role };
   },
 });
 

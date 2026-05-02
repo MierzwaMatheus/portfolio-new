@@ -1,10 +1,13 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
-import { requireAuth } from './auth';
+import { requireRole } from './auth';
+
+const EDITOR_ROLES = ['root', 'admin', 'content-editor'] as const;
 
 export const tree = query({
   args: {},
   handler: async (ctx) => {
+    await requireRole(ctx, [...EDITOR_ROLES]);
     return ctx.db.query('imageFolders').collect();
   },
 });
@@ -15,7 +18,7 @@ export const create = mutation({
     parentId: v.optional(v.id('imageFolders')),
   },
   handler: async (ctx, args) => {
-    const { userId } = await requireAuth(ctx);
+    const { userId } = await requireRole(ctx, [...EDITOR_ROLES]);
     let path = args.name.toLowerCase().replace(/\s+/g, '_');
 
     if (args.parentId) {
@@ -43,7 +46,7 @@ export const create = mutation({
 export const remove = mutation({
   args: { id: v.id('imageFolders') },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    await requireRole(ctx, [...EDITOR_ROLES]);
     const hasImages = await ctx.db
       .query('imageMetadata')
       .withIndex('by_folderId', (q) => q.eq('folderId', args.id))

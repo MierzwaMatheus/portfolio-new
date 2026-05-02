@@ -1,11 +1,13 @@
 import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
-import { requireAuth } from './auth';
+import { requireRole } from './auth';
+
+const EDITOR_ROLES = ['root', 'admin', 'content-editor'] as const;
 
 export const generateUploadUrl = mutation({
   args: {},
   handler: async (ctx) => {
-    await requireAuth(ctx);
+    await requireRole(ctx, [...EDITOR_ROLES]);
     return ctx.storage.generateUploadUrl();
   },
 });
@@ -24,7 +26,7 @@ export const create = mutation({
     mimeType: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { userId } = await requireAuth(ctx);
+    const { userId } = await requireRole(ctx, [...EDITOR_ROLES]);
     const now = Date.now();
     return ctx.db.insert('imageMetadata', {
       ...args,
@@ -44,7 +46,7 @@ export const update = mutation({
     folderId: v.optional(v.id('imageFolders')),
   },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    await requireRole(ctx, [...EDITOR_ROLES]);
     const { id, ...fields } = args;
     await ctx.db.patch(id, { ...fields, updatedAt: Date.now() });
   },
@@ -53,16 +55,16 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id('imageMetadata') },
   handler: async (ctx, args) => {
-    await requireAuth(ctx);
+    await requireRole(ctx, [...EDITOR_ROLES]);
     const img = await ctx.db.get(args.id);
     if (!img) throw new Error('Image not found');
 
-    // Check references before deleting
-    const projectRef = await ctx.db
-      .query('projects')
-      .filter((q) => q.eq(q.field('imageIds'), [args.id]))
-      .first();
-    if (projectRef) throw new Error('Image is referenced by a project');
+    // Verifica referência em projetos corretamente (array contains)
+    const allProjects = await ctx.db.query('projects').collect();
+    const referenced = allProjects.some((p) =>
+      Array.isArray(p.imageIds) && p.imageIds.includes(args.id)
+    );
+    if (referenced) throw new Error('Image is referenced by a project');
 
     await ctx.storage.delete(img.storageId);
     await ctx.db.delete(args.id);
@@ -75,6 +77,7 @@ export const list = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await requireRole(ctx, [...EDITOR_ROLES]);
     const images = args.folderId
       ? await ctx.db
           .query('imageMetadata')
@@ -99,6 +102,7 @@ export const list = query({
 export const getById = query({
   args: { id: v.id('imageMetadata') },
   handler: async (ctx, args) => {
+    await requireRole(ctx, [...EDITOR_ROLES]);
     const img = await ctx.db.get(args.id);
     if (!img) return null;
     return { ...img, url: await ctx.storage.getUrl(img.storageId) };

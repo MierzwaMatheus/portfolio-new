@@ -18,7 +18,7 @@ async function callOpenRouter(
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://portfolio.com',
+      'HTTP-Referer': 'https://www.mmlo.com.br',
       'X-Title': 'Portfolio AI Resume Generator',
     },
     body: JSON.stringify({
@@ -147,7 +147,7 @@ export const generate = action({
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
 
-    const { userId } = await ctx.runQuery(internal.auth.requireAuthQuery, {});
+    const { userId } = await ctx.runQuery(internal.auth.requireRoleQuery, { allowedRoles: ['root'] });
 
     // Fetch current CV data
     const [contactInfo, resumeItems, projects, aboutContent] = await Promise.all([

@@ -25,7 +25,7 @@ async function callOpenRouter(
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
-      'HTTP-Referer': 'https://portfolio.mierzwa.dev',
+      'HTTP-Referer': 'https://www.mmlo.com.br',
       'X-Title': 'Portfolio Playground',
     },
     body: JSON.stringify({
@@ -155,7 +155,7 @@ async function generateProduction(apiKey: string, jobDescription: string, locale
 // ── HTTP Action ───────────────────────────────────────────────────────────────
 
 const ALLOWED_ORIGINS = new Set([
-  'https://portfolio.mierzwa.dev',
+  'https://www.mmlo.com.br',
   'http://localhost:5173',
   'http://localhost:5174',
 ]);
