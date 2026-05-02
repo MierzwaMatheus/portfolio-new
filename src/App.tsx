@@ -51,7 +51,11 @@ import { PluginRoute } from "./components/PluginRoute";
 import Playground from "./pages/Playground";
 import ContactWizardDemo from "./pages/playground/ContactWizardDemo";
 import ProposalDemo from "./pages/playground/ProposalDemo";
+import PlaygroundProposalView from "./pages/playground/ProposalView";
+import PlaygroundProposalAcceptView from "./pages/playground/ProposalAcceptView";
 import BlogPostDemo from "./pages/playground/BlogPostDemo";
+import BlogPreview from "./pages/playground/BlogPreview";
+import BlogPostPreview from "./pages/playground/BlogPostPreview";
 import PaymentLinkDemo from "./pages/playground/PaymentLinkDemo";
 import AiCvDemo from "./pages/playground/AiCvDemo";
 
@@ -71,8 +75,20 @@ function Router() {
         <Route path="/playground/contact">
           <PluginRoute pluginId="playground"><ContactWizardDemo /></PluginRoute>
         </Route>
+        <Route path="/playground/proposal/:slug/aceitar">
+          <PluginRoute pluginId="playground"><PlaygroundProposalAcceptView /></PluginRoute>
+        </Route>
+        <Route path="/playground/proposal/:slug">
+          <PluginRoute pluginId="playground"><PlaygroundProposalView /></PluginRoute>
+        </Route>
         <Route path="/playground/proposal">
           <PluginRoute pluginId="playground"><ProposalDemo /></PluginRoute>
+        </Route>
+        <Route path="/playground/blog/preview/:slug">
+          <PluginRoute pluginId="playground"><BlogPostPreview /></PluginRoute>
+        </Route>
+        <Route path="/playground/blog/preview">
+          <PluginRoute pluginId="playground"><BlogPreview /></PluginRoute>
         </Route>
         <Route path="/playground/blog">
           <PluginRoute pluginId="playground"><BlogPostDemo /></PluginRoute>

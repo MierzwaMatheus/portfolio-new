@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { PlaygroundLayout } from "@/components/PlaygroundLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Eye, Star } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, Star, ExternalLink } from "lucide-react";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { toast } from "sonner";
 import { usePlaygroundStorage } from "@/hooks/usePlaygroundStorage";
@@ -35,6 +36,7 @@ function slugify(text: string) {
 export default function BlogPostDemo() {
   const sessionId = usePlaygroundSession();
   const logEvent = useMutation(api.playground.logEvent);
+  const [, setLocation] = useLocation();
   const [posts, setPosts] = usePlaygroundStorage<Post[]>("pg_blog_posts", []);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
@@ -99,7 +101,13 @@ export default function BlogPostDemo() {
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">Blog</h1>
-            <Button onClick={() => handleOpen()} className="gap-2"><Plus className="h-4 w-4" />Novo Post</Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => setLocation("/playground/blog/preview")}>
+                <ExternalLink className="h-4 w-4" />
+                Ver Blog
+              </Button>
+              <Button onClick={() => handleOpen()} className="gap-2"><Plus className="h-4 w-4" />Novo Post</Button>
+            </div>
           </div>
 
           {posts.length === 0 ? (
@@ -123,7 +131,8 @@ export default function BlogPostDemo() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <Switch checked={post.status === "published"} onCheckedChange={() => toggleStatus(post)} />
-                      <Button size="sm" variant="ghost" onClick={() => setPreviewPost(post)}><Eye className="h-4 w-4" /></Button>
+                      <Button size="sm" variant="ghost" onClick={() => setLocation(`/playground/blog/preview/${post.slug}`)} title="Preview real"><ExternalLink className="h-4 w-4" /></Button>
+                      <Button size="sm" variant="ghost" onClick={() => setPreviewPost(post)} title="Preview rápido"><Eye className="h-4 w-4" /></Button>
                       <Button size="sm" variant="ghost" onClick={() => handleOpen(post)}><Pencil className="h-4 w-4" /></Button>
                       <Button size="sm" variant="ghost" className="text-destructive" onClick={() => handleDelete(post.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
