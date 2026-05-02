@@ -239,5 +239,16 @@ export const ptBR = {
       deleteError: "Erro ao excluir.",
     },
   },
+  notFound: {
+    label: "erro do sistema",
+    errorCode: "ERR_ROTA_NAO_ENCONTRADA",
+    lines: [
+      "> processo encerrado com código 404",
+      "> rota não encontrada no manifesto",
+      "> verificando handlers de fallback...",
+      "> nenhum encontrado. abortando.",
+    ],
+    cta: "voltar ao início",
+  },
 };
 

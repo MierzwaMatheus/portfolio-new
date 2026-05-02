@@ -239,5 +239,16 @@ export const enUS = {
       deleteError: "Error deleting.",
     },
   },
+  notFound: {
+    label: "system error",
+    errorCode: "ERR_ROUTE_NOT_FOUND",
+    lines: [
+      "> process exited with code 404",
+      "> route not found in manifest",
+      "> scanning fallback handlers...",
+      "> none matched. abort.",
+    ],
+    cta: "back to home",
+  },
 };
 
