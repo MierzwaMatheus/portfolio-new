@@ -1,4 +1,4 @@
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { useQuery } from 'convex/react';
 import { api } from '../../convex/_generated/api';
 import { PLUGIN_REGISTRY, PluginId } from '../../convex/pluginRegistry';
@@ -13,24 +13,57 @@ interface PluginsContextValue {
 
 const PluginsContext = createContext<PluginsContextValue | null>(null);
 
-export function PluginsProvider({ children }: { children: React.ReactNode }) {
-  const states = useQuery(api.plugins.getPluginStates);
-  const isLoading = states === undefined;
+const IS_PROD = import.meta.env.PROD;
 
-  const resolvedStates: PluginStates = {};
+function defaultStates(): PluginStates {
+  return Object.fromEntries(PLUGIN_REGISTRY.map(p => [p.id, p.defaultEnabled]));
+}
+
+function resolveStates(raw: Record<string, boolean> | undefined): PluginStates {
+  const result: PluginStates = {};
   for (const plugin of PLUGIN_REGISTRY) {
-    resolvedStates[plugin.id] = states
-      ? (states[plugin.id] ?? plugin.defaultEnabled)
-      : plugin.defaultEnabled;
+    result[plugin.id] = raw ? (raw[plugin.id] ?? plugin.defaultEnabled) : plugin.defaultEnabled;
   }
+  return result;
+}
 
-  const isEnabled = (id: PluginId): boolean => resolvedStates[id] ?? true;
+function StaticPluginsProvider({ children }: { children: React.ReactNode }) {
+  const [states, setStates] = useState<PluginStates>(defaultStates);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/data/plugins.json')
+      .then(r => r.ok ? r.json() : null)
+      .then((raw: Record<string, boolean> | null) => setStates(resolveStates(raw ?? undefined)))
+      .catch(() => setStates(defaultStates()))
+      .finally(() => setIsLoading(false));
+  }, []);
+
+  const isEnabled = (id: PluginId): boolean => states[id] ?? true;
 
   return (
-    <PluginsContext.Provider value={{ states: resolvedStates, isLoading, isEnabled }}>
+    <PluginsContext.Provider value={{ states, isLoading, isEnabled }}>
       {children}
     </PluginsContext.Provider>
   );
+}
+
+function ConvexPluginsProvider({ children }: { children: React.ReactNode }) {
+  const raw = useQuery(api.plugins.getPluginStates);
+  const states = resolveStates(raw);
+  const isEnabled = (id: PluginId): boolean => states[id] ?? true;
+
+  return (
+    <PluginsContext.Provider value={{ states, isLoading: raw === undefined, isEnabled }}>
+      {children}
+    </PluginsContext.Provider>
+  );
+}
+
+export function PluginsProvider({ children }: { children: React.ReactNode }) {
+  return IS_PROD
+    ? <StaticPluginsProvider>{children}</StaticPluginsProvider>
+    : <ConvexPluginsProvider>{children}</ConvexPluginsProvider>;
 }
 
 export function usePlugins() {

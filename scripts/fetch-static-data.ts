@@ -65,6 +65,10 @@ async function main() {
 
   write('about.json', { services, testimonials, faq, dailyRoutine });
 
+  // Plugin states
+  const pluginStates = await client.query(api.plugins.getPluginStates);
+  write('plugins.json', pluginStates);
+
   // Blog listing
   const published = await client.query(api.posts.listAllPublished, {});
 
