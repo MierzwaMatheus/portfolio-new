@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -178,6 +179,7 @@ export default function AiResumes() {
   const [jobDescription, setJobDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [includeDeleted, setIncludeDeleted] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: Id<"aiGeneratedResumes">; name: string } | null>(null);
 
   const resumes = useQuery(api.aiResumes.list, { includeDeleted: isRoot && includeDeleted });
   const generate = useAction(api.aiResumesAction.generate);
@@ -208,17 +210,8 @@ export default function AiResumes() {
     }
   }
 
-  async function handleDelete(id: Id<"aiGeneratedResumes">) {
-    if (isRoot) {
-      const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
-      if (permanent) {
-        try { await permanentDelete({ id }); toast.success("CV deletado permanentemente"); } catch (e: any) { toast.error(e?.message || "Erro"); }
-      } else {
-        try { await remove({ id }); toast.success("CV desativado"); } catch (e: any) { toast.error(e?.message || "Erro"); }
-      }
-    } else {
-      try { await remove({ id }); toast.success("CV desativado"); } catch (e: any) { toast.error(e?.message || "Erro"); }
-    }
+  function handleDelete(id: Id<"aiGeneratedResumes">, name: string) {
+    setDeleteTarget({ id, name });
   }
 
   async function handleRestore(id: Id<"aiGeneratedResumes">) {
@@ -334,7 +327,7 @@ export default function AiResumes() {
               <ResumeCard
                 key={resume._id}
                 resume={resume}
-                onDelete={() => handleDelete(resume._id)}
+                onDelete={() => handleDelete(resume._id, resume.title)}
                 onRestore={() => handleRestore(resume._id)}
               />
             ))}
@@ -347,6 +340,19 @@ export default function AiResumes() {
           </p>
         )}
       </div>
+      <DeleteConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        itemName={deleteTarget?.name}
+        onConfirm={async () => {
+          await remove({ id: deleteTarget!.id });
+          toast.success('CV excluído');
+        }}
+        onPermanentDelete={isRoot ? async () => {
+          await permanentDelete({ id: deleteTarget!.id });
+          toast.success('CV excluído permanentemente');
+        } : undefined}
+      />
     </AdminLayout>
   );
 }

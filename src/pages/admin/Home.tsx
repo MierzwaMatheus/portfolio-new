@@ -1,6 +1,7 @@
 
 
 import { useState, useEffect } from "react";
+import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,6 +40,7 @@ export default function AdminHome() {
   const [availabilityLabelPT, setAvailabilityLabelPT] = useState("");
   const [availabilityLabelEN, setAvailabilityLabelEN] = useState("");
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: string; id: string; name?: string } | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
 
   useEffect(() => {
@@ -171,20 +173,8 @@ export default function AdminHome() {
     }
   };
 
-  const handleDelete = async (type: string, id: string) => {
-    if (type === "service") {
-      if (isRoot) {
-        const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
-        if (permanent) {
-          try { await permanentDeleteService({ id: id as Id<"services"> }); toast.success('Deletado permanentemente'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-        } else {
-          try { await removeService({ id: id as Id<"services"> }); toast.success('Item desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-        }
-      } else {
-        if (!confirm('Tem certeza? O item será desativado.')) return;
-        try { await removeService({ id: id as Id<"services"> }); toast.success('Item desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-      }
-    }
+  const handleDelete = (type: string, id: string, name?: string) => {
+    setDeleteTarget({ type, id, name });
   };
 
   const handleRestore = async (type: string, id: string) => {
@@ -283,7 +273,7 @@ export default function AdminHome() {
                               <RotateCcw className="w-4 h-4 mr-2" /> Restaurar
                             </Button>
                           ) : (
-                            <Button variant="ghost" size="sm" onClick={() => handleDelete("service", item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
+                            <Button variant="ghost" size="sm" onClick={() => handleDelete("service", item._id, item.titleTranslations?.ptBR || item.title)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
                               <Trash2 className="w-4 h-4 mr-2" /> Excluir
                             </Button>
                           )}
@@ -403,6 +393,24 @@ export default function AdminHome() {
             </form>
           </DialogContent>
         </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        itemName={deleteTarget?.name}
+        onConfirm={async () => {
+          if (deleteTarget?.type === "service") {
+            await removeService({ id: deleteTarget.id as Id<"services"> });
+            toast.success('Item excluído');
+          }
+        }}
+        onPermanentDelete={isRoot ? async () => {
+          if (deleteTarget?.type === "service") {
+            await permanentDeleteService({ id: deleteTarget.id as Id<"services"> });
+            toast.success('Item excluído permanentemente');
+          }
+        } : undefined}
+      />
       </div>
     </AdminLayout>
   );

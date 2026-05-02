@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -178,6 +179,7 @@ export default function AdminProposals() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isJsonImportModalOpen, setIsJsonImportModalOpen] = useState(false);
   const [editingProposal, setEditingProposal] = useState<any | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name?: string } | null>(null);
   const [activeTab, setActiveTab] = useState("all");
   const [jsonPasteContent, setJsonPasteContent] = useState("");
 
@@ -346,18 +348,8 @@ export default function AdminProposals() {
     toast.success("Link copiado para a área de transferência!");
   };
 
-  const handleDelete = async (id: string) => {
-    if (isRoot) {
-      const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
-      if (permanent) {
-        try { await permanentDeleteProposal({ id: id as Id<"proposals"> }); toast.success('Proposta deletada permanentemente'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-      } else {
-        try { await removeProposal({ id: id as Id<"proposals"> }); toast.success('Proposta desativada'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-      }
-    } else {
-      if (!confirm('Tem certeza? A proposta será desativada.')) return;
-      try { await removeProposal({ id: id as Id<"proposals"> }); toast.success('Proposta desativada'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-    }
+  const handleDelete = (id: string, name?: string) => {
+    setDeleteTarget({ id, name });
   };
 
   const handleRestore = async (id: string) => {
@@ -972,7 +964,7 @@ export default function AdminProposals() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-400/10"
-                            onClick={() => handleDelete(proposal._id)}
+                            onClick={() => handleDelete(proposal._id, proposal.title || proposal.clientName)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -1091,6 +1083,19 @@ export default function AdminProposals() {
             </div>
           </TabsContent>
         </Tabs>
+      <DeleteConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        itemName={deleteTarget?.name}
+        onConfirm={async () => {
+          await removeProposal({ id: deleteTarget!.id as Id<"proposals"> });
+          toast.success('Proposta excluída');
+        }}
+        onPermanentDelete={isRoot ? async () => {
+          await permanentDeleteProposal({ id: deleteTarget!.id as Id<"proposals"> });
+          toast.success('Proposta excluída permanentemente');
+        } : undefined}
+      />
       </div>
     </AdminLayout>
   );

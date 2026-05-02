@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -162,6 +163,7 @@ export default function AdminAbout() {
 
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ type: string; id: string; name?: string } | null>(null);
   const [selectedImageId, setSelectedImageId] = useState<string>("");
   const [selectedImageUrl, setSelectedImageUrl] = useState<string>("");
   const [spanSize, setSpanSize] = useState<SpanSize>("1x1");
@@ -296,36 +298,8 @@ export default function AdminAbout() {
     }
   };
 
-  const handleDelete = async (type: string, id: string) => {
-    if (isRoot) {
-      const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
-      if (type === "dailyRoutine") {
-        if (permanent) {
-          try { await permanentDeleteDailyRoutine({ id: id as Id<"aboutDailyRoutine"> }); toast.success('Deletado permanentemente'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-        } else {
-          try { await removeDailyRoutine({ id: id as Id<"aboutDailyRoutine"> }); toast.success('Item desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-        }
-      } else if (type === "faq") {
-        if (permanent) {
-          try { await permanentDeleteFaq({ id: id as Id<"aboutFaq"> }); toast.success('Deletado permanentemente'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-        } else {
-          try { await removeFaq({ id: id as Id<"aboutFaq"> }); toast.success('Item desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-        }
-      }
-    } else {
-      if (!confirm(t('admin.about.deleteConfirm'))) return;
-      try {
-        if (type === "dailyRoutine") {
-          await removeDailyRoutine({ id: id as Id<"aboutDailyRoutine"> });
-        } else if (type === "faq") {
-          await removeFaq({ id: id as Id<"aboutFaq"> });
-        }
-        toast.success('Item desativado');
-      } catch (error) {
-        console.error("Error deleting:", error);
-        toast.error(t('admin.about.deleteError'));
-      }
-    }
+  const handleDelete = (type: string, id: string, name?: string) => {
+    setDeleteTarget({ type, id, name });
   };
 
   const handleRestore = async (type: string, id: string) => {
@@ -585,6 +559,28 @@ export default function AdminAbout() {
             </form>
           </DialogContent>
         </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        itemName={deleteTarget?.name}
+        onConfirm={async () => {
+          if (deleteTarget?.type === "dailyRoutine") {
+            await removeDailyRoutine({ id: deleteTarget.id as Id<"aboutDailyRoutine"> });
+          } else if (deleteTarget?.type === "faq") {
+            await removeFaq({ id: deleteTarget.id as Id<"aboutFaq"> });
+          }
+          toast.success('Item excluído');
+        }}
+        onPermanentDelete={isRoot ? async () => {
+          if (deleteTarget?.type === "dailyRoutine") {
+            await permanentDeleteDailyRoutine({ id: deleteTarget.id as Id<"aboutDailyRoutine"> });
+          } else if (deleteTarget?.type === "faq") {
+            await permanentDeleteFaq({ id: deleteTarget.id as Id<"aboutFaq"> });
+          }
+          toast.success('Item excluído permanentemente');
+        } : undefined}
+      />
       </div>
     </AdminLayout>
   );

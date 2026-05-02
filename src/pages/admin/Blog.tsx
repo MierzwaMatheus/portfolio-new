@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +55,7 @@ export default function AdminBlog() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: Id<"posts">; name: string } | null>(null);
   const [content, setContent] = useState("");
   const [previewImage, setPreviewImage] = useState<string>("");
   const [previewImageId, setPreviewImageId] = useState<Id<"imageMetadata"> | undefined>(undefined);
@@ -198,18 +200,8 @@ export default function AdminBlog() {
     }
   };
 
-  const handleDelete = async (id: Id<"posts">) => {
-    if (isRoot) {
-      const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
-      if (permanent) {
-        try { await permanentDeletePost({ id }); toast.success('Deletado permanentemente'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-      } else {
-        try { await removePost({ id }); toast.success('Post desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-      }
-    } else {
-      if (!confirm('Tem certeza? O post será desativado.')) return;
-      try { await removePost({ id }); toast.success('Post desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-    }
+  const handleDelete = (id: Id<"posts">, name: string) => {
+    setDeleteTarget({ id, name });
   };
 
   const handleRestore = async (id: Id<"posts">) => {
@@ -468,7 +460,7 @@ export default function AdminBlog() {
                               <RotateCcw className="w-4 h-4" />
                             </button>
                           ) : (
-                            <Button size="icon" variant="ghost" onClick={() => handleDelete(post._id)}>
+                            <Button size="icon" variant="ghost" onClick={() => handleDelete(post._id, post.title)}>
                               <Trash2 className="w-4 h-4 text-red-400" />
                             </Button>
                           )}
@@ -495,6 +487,19 @@ export default function AdminBlog() {
           )}
         </div>
       </div>
+      <DeleteConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        itemName={deleteTarget?.name}
+        onConfirm={async () => {
+          await removePost({ id: deleteTarget!.id });
+          toast.success('Post excluído');
+        }}
+        onPermanentDelete={isRoot ? async () => {
+          await permanentDeletePost({ id: deleteTarget!.id });
+          toast.success('Post excluído permanentemente');
+        } : undefined}
+      />
     </AdminLayout>
   );
 }

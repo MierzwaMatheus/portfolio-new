@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +69,7 @@ export default function PaymentLinks() {
 
   const isRoot = useIsRoot();
   const [includeDeleted, setIncludeDeleted] = useState(false);
+  const [deleteCheckoutTarget, setDeleteCheckoutTarget] = useState<{ id: Id<"checkouts">; name?: string } | null>(null);
 
   const checkoutsData = useQuery(api.checkouts.listAdmin, { limit: 100, includeDeleted: isRoot && includeDeleted });
   const checkouts = checkoutsData ?? [];
@@ -114,11 +116,13 @@ export default function PaymentLinks() {
     }
   };
 
-  const handleDeleteCustomer = async (customerId: string) => {
-    if (!confirm("Tem certeza que deseja excluir este cliente?")) {
-      return;
-    }
+  const [deleteCustomerTarget, setDeleteCustomerTarget] = useState<string | null>(null);
 
+  const handleDeleteCustomer = (customerId: string) => {
+    setDeleteCustomerTarget(customerId);
+  };
+
+  const doDeleteCustomer = async (customerId: string) => {
     try {
       await asaasApi.deleteCustomer(customerId);
       toast.success("Cliente excluído com sucesso!");
@@ -186,11 +190,13 @@ export default function PaymentLinks() {
     }
   };
 
-  const handleDeleteCharge = async (chargeId: string) => {
-    if (!confirm("Tem certeza que deseja excluir esta cobrança?")) {
-      return;
-    }
+  const [deleteChargeTarget, setDeleteChargeTarget] = useState<string | null>(null);
 
+  const handleDeleteCharge = (chargeId: string) => {
+    setDeleteChargeTarget(chargeId);
+  };
+
+  const doDeleteCharge = async (chargeId: string) => {
     try {
       await asaasApi.deleteCharge(chargeId);
       toast.success("Cobrança excluída com sucesso!");
@@ -230,18 +236,8 @@ export default function PaymentLinks() {
     return <Badge variant="outline" className={statusInfo.color}>{statusInfo.label}</Badge>;
   };
 
-  const handleDeleteCheckout = async (id: Id<"checkouts">) => {
-    if (isRoot) {
-      const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
-      if (permanent) {
-        try { await permanentDeleteCheckout({ id }); toast.success('Deletado permanentemente'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-      } else {
-        try { await removeCheckout({ id }); toast.success('Checkout desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-      }
-    } else {
-      if (!confirm('Tem certeza? O checkout será desativado.')) return;
-      try { await removeCheckout({ id }); toast.success('Checkout desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-    }
+  const handleDeleteCheckout = (id: Id<"checkouts">, name?: string) => {
+    setDeleteCheckoutTarget({ id, name });
   };
 
   const handleRestoreCheckout = async (id: Id<"checkouts">) => {
@@ -524,7 +520,7 @@ export default function PaymentLinks() {
                               <Button
                                 size="sm"
                                 variant="ghost"
-                                onClick={() => handleDeleteCheckout(checkout._id)}
+                                onClick={() => handleDeleteCheckout(checkout._id, checkout.customerName)}
                                 className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
                                 title="Excluir checkout"
                               >
@@ -879,6 +875,36 @@ export default function PaymentLinks() {
             </div>
           </DialogContent>
         </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteCheckoutTarget !== null}
+        onClose={() => setDeleteCheckoutTarget(null)}
+        itemName={deleteCheckoutTarget?.name}
+        onConfirm={async () => {
+          await removeCheckout({ id: deleteCheckoutTarget!.id });
+          toast.success('Checkout excluído');
+        }}
+        onPermanentDelete={isRoot ? async () => {
+          await permanentDeleteCheckout({ id: deleteCheckoutTarget!.id });
+          toast.success('Checkout excluído permanentemente');
+        } : undefined}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteCustomerTarget !== null}
+        onClose={() => setDeleteCustomerTarget(null)}
+        onConfirm={async () => {
+          await doDeleteCustomer(deleteCustomerTarget!);
+        }}
+      />
+
+      <DeleteConfirmDialog
+        open={deleteChargeTarget !== null}
+        onClose={() => setDeleteChargeTarget(null)}
+        onConfirm={async () => {
+          await doDeleteCharge(deleteChargeTarget!);
+        }}
+      />
       </div>
     </AdminLayout>
   );

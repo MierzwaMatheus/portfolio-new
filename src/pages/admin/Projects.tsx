@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -145,7 +146,7 @@ function SortableProjectCard({
 }: {
   project: Project;
   onEdit: (project: Project) => void;
-  onDelete: (id: Id<"projects">) => void;
+  onDelete: (id: Id<"projects">, name: string) => void;
   onRestore: (id: Id<"projects">) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: project._id });
@@ -175,7 +176,7 @@ function SortableProjectCard({
               <Button size="icon" variant="secondary" onClick={() => onEdit(project)}>
                 <Pencil className="w-4 h-4" />
               </Button>
-              <Button size="icon" variant="destructive" onClick={() => onDelete(project._id)}>
+              <Button size="icon" variant="destructive" onClick={() => onDelete(project._id, project.title)}>
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
@@ -280,6 +281,7 @@ export default function AdminProjects() {
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: Id<"projects">; name: string } | null>(null);
   // Track image picker selections as { id, url } pairs to render thumbnails locally
   const [projectImages, setProjectImages] = useState<{ id: Id<"imageMetadata">; url: string | null }[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
@@ -453,18 +455,8 @@ export default function AdminProjects() {
     }
   };
 
-  const handleDelete = async (id: Id<"projects">) => {
-    if (isRoot) {
-      const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
-      if (permanent) {
-        try { await permanentDeleteProject({ id }); toast.success('Deletado permanentemente'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-      } else {
-        try { await removeProject({ id }); toast.success('Projeto desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-      }
-    } else {
-      if (!confirm('Tem certeza? O projeto será desativado.')) return;
-      try { await removeProject({ id }); toast.success('Projeto desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-    }
+  const handleDelete = (id: Id<"projects">, name: string) => {
+    setDeleteTarget({ id, name });
   };
 
   const handleRestore = async (id: Id<"projects">) => {
@@ -924,6 +916,20 @@ export default function AdminProjects() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <DeleteConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        itemName={deleteTarget?.name}
+        onConfirm={async () => {
+          await removeProject({ id: deleteTarget!.id });
+          toast.success('Projeto excluído');
+        }}
+        onPermanentDelete={isRoot ? async () => {
+          await permanentDeleteProject({ id: deleteTarget!.id });
+          toast.success('Projeto excluído permanentemente');
+        } : undefined}
+      />
     </AdminLayout>
   );
 }

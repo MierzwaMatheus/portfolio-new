@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -60,6 +61,7 @@ export default function CreateUser() {
     const [isLoading, setIsLoading] = useState(false);
     const [tempPassword, setTempPassword] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
+    const [deleteTarget, setDeleteTarget] = useState<{ userId: string; email: string } | null>(null);
 
     const usersData = useQuery(api.users.list, {});
     const users = usersData ?? [];
@@ -91,16 +93,8 @@ export default function CreateUser() {
         }
     }
 
-    const handleDelete = async (userId: string, userEmail: string) => {
-        if (!confirm(`Tem certeza que deseja remover o acesso do usuário ${userEmail}?`)) return;
-
-        try {
-            await removeRole({ userId: userId as Id<"users"> });
-            toast.success("Acesso do usuário removido com sucesso");
-        } catch (error) {
-            console.error("Error deleting user:", error);
-            toast.error("Erro ao remover usuário");
-        }
+    const handleDelete = (userId: string, userEmail: string) => {
+        setDeleteTarget({ userId, email: userEmail });
     };
 
     const handleCopy = async () => {
@@ -300,6 +294,16 @@ export default function CreateUser() {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            <DeleteConfirmDialog
+                open={deleteTarget !== null}
+                onClose={() => setDeleteTarget(null)}
+                itemName={deleteTarget?.email}
+                onConfirm={async () => {
+                    await removeRole({ userId: deleteTarget!.userId as Id<"users"> });
+                    toast.success("Acesso do usuário removido com sucesso");
+                }}
+            />
         </AdminLayout>
     );
 }

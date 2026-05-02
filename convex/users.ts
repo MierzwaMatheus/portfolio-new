@@ -95,6 +95,7 @@ export const removeRole = mutation({
       .unique();
 
     if (existing) {
+      const targetUser = await ctx.db.get(args.userId);
       await ctx.db.delete(existing._id);
       await logAudit(ctx, {
         eventType: 'user.role_removed',
@@ -102,6 +103,11 @@ export const removeRole = mutation({
         actorId: actorId,
         targetType: 'user',
         targetId: args.userId,
+        metadata: {
+          role: existing.role,
+          email: targetUser?.email,
+          name: targetUser?.name,
+        },
         success: true,
       });
     }
@@ -238,7 +244,7 @@ export const adminCreateUser = action({
       eventType: 'user.created',
       actorId: actorData.userId,
       targetId: result.user._id,
-      metadata: { role: args.role, email: args.email },
+      metadata: { role: args.role, email: args.email, name: args.name },
     });
 
     return { userId: result.user._id, tempPassword };

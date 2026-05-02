@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { AdminLayout } from "./Dashboard";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -437,6 +438,7 @@ function DirectTestimonialsTab() {
   const updateMutation = useMutation(api.testimonials.update);
 
   const [editing, setEditing] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; name?: string } | null>(null);
   const [editName, setEditName] = useState("");
   const [editRole, setEditRole] = useState("");
   const [editText, setEditText] = useState("");
@@ -470,18 +472,8 @@ function DirectTestimonialsTab() {
     }
   }
 
-  async function handleDelete(id: string) {
-    if (isRoot) {
-      const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
-      if (permanent) {
-        try { await permanentDeleteMutation({ id: id as any }); toast.success('Deletado permanentemente'); } catch (err) { toast.error(err instanceof Error ? err.message : 'Erro'); }
-      } else {
-        try { await removeMutation({ id: id as any }); toast.success('Depoimento desativado'); } catch (err) { toast.error(err instanceof Error ? err.message : 'Erro'); }
-      }
-    } else {
-      if (!confirm("Excluir este depoimento?")) return;
-      try { await removeMutation({ id: id as any }); toast.success("Excluído"); } catch (err) { toast.error(err instanceof Error ? err.message : "Erro"); }
-    }
+  function handleDelete(id: string, name?: string) {
+    setDeleteTarget({ id, name });
   }
 
   async function handleRestore(id: string) {
@@ -502,6 +494,7 @@ function DirectTestimonialsTab() {
   }
 
   return (
+    <>
     <div className="space-y-4">
       {isRoot && (
         <div className="flex justify-end">
@@ -598,7 +591,7 @@ function DirectTestimonialsTab() {
                       <RotateCcw className="w-3 h-3 mr-1" />Restaurar
                     </Button>
                   ) : (
-                    <Button size="sm" variant="outline" onClick={() => handleDelete(item._id)} className="border-red-800 text-red-400 hover:bg-red-900/20 text-xs">
+                    <Button size="sm" variant="outline" onClick={() => handleDelete(item._id, item.name)} className="border-red-800 text-red-400 hover:bg-red-900/20 text-xs">
                       <Trash2 className="w-3 h-3 mr-1" />Excluir
                     </Button>
                   )}
@@ -610,6 +603,21 @@ function DirectTestimonialsTab() {
       })}
       </div>
     </div>
+
+    <DeleteConfirmDialog
+      open={deleteTarget !== null}
+      onClose={() => setDeleteTarget(null)}
+      itemName={deleteTarget?.name}
+      onConfirm={async () => {
+        await removeMutation({ id: deleteTarget!.id as any });
+        toast.success('Depoimento excluído');
+      }}
+      onPermanentDelete={isRoot ? async () => {
+        await permanentDeleteMutation({ id: deleteTarget!.id as any });
+        toast.success('Depoimento excluído permanentemente');
+      } : undefined}
+    />
+    </>
   );
 }
 

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -298,6 +299,7 @@ export default function AdminResume() {
   const [editingSimpleType, setEditingSimpleType] = useState<ResumeType | null>(null);
 
   const [activeModal, setActiveModal] = useState<ResumeType | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Id<"resumeItems"> | null>(null);
   const [editingItem, setEditingItem] = useState<ResumeItem | null>(null);
   const [skillLevel, setSkillLevel] = useState<number[]>([50]);
   const [languageLevel, setLanguageLevel] = useState<string>("");
@@ -439,18 +441,8 @@ export default function AdminResume() {
     }
   };
 
-  const handleDelete = async (id: Id<"resumeItems">) => {
-    if (isRoot) {
-      const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
-      if (permanent) {
-        try { await permanentDeleteItem({ id }); toast.success('Deletado permanentemente'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-      } else {
-        try { await removeItem({ id }); toast.success('Item desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-      }
-    } else {
-      if (!confirm('Tem certeza? O item será desativado.')) return;
-      try { await removeItem({ id }); toast.success('Item desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
-    }
+  const handleDelete = (id: Id<"resumeItems">) => {
+    setDeleteTarget(id);
   };
 
   const handleRestore = async (id: Id<"resumeItems">) => {
@@ -948,6 +940,18 @@ export default function AdminResume() {
             </div>
           </DialogContent>
         </Dialog>
+      <DeleteConfirmDialog
+        open={deleteTarget !== null}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={async () => {
+          await removeItem({ id: deleteTarget! });
+          toast.success('Item excluído');
+        }}
+        onPermanentDelete={isRoot ? async () => {
+          await permanentDeleteItem({ id: deleteTarget! });
+          toast.success('Item excluído permanentemente');
+        } : undefined}
+      />
       </div>
     </AdminLayout>
   );
