@@ -459,6 +459,7 @@ export default defineSchema({
       v.literal('proposal_password'),
       v.literal('proposal_accept'),
       v.literal('webhook_invalid'),
+      v.literal('contact_submit'),
     ),
     attemptCount: v.number(),
     firstAttemptAt: v.number(),
@@ -482,6 +483,43 @@ export default defineSchema({
     createdBy: v.id('users'),
     createdAt: v.number(),
   }).index('by_createdAt', ['createdAt']),
+
+  // ── contactRequests ────────────────────────────────────────────────────────
+  contactRequests: defineTable({
+    type: v.union(
+      v.literal('project'),
+      v.literal('job'),
+      v.literal('networking'),
+      v.literal('feedback'),
+    ),
+    status: v.union(
+      v.literal('new'),
+      v.literal('read'),
+      v.literal('contacted'),
+      v.literal('in_progress'),
+      v.literal('closed'),
+      v.literal('archived'),
+    ),
+    sourceContext: v.optional(v.string()),
+    answers: v.any(),
+    contactInfo: v.object({
+      name: v.string(),
+      email: v.string(),
+      phone: v.optional(v.string()),
+      linkedin: v.optional(v.string()),
+      company: v.optional(v.string()),
+    }),
+    ipAddress: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+    adminNotes: v.optional(v.string()),
+    handledBy: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index('by_status', ['status'])
+    .index('by_type', ['type'])
+    .index('by_createdAt', ['createdAt'])
+    .index('by_status_and_createdAt', ['status', 'createdAt']),
 
   // ── auditLog ───────────────────────────────────────────────────────────────
   auditLog: defineTable({

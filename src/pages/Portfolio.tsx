@@ -36,11 +36,14 @@ import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { portfolioRepository } from "@/repositories/instances";
 import { Project } from "@/repositories/interfaces/PortfolioRepository";
+import { useContactWizard } from "@/contexts/ContactWizardContext";
+import { MessageSquare } from "lucide-react";
 
 export default function Portfolio() {
   const { t } = useTranslation();
   const { isLoading: i18nLoading } = useI18n();
   const { projects, isLoading } = usePortfolio(portfolioRepository);
+  const { openWizard } = useContactWizard();
   const [activeFilter, setActiveFilter] = useState(t("portfolio.all"));
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [expandedImage, setExpandedImage] = useState<{
@@ -224,6 +227,13 @@ export default function Portfolio() {
                         </Button>
                       </Link>
                     )}
+                    <Button
+                      onClick={() => openWizard({ flowType: "project", sourceContext: "portfolio" })}
+                      className="w-full bg-white/5 hover:bg-neon-purple/20 text-gray-400 hover:text-neon-purple border border-white/10 hover:border-neon-purple/30 transition-all duration-300 text-xs"
+                    >
+                      <MessageSquare className="mr-2 h-3 w-3" />
+                      {t("contactWizard.trigger")}
+                    </Button>
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button

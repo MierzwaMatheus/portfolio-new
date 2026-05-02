@@ -42,6 +42,9 @@ import { ConvexTranslationService } from "./i18n/implementations/ConvexTranslati
 import { Terminal } from "./components/Terminal";
 import { AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import { ContactWizardProvider } from "./contexts/ContactWizardContext";
+import { ContactWizardModal } from "./components/ContactWizardModal";
+import AdminContactRequests from "./pages/admin/ContactRequests";
 
 const translationService = new ConvexTranslationService(convex);
 
@@ -123,6 +126,9 @@ function Router() {
         </Route>
         <Route path="/admin/logs">
           <ProtectedRoute component={AdminLogs} allowedRoles={["root"]} />
+        </Route>
+        <Route path="/admin/contatos">
+          <ProtectedRoute component={AdminContactRequests} allowedRoles={["root", "admin"]} />
         </Route>
       </Switch>
     );
@@ -238,7 +244,10 @@ function App() {
                 <ThemeProvider defaultTheme="dark">
                   <TooltipProvider>
                     <Toaster />
-                    <AppContent />
+                    <ContactWizardProvider>
+                      <AppContent />
+                      <ContactWizardModal />
+                    </ContactWizardProvider>
                   </TooltipProvider>
                 </ThemeProvider>
               </I18nProvider>

@@ -19,6 +19,7 @@ import {
   CreditCard,
   Sparkles,
   ScrollText,
+  MessageSquare,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -102,6 +103,12 @@ function AdminSidebar() {
       label: "Criar Usuário",
       path: "/admin/users/new",
       roles: ["root"],
+    },
+    {
+      icon: MessageSquare,
+      label: "Contatos",
+      path: "/admin/contatos",
+      roles: ["root", "admin"],
     },
     {
       icon: ScrollText,

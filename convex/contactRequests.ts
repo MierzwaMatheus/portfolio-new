@@ -1,0 +1,276 @@
+import { v } from 'convex/values';
+import { mutation, query, internalAction, internalQuery } from './_generated/server';
+import { internal } from './_generated/api';
+import { requireRole, requireAuth } from './auth';
+import { logAudit } from './audit';
+
+const HOUR_MS = 60 * 60 * 1000;
+const RATE_LIMIT_MAX = 5;
+
+const TYPE_LABELS: Record<string, string> = {
+  project: '💼 Projeto',
+  job: '🧑‍💼 Oportunidade de Emprego',
+  networking: '🤝 Networking / Colaboração',
+  feedback: '💬 Feedback / Dúvida',
+};
+
+const ANSWER_LABELS: Record<string, Record<string, string>> = {
+  project: {
+    projectType: 'Tipo de projeto',
+    timeline: 'Prazo estimado',
+    budget: 'Orçamento estimado',
+    description: 'Descrição',
+  },
+  job: {
+    contractType: 'Tipo de contrato',
+    modality: 'Modalidade',
+    area: 'Área',
+    company: 'Empresa / Cargo',
+  },
+  networking: {
+    howFound: 'Como me encontrou',
+    topic: 'Assunto',
+  },
+  feedback: {
+    about: 'Sobre',
+    message: 'Mensagem',
+  },
+};
+
+export const submit = mutation({
+  args: {
+    type: v.union(
+      v.literal('project'),
+      v.literal('job'),
+      v.literal('networking'),
+      v.literal('feedback'),
+    ),
+    sourceContext: v.optional(v.string()),
+    answers: v.any(),
+    contactInfo: v.object({
+      name: v.string(),
+      email: v.string(),
+      phone: v.optional(v.string()),
+      linkedin: v.optional(v.string()),
+      company: v.optional(v.string()),
+    }),
+    ipAddress: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const ip = args.ipAddress ?? 'unknown';
+    const key = `contact_submit:${ip}`;
+    const now = Date.now();
+
+    const existing = await ctx.db
+      .query('rateLimitAttempts')
+      .withIndex('by_key', (q) => q.eq('key', key))
+      .unique();
+
+    if (existing) {
+      if (existing.blockedUntil && existing.blockedUntil > now) {
+        throw new Error('RATE_LIMITED');
+      }
+      const windowStart = now - HOUR_MS;
+      if (existing.firstAttemptAt > windowStart && existing.attemptCount >= RATE_LIMIT_MAX) {
+        await ctx.db.patch(existing._id, {
+          attemptCount: existing.attemptCount + 1,
+          lastAttemptAt: now,
+          blockedUntil: now + HOUR_MS,
+        });
+        throw new Error('RATE_LIMITED');
+      }
+      if (existing.firstAttemptAt <= windowStart) {
+        await ctx.db.patch(existing._id, {
+          attemptCount: 1,
+          firstAttemptAt: now,
+          lastAttemptAt: now,
+          blockedUntil: undefined,
+          expiresAt: now + HOUR_MS * 2,
+        });
+      } else {
+        await ctx.db.patch(existing._id, {
+          attemptCount: existing.attemptCount + 1,
+          lastAttemptAt: now,
+          expiresAt: now + HOUR_MS * 2,
+        });
+      }
+    } else {
+      await ctx.db.insert('rateLimitAttempts', {
+        key,
+        identifier: ip,
+        type: 'contact_submit',
+        attemptCount: 1,
+        firstAttemptAt: now,
+        lastAttemptAt: now,
+        expiresAt: now + HOUR_MS * 2,
+      });
+    }
+
+    const id = await ctx.db.insert('contactRequests', {
+      type: args.type,
+      status: 'new',
+      sourceContext: args.sourceContext,
+      answers: args.answers,
+      contactInfo: args.contactInfo,
+      ipAddress: args.ipAddress,
+      userAgent: args.userAgent,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    await logAudit(ctx, {
+      eventType: 'contact.submitted',
+      actorType: 'external',
+      targetType: 'contactRequest',
+      targetId: id,
+      metadata: { type: args.type, sourceContext: args.sourceContext },
+      ipAddress: args.ipAddress,
+      userAgent: args.userAgent,
+      success: true,
+    });
+
+    await ctx.scheduler.runAfter(0, internal.contactRequests.sendNotification, { id });
+
+    return { id };
+  },
+});
+
+export const sendNotification = internalAction({
+  args: { id: v.id('contactRequests') },
+  handler: async (ctx, { id }) => {
+    const doc = await ctx.runQuery(internal.contactRequests.getInternal, { id });
+    if (!doc) return;
+
+    const typeLabel = TYPE_LABELS[doc.type] ?? doc.type;
+    const answerLabels = ANSWER_LABELS[doc.type] ?? {};
+    const answers = doc.answers as Record<string, string> ?? {};
+
+    const answersBlock = Object.entries(answers)
+      .map(([k, v]) => `<b>${answerLabels[k] ?? k}:</b> ${v}`)
+      .join('\n');
+
+    const ts = new Date(doc.createdAt).toLocaleString('pt-BR', {
+      timeZone: 'America/Sao_Paulo',
+    });
+
+    const { name, email, phone, linkedin, company } = doc.contactInfo;
+
+    const lines = [
+      `🔔 <b>Nova solicitação de contato</b>`,
+      ``,
+      `${typeLabel}`,
+      `📍 <b>Origem:</b> ${doc.sourceContext ?? 'desconhecida'}`,
+      `🕐 <b>Recebido:</b> ${ts}`,
+      ``,
+      `─────────────────────────`,
+      `👤 <b>CONTATO</b>`,
+      `<b>Nome:</b> ${name}`,
+      `<b>E-mail:</b> ${email}`,
+      phone ? `<b>Telefone:</b> ${phone}` : null,
+      linkedin ? `<b>LinkedIn:</b> ${linkedin}` : null,
+      company ? `<b>Empresa:</b> ${company}` : null,
+      ``,
+      `─────────────────────────`,
+      `📋 <b>RESPOSTAS</b>`,
+      answersBlock || '(sem respostas)',
+    ]
+      .filter((l) => l !== null)
+      .join('\n');
+
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_ADMIN_CHAT_ID;
+    if (!token || !chatId) return;
+
+    await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: chatId, text: lines, parse_mode: 'HTML' }),
+    });
+  },
+});
+
+export const getInternal = internalQuery({
+  args: { id: v.id('contactRequests') },
+  handler: async (ctx, { id }) => ctx.db.get(id),
+});
+
+export const list = query({
+  args: {
+    status: v.optional(v.string()),
+    type: v.optional(v.string()),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await requireRole(ctx, ['root', 'admin']);
+    const all = await ctx.db
+      .query('contactRequests')
+      .withIndex('by_createdAt')
+      .order('desc')
+      .take(200);
+
+    return all
+      .filter((r) => !args.status || r.status === args.status)
+      .filter((r) => !args.type || r.type === args.type)
+      .slice(0, args.limit ?? 100);
+  },
+});
+
+export const get = query({
+  args: { id: v.id('contactRequests') },
+  handler: async (ctx, { id }) => {
+    await requireRole(ctx, ['root', 'admin']);
+    return ctx.db.get(id);
+  },
+});
+
+export const markRead = mutation({
+  args: { id: v.id('contactRequests') },
+  handler: async (ctx, { id }) => {
+    await requireRole(ctx, ['root', 'admin']);
+    const doc = await ctx.db.get(id);
+    if (!doc) throw new Error('Not found');
+    if (doc.status === 'new') {
+      await ctx.db.patch(id, { status: 'read', updatedAt: Date.now() });
+    }
+  },
+});
+
+export const updateStatus = mutation({
+  args: {
+    id: v.id('contactRequests'),
+    status: v.union(
+      v.literal('new'),
+      v.literal('read'),
+      v.literal('contacted'),
+      v.literal('in_progress'),
+      v.literal('closed'),
+      v.literal('archived'),
+    ),
+  },
+  handler: async (ctx, { id, status }) => {
+    const { userId } = await requireAuth(ctx);
+    await requireRole(ctx, ['root', 'admin']);
+    const doc = await ctx.db.get(id);
+    if (!doc) throw new Error('Not found');
+    const prev = doc.status;
+    await ctx.db.patch(id, { status, updatedAt: Date.now() });
+    await logAudit(ctx, {
+      eventType: 'contact.status_changed',
+      actorType: 'user',
+      actorId: userId,
+      targetType: 'contactRequest',
+      targetId: id,
+      metadata: { from: prev, to: status },
+      success: true,
+    });
+  },
+});
+
+export const addNote = mutation({
+  args: { id: v.id('contactRequests'), note: v.string() },
+  handler: async (ctx, { id, note }) => {
+    await requireRole(ctx, ['root', 'admin']);
+    await ctx.db.patch(id, { adminNotes: note, updatedAt: Date.now() });
+  },
+});
