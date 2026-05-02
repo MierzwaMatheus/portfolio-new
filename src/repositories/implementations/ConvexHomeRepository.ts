@@ -53,4 +53,12 @@ export class ConvexHomeRepository implements HomeRepository {
       label: value.label ?? {},
     };
   }
+
+  async getContactWizardEnabled(): Promise<boolean> {
+    const data = await client.query(api.homeContent.getByKey, {
+      key: "contact_wizard_enabled",
+    });
+    if (!data) return true;
+    return (data as any).value !== false;
+  }
 }

@@ -481,6 +481,8 @@ export function ContactWizard({
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("RATE_LIMITED")) {
         toast.error(t("contactWizard.rateLimited"));
+      } else if (msg.includes("CONTACT_DISABLED")) {
+        toast.error("O formulário de contato está temporariamente desativado.");
       } else {
         toast.error(t("contactWizard.errorMessage"));
       }

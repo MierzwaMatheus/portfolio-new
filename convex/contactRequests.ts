@@ -5,7 +5,12 @@ import { requireRole, requireAuth } from './auth';
 import { logAudit } from './audit';
 
 const HOUR_MS = 60 * 60 * 1000;
-const RATE_LIMIT_MAX = 5;
+const DAY_MS = 24 * HOUR_MS;
+// Per email: max 3 submissions per 24h
+const EMAIL_RATE_LIMIT_MAX = 3;
+const EMAIL_WINDOW_MS = DAY_MS;
+// Per IP: max 10 submissions per hour (best-effort, IP may be shared/unknown)
+const IP_RATE_LIMIT_MAX = 10;
 
 const TYPE_LABELS: Record<string, string> = {
   project: '💼 Projeto',
@@ -124,53 +129,91 @@ export const submit = mutation({
     userAgent: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const ip = args.ipAddress ?? 'unknown';
-    const key = `contact_submit:${ip}`;
     const now = Date.now();
+    const email = args.contactInfo.email.toLowerCase().trim();
+    const ip = args.ipAddress ?? 'unknown';
 
-    const existing = await ctx.db
-      .query('rateLimitAttempts')
-      .withIndex('by_key', (q) => q.eq('key', key))
-      .unique();
+    // Helper: check and increment a rate limit bucket
+    async function checkRateLimit(
+      key: string,
+      identifier: string,
+      maxAttempts: number,
+      windowMs: number,
+      blockMs: number,
+    ) {
+      const existing = await ctx.db
+        .query('rateLimitAttempts')
+        .withIndex('by_key', (q) => q.eq('key', key))
+        .unique();
 
-    if (existing) {
-      if (existing.blockedUntil && existing.blockedUntil > now) {
-        throw new Error('RATE_LIMITED');
-      }
-      const windowStart = now - HOUR_MS;
-      if (existing.firstAttemptAt > windowStart && existing.attemptCount >= RATE_LIMIT_MAX) {
-        await ctx.db.patch(existing._id, {
-          attemptCount: existing.attemptCount + 1,
-          lastAttemptAt: now,
-          blockedUntil: now + HOUR_MS,
-        });
-        throw new Error('RATE_LIMITED');
-      }
-      if (existing.firstAttemptAt <= windowStart) {
-        await ctx.db.patch(existing._id, {
+      if (existing) {
+        if (existing.blockedUntil && existing.blockedUntil > now) {
+          throw new Error('RATE_LIMITED');
+        }
+        const windowStart = now - windowMs;
+        if (existing.firstAttemptAt > windowStart && existing.attemptCount >= maxAttempts) {
+          await ctx.db.patch(existing._id, {
+            attemptCount: existing.attemptCount + 1,
+            lastAttemptAt: now,
+            blockedUntil: now + blockMs,
+          });
+          throw new Error('RATE_LIMITED');
+        }
+        if (existing.firstAttemptAt <= windowStart) {
+          await ctx.db.patch(existing._id, {
+            attemptCount: 1,
+            firstAttemptAt: now,
+            lastAttemptAt: now,
+            blockedUntil: undefined,
+            expiresAt: now + windowMs * 2,
+          });
+        } else {
+          await ctx.db.patch(existing._id, {
+            attemptCount: existing.attemptCount + 1,
+            lastAttemptAt: now,
+            expiresAt: now + windowMs * 2,
+          });
+        }
+      } else {
+        await ctx.db.insert('rateLimitAttempts', {
+          key,
+          identifier,
+          type: 'contact_submit',
           attemptCount: 1,
           firstAttemptAt: now,
           lastAttemptAt: now,
-          blockedUntil: undefined,
-          expiresAt: now + HOUR_MS * 2,
-        });
-      } else {
-        await ctx.db.patch(existing._id, {
-          attemptCount: existing.attemptCount + 1,
-          lastAttemptAt: now,
-          expiresAt: now + HOUR_MS * 2,
+          expiresAt: now + windowMs * 2,
         });
       }
-    } else {
-      await ctx.db.insert('rateLimitAttempts', {
-        key,
-        identifier: ip,
-        type: 'contact_submit',
-        attemptCount: 1,
-        firstAttemptAt: now,
-        lastAttemptAt: now,
-        expiresAt: now + HOUR_MS * 2,
-      });
+    }
+
+    // Primary: rate limit by email (reliable, tamper-proof)
+    await checkRateLimit(
+      `contact_email:${email}`,
+      email,
+      EMAIL_RATE_LIMIT_MAX,
+      EMAIL_WINDOW_MS,
+      DAY_MS,
+    );
+
+    // Secondary: rate limit by IP (best-effort, catches bulk abuse from same origin)
+    if (ip !== 'unknown') {
+      await checkRateLimit(
+        `contact_ip:${ip}`,
+        ip,
+        IP_RATE_LIMIT_MAX,
+        HOUR_MS,
+        HOUR_MS,
+      );
+    }
+
+    // Kill switch: check if contact wizard is enabled
+    const enabledSetting = await ctx.db
+      .query('homeContent')
+      .withIndex('by_key', (q) => q.eq('key', 'contact_wizard_enabled'))
+      .unique();
+    if (enabledSetting !== null && enabledSetting.value === false) {
+      throw new Error('CONTACT_DISABLED');
     }
 
     const id = await ctx.db.insert('contactRequests', {

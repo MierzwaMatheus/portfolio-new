@@ -9,9 +9,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { ShieldOff, ShieldCheck } from "lucide-react";
 
 type Status = "new" | "read" | "contacted" | "in_progress" | "closed" | "archived";
 type FlowType = "project" | "job" | "networking" | "feedback";
@@ -93,6 +96,19 @@ export default function AdminContactRequests() {
   const updateStatus = useMutation(api.contactRequests.updateStatus);
   const addNote = useMutation(api.contactRequests.addNote);
 
+  const enabledSetting = useQuery(api.homeContent.getByKey, { key: "contact_wizard_enabled" });
+  const setContent = useMutation(api.homeContent.set);
+  const wizardEnabled = enabledSetting === undefined ? true : (enabledSetting === null ? true : enabledSetting.value !== false);
+
+  const handleToggleWizard = async () => {
+    try {
+      await setContent({ key: "contact_wizard_enabled", value: !wizardEnabled });
+      toast.success(wizardEnabled ? "Wizard de contato desativado" : "Wizard de contato ativado");
+    } catch {
+      toast.error("Erro ao alterar configuração");
+    }
+  };
+
   const handleOpen = async (id: Id<"contactRequests">) => {
     setSelectedId(id);
     await markRead({ id });
@@ -126,6 +142,22 @@ export default function AdminContactRequests() {
             <h1 className="text-2xl font-bold text-white">Contatos</h1>
             <p className="text-sm text-gray-400 mt-1">Solicitações recebidas pelo wizard de contato</p>
           </div>
+          <div className="flex items-center gap-4">
+            {/* Kill switch */}
+            <div className={`flex items-center gap-2.5 px-3 py-2 rounded-md border transition-colors ${wizardEnabled ? "border-neon-purple/30 bg-neon-purple/5" : "border-red-800/40 bg-red-900/10"}`}>
+              {wizardEnabled
+                ? <ShieldCheck className="h-4 w-4 text-neon-purple shrink-0" />
+                : <ShieldOff className="h-4 w-4 text-red-400 shrink-0" />}
+              <Label className={`text-xs font-mono cursor-pointer select-none ${wizardEnabled ? "text-neon-purple" : "text-red-400"}`} htmlFor="wizard-toggle">
+                {wizardEnabled ? "Wizard ativo" : "Wizard desativado"}
+              </Label>
+              <Switch
+                id="wizard-toggle"
+                checked={wizardEnabled}
+                onCheckedChange={handleToggleWizard}
+                className="data-[state=checked]:bg-neon-purple data-[state=unchecked]:bg-red-800"
+              />
+            </div>
           <div className="flex gap-2">
             <Select value={statusFilter ?? "all"} onValueChange={(v) => setStatusFilter(v === "all" ? undefined : v)}>
               <SelectTrigger className="w-36 bg-white/5 border-white/10 text-white text-xs">
@@ -149,6 +181,7 @@ export default function AdminContactRequests() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
           </div>
         </div>
 

@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useI18n } from "@/i18n/context/I18nContext";
 import { useContactWizard } from "@/contexts/ContactWizardContext";
+import { useHome } from "@/hooks/useHome";
 import { MessageSquare } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { useSidebar } from "@/hooks/useSidebar";
@@ -65,6 +66,7 @@ export function Sidebar() {
   const { t } = useTranslation();
   const { locale, setLocale } = useI18n();
   const { openWizard } = useContactWizard();
+  const { contactWizardEnabled: wizardEnabled } = useHome(homeRepository);
   const [location] = useLocation();
   const { contactInfo, isLoading } = useSidebar(sidebarRepository);
   const { items: resumeItems } = useResume(resumeRepository);
@@ -292,13 +294,15 @@ const NAV_ITEMS = NAV_ITEMS_KEYS.map(item => ({
             </div>
           </div>
 
-          <Button
-            onClick={() => openWizard({ sourceContext: "sidebar" })}
-            className="w-full bg-neon-purple/20 hover:bg-neon-purple/30 border border-neon-purple/50 text-neon-purple h-9 text-xs font-mono uppercase tracking-wider mb-2"
-          >
-            <MessageSquare className="mr-2 h-3 w-3" />
-            {t("contactWizard.trigger")}
-          </Button>
+          {wizardEnabled && (
+            <Button
+              onClick={() => openWizard({ sourceContext: "sidebar" })}
+              className="w-full bg-neon-purple/20 hover:bg-neon-purple/30 border border-neon-purple/50 text-neon-purple h-9 text-xs font-mono uppercase tracking-wider mb-2"
+            >
+              <MessageSquare className="mr-2 h-3 w-3" />
+              {t("contactWizard.trigger")}
+            </Button>
+          )}
 
           <Button
             variant="outline"

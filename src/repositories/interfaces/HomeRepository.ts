@@ -36,5 +36,6 @@ export interface HomeRepository {
   getServices(): Promise<Service[]>;
   getTestimonials(): Promise<Testimonial[]>;
   getAvailability(): Promise<AvailabilityData | null>;
+  getContactWizardEnabled(): Promise<boolean>;
 }
 

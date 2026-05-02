@@ -41,6 +41,12 @@ export function useHome(repository: HomeRepository) {
     staleTime: Infinity,
   });
 
+  const { data: contactWizardEnabled = true } = useQuery({
+    queryKey: ["home", "contact_wizard_enabled"],
+    queryFn: () => repository.getContactWizardEnabled(),
+    staleTime: Infinity,
+  });
+
   const isLoading =
     isLoadingContact ||
     isLoadingAbout ||
@@ -121,6 +127,7 @@ export function useHome(repository: HomeRepository) {
     services,
     testimonials,
     availability,
+    contactWizardEnabled,
     isLoading,
   };
 }

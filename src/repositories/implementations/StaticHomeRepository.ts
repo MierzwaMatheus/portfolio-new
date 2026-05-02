@@ -80,4 +80,16 @@ export class StaticHomeRepository implements HomeRepository {
       return null;
     }
   }
+
+  async getContactWizardEnabled(): Promise<boolean> {
+    try {
+      const response = await fetch("/data/home.json");
+      if (!response.ok) return true;
+      const data = await response.json();
+      if (!("contact_wizard_enabled" in data)) return true;
+      return data.contact_wizard_enabled !== false;
+    } catch {
+      return true;
+    }
+  }
 }

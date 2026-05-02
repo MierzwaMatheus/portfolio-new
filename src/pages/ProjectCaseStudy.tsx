@@ -32,6 +32,8 @@ import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useProjectBySlug } from "@/hooks/usePortfolio";
 import { portfolioRepository } from "@/repositories/instances";
 import { useContactWizard } from "@/contexts/ContactWizardContext";
+import { useQuery } from "@tanstack/react-query";
+import { homeRepository } from "@/repositories/instances";
 import { MessageSquare } from "lucide-react";
 
 function DynamicIcon({ name, className }: { name?: string; className?: string }) {
@@ -74,6 +76,11 @@ export default function ProjectCaseStudy() {
   const [, params] = useRoute("/portfolio/:slug");
   const { project, isLoading } = useProjectBySlug(portfolioRepository, params?.slug);
   const { openWizard } = useContactWizard();
+  const { data: wizardEnabled = true } = useQuery({
+    queryKey: ["home", "contact_wizard_enabled"],
+    queryFn: () => homeRepository.getContactWizardEnabled(),
+    staleTime: Infinity,
+  });
   const [expandedImage, setExpandedImage] = useState<{
     url: string;
     index: number;
@@ -283,19 +290,21 @@ export default function ProjectCaseStudy() {
         )}
 
         {/* Contact CTA */}
-        <div className="mt-10 rounded-xl border border-neon-purple/20 bg-neon-purple/5 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <p className="text-white font-semibold text-sm">Gostou do que viu?</p>
-            <p className="text-gray-400 text-xs mt-0.5">Entre em contato para discutir um projeto similar</p>
+        {wizardEnabled && (
+          <div className="mt-10 rounded-xl border border-neon-purple/20 bg-neon-purple/5 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div>
+              <p className="text-white font-semibold text-sm">Gostou do que viu?</p>
+              <p className="text-gray-400 text-xs mt-0.5">Entre em contato para discutir um projeto similar</p>
+            </div>
+            <Button
+              onClick={() => openWizard({ flowType: "project", sourceContext: `case-study:${params?.slug ?? ""}` })}
+              className="bg-neon-purple hover:bg-neon-purple/80 text-white font-mono text-xs shrink-0"
+            >
+              <MessageSquare className="mr-2 h-3.5 w-3.5" />
+              {t("contactWizard.trigger")}
+            </Button>
           </div>
-          <Button
-            onClick={() => openWizard({ flowType: "project", sourceContext: `case-study:${params?.slug ?? ""}` })}
-            className="bg-neon-purple hover:bg-neon-purple/80 text-white font-mono text-xs shrink-0"
-          >
-            <MessageSquare className="mr-2 h-3.5 w-3.5" />
-            {t("contactWizard.trigger")}
-          </Button>
-        </div>
+        )}
       </motion.div>
 
       {/* Fullscreen image — ocupa quase toda a tela */}
