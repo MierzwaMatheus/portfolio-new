@@ -1,6 +1,6 @@
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { SEO } from "@/components/SEO";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Code,
@@ -11,6 +11,7 @@ import {
   Layout as LayoutIcon,
   MessageSquare,
   Quote,
+  Star,
 } from "lucide-react";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useI18n } from "@/i18n/context/I18nContext";
@@ -18,12 +19,16 @@ import { useHome } from "@/hooks/useHome";
 import { homeRepository } from "@/repositories/instances";
 import { useMatrixText } from "@/hooks/useMatrixText";
 import { AvailabilityBadge } from "@/components/AvailabilityBadge";
+import { TestimonialWizard } from "@/components/TestimonialWizard";
+import { usePlugin } from "@/contexts/PluginsContext";
 
 export default function Home() {
   const { t, tValue } = useTranslation();
   const { isLoading: i18nLoading } = useI18n();
   const { contactRole, aboutText, services, testimonials, availability, isLoading } =
     useHome(homeRepository);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const testimonialsIntakeEnabled = usePlugin("testimonials-intake");
 
   const matrixAboutText = useMatrixText({
     text: "Carregando informações do perfil...\n\nSincronizando dados do banco de dados, processando traduções e preparando experiência personalizada. Por favor, aguarde enquanto o sistema carrega todas as informações.",
@@ -248,6 +253,20 @@ export default function Home() {
               </div>
             ))}
           </div>
+
+          {testimonialsIntakeEnabled && (
+            <div className="text-center mt-8">
+              <button
+                onClick={() => setWizardOpen(true)}
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-neon-purple/40 bg-neon-purple/5 text-neon-purple hover:bg-neon-purple/10 hover:border-neon-purple transition-all text-sm font-medium"
+              >
+                <Star className="w-4 h-4" />
+                Deixar meu depoimento
+              </button>
+            </div>
+          )}
+
+          <TestimonialWizard open={wizardOpen} onClose={() => setWizardOpen(false)} />
         </motion.section>
       </motion.div>
     </>

@@ -21,6 +21,7 @@ import {
   ScrollText,
   MessageSquare,
   Puzzle,
+  Star,
 } from "lucide-react";
 import { usePlugins } from "@/contexts/PluginsContext";
 import type { PluginId } from "../../../convex/pluginRegistry";
@@ -108,6 +109,13 @@ function AdminSidebar() {
       path: "/admin/contatos",
       roles: ["root", "admin"],
       pluginId: "contact-wizard",
+    },
+    {
+      icon: Star,
+      label: "Depoimentos",
+      path: "/admin/depoimentos",
+      roles: ["root", "admin"],
+      pluginId: "testimonials-intake",
     },
     {
       icon: CreditCard,

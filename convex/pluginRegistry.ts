@@ -10,7 +10,8 @@ export type PluginId =
   | 'audit-log'
   | 'media-manager'
   | 'i18n'
-  | 'playground';
+  | 'playground'
+  | 'testimonials-intake';
 
 export interface PluginDefinition {
   id: PluginId;
@@ -138,6 +139,16 @@ export const PLUGIN_REGISTRY: PluginDefinition[] = [
     adminRoutes: [],
     publicRoutes: ['/playground'],
     minRole: 'root',
+  },
+  {
+    id: 'testimonials-intake',
+    label: 'Envio de Depoimentos',
+    description: 'Permite que visitantes enviem depoimentos (texto ou vídeo) para moderação',
+    defaultEnabled: true,
+    tables: ['testimonialSubmissions'],
+    adminRoutes: ['/admin/depoimentos'],
+    publicRoutes: [],
+    minRole: 'admin',
   },
 ];
 

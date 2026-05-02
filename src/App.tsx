@@ -46,6 +46,7 @@ import { ContactWizardProvider } from "./contexts/ContactWizardContext";
 import { ContactWizardModal } from "./components/ContactWizardModal";
 import AdminContactRequests from "./pages/admin/ContactRequests";
 import AdminPlugins from "./pages/admin/Plugins";
+import AdminTestimonials from "./pages/admin/Testimonials";
 import { PluginsProvider } from "./contexts/PluginsContext";
 import { PluginRoute } from "./components/PluginRoute";
 import Playground from "./pages/Playground";
@@ -190,6 +191,12 @@ function Router() {
         <Route path="/admin/plugins">
           <ProtectedRoute
             component={AdminPlugins}
+            allowedRoles={["root", "admin"]}
+          />
+        </Route>
+        <Route path="/admin/depoimentos">
+          <ProtectedRoute
+            component={() => <PluginRoute pluginId="testimonials-intake"><AdminTestimonials /></PluginRoute>}
             allowedRoles={["root", "admin"]}
           />
         </Route>

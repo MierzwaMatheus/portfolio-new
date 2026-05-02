@@ -1,0 +1,620 @@
+import { useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Send,
+  Check,
+  Video,
+  FileText,
+  Upload,
+  X,
+  Star,
+  Loader2,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  TestimonialWizardProvider,
+  useTestimonialWizard,
+  MediaType,
+  PersonalInfo,
+} from "@/contexts/TestimonialWizardContext";
+
+const MAX_VIDEO_MB = 20;
+const MAX_VIDEO_BYTES = MAX_VIDEO_MB * 1024 * 1024;
+
+const slideVariants = {
+  enter: (dir: number) => ({ x: dir > 0 ? 40 : -40, opacity: 0 }),
+  center: { x: 0, opacity: 1 },
+  exit: (dir: number) => ({ x: dir > 0 ? -40 : 40, opacity: 0 }),
+};
+
+// ── Step 0: MediaChoice ───────────────────────────────────────────────────────
+
+function MediaChoiceStep() {
+  const { state, dispatch } = useTestimonialWizard();
+
+  function choose(type: MediaType) {
+    dispatch({ type: "SET_MEDIA_TYPE", payload: type });
+    dispatch({ type: "NEXT_STEP" });
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="text-center">
+        <h2 className="text-xl font-bold text-white mb-2">
+          Como você prefere deixar seu depoimento?
+        </h2>
+        <p className="text-gray-400 text-sm">
+          Sua opinião é muito importante para mim
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        <button
+          onClick={() => choose("video")}
+          className={cn(
+            "relative flex items-start gap-4 p-5 rounded-xl border-2 text-left transition-all",
+            "border-neon-purple/50 bg-neon-purple/5 hover:bg-neon-purple/10 hover:border-neon-purple group",
+          )}
+        >
+          <div className="mt-0.5 flex-shrink-0 w-10 h-10 rounded-full bg-neon-purple/20 flex items-center justify-center group-hover:bg-neon-purple/30 transition-colors">
+            <Video className="w-5 h-5 text-neon-purple" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="font-semibold text-white">Vídeo</span>
+              <span className="text-xs bg-neon-purple/20 text-neon-purple px-2 py-0.5 rounded-full font-medium">
+                Recomendado ⭐
+              </span>
+            </div>
+            <p className="text-sm text-gray-400 leading-relaxed">
+              Vídeos têm muito mais impacto e ajudam a transmitir autenticidade.
+              Leva menos de 2 minutos e faz uma diferença enorme para quem está
+              considerando me contratar!
+            </p>
+            <p className="text-xs text-gray-500 mt-2">MP4, MOV ou WebM · máx. {MAX_VIDEO_MB} MB</p>
+          </div>
+        </button>
+
+        <button
+          onClick={() => choose("text")}
+          className={cn(
+            "flex items-start gap-4 p-5 rounded-xl border-2 text-left transition-all",
+            "border-white/10 bg-white/3 hover:bg-white/5 hover:border-white/20 group",
+          )}
+        >
+          <div className="mt-0.5 flex-shrink-0 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/15 transition-colors">
+            <FileText className="w-5 h-5 text-gray-300" />
+          </div>
+          <div>
+            <span className="font-semibold text-white">Texto escrito</span>
+            <p className="text-sm text-gray-400 leading-relaxed mt-1">
+              Prefiro escrever minha experiência em palavras.
+            </p>
+          </div>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Step 1 (text): TextInputStep ──────────────────────────────────────────────
+
+function TextInputStep() {
+  const { state, dispatch } = useTestimonialWizard();
+  const MIN_CHARS = 50;
+  const MAX_CHARS = 500;
+  const len = state.text.length;
+  const isValid = len >= MIN_CHARS && len <= MAX_CHARS;
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h2 className="text-xl font-bold text-white mb-1">
+          Conte sua experiência
+        </h2>
+        <p className="text-gray-400 text-sm">Seja autêntico — isso faz toda a diferença</p>
+      </div>
+
+      <div>
+        <Textarea
+          value={state.text}
+          onChange={(e) => dispatch({ type: "SET_TEXT", payload: e.target.value })}
+          placeholder="Descreva como foi trabalhar comigo, o que gostou, os resultados que obteve..."
+          className="min-h-[160px] bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-600 resize-none"
+          maxLength={MAX_CHARS}
+        />
+        <div className={cn("text-xs mt-1 text-right", len < MIN_CHARS ? "text-gray-500" : "text-neon-lime")}>
+          {len}/{MAX_CHARS} {len < MIN_CHARS && `(mín. ${MIN_CHARS})`}
+        </div>
+      </div>
+
+      <div className="flex justify-between pt-2">
+        <Button
+          variant="ghost"
+          onClick={() => dispatch({ type: "PREV_STEP" })}
+          className="text-gray-400 hover:text-white"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
+        </Button>
+        <Button
+          onClick={() => dispatch({ type: "NEXT_STEP" })}
+          disabled={!isValid}
+          className="bg-neon-lime text-black hover:bg-neon-lime/90 font-semibold"
+        >
+          Continuar <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Step 1 (video): VideoUploadStep ──────────────────────────────────────────
+
+function VideoUploadStep() {
+  const { state, dispatch } = useTestimonialWizard();
+  const generateUrl = useMutation(api.testimonialSubmissions.generateVideoUploadUrl);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  async function handleFile(file: File) {
+    if (!file.type.startsWith("video/")) {
+      toast.error("Por favor selecione um arquivo de vídeo (MP4, MOV, WebM).");
+      return;
+    }
+    if (file.size > MAX_VIDEO_BYTES) {
+      toast.error(`O vídeo deve ter no máximo ${MAX_VIDEO_MB} MB.`);
+      return;
+    }
+
+    setUploading(true);
+    setProgress(10);
+
+    try {
+      const uploadUrl = await generateUrl({ fileSizeBytes: file.size });
+      setProgress(30);
+
+      const xhr = new XMLHttpRequest();
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) {
+          setProgress(30 + Math.floor((e.loaded / e.total) * 60));
+        }
+      });
+
+      await new Promise<void>((resolve, reject) => {
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) resolve();
+          else reject(new Error(`Upload falhou: ${xhr.status}`));
+        };
+        xhr.onerror = () => reject(new Error("Erro de rede no upload"));
+        xhr.open("POST", uploadUrl);
+        xhr.setRequestHeader("Content-Type", file.type);
+        xhr.send(file);
+      });
+
+      setProgress(95);
+      const { storageId } = JSON.parse(xhr.responseText);
+      dispatch({
+        type: "SET_VIDEO",
+        payload: { storageId, fileSize: file.size, fileName: file.name },
+      });
+      setProgress(100);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("VIDEO_TOO_LARGE")) {
+        toast.error(`O vídeo deve ter no máximo ${MAX_VIDEO_MB} MB.`);
+      } else if (msg.includes("VIDEO_DAILY_LIMIT_REACHED")) {
+        toast.error("Limite diário de uploads de vídeo atingido. Tente novamente amanhã ou envie um depoimento em texto.");
+      } else {
+        toast.error("Erro ao fazer upload do vídeo. Tente novamente.");
+      }
+      setProgress(0);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h2 className="text-xl font-bold text-white mb-1">Envie seu vídeo</h2>
+        <p className="text-gray-400 text-sm">MP4, MOV ou WebM · máx. {MAX_VIDEO_MB} MB</p>
+      </div>
+
+      {!state.videoStorageId ? (
+        <div
+          onClick={() => fileInputRef.current?.click()}
+          className="border-2 border-dashed border-white/20 rounded-xl p-10 flex flex-col items-center gap-3 cursor-pointer hover:border-neon-purple/50 hover:bg-neon-purple/5 transition-all"
+        >
+          {uploading ? (
+            <>
+              <Loader2 className="w-8 h-8 text-neon-purple animate-spin" />
+              <p className="text-sm text-gray-400">{progress}% enviado...</p>
+              <div className="w-full bg-white/10 rounded-full h-1.5 mt-1">
+                <div
+                  className="bg-neon-purple h-1.5 rounded-full transition-all"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              <Upload className="w-8 h-8 text-gray-500" />
+              <p className="text-sm text-white font-medium">Clique para selecionar o vídeo</p>
+              <p className="text-xs text-gray-500">ou arraste e solte aqui</p>
+            </>
+          )}
+        </div>
+      ) : (
+        <div className="flex items-center gap-3 p-4 bg-neon-lime/10 border border-neon-lime/30 rounded-xl">
+          <Check className="w-5 h-5 text-neon-lime flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm text-white font-medium truncate">{state.videoFileName}</p>
+            <p className="text-xs text-gray-400">
+              {state.videoFileSize ? `${(state.videoFileSize / (1024 * 1024)).toFixed(1)} MB` : ""}
+            </p>
+          </div>
+          <button
+            onClick={() =>
+              dispatch({ type: "SET_VIDEO", payload: { storageId: "", fileSize: 0, fileName: "" } })
+            }
+            className="text-gray-500 hover:text-white"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="video/mp4,video/quicktime,video/webm"
+        className="hidden"
+        onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+      />
+
+      <div className="flex justify-between pt-2">
+        <Button
+          variant="ghost"
+          onClick={() => dispatch({ type: "PREV_STEP" })}
+          className="text-gray-400 hover:text-white"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
+        </Button>
+        <Button
+          onClick={() => dispatch({ type: "NEXT_STEP" })}
+          disabled={!state.videoStorageId || uploading}
+          className="bg-neon-lime text-black hover:bg-neon-lime/90 font-semibold"
+        >
+          Continuar <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Step 2: PersonalInfoStep ──────────────────────────────────────────────────
+
+function PersonalInfoStep() {
+  const { state, dispatch } = useTestimonialWizard();
+  const info = state.personalInfo;
+
+  function update(field: keyof PersonalInfo, value: string) {
+    dispatch({ type: "SET_PERSONAL_INFO", payload: { ...info, [field]: value } });
+  }
+
+  const isValid = info.name.trim().length >= 2 && info.role.trim().length >= 2 && info.email.includes("@");
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h2 className="text-xl font-bold text-white mb-1">Seus dados</h2>
+        <p className="text-gray-400 text-sm">
+          O e-mail não será exibido publicamente
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <Label className="text-gray-300 text-sm mb-1.5 block">
+            Nome completo <span className="text-neon-purple">*</span>
+          </Label>
+          <Input
+            value={info.name}
+            onChange={(e) => update("name", e.target.value)}
+            placeholder="Seu nome"
+            className="bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-600"
+          />
+        </div>
+
+        <div>
+          <Label className="text-gray-300 text-sm mb-1.5 block">
+            Cargo / Função <span className="text-neon-purple">*</span>
+          </Label>
+          <Input
+            value={info.role}
+            onChange={(e) => update("role", e.target.value)}
+            placeholder="Ex: CEO, Desenvolvedor, Designer..."
+            className="bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-600"
+          />
+        </div>
+
+        <div>
+          <Label className="text-gray-300 text-sm mb-1.5 block">Empresa (opcional)</Label>
+          <Input
+            value={info.company}
+            onChange={(e) => update("company", e.target.value)}
+            placeholder="Nome da empresa"
+            className="bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-600"
+          />
+        </div>
+
+        <div>
+          <Label className="text-gray-300 text-sm mb-1.5 block">
+            E-mail <span className="text-neon-purple">*</span>
+          </Label>
+          <Input
+            type="email"
+            value={info.email}
+            onChange={(e) => update("email", e.target.value)}
+            placeholder="seu@email.com"
+            className="bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-600"
+          />
+        </div>
+
+        <div>
+          <Label className="text-gray-300 text-sm mb-1.5 block">
+            URL da sua foto (opcional)
+          </Label>
+          <Input
+            value={info.imageUrl}
+            onChange={(e) => update("imageUrl", e.target.value)}
+            placeholder="https://... (LinkedIn, GitHub, etc.)"
+            className="bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-600"
+          />
+          <p className="text-xs text-gray-600 mt-1">Cole a URL da sua foto de perfil</p>
+        </div>
+      </div>
+
+      <div className="flex justify-between pt-2">
+        <Button
+          variant="ghost"
+          onClick={() => dispatch({ type: "PREV_STEP" })}
+          className="text-gray-400 hover:text-white"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
+        </Button>
+        <Button
+          onClick={() => dispatch({ type: "NEXT_STEP" })}
+          disabled={!isValid}
+          className="bg-neon-lime text-black hover:bg-neon-lime/90 font-semibold"
+        >
+          Revisar <ArrowRight className="w-4 h-4 ml-2" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── Step 3: SummaryStep ───────────────────────────────────────────────────────
+
+function SummaryStep({ onClose }: { onClose: () => void }) {
+  const { state, dispatch } = useTestimonialWizard();
+  const submitMutation = useMutation(api.testimonialSubmissions.submit);
+  const info = state.personalInfo;
+
+  async function handleSubmit() {
+    dispatch({ type: "SUBMIT_START" });
+    try {
+      await submitMutation({
+        name: info.name.trim(),
+        role: info.role.trim(),
+        company: info.company.trim() || undefined,
+        email: info.email.trim(),
+        type: state.mediaType as "text" | "video",
+        text: state.mediaType === "text" ? state.text : undefined,
+        videoStorageId:
+          state.mediaType === "video" && state.videoStorageId
+            ? (state.videoStorageId as Parameters<typeof submitMutation>[0]["videoStorageId"])
+            : undefined,
+        videoFileSize: state.videoFileSize ?? undefined,
+        imageUrl: info.imageUrl.trim() || undefined,
+      });
+      dispatch({ type: "SUBMIT_SUCCESS" });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "";
+      if (msg.includes("RATE_LIMITED")) {
+        dispatch({ type: "SUBMIT_ERROR", payload: "Você já enviou um depoimento recentemente. Tente novamente em 7 dias." });
+      } else {
+        dispatch({ type: "SUBMIT_ERROR", payload: "Erro ao enviar. Tente novamente." });
+      }
+    }
+  }
+
+  if (state.isSuccess) {
+    return (
+      <div className="flex flex-col items-center text-center py-8 space-y-4">
+        <div className="w-16 h-16 rounded-full bg-neon-lime/20 flex items-center justify-center">
+          <Check className="w-8 h-8 text-neon-lime" />
+        </div>
+        <h2 className="text-xl font-bold text-white">Obrigado pelo depoimento!</h2>
+        <p className="text-gray-400 text-sm max-w-xs">
+          Recebi seu depoimento e vou revisá-lo em breve. Após aprovação, ele poderá aparecer no meu portfólio.
+        </p>
+        <Button onClick={onClose} className="mt-4 bg-neon-lime text-black hover:bg-neon-lime/90 font-semibold">
+          Fechar
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-5">
+      <div>
+        <h2 className="text-xl font-bold text-white mb-1">Revisar e enviar</h2>
+        <p className="text-gray-400 text-sm">Confira os dados antes de enviar</p>
+      </div>
+
+      <div className="space-y-3 bg-[#1a1a1a] rounded-xl p-4 border border-white/5">
+        <div className="flex items-center gap-3">
+          {info.imageUrl ? (
+            <img src={info.imageUrl} alt={info.name} className="w-10 h-10 rounded-full object-cover border border-white/10" />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-neon-purple/20 flex items-center justify-center text-neon-purple font-bold text-sm flex-shrink-0">
+              {info.name.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <p className="font-semibold text-white">{info.name}</p>
+            <p className="text-xs text-neon-purple">
+              {info.role}{info.company ? ` · ${info.company}` : ""}
+            </p>
+          </div>
+        </div>
+
+        <div className="border-t border-white/5 pt-3">
+          {state.mediaType === "text" ? (
+            <p className="text-sm text-gray-300 italic leading-relaxed">"{state.text}"</p>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-gray-300">
+              <Video className="w-4 h-4 text-neon-purple" />
+              <span>Vídeo: {state.videoFileName}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {state.error && (
+        <p className="text-sm text-red-400 bg-red-400/10 border border-red-400/20 rounded-lg p-3">
+          {state.error}
+        </p>
+      )}
+
+      <div className="flex justify-between pt-2">
+        <Button
+          variant="ghost"
+          onClick={() => dispatch({ type: "PREV_STEP" })}
+          disabled={state.isSubmitting}
+          className="text-gray-400 hover:text-white"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
+        </Button>
+        <Button
+          onClick={handleSubmit}
+          disabled={state.isSubmitting}
+          className="bg-neon-purple text-white hover:bg-neon-purple/90 font-semibold"
+        >
+          {state.isSubmitting ? (
+            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Enviando...</>
+          ) : (
+            <><Send className="w-4 h-4 mr-2" /> Enviar depoimento</>
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// ── WizardContent ─────────────────────────────────────────────────────────────
+
+function WizardContent({ onClose }: { onClose: () => void }) {
+  const { state, dispatch } = useTestimonialWizard();
+  const dir = 1;
+
+  // step 0 = escolha de tipo
+  // step 1 = texto ou vídeo
+  // step 2 = dados pessoais
+  // step 3 = revisão/envio
+
+  const totalSteps = 4;
+  const progressPercent = state.isSuccess ? 100 : (state.step / (totalSteps - 1)) * 100;
+
+  function renderStep() {
+    switch (state.step) {
+      case 0:
+        return <MediaChoiceStep key="media" />;
+      case 1:
+        return state.mediaType === "video"
+          ? <VideoUploadStep key="video" />
+          : <TextInputStep key="text" />;
+      case 2:
+        return <PersonalInfoStep key="personal" />;
+      case 3:
+        return <SummaryStep key="summary" onClose={onClose} />;
+      default:
+        return null;
+    }
+  }
+
+  return (
+    <div className="space-y-5">
+      {!state.isSuccess && (
+        <div className="w-full bg-white/5 rounded-full h-1">
+          <motion.div
+            className="bg-neon-purple h-1 rounded-full"
+            animate={{ width: `${progressPercent}%` }}
+            transition={{ duration: 0.3 }}
+          />
+        </div>
+      )}
+
+      <AnimatePresence mode="wait" custom={dir}>
+        <motion.div
+          key={state.step}
+          custom={dir}
+          variants={slideVariants}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          transition={{ duration: 0.2, ease: "easeInOut" }}
+        >
+          {renderStep()}
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Public Component ──────────────────────────────────────────────────────────
+
+interface Props {
+  open: boolean;
+  onClose: () => void;
+}
+
+export function TestimonialWizard({ open, onClose }: Props) {
+  function handleClose() {
+    onClose();
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
+      <DialogContent className="bg-[#121212] border-white/10 max-w-lg w-full">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-white">
+            <Star className="w-5 h-5 text-neon-purple" />
+            Deixar um depoimento
+          </DialogTitle>
+        </DialogHeader>
+        <TestimonialWizardProvider>
+          <WizardContent onClose={handleClose} />
+        </TestimonialWizardProvider>
+      </DialogContent>
+    </Dialog>
+  );
+}

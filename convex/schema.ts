@@ -450,6 +450,30 @@ export default defineSchema({
     updatedAt: v.number(),
   }),
 
+  // ── testimonialSubmissions ─────────────────────────────────────────────────
+  testimonialSubmissions: defineTable({
+    name: v.string(),
+    role: v.string(),
+    company: v.optional(v.string()),
+    email: v.string(),
+    type: v.union(v.literal('text'), v.literal('video')),
+    text: v.optional(v.string()),
+    videoStorageId: v.optional(v.id('_storage')),
+    videoFileSize: v.optional(v.number()),
+    imageUrl: v.optional(v.string()),
+    status: v.union(
+      v.literal('pending'),
+      v.literal('approved'),
+      v.literal('rejected'),
+      v.literal('published'),
+    ),
+    createdAt: v.number(),
+    reviewedAt: v.optional(v.number()),
+    reviewedBy: v.optional(v.id('users')),
+  })
+    .index('by_status', ['status'])
+    .index('by_createdAt', ['createdAt']),
+
   // ── rateLimitAttempts ──────────────────────────────────────────────────────
   rateLimitAttempts: defineTable({
     key: v.string(),
@@ -462,6 +486,7 @@ export default defineSchema({
       v.literal('contact_submit'),
       v.literal('playground_log'),
       v.literal('playground_ai'),
+      v.literal('testimonial_submit'),
     ),
     attemptCount: v.number(),
     firstAttemptAt: v.number(),

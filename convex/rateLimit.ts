@@ -8,6 +8,7 @@ const WINDOWS: Record<string, number> = {
   webhook_invalid: 60 * 60 * 1000,
   playground_log: 60 * 60 * 1000,
   playground_ai: 24 * 60 * 60 * 1000,
+  testimonial_submit: 7 * 24 * 60 * 60 * 1000,
 };
 
 const LIMITS: Record<string, { perKey: number; blockDuration: number }> = {
@@ -17,9 +18,10 @@ const LIMITS: Record<string, { perKey: number; blockDuration: number }> = {
   webhook_invalid: { perKey: 20, blockDuration: 60 * 60 * 1000 },
   playground_log: { perKey: 30, blockDuration: 60 * 60 * 1000 },
   playground_ai: { perKey: 5, blockDuration: 24 * 60 * 60 * 1000 },
+  testimonial_submit: { perKey: 1, blockDuration: 7 * 24 * 60 * 60 * 1000 },
 };
 
-export type RateLimitType = 'login' | 'proposal_password' | 'proposal_accept' | 'webhook_invalid' | 'playground_log' | 'playground_ai';
+export type RateLimitType = 'login' | 'proposal_password' | 'proposal_accept' | 'webhook_invalid' | 'playground_log' | 'playground_ai' | 'testimonial_submit';
 
 export async function checkRateLimit(
   ctx: QueryCtx | MutationCtx,
