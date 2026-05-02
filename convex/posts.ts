@@ -68,7 +68,7 @@ export const listPublished = query({
 export const listAdmin = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    await requireRole(ctx, ['root', 'admin', 'content-editor', 'blog-editor']);
     const posts = await ctx.db
       .query('posts')
       .withIndex('by_status_and_publishedAt')
@@ -144,7 +144,7 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     await requirePlugin(ctx, 'blog');
-    await requireRole(ctx, ['root', 'admin']);
+    await requireRole(ctx, ['root', 'admin', 'content-editor', 'blog-editor']);
     const userId = await getAuthUserId(ctx);
 
     const existing = await ctx.db
@@ -190,7 +190,7 @@ export const update = mutation({
   },
   handler: async (ctx, args) => {
     await requirePlugin(ctx, 'blog');
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor', 'blog-editor']);
     const existing = await ctx.db.get(args.id);
     const { id, ...fields } = args;
     await ctx.db.patch(id, { ...fields, updatedAt: Date.now() });
@@ -204,7 +204,7 @@ export const publish = mutation({
   args: { id: v.id('posts') },
   handler: async (ctx, args) => {
     await requirePlugin(ctx, 'blog');
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor', 'blog-editor']);
     const post = await ctx.db.get(args.id);
     const now = Date.now();
     await ctx.db.patch(args.id, { status: 'published', publishedAt: now, updatedAt: now });
@@ -217,7 +217,7 @@ export const unpublish = mutation({
   args: { id: v.id('posts') },
   handler: async (ctx, args) => {
     await requirePlugin(ctx, 'blog');
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor', 'blog-editor']);
     const post = await ctx.db.get(args.id);
     await ctx.db.patch(args.id, { status: 'draft', updatedAt: Date.now() });
     await markPendingChanges(ctx);
@@ -229,7 +229,7 @@ export const remove = mutation({
   args: { id: v.id('posts') },
   handler: async (ctx, args) => {
     await requirePlugin(ctx, 'blog');
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor', 'blog-editor']);
     const post = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
     if (post?.status === 'published') await markPendingChanges(ctx);

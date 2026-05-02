@@ -122,10 +122,13 @@ export default defineSchema({
     role: v.union(
       v.literal('root'),
       v.literal('admin'),
+      v.literal('content-editor'),
+      v.literal('blog-editor'),
       v.literal('proposal-editor'),
     ),
     createdAt: v.number(),
     createdBy: v.optional(v.id('users')),
+    mustChangePassword: v.optional(v.boolean()),
   })
     .index('by_userId', ['userId'])
     .index('by_role', ['role']),

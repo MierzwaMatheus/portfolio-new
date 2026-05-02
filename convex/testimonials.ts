@@ -50,7 +50,7 @@ export const create = mutation({
     orderIndex: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const id = await ctx.db.insert('testimonials', { ...args, showOnHome: false, createdAt: Date.now() });
     await logAudit(ctx, {
       eventType: 'testimonial.created',
@@ -83,7 +83,7 @@ export const update = mutation({
     orderIndex: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const { id, ...fields } = args;
     await ctx.db.patch(id, fields);
     await markPendingChanges(ctx);
@@ -99,7 +99,7 @@ export const createWithAvatar = mutation({
     avatarFileSize: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const now = Date.now();
 
     let imageId: string | undefined;
@@ -150,7 +150,7 @@ export const createWithAvatar = mutation({
 export const remove = mutation({
   args: { id: v.id('testimonials') },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    await requireRole(ctx, ['root', 'admin', 'content-editor']);
     await ctx.db.delete(args.id);
     await markPendingChanges(ctx);
   },
@@ -159,7 +159,7 @@ export const remove = mutation({
 export const toggleShowOnHome = mutation({
   args: { id: v.id('testimonials') },
   handler: async (ctx, { id }) => {
-    await requireRole(ctx, ['root', 'admin']);
+    await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const doc = await ctx.db.get(id);
     if (!doc) throw new Error('Not found');
     await ctx.db.patch(id, { showOnHome: !doc.showOnHome });
@@ -171,7 +171,7 @@ export const toggleShowOnHome = mutation({
 export const unpublish = mutation({
   args: { submissionId: v.id('testimonialSubmissions') },
   handler: async (ctx, { submissionId }) => {
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const submission = await ctx.db.get(submissionId);
     if (!submission) throw new Error('Not found');
     if (submission.status !== 'published') throw new Error('Depoimento não está publicado');

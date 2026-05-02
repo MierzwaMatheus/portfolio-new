@@ -153,7 +153,7 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     await requirePlugin(ctx, 'portfolio');
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const now = Date.now();
     const id = await ctx.db.insert('projects', { ...args, createdAt: now });
     await markPendingChanges(ctx);
@@ -198,7 +198,7 @@ export const update = mutation({
   },
   handler: async (ctx, args) => {
     await requirePlugin(ctx, 'portfolio');
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const existing = await ctx.db.get(args.id);
     const { id, ...fields } = args;
     await ctx.db.patch(id, { ...fields, updatedAt: Date.now() });
@@ -211,7 +211,7 @@ export const remove = mutation({
   args: { id: v.id('projects') },
   handler: async (ctx, args) => {
     await requirePlugin(ctx, 'portfolio');
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const existing = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
     await markPendingChanges(ctx);
@@ -225,7 +225,7 @@ export const reorder = mutation({
   },
   handler: async (ctx, args) => {
     await requirePlugin(ctx, 'portfolio');
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     for (const { id, orderIndex } of args.items) {
       await ctx.db.patch(id, { orderIndex });
     }

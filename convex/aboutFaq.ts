@@ -27,7 +27,7 @@ export const create = mutation({
   },
   handler: async (ctx, args) => {
     await requirePlugin(ctx, 'about');
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const id = await ctx.db.insert('aboutFaq', { ...args, createdAt: Date.now() });
     await markPendingChanges(ctx);
     await logAudit(ctx, { eventType: 'admin.create', actorType: 'user', actorId: userId, targetType: 'aboutFaq', targetId: id, metadata: { label: args.question }, success: true });
@@ -50,7 +50,7 @@ export const update = mutation({
   },
   handler: async (ctx, args) => {
     await requirePlugin(ctx, 'about');
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const existing = await ctx.db.get(args.id);
     const { id, ...fields } = args;
     await ctx.db.patch(id, { ...fields, updatedAt: Date.now() });
@@ -63,7 +63,7 @@ export const remove = mutation({
   args: { id: v.id('aboutFaq') },
   handler: async (ctx, args) => {
     await requirePlugin(ctx, 'about');
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const existing = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
     await markPendingChanges(ctx);

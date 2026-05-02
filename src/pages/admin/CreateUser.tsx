@@ -20,6 +20,13 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
+import {
     Table,
     TableBody,
     TableCell,
@@ -29,56 +36,59 @@ import {
 } from "@/components/ui/table";
 import { toast } from "sonner";
 import { AdminLayout } from "./Dashboard";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useAction, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
-import { Loader2, UserPlus, Users, Trash2, Eye, EyeOff } from "lucide-react";
+import { Loader2, UserPlus, Users, Trash2, Copy, Check } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-// TODO: Convex backend lacks a server-side admin createUser mutation; needs to be added before this page works.
+const ROLES = [
+    { value: "admin", label: "Admin", desc: "Painel completo, exceto gerenciamento de usuários e logs" },
+    { value: "content-editor", label: "Editor de Conteúdo", desc: "Projetos, Blog, Currículo, Sobre, Home e Depoimentos" },
+    { value: "blog-editor", label: "Editor de Blog", desc: "Acesso apenas ao Blog" },
+    { value: "proposal-editor", label: "Editor de Propostas", desc: "Acesso apenas às Propostas" },
+] as const;
 
 const formSchema = z.object({
     email: z.string().email("Email inválido"),
-    password: z.string().min(6, "A senha deve ter no mínimo 6 caracteres").optional().or(z.literal('')),
-    confirmPassword: z.string().optional().or(z.literal('')),
     name: z.string().min(2, "O nome deve ter no mínimo 2 caracteres"),
-    role: z.enum(["root", "admin", "proposal-editor"]),
-}).refine((data) => {
-    if (data.password && data.password !== data.confirmPassword) {
-        return false;
-    }
-    return true;
-}, {
-    message: "As senhas não coincidem",
-    path: ["confirmPassword"],
+    role: z.enum(["admin", "content-editor", "blog-editor", "proposal-editor"]),
 });
 
 export default function CreateUser() {
     const [isLoading, setIsLoading] = useState(false);
-    const [showPassword, setShowPassword] = useState(false);
+    const [tempPassword, setTempPassword] = useState<string | null>(null);
+    const [copied, setCopied] = useState(false);
 
     const usersData = useQuery(api.users.list, {});
     const users = usersData ?? [];
     const isLoadingUsers = usersData === undefined;
 
+    const adminCreateUser = useAction(api.users.adminCreateUser);
     const removeRole = useMutation(api.users.removeRole);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
             email: "",
-            password: "",
-            confirmPassword: "",
             name: "",
-            role: "proposal-editor",
+            role: "content-editor",
         },
     });
 
-    async function onSubmit(_values: z.infer<typeof formSchema>) {
-        // TODO: Convex backend lacks a server-side admin createUser mutation; needs to be added before this page works.
-        toast.error("Funcionalidade ainda não implementada no backend Convex");
-        setIsLoading(false);
+    async function onSubmit(values: z.infer<typeof formSchema>) {
+        setIsLoading(true);
+        try {
+            const result = await adminCreateUser(values);
+            setTempPassword(result.tempPassword);
+            form.reset();
+            toast.success("Usuário criado com sucesso");
+        } catch (error: any) {
+            toast.error(error?.message ?? "Erro ao criar usuário");
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     const handleDelete = async (userId: string, userEmail: string) => {
@@ -91,6 +101,13 @@ export default function CreateUser() {
             console.error("Error deleting user:", error);
             toast.error("Erro ao remover usuário");
         }
+    };
+
+    const handleCopy = async () => {
+        if (!tempPassword) return;
+        await navigator.clipboard.writeText(tempPassword);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
     };
 
     return (
@@ -114,9 +131,6 @@ export default function CreateUser() {
                             <UserPlus className="w-5 h-5 text-neon-purple" />
                             Novo Usuário
                         </h2>
-                        <p className="text-yellow-400 text-xs mb-4">
-                            Funcionalidade ainda não implementada no backend Convex.
-                        </p>
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                                 <FormField
@@ -147,61 +161,12 @@ export default function CreateUser() {
                                     )}
                                 />
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <FormField
-                                        control={form.control}
-                                        name="password"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="text-white">Senha</FormLabel>
-                                                <div className="relative">
-                                                    <FormControl>
-                                                        <Input
-                                                            type={showPassword ? "text" : "password"}
-                                                            placeholder="******"
-                                                            {...field}
-                                                            className="bg-background/50 border-white/10 text-white pr-10"
-                                                        />
-                                                    </FormControl>
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => setShowPassword(!showPassword)}
-                                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
-                                                    >
-                                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                                    </button>
-                                                </div>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-
-                                    <FormField
-                                        control={form.control}
-                                        name="confirmPassword"
-                                        render={({ field }) => (
-                                            <FormItem>
-                                                <FormLabel className="text-white">Confirmar Senha</FormLabel>
-                                                <FormControl>
-                                                    <Input
-                                                        type={showPassword ? "text" : "password"}
-                                                        placeholder="******"
-                                                        {...field}
-                                                        className="bg-background/50 border-white/10 text-white"
-                                                    />
-                                                </FormControl>
-                                                <FormMessage />
-                                            </FormItem>
-                                        )}
-                                    />
-                                </div>
-
                                 <FormField
                                     control={form.control}
                                     name="role"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel className="text-white">Função (Role)</FormLabel>
+                                            <FormLabel className="text-white">Função</FormLabel>
                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                 <FormControl>
                                                     <SelectTrigger className="bg-background/50 border-white/10 text-white">
@@ -209,9 +174,12 @@ export default function CreateUser() {
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
-                                                    <SelectItem value="root">Root (Acesso Total)</SelectItem>
-                                                    <SelectItem value="admin">Admin (Acesso Admin)</SelectItem>
-                                                    <SelectItem value="proposal-editor">Editor de Propostas</SelectItem>
+                                                    {ROLES.map((r) => (
+                                                        <SelectItem key={r.value} value={r.value}>
+                                                            <span className="font-medium">{r.label}</span>
+                                                            <span className="text-xs text-muted-foreground ml-2">— {r.desc}</span>
+                                                        </SelectItem>
+                                                    ))}
                                                 </SelectContent>
                                             </Select>
                                             <FormMessage />
@@ -219,14 +187,18 @@ export default function CreateUser() {
                                     )}
                                 />
 
+                                <p className="text-xs text-gray-500">
+                                    Uma senha temporária será gerada automaticamente. Repasse-a ao novo usuário.
+                                </p>
+
                                 <Button type="submit" className="w-full bg-neon-purple hover:bg-neon-purple/90 text-white" disabled={isLoading}>
                                     {isLoading ? (
                                         <>
                                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                            Processando...
+                                            Criando...
                                         </>
                                     ) : (
-                                        "Salvar Usuário"
+                                        "Criar Usuário"
                                     )}
                                 </Button>
                             </form>
@@ -296,6 +268,38 @@ export default function CreateUser() {
                     </div>
                 </div>
             </div>
+
+            <Dialog open={!!tempPassword} onOpenChange={(open) => { if (!open) setTempPassword(null); }}>
+                <DialogContent className="bg-card border border-white/10 text-white">
+                    <DialogHeader>
+                        <DialogTitle className="text-white">Usuário criado com sucesso</DialogTitle>
+                        <DialogDescription className="text-gray-400">
+                            Repasse a senha temporária abaixo ao novo usuário. Ela não será exibida novamente.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                            <code className="flex-1 bg-background/60 border border-white/10 rounded-md px-4 py-3 font-mono text-lg tracking-widest text-neon-purple">
+                                {tempPassword}
+                            </code>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="border-white/10 text-white hover:bg-white/10 shrink-0"
+                                onClick={handleCopy}
+                            >
+                                {copied ? <Check className="w-4 h-4 text-green-400" /> : <Copy className="w-4 h-4" />}
+                            </Button>
+                        </div>
+                        <Button
+                            className="w-full bg-neon-purple hover:bg-neon-purple/90 text-white"
+                            onClick={() => setTempPassword(null)}
+                        >
+                            Entendido
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </AdminLayout>
     );
 }

@@ -61,7 +61,7 @@ export async function getUserRole(
 
 export async function requireRole(
   ctx: QueryCtx | MutationCtx,
-  allowedRoles: Array<"root" | "admin" | "proposal-editor">
+  allowedRoles: Array<"root" | "admin" | "content-editor" | "blog-editor" | "proposal-editor">
 ) {
   const userId = await getAuthUserId(ctx);
   if (!userId) throw new Error("Unauthorized");

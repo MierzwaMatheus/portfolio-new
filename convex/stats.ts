@@ -4,7 +4,7 @@ import { requireRole } from './auth';
 export const getDashboard = query({
   args: {},
   handler: async (ctx) => {
-    await requireRole(ctx, ['root', 'admin', 'proposal-editor']);
+    await requireRole(ctx, ['root', 'admin', 'content-editor', 'blog-editor']);
 
     const [
       projectsTotal,

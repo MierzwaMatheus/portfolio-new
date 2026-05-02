@@ -258,7 +258,7 @@ export const list = query({
     ),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    await requireRole(ctx, ['root', 'admin', 'content-editor']);
 
     const all = await ctx.db
       .query('testimonialSubmissions')
@@ -281,7 +281,7 @@ export const list = query({
 export const approve = mutation({
   args: { id: v.id('testimonialSubmissions') },
   handler: async (ctx, { id }) => {
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const doc = await ctx.db.get(id);
     if (!doc) throw new Error('Not found');
 
@@ -306,7 +306,7 @@ export const approve = mutation({
 export const reject = mutation({
   args: { id: v.id('testimonialSubmissions') },
   handler: async (ctx, { id }) => {
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const doc = await ctx.db.get(id);
     if (!doc) throw new Error('Not found');
 
@@ -349,7 +349,7 @@ export const reject = mutation({
 export const restore = mutation({
   args: { id: v.id('testimonialSubmissions') },
   handler: async (ctx, { id }) => {
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const doc = await ctx.db.get(id);
     if (!doc) throw new Error('Not found');
 
@@ -408,7 +408,7 @@ async function createAvatarMetadata(
 export const publish = mutation({
   args: { id: v.id('testimonialSubmissions') },
   handler: async (ctx, { id }) => {
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const doc = await ctx.db.get(id);
     if (!doc) throw new Error('Not found');
     if (doc.type !== 'text' || !doc.text) {
@@ -469,7 +469,7 @@ export const publish = mutation({
 export const approveAndPublish = mutation({
   args: { id: v.id('testimonialSubmissions') },
   handler: async (ctx, { id }) => {
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const doc = await ctx.db.get(id);
     if (!doc) throw new Error('Not found');
     if (doc.type !== 'text' || !doc.text) {
@@ -530,7 +530,7 @@ export const approveAndPublish = mutation({
 export const getDailyVideoUsage = query({
   args: {},
   handler: async (ctx) => {
-    await requireRole(ctx, ['root', 'admin']);
+    await requireRole(ctx, ['root', 'admin', 'content-editor']);
 
     const dayStart = todayStart();
     const todaySubmissions = await ctx.db

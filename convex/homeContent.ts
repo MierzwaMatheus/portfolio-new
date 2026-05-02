@@ -27,7 +27,7 @@ export const set = mutation({
     value: v.any(),
   },
   handler: async (ctx, args) => {
-    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const now = Date.now();
     const existing = await ctx.db
       .query('homeContent')

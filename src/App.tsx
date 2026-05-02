@@ -50,6 +50,7 @@ import AdminTestimonials from "./pages/admin/Testimonials";
 import TestimonialsPage from "./pages/Testimonials";
 import { PluginsProvider } from "./contexts/PluginsContext";
 import { PluginRoute } from "./components/PluginRoute";
+import { ChangePasswordModal } from "./components/ChangePasswordModal";
 import Playground from "./pages/Playground";
 import ContactWizardDemo from "./pages/playground/ContactWizardDemo";
 import ProposalDemo from "./pages/playground/ProposalDemo";
@@ -107,47 +108,49 @@ function Router() {
 
   if (isAdminRoute) {
     return (
+      <>
+      <ChangePasswordModal />
       <Switch>
         <Route path="/admin/dashboard">
           <ProtectedRoute
             component={Dashboard}
-            allowedRoles={["root", "admin"]}
+            allowedRoles={["root", "admin", "content-editor", "blog-editor"]}
           />
         </Route>
         <Route path="/admin">
           <ProtectedRoute
             component={Dashboard}
-            allowedRoles={["root", "admin"]}
+            allowedRoles={["root", "admin", "content-editor", "blog-editor"]}
           />
         </Route>
         <Route path="/admin/projects">
           <ProtectedRoute
             component={() => <PluginRoute pluginId="portfolio"><AdminProjects /></PluginRoute>}
-            allowedRoles={["root", "admin"]}
+            allowedRoles={["root", "admin", "content-editor"]}
           />
         </Route>
         <Route path="/admin/blog">
           <ProtectedRoute
             component={() => <PluginRoute pluginId="blog"><AdminBlog /></PluginRoute>}
-            allowedRoles={["root", "admin"]}
+            allowedRoles={["root", "admin", "content-editor", "blog-editor"]}
           />
         </Route>
         <Route path="/admin/resume">
           <ProtectedRoute
             component={() => <PluginRoute pluginId="resume"><AdminResume /></PluginRoute>}
-            allowedRoles={["root", "admin"]}
+            allowedRoles={["root", "admin", "content-editor"]}
           />
         </Route>
         <Route path="/admin/home">
           <ProtectedRoute
             component={AdminHome}
-            allowedRoles={["root", "admin"]}
+            allowedRoles={["root", "admin", "content-editor"]}
           />
         </Route>
         <Route path="/admin/about">
           <ProtectedRoute
             component={() => <PluginRoute pluginId="about"><AdminAbout /></PluginRoute>}
-            allowedRoles={["root", "admin"]}
+            allowedRoles={["root", "admin", "content-editor"]}
           />
         </Route>
         <Route path="/admin/contact">
@@ -198,10 +201,11 @@ function Router() {
         <Route path="/admin/depoimentos">
           <ProtectedRoute
             component={() => <PluginRoute pluginId="testimonials"><AdminTestimonials /></PluginRoute>}
-            allowedRoles={["root", "admin"]}
+            allowedRoles={["root", "admin", "content-editor"]}
           />
         </Route>
       </Switch>
+      </>
     );
   }
 

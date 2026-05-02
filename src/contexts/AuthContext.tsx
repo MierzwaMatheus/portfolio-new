@@ -8,6 +8,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   roles: string[];
+  mustChangePassword: boolean;
   checkRole: (allowedKeys: string[]) => boolean;
   logout: () => Promise<void>;
 }
@@ -24,7 +25,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isAuthenticated ? {} : "skip"
   );
 
+  const mustChangePasswordData = useQuery(
+    api.users.getMustChangePassword,
+    isAuthenticated ? {} : "skip"
+  );
+
   const roles: string[] = myRole ? [myRole as string] : [];
+  const mustChangePassword = mustChangePasswordData ?? false;
 
   // Loading until auth is resolved AND, if authenticated, role has been fetched
   const isLoading =
@@ -47,6 +54,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated,
         isLoading,
         roles,
+        mustChangePassword,
         checkRole,
         logout,
       }}

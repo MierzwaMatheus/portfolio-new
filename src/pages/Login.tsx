@@ -19,9 +19,11 @@ export default function Login() {
 
   // Redirect after login resolves authenticated state with role
   useEffect(() => {
-    if (!isAuthLoading && isAuthenticated) {
-      if (roles.includes("root") || roles.includes("admin")) {
+    if (!isAuthLoading && isAuthenticated && roles.length > 0) {
+      if (roles.includes("root") || roles.includes("admin") || roles.includes("content-editor")) {
         setLocation("/admin/dashboard");
+      } else if (roles.includes("blog-editor")) {
+        setLocation("/admin/blog");
       } else if (roles.includes("proposal-editor")) {
         setLocation("/admin/proposals");
       } else {
