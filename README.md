@@ -616,6 +616,48 @@ O projeto utiliza componentes do shadcn/ui, uma coleção de componentes React r
 - Sistema de temas preparado (dark mode implementado)
 - Imagens armazenadas por ID no Convex Storage (não por URL)
 
+## 🧩 Sistema de Plugins
+
+O projeto possui um sistema de plugins que permite ativar ou desativar funcionalidades independentemente, sem afetar o restante do sistema. Ideal para quem faz fork do projeto e não precisa de tudo.
+
+### Como funciona
+
+Cada plugin controla:
+- **Backend**: funções Convex retornam vazio (queries) ou lançam erro (mutations) quando desativado — mesmo acesso direto via SDK é bloqueado
+- **Frontend público**: links somem da sidebar automaticamente, rotas retornam 404
+- **Frontend admin**: itens da sidebar admin desaparecem, rotas retornam 404
+
+O estado dos plugins é armazenado na tabela `homeContent` com chaves `plugin:<id>:enabled`. Em produção, o estado é buscado uma única vez via `fetch('/data/plugins.json')` (gerado no build) e cacheado pelo browser — sem requests em tempo real ao Convex.
+
+### Plugins disponíveis
+
+| Plugin | Rotas admin | Rotas públicas | minRole |
+|--------|-------------|----------------|---------|
+| `contact-wizard` | `/admin/contatos`, `/admin/contact` | — | admin |
+| `proposals` | `/admin/proposals` | `/proposta/:id`, `/proposta/:slug/aceitar` | admin |
+| `payments` | `/admin/payment-links` | `/checkout/:link`, `/payment-success/:link` | admin |
+| `blog` | `/admin/blog` | `/blog`, `/blog/:slug` | admin |
+| `portfolio` | `/admin/projects` | `/portfolio`, `/portfolio/:slug` | admin |
+| `resume` | `/admin/resume` | `/curriculo` | admin |
+| `about` | `/admin/about` | `/sobre` | admin |
+| `ai-resumes` | `/admin/ai-resumes` | — | root |
+| `audit-log` | `/admin/logs` | — | root |
+| `media-manager` | — | — | root |
+| `i18n` | — | — | root |
+
+### Gerenciamento
+
+Acesse `/admin/plugins` para ativar ou desativar plugins via interface. A mudança só entra em vigor para visitantes públicos após um novo deploy (que regenera `plugins.json`). No admin, a mudança é imediata.
+
+### Adicionando um novo plugin
+
+1. Adicionar entrada em `convex/pluginRegistry.ts`
+2. Adicionar `await requirePlugin(ctx, 'meu-plugin')` nas mutations e `if (!(await isPluginEnabled(ctx, 'meu-plugin'))) return []` nas queries públicas
+3. Adicionar `pluginId: 'meu-plugin'` no navItem do `Dashboard.tsx`
+4. Envolver a rota em `<PluginRoute pluginId="meu-plugin">` no `App.tsx`
+
+---
+
 ## 🆕 Funcionalidades Recentes
 
 ### Migração Supabase → Convex
