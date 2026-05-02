@@ -26,6 +26,8 @@ import type * as imageFolders from "../imageFolders.js";
 import type * as images from "../images.js";
 import type * as importCsv from "../importCsv.js";
 import type * as migration from "../migration.js";
+import type * as playground from "../playground.js";
+import type * as playgroundAi from "../playgroundAi.js";
 import type * as pluginRegistry from "../pluginRegistry.js";
 import type * as plugins from "../plugins.js";
 import type * as posts from "../posts.js";
@@ -68,6 +70,8 @@ declare const fullApi: ApiFromModules<{
   images: typeof images;
   importCsv: typeof importCsv;
   migration: typeof migration;
+  playground: typeof playground;
+  playgroundAi: typeof playgroundAi;
   pluginRegistry: typeof pluginRegistry;
   plugins: typeof plugins;
   posts: typeof posts;

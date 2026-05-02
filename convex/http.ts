@@ -3,6 +3,7 @@ import { httpAction } from './_generated/server';
 import { internal } from './_generated/api';
 import { handleImport } from './importCsv';
 import { auth } from './auth';
+import { aiProxy } from './playgroundAi';
 
 const http = httpRouter();
 
@@ -175,5 +176,8 @@ http.route({
     return new Response('ok', { status: 200 });
   }),
 });
+
+http.route({ path: '/playground/ai-proxy', method: 'POST', handler: aiProxy });
+http.route({ path: '/playground/ai-proxy', method: 'OPTIONS', handler: aiProxy });
 
 export default http;

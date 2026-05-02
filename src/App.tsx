@@ -48,12 +48,44 @@ import AdminContactRequests from "./pages/admin/ContactRequests";
 import AdminPlugins from "./pages/admin/Plugins";
 import { PluginsProvider } from "./contexts/PluginsContext";
 import { PluginRoute } from "./components/PluginRoute";
+import Playground from "./pages/Playground";
+import ContactWizardDemo from "./pages/playground/ContactWizardDemo";
+import ProposalDemo from "./pages/playground/ProposalDemo";
+import BlogPostDemo from "./pages/playground/BlogPostDemo";
+import PaymentLinkDemo from "./pages/playground/PaymentLinkDemo";
+import AiCvDemo from "./pages/playground/AiCvDemo";
 
 const translationService = new ConvexTranslationService(convex);
 
 function Router() {
   const [location] = useLocation();
   const isAdminRoute = location.startsWith("/admin");
+  const isPlaygroundRoute = location.startsWith("/playground");
+
+  if (isPlaygroundRoute) {
+    return (
+      <Switch>
+        <Route path="/playground">
+          <PluginRoute pluginId="playground"><Playground /></PluginRoute>
+        </Route>
+        <Route path="/playground/contact">
+          <PluginRoute pluginId="playground"><ContactWizardDemo /></PluginRoute>
+        </Route>
+        <Route path="/playground/proposal">
+          <PluginRoute pluginId="playground"><ProposalDemo /></PluginRoute>
+        </Route>
+        <Route path="/playground/blog">
+          <PluginRoute pluginId="playground"><BlogPostDemo /></PluginRoute>
+        </Route>
+        <Route path="/playground/payment">
+          <PluginRoute pluginId="playground"><PaymentLinkDemo /></PluginRoute>
+        </Route>
+        <Route path="/playground/ai-cv">
+          <PluginRoute pluginId="playground"><AiCvDemo /></PluginRoute>
+        </Route>
+      </Switch>
+    );
+  }
 
   if (isAdminRoute) {
     return (

@@ -38,4 +38,11 @@ crons.daily(
   internal.audit.anonymizeOldIps,
 );
 
+// Clean up expired playground logs daily
+crons.daily(
+  'cleanupExpiredPlaygroundLogs',
+  { hourUTC: 3, minuteUTC: 30 },
+  internal.playground.cleanupExpired,
+);
+
 export default crons;

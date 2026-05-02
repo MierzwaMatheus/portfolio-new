@@ -9,7 +9,8 @@ export type PluginId =
   | 'ai-resumes'
   | 'audit-log'
   | 'media-manager'
-  | 'i18n';
+  | 'i18n'
+  | 'playground';
 
 export interface PluginDefinition {
   id: PluginId;
@@ -126,6 +127,16 @@ export const PLUGIN_REGISTRY: PluginDefinition[] = [
     defaultEnabled: true,
     tables: [],
     adminRoutes: [],
+    minRole: 'root',
+  },
+  {
+    id: 'playground',
+    label: 'Playground',
+    description: 'Área pública de demonstração das funcionalidades do admin',
+    defaultEnabled: true,
+    tables: ['playgroundAuditLog'],
+    adminRoutes: [],
+    publicRoutes: ['/playground'],
     minRole: 'root',
   },
 ];

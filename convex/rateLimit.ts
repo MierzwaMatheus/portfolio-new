@@ -6,6 +6,8 @@ const WINDOWS: Record<string, number> = {
   proposal_password: 15 * 60 * 1000,
   proposal_accept: 60 * 60 * 1000,
   webhook_invalid: 60 * 60 * 1000,
+  playground_log: 60 * 60 * 1000,
+  playground_ai: 24 * 60 * 60 * 1000,
 };
 
 const LIMITS: Record<string, { perKey: number; blockDuration: number }> = {
@@ -13,11 +15,15 @@ const LIMITS: Record<string, { perKey: number; blockDuration: number }> = {
   proposal_password: { perKey: 5, blockDuration: 30 * 60 * 1000 },
   proposal_accept: { perKey: 3, blockDuration: 60 * 60 * 1000 },
   webhook_invalid: { perKey: 20, blockDuration: 60 * 60 * 1000 },
+  playground_log: { perKey: 30, blockDuration: 60 * 60 * 1000 },
+  playground_ai: { perKey: 5, blockDuration: 24 * 60 * 60 * 1000 },
 };
+
+export type RateLimitType = 'login' | 'proposal_password' | 'proposal_accept' | 'webhook_invalid' | 'playground_log' | 'playground_ai';
 
 export async function checkRateLimit(
   ctx: QueryCtx | MutationCtx,
-  type: 'login' | 'proposal_password' | 'proposal_accept' | 'webhook_invalid',
+  type: RateLimitType,
   identifier: string,
 ): Promise<{ allowed: boolean; blockedUntil?: number }> {
   const key = `${type}:${identifier}`;
@@ -49,7 +55,7 @@ export async function checkRateLimit(
 
 export async function recordRateLimitAttempt(
   ctx: MutationCtx,
-  type: 'login' | 'proposal_password' | 'proposal_accept' | 'webhook_invalid',
+  type: RateLimitType,
   identifier: string,
 ) {
   const key = `${type}:${identifier}`;
@@ -90,7 +96,7 @@ export async function recordRateLimitAttempt(
 
 export async function resetRateLimit(
   ctx: MutationCtx,
-  type: 'login' | 'proposal_password' | 'proposal_accept' | 'webhook_invalid',
+  type: RateLimitType,
   identifier: string,
 ) {
   const key = `${type}:${identifier}`;

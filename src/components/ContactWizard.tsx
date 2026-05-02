@@ -404,10 +404,12 @@ export function ContactWizard({
   initialFlow,
   sourceContext,
   onClose,
+  onSubmitOverride,
 }: {
   initialFlow?: FlowType;
   sourceContext?: string;
   onClose: () => void;
+  onSubmitOverride?: (data: { type: FlowType; answers: Record<string, string>; contactInfo: ContactInfo }) => Promise<void>;
 }) {
   const { t, tValue } = useTranslation();
   const submitMutation = useMutation(api.contactRequests.submit);
@@ -468,14 +470,18 @@ export function ContactWizard({
     if (!state.flow || !state.contactInfo.name || !state.contactInfo.email) return;
     dispatch({ type: "SUBMIT_START" });
     try {
-      await submitMutation({
-        type: state.flow,
-        sourceContext,
-        answers: state.answers,
-        contactInfo: state.contactInfo,
-        ipAddress: undefined,
-        userAgent: navigator.userAgent,
-      });
+      if (onSubmitOverride) {
+        await onSubmitOverride({ type: state.flow, answers: state.answers, contactInfo: state.contactInfo });
+      } else {
+        await submitMutation({
+          type: state.flow,
+          sourceContext,
+          answers: state.answers,
+          contactInfo: state.contactInfo,
+          ipAddress: undefined,
+          userAgent: navigator.userAgent,
+        });
+      }
       dispatch({ type: "SUBMIT_SUCCESS" });
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";

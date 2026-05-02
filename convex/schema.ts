@@ -460,6 +460,8 @@ export default defineSchema({
       v.literal('proposal_accept'),
       v.literal('webhook_invalid'),
       v.literal('contact_submit'),
+      v.literal('playground_log'),
+      v.literal('playground_ai'),
     ),
     attemptCount: v.number(),
     firstAttemptAt: v.number(),
@@ -520,6 +522,21 @@ export default defineSchema({
     .index('by_type', ['type'])
     .index('by_createdAt', ['createdAt'])
     .index('by_status_and_createdAt', ['status', 'createdAt']),
+
+  // ── playgroundAuditLog ────────────────────────────────────────────────────
+  playgroundAuditLog: defineTable({
+    sessionId: v.string(),
+    eventType: v.string(),
+    metadata: v.optional(v.any()),
+    ipAddress: v.optional(v.string()),
+    userAgent: v.optional(v.string()),
+    success: v.boolean(),
+    createdAt: v.number(),
+    expiresAt: v.number(),
+  })
+    .index('by_createdAt', ['createdAt'])
+    .index('by_sessionId', ['sessionId'])
+    .index('by_expiresAt', ['expiresAt']),
 
   // ── auditLog ───────────────────────────────────────────────────────────────
   auditLog: defineTable({
