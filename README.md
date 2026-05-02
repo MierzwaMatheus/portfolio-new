@@ -402,18 +402,27 @@ O projeto utiliza Convex como backend reativo. Certifique-se de configurar:
 1. **Deploy do schema** com as collections:
    - `projects` - Projetos do portfólio
    - `posts` - Posts do blog
-   - `resumeItems` - Itens do currículo
+   - `resumeItems` - Itens do currículo (por categoria)
    - `proposals` - Propostas comerciais
    - `proposalVersions` - Versões históricas das propostas
-   - `proposalSessions` - Sessões temporárias de acesso
+   - `proposalSessions` - Sessões temporárias de acesso via senha
    - `proposalAcceptances` - Registros de aceites eletrônicos (com `signatureStorageId`)
-   - `services` - Serviços/habilidades
-   - `testimonials` - Depoimentos
-   - `content` - Conteúdo geral (chave-valor)
-   - `contactInfo` - Informações de contato
-   - `userAppRoles` - Roles de usuários
+   - `services` - Serviços/habilidades da página inicial
+   - `testimonials` - Depoimentos curados pelo admin
+   - `testimonialSubmissions` - Depoimentos enviados por clientes via wizard (pendentes de aprovação)
+   - `homeContent` - Conteúdo chave-valor (inclui estado dos plugins)
+   - `contactInfo` - Informações de contato e redes sociais
+   - `contactRequests` - Solicitações de contato recebidas via wizard
+   - `userRoles` - Roles dos usuários (root, admin, content-editor, blog-editor, proposal-editor)
    - `aiGeneratedResumes` - CVs gerados por IA
    - `auditLogs` - Logs de auditoria administrativa
+   - `checkouts` - Sessões de checkout (Asaas/Stripe)
+   - `rateLimits` - Controle de rate limiting por IP/fingerprint
+   - `imageFolders` - Pastas do gerenciador de mídia
+   - `images` - Metadados de imagens do Convex Storage
+   - `playgroundLogs` - Eventos de uso da área de demonstrações (expiram em 24h)
+   - `aboutDailyRoutines` - Itens da rotina diária (seção Sobre)
+   - `aboutFaqs` - FAQ da seção Sobre
 
 2. **Convex Storage** para upload de imagens e assinaturas
 
@@ -631,19 +640,30 @@ O estado dos plugins é armazenado na tabela `homeContent` com chaves `plugin:<i
 
 ### Plugins disponíveis
 
-| Plugin | Rotas admin | Rotas públicas | minRole |
-|--------|-------------|----------------|---------|
-| `contact-wizard` | `/admin/contatos`, `/admin/contact` | — | admin |
-| `proposals` | `/admin/proposals` | `/proposta/:id`, `/proposta/:slug/aceitar` | admin |
-| `payments` | `/admin/payment-links` | `/checkout/:link`, `/payment-success/:link` | admin |
-| `blog` | `/admin/blog` | `/blog`, `/blog/:slug` | admin |
-| `portfolio` | `/admin/projects` | `/portfolio`, `/portfolio/:slug` | admin |
-| `resume` | `/admin/resume` | `/curriculo` | admin |
-| `about` | `/admin/about` | `/sobre` | admin |
-| `ai-resumes` | `/admin/ai-resumes` | — | root |
-| `audit-log` | `/admin/logs` | — | root |
-| `media-manager` | — | — | root |
-| `i18n` | — | — | root |
+| Plugin | Rotas admin | Rotas públicas | minRole | Sub-plugin de |
+|--------|-------------|----------------|---------|---------------|
+| `contact-wizard` | `/admin/contatos`, `/admin/contact` | — | admin | — |
+| `proposals` | `/admin/proposals` | `/proposta/:id`, `/proposta/:slug/aceitar` | admin | — |
+| `payments` | `/admin/payment-links` | `/checkout/:link`, `/payment-success/:link` | admin | — |
+| `blog` | `/admin/blog` | `/blog`, `/blog/:slug` | admin | — |
+| `portfolio` | `/admin/projects` | `/portfolio`, `/portfolio/:slug` | admin | — |
+| `resume` | `/admin/resume` | `/curriculo` | admin | — |
+| `about` | `/admin/about` | `/sobre` | admin | — |
+| `ai-resumes` | `/admin/ai-resumes` | — | root | — |
+| `audit-log` | `/admin/logs` | — | root | — |
+| `media-manager` | — | — | root | — |
+| `i18n` | — | — | root | — |
+| `playground` | — | `/playground` | root | — |
+| `testimonials` | `/admin/depoimentos` | `/depoimentos` | admin | — |
+| `testimonials-intake` | — | — | admin | `testimonials` |
+
+### Sub-plugins
+
+Alguns plugins têm funcionalidades opcionais que podem ser controladas de forma independente. Esses são chamados de **sub-plugins** — eles ficam aninhados abaixo do plugin pai na interface de gerenciamento e só fazem sentido quando o pai está ativo.
+
+O sub-plugin `testimonials-intake` é o exemplo atual: controla exclusivamente o **formulário público de envio de depoimentos** (wizard de submissão, upload de vídeo, fila de moderação). Ele pode ser desativado enquanto o plugin `testimonials` permanece ativo, o que mantém a exibição pública de depoimentos mas remove o canal de envio por visitantes. Útil quando o admin quer pausar novos envios sem tirar os depoimentos já publicados do ar.
+
+Para criar um sub-plugin, basta adicionar `parentId: 'id-do-pai'` na definição do plugin em `convex/pluginRegistry.ts`.
 
 ### Gerenciamento
 
@@ -737,6 +757,82 @@ Sistema completo de aceite com validade jurídica:
 - **PDF do contrato** com assinatura, cláusulas obrigatórias e foro
 - **Imutabilidade**: Propostas aceitas são bloqueadas para edição/exclusão
 - **Versionamento automático** ao editar propostas não aceitas
+
+### Gerenciamento de Usuários
+
+O sistema de usuários vai além da criação básica. Na primeira vez que o projeto é acessado sem nenhum usuário root cadastrado, o sistema exibe automaticamente uma tela de setup inicial para criar a conta root — não é possível acessar o admin sem isso. A partir daí, apenas o root pode criar novos usuários (`/admin/users/new`), que são criados com email e senha e um role pré-definido. Todo usuário criado pelo admin recebe uma flag de **troca de senha obrigatória no primeiro login**: o sistema bloqueia o acesso até que a troca seja realizada, evitando que credenciais temporárias fiquem ativas.
+
+Os roles disponíveis são: `root` (acesso total), `admin` (acesso geral), `content-editor`, `blog-editor` e `proposal-editor`.
+
+---
+
+### Wizard de Contato
+
+O portfólio tem um fluxo de contato adaptativo acessível pela sidebar pública. Em vez de um formulário simples, é um wizard em etapas que coleta nome, objetivo, orçamento e prazo antes de enviar. O envio tem **rate limiting por IP** para evitar spam. Cada solicitação recebida aparece no painel admin em `/admin/contatos`, onde o admin pode marcar como lida, atualizar o status (pendente / em andamento / concluída) e adicionar notas internas. Uma notificação Telegram é disparada automaticamente ao receber uma nova solicitação.
+
+---
+
+### Wizard de Depoimentos
+
+Clientes podem enviar depoimentos de forma autônoma via wizard público, sem precisar de login. O wizard aceita depoimento em texto ou em vídeo (upload direto para o Convex Storage). Há uma cota diária de uploads de vídeo para evitar abuso. Cada envio vai para uma fila de aprovação em `/admin/testimonials` (aba "Submissões"), onde o admin pode aprovar, rejeitar ou aprovar e publicar diretamente. Quando publicado, o depoimento passa a aparecer na área pública. Uma notificação Telegram é disparada a cada nova submissão.
+
+---
+
+### Seção Sobre (`/sobre`)
+
+A seção Sobre é completamente gerenciável via admin (`/admin/about`). Além do texto de apresentação, o admin pode gerenciar dois blocos de conteúdo adicionais:
+- **Rotina diária**: lista de atividades e hábitos do dia a dia, exibida na página pública
+- **FAQ**: perguntas e respostas frequentes sobre o trabalho, também exibidas publicamente
+
+---
+
+### Gerenciador de Mídia
+
+Todas as imagens usadas no sistema ficam centralizadas no Convex Storage. O gerenciador de mídia permite organizar as imagens em **pastas com hierarquia**, fazer upload via interface e reutilizar imagens já enviadas em qualquer parte do sistema (projetos, depoimentos, etc.) pelo seletor `ImagePicker`. As imagens são referenciadas por ID — nunca por URL direta — o que garante que o Storage Convex permaneça como fonte única de verdade.
+
+---
+
+### Checkout com Asaas (Boleto/PIX)
+
+Além do Stripe, o sistema tem integração com o **Asaas** para geração de cobranças via boleto bancário e PIX. O fluxo funciona assim: o admin cria um checkout com valor e dados do cliente; o sistema cria o cliente no Asaas (ou reutiliza se já existir) e gera a cobrança. O cliente acessa o link de checkout em `/checkout/:link`, vê os dados da cobrança e acompanha o status. Quando o pagamento é confirmado pelo webhook do Asaas, o sistema marca o checkout como pago automaticamente e dispara uma notificação Telegram ao admin.
+
+---
+
+### Área de Playground (`/playground`)
+
+O Playground é uma área pública de demonstração onde visitantes podem experimentar funcionalidades do sistema sem precisar criar conta. Cada demo é isolada e usa dados fictícios. O uso de IA no playground é controlado por rate limiting por IP para limitar custos. Os eventos de uso são registrados anonimamente e expiram em 24h.
+
+---
+
+### Soft Delete em Todo o Sistema
+
+Nenhum dado é apagado permanentemente por padrão. Todas as entidades gerenciáveis (projetos, posts, propostas, depoimentos, itens de currículo, serviços, imagens, checkouts, etc.) usam **soft delete**: ao excluir, o registro é marcado como deletado e some das listagens, mas permanece no banco. O admin pode visualizar os itens deletados na página de auditoria e restaurá-los se necessário. A exclusão permanente é uma ação separada, explícita, com confirmação.
+
+---
+
+### Tarefas Automáticas de Manutenção
+
+O sistema executa rotinas automáticas via cron jobs do Convex para manter o banco limpo:
+- Sessões expiradas de propostas são removidas diariamente
+- Entradas de rate limiting expiradas são limpas diariamente
+- Logs de auditoria com mais de 2 anos são removidos semanalmente
+- IPs nos logs de auditoria com mais de 90 dias são anonimizados diariamente (conformidade com LGPD)
+- Checkouts pendentes há mais de 24h são expirados a cada hora
+- Logs de uso do playground são limpos diariamente
+
+---
+
+### Conformidade com LGPD nas Propostas
+
+O módulo de propostas tem dois recursos de conformidade com a LGPD: o titular dos dados pode solicitar o **apagamento dos seus dados pessoais** de uma proposta aceita, e também pode requisitar a **exportação de todos os seus dados** armazenados no sistema. Ambas as ações são rastreadas nos logs de auditoria.
+
+---
+
+### Setup Inicial com Seed
+
+Ao criar um novo ambiente, o admin pode executar o seed para popular o banco com dados iniciais de exemplo (informações de contato, serviços e conteúdo da home), acelerando a configuração inicial do portfólio.
+
+---
 
 ## 🔄 Próximas Melhorias
 
