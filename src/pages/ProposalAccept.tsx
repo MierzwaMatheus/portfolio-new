@@ -55,8 +55,8 @@ export default function ProposalAccept() {
   const [showContractModal, setShowContractModal] = useState(false);
   const [isSigning, setIsSigning] = useState(false);
 
-  const acceptMutation = useMutation(api.proposals.accept);
   const generateUploadUrl = useMutation(api.proposals.generateSignatureUploadUrl);
+  const CONVEX_SITE_URL = (import.meta.env.VITE_CONVEX_URL as string)?.replace('.convex.cloud', '.convex.site');
   const contactInfo = useQuery(api.contactInfo.get);
 
   // Recover token from sessionStorage
@@ -424,18 +424,31 @@ export default function ProposalAccept() {
         // Non-fatal: proceed without stored signature
       }
 
+      let serverContentHash: string | undefined;
+      let serverIpAddress: string | undefined;
       try {
-        await acceptMutation({
-          slug: slugStr,
-          token: sessionToken ?? undefined,
-          clientName: clientName.trim(),
-          clientDocument: clientDocument.replace(/\D/g, ''),
-          clientEmail: clientEmail.trim(),
-          clientRole: clientRole.trim() || undefined,
-          clientDeclaration: clientDeclaration.trim() || undefined,
-          userAgent: userAgent || "unknown",
-          signatureStorageId: signatureStorageId as any,
+        const acceptRes = await fetch(`${CONVEX_SITE_URL}/api/proposal/accept`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            slug: slugStr,
+            token: sessionToken ?? undefined,
+            clientName: clientName.trim(),
+            clientDocument: clientDocument.replace(/\D/g, ''),
+            clientEmail: clientEmail.trim(),
+            clientRole: clientRole.trim() || undefined,
+            clientDeclaration: clientDeclaration.trim() || undefined,
+            userAgent: userAgent || "unknown",
+            signatureStorageId: signatureStorageId ?? undefined,
+          }),
         });
+        if (!acceptRes.ok) {
+          const data = await acceptRes.json().catch(() => ({}));
+          throw new Error((data as { error?: string }).error ?? 'ERROR');
+        }
+        const acceptData = await acceptRes.json() as { contentHash?: string; ipAddress?: string };
+        serverContentHash = acceptData.contentHash;
+        serverIpAddress = acceptData.ipAddress;
       } catch (error: any) {
         const msg = String(error?.message ?? "");
         if (msg.includes('Already accepted') || msg.includes('já foi aceita')) {
@@ -459,9 +472,9 @@ export default function ProposalAccept() {
         client_role: clientRole.trim() || undefined,
         client_declaration: clientDeclaration.trim() || undefined,
         accepted_at: new Date(acceptedAtTs).toISOString(),
-        ip_address: null,
+        ip_address: serverIpAddress ?? null,
         user_agent: userAgent || null,
-        content_hash: undefined,
+        content_hash: serverContentHash,
         proposal_version: String(rawProposal?.version ?? 1),
       };
 

@@ -391,7 +391,7 @@ export const restore = mutation({
   },
 });
 
-export const createSession = mutation({
+export const _createSessionInternal = internalMutation({
   args: {
     slug: v.string(),
     password: v.string(),
@@ -440,7 +440,7 @@ export const createSession = mutation({
   },
 });
 
-export const accept = mutation({
+export const _acceptInternal = internalMutation({
   args: {
     slug: v.string(),
     token: v.optional(v.string()),
@@ -449,6 +449,7 @@ export const accept = mutation({
     clientEmail: v.string(),
     clientRole: v.optional(v.string()),
     clientDeclaration: v.optional(v.string()),
+    ipAddress: v.string(),
     userAgent: v.string(),
     signatureStorageId: v.optional(v.id('_storage')),
   },
@@ -513,7 +514,7 @@ export const accept = mutation({
       contentSnapshot,
       contentSnapshotVersion: 'v2-server',
       contentHash,
-      ipAddress: 'client-reported',
+      ipAddress: args.ipAddress,
       userAgent: args.userAgent.substring(0, 512),
       signatureStorageId: args.signatureStorageId,
       acceptedAt: now,
@@ -542,7 +543,7 @@ export const accept = mutation({
       message: `✅ <b>Proposta aceita!</b>\n\nCliente: ${escapeTgHtml(args.clientName)}\nEmail: ${escapeTgHtml(args.clientEmail)}\nProposta: <code>${escapeTgHtml(proposal.slug)}</code>\nValor: R$ ${proposal.investmentValue.toFixed(2)}`,
     });
 
-    return acceptanceId;
+    return { acceptanceId, contentHash };
   },
 });
 

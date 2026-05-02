@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
@@ -48,7 +48,7 @@ export default function Proposal() {
   const [isRescisionOpen, setIsRescisionOpen] = useState(false);
   const [showContractModal, setShowContractModal] = useState(false);
 
-  const createSessionMutation = useMutation(api.proposals.createSession);
+  const CONVEX_SITE_URL = (import.meta.env.VITE_CONVEX_URL as string)?.replace('.convex.cloud', '.convex.site');
 
   // Try recover token from sessionStorage on slug change
   useEffect(() => {
@@ -105,22 +105,17 @@ export default function Proposal() {
     if (!slug) return;
 
     try {
-      const ipAddress = await fetch('https://api.ipify.org?format=json')
-        .then(res => res.json())
-        .then(data => data.ip)
-        .catch(() => null);
-
-      const userAgent = navigator.userAgent;
-
-      const result: any = await createSessionMutation({
-        slug,
-        password,
-        ipAddress: ipAddress || undefined,
-        userAgent: userAgent || undefined,
+      const res = await fetch(`${CONVEX_SITE_URL}/api/proposal/session`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, password }),
       });
-
-      // Convex returns either a token string or { token } depending on impl
-      const token: string | undefined = typeof result === "string" ? result : result?.token;
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error ?? 'ERROR');
+      }
+      const result = await res.json();
+      const token: string | undefined = result?.token;
       if (token) {
         setSessionToken(token);
         sessionStorage.setItem(`proposal_session_slug_${slug}`, token);

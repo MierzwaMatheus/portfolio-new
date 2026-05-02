@@ -188,7 +188,11 @@ export const aiProxy = httpAction(async (ctx, req) => {
   }
 
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
-  const sessionId = req.headers.get('x-session-id') ?? 'unknown';
+  const sessionId = req.headers.get('x-session-id');
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!sessionId || !UUID_RE.test(sessionId)) {
+    return json({ error: 'Missing or invalid session' }, 400, origin);
+  }
   const apiKey = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
 
   if (!apiKey) return json({ error: 'Missing API key' }, 401, origin);

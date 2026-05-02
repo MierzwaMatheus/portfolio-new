@@ -1,7 +1,6 @@
 import { httpRouter } from 'convex/server';
 import { httpAction } from './_generated/server';
 import { internal } from './_generated/api';
-import { handleImport } from './importCsv';
 import { auth } from './auth';
 import { aiProxy } from './playgroundAi';
 
@@ -45,91 +44,133 @@ async function verifyStripeSignature(payload: string, header: string, secret: st
   }
 }
 
-// Required by @convex-dev/auth — exposes /.well-known/openid-configuration etc.
-auth.addHttpRoutes(http);
+const ALLOWED_ORIGINS = new Set([
+  'https://www.mmlo.com.br',
+  'http://localhost:3000',
+  'http://localhost:5173',
+  'http://localhost:5174',
+]);
 
-// CSV import endpoints — POST /import/<table>
-for (const table of ['projects', 'posts', 'services', 'faq', 'contact_info', 'testimonials', 'resume_items', 'daily_routine'] as const) {
-  http.route({
-    path: `/import/${table}`,
-    method: 'POST',
-    handler: httpAction(async (ctx, req) => handleImport(ctx, req, table)),
+function corsHeaders(origin: string): Record<string, string> {
+  return {
+    'Access-Control-Allow-Origin': origin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Vary': 'Origin',
+  };
+}
+
+function apiJson(body: unknown, status = 200, origin: string | null = null) {
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (origin && ALLOWED_ORIGINS.has(origin)) Object.assign(headers, corsHeaders(origin));
+  return new Response(JSON.stringify(body), { status, headers });
+}
+
+function extractIp(req: Request): string {
+  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+}
+
+function makeApiHandler(
+  handler: (ctx: any, req: Request, ip: string, userAgent: string, origin: string | null) => Promise<Response>,
+) {
+  return httpAction(async (ctx, req) => {
+    const origin = req.headers.get('origin');
+    if (req.method === 'OPTIONS') {
+      if (!origin || !ALLOWED_ORIGINS.has(origin)) return new Response('Forbidden', { status: 403 });
+      return new Response(null, { status: 204, headers: corsHeaders(origin) });
+    }
+    const ip = extractIp(req);
+    const userAgent = req.headers.get('user-agent') ?? 'unknown';
+    return handler(ctx, req, ip, userAgent, origin);
   });
 }
 
-// Image migration endpoints
+// Required by @convex-dev/auth — exposes /.well-known/openid-configuration etc.
+auth.addHttpRoutes(http);
+
+// Public submit endpoints — IP extracted server-side
 http.route({
-  path: '/import/image-folders',
+  path: '/api/contact/submit',
   method: 'POST',
-  handler: httpAction(async (ctx, req) => {
-    const secret = process.env.IMPORT_SECRET;
-    if (!secret) return new Response('IMPORT_SECRET not set', { status: 500 });
-    if (!timingSafeEqual(req.headers.get('x-import-secret') ?? '', secret)) return new Response('Unauthorized', { status: 401 });
-    const rows = await req.json() as unknown[];
-    const idMap = await ctx.runMutation(internal.importCsv._bulkInsertImageFolders, { rows });
-    return new Response(JSON.stringify({ ok: true, idMap }), {
-      status: 200, headers: { 'Content-Type': 'application/json' },
-    });
-  }),
-});
-
-http.route({
-  path: '/import/upload-image',
-  method: 'POST',
-  handler: httpAction(async (ctx, req) => {
-    const secret = process.env.IMPORT_SECRET;
-    if (!secret) return new Response('IMPORT_SECRET not set', { status: 500 });
-    if (!timingSafeEqual(req.headers.get('x-import-secret') ?? '', secret)) return new Response('Unauthorized', { status: 401 });
-
-    const displayName = req.headers.get('x-display-name') ?? 'image';
-    const folderId = req.headers.get('x-folder-id') ?? undefined;
-    const fileSize = req.headers.get('x-file-size') ? Number(req.headers.get('x-file-size')) : undefined;
-    const mimeType = req.headers.get('x-mime-type') ?? 'application/octet-stream';
-    const supabaseId = req.headers.get('x-supabase-id') ?? undefined;
-
-    const uploadUrl = await ctx.storage.generateUploadUrl();
-    const blob = await req.blob();
-    const uploadResp = await fetch(uploadUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': mimeType },
-      body: blob,
-    });
-    if (!uploadResp.ok) {
-      return new Response(`Upload failed: ${uploadResp.statusText}`, { status: 500 });
+  handler: makeApiHandler(async (ctx, req, ip, userAgent, origin) => {
+    let body: unknown;
+    try { body = await req.json(); } catch { return apiJson({ error: 'INVALID_JSON' }, 400, origin); }
+    try {
+      const result = await ctx.runMutation(internal.contactRequests._submitInternal, { ...(body as object), ipAddress: ip, userAgent });
+      return apiJson(result, 200, origin);
+    } catch (e: unknown) {
+      return apiJson({ error: (e as Error)?.message ?? 'ERROR' }, 400, origin);
     }
-    const { storageId } = await uploadResp.json() as { storageId: string };
-
-    const imageMetadataId = await ctx.runMutation(internal.importCsv._createImageMetadata, {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      storageId: storageId as any,
-      displayName,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      folderId: folderId as any,
-      fileSize,
-      mimeType,
-      supabaseId,
-    });
-
-    return new Response(JSON.stringify({ ok: true, storageId, imageMetadataId, supabaseId }), {
-      status: 200, headers: { 'Content-Type': 'application/json' },
-    });
   }),
 });
 
 http.route({
-  path: '/import/link-images',
+  path: '/api/contact/submit',
+  method: 'OPTIONS',
+  handler: makeApiHandler(async () => new Response(null, { status: 204 })),
+});
+
+http.route({
+  path: '/api/testimonial/submit',
   method: 'POST',
-  handler: httpAction(async (ctx, req) => {
-    const secret = process.env.IMPORT_SECRET;
-    if (!secret) return new Response('IMPORT_SECRET not set', { status: 500 });
-    if (!timingSafeEqual(req.headers.get('x-import-secret') ?? '', secret)) return new Response('Unauthorized', { status: 401 });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const body = await req.json() as any;
-    const linked = await ctx.runMutation(internal.importCsv._linkImages, body);
-    return new Response(JSON.stringify({ ok: true, linked }), {
-      status: 200, headers: { 'Content-Type': 'application/json' },
-    });
+  handler: makeApiHandler(async (ctx, req, ip, userAgent, origin) => {
+    let body: unknown;
+    try { body = await req.json(); } catch { return apiJson({ error: 'INVALID_JSON' }, 400, origin); }
+    try {
+      const result = await ctx.runMutation(internal.testimonialSubmissions._submitInternal, { ...(body as object), ipAddress: ip, userAgent });
+      return apiJson(result, 200, origin);
+    } catch (e: unknown) {
+      return apiJson({ error: (e as Error)?.message ?? 'ERROR' }, 400, origin);
+    }
   }),
+});
+
+http.route({
+  path: '/api/testimonial/submit',
+  method: 'OPTIONS',
+  handler: makeApiHandler(async () => new Response(null, { status: 204 })),
+});
+
+http.route({
+  path: '/api/proposal/session',
+  method: 'POST',
+  handler: makeApiHandler(async (ctx, req, ip, userAgent, origin) => {
+    let body: unknown;
+    try { body = await req.json(); } catch { return apiJson({ error: 'INVALID_JSON' }, 400, origin); }
+    try {
+      const result = await ctx.runMutation(internal.proposals._createSessionInternal, { ...(body as object), ipAddress: ip, userAgent });
+      return apiJson({ token: result }, 200, origin);
+    } catch (e: unknown) {
+      return apiJson({ error: (e as Error)?.message ?? 'ERROR' }, 400, origin);
+    }
+  }),
+});
+
+http.route({
+  path: '/api/proposal/session',
+  method: 'OPTIONS',
+  handler: makeApiHandler(async () => new Response(null, { status: 204 })),
+});
+
+http.route({
+  path: '/api/proposal/accept',
+  method: 'POST',
+  handler: makeApiHandler(async (ctx, req, ip, userAgent, origin) => {
+    let body: unknown;
+    try { body = await req.json(); } catch { return apiJson({ error: 'INVALID_JSON' }, 400, origin); }
+    try {
+      const result = await ctx.runMutation(internal.proposals._acceptInternal, { ...(body as object), ipAddress: ip, userAgent }) as { acceptanceId: string; contentHash: string };
+      return apiJson({ id: result.acceptanceId, contentHash: result.contentHash, ipAddress: ip }, 200, origin);
+    } catch (e: unknown) {
+      return apiJson({ error: (e as Error)?.message ?? 'ERROR' }, 400, origin);
+    }
+  }),
+});
+
+http.route({
+  path: '/api/proposal/accept',
+  method: 'OPTIONS',
+  handler: makeApiHandler(async () => new Response(null, { status: 204 })),
 });
 
 http.route({

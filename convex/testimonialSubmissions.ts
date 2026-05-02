@@ -62,7 +62,7 @@ export const generateAvatarUploadUrl = mutation({
   },
 });
 
-export const submit = mutation({
+export const _submitInternal = internalMutation({
   args: {
     name: v.string(),
     role: v.string(),

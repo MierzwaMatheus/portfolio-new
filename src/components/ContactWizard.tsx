@@ -1,7 +1,5 @@
 import { useReducer, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useMutation } from "convex/react";
-import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { FlowType } from "@/contexts/ContactWizardContext";
@@ -412,7 +410,6 @@ export function ContactWizard({
   onSubmitOverride?: (data: { type: FlowType; answers: Record<string, string>; contactInfo: ContactInfo }) => Promise<void>;
 }) {
   const { t, tValue } = useTranslation();
-  const submitMutation = useMutation(api.contactRequests.submit);
   const [state, dispatch] = useReducer(reducer, {
     ...initialState,
     flow: initialFlow ?? null,
@@ -473,14 +470,21 @@ export function ContactWizard({
       if (onSubmitOverride) {
         await onSubmitOverride({ type: state.flow, answers: state.answers, contactInfo: state.contactInfo });
       } else {
-        await submitMutation({
-          type: state.flow,
-          sourceContext,
-          answers: state.answers,
-          contactInfo: state.contactInfo,
-          ipAddress: undefined,
-          userAgent: navigator.userAgent,
+        const siteUrl = (import.meta.env.VITE_CONVEX_URL as string)?.replace('.convex.cloud', '.convex.site');
+        const res = await fetch(`${siteUrl}/api/contact/submit`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: state.flow,
+            sourceContext,
+            answers: state.answers,
+            contactInfo: state.contactInfo,
+          }),
         });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error((data as { error?: string }).error ?? 'ERROR');
+        }
       }
       dispatch({ type: "SUBMIT_SUCCESS" });
     } catch (err: unknown) {

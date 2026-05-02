@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { mutation, query, internalAction, internalQuery } from './_generated/server';
+import { mutation, query, internalAction, internalQuery, internalMutation } from './_generated/server';
 import { internal } from './_generated/api';
 import { escapeTgHtml } from './lib/security';
 import { requireRole, requireAuth } from './auth';
@@ -110,7 +110,7 @@ function resolveAnswerValue(key: string, value: string): string {
   return ANSWER_VALUES[value] ?? value;
 }
 
-export const submit = mutation({
+export const _submitInternal = internalMutation({
   args: {
     type: v.union(
       v.literal('project'),

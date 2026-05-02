@@ -24,7 +24,6 @@ import type * as homeContent from "../homeContent.js";
 import type * as http from "../http.js";
 import type * as imageFolders from "../imageFolders.js";
 import type * as images from "../images.js";
-import type * as importCsv from "../importCsv.js";
 import type * as lib_security from "../lib/security.js";
 import type * as lib_softDelete from "../lib/softDelete.js";
 import type * as playground from "../playground.js";
@@ -69,7 +68,6 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   imageFolders: typeof imageFolders;
   images: typeof images;
-  importCsv: typeof importCsv;
   "lib/security": typeof lib_security;
   "lib/softDelete": typeof lib_softDelete;
   playground: typeof playground;

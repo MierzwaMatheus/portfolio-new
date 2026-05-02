@@ -611,7 +611,6 @@ function PersonalInfoStep() {
 
 function SummaryStep({ onClose }: { onClose: () => void }) {
   const { state, dispatch } = useTestimonialWizard();
-  const submitMutation = useMutation(api.testimonialSubmissions.submit);
   const generateAvatarUrl = useMutation(api.testimonialSubmissions.generateAvatarUploadUrl);
   const info = state.personalInfo;
 
@@ -629,21 +628,27 @@ function SummaryStep({ onClose }: { onClose: () => void }) {
         avatarFileSize = state.avatarFile.size;
       }
 
-      await submitMutation({
-        name: info.name.trim(),
-        role: info.role.trim(),
-        company: info.company.trim() || undefined,
-        email: info.email.trim(),
-        type: state.mediaType as "text" | "video",
-        text: state.mediaType === "text" ? state.text : undefined,
-        videoStorageId:
-          state.mediaType === "video" && state.videoStorageId
-            ? (state.videoStorageId as Parameters<typeof submitMutation>[0]["videoStorageId"])
-            : undefined,
-        videoFileSize: state.videoFileSize ?? undefined,
-        avatarStorageId: avatarStorageId as Parameters<typeof submitMutation>[0]["avatarStorageId"],
-        avatarFileSize,
+      const siteUrl = (import.meta.env.VITE_CONVEX_URL as string)?.replace('.convex.cloud', '.convex.site');
+      const res = await fetch(`${siteUrl}/api/testimonial/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: info.name.trim(),
+          role: info.role.trim(),
+          company: info.company.trim() || undefined,
+          email: info.email.trim(),
+          type: state.mediaType,
+          text: state.mediaType === "text" ? state.text : undefined,
+          videoStorageId: state.mediaType === "video" && state.videoStorageId ? state.videoStorageId : undefined,
+          videoFileSize: state.videoFileSize ?? undefined,
+          avatarStorageId: avatarStorageId ?? undefined,
+          avatarFileSize,
+        }),
       });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error ?? 'ERROR');
+      }
       dispatch({ type: "SUBMIT_SUCCESS" });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
