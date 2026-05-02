@@ -39,7 +39,7 @@ async function main() {
   write('sidebar.json', contactInfo);
 
   // Home content (key/value pairs flattened to a map for static repository consumption)
-  const homeContent = await client.query(api.homeContent.getAll);
+  const homeContent = await client.query(api.homeContent.getAllPublic);
   const homeMap = Object.fromEntries(
     (homeContent ?? []).map((row: { key: string; value: unknown }) => [row.key, row.value])
   );

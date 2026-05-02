@@ -30,6 +30,14 @@ export const getAll = query({
   },
 });
 
+export const getAllPublic = query({
+  args: {},
+  handler: async (ctx) => {
+    const all = await ctx.db.query('homeContent').collect();
+    return all.filter((row) => PUBLIC_HOME_KEYS.has(row.key));
+  },
+});
+
 export const set = mutation({
   args: {
     key: v.string(),
