@@ -9,8 +9,79 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, GripVertical, X, Upload, Copy, Check } from "lucide-react";
+import { Plus, Pencil, Trash2, GripVertical, X, Upload, Copy, Check, Search } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { CASE_STUDY_AI_PROMPT } from "@/constants/caseStudyPrompt";
+
+const ICON_SUGGESTIONS = [
+  "Zap","Users","TrendingUp","Clock","BarChart2","Star","Globe","Code2",
+  "Rocket","Shield","Database","Server","Cpu","Layers","GitBranch","CheckCircle",
+  "Award","Target","Activity","Timer","Package","Lock","Smile","ThumbsUp",
+];
+
+function IconPicker({ value, onChange }: { value?: string; onChange: (name: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const allIcons = search
+    ? Object.keys(LucideIcons).filter(k => k.toLowerCase().includes(search.toLowerCase()) && typeof (LucideIcons as any)[k] === 'function').slice(0, 48)
+    : ICON_SUGGESTIONS;
+
+  const SelectedIcon = value ? (LucideIcons as any)[value] : null;
+
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-2 bg-white/5 border border-white/10 text-white rounded-md px-3 h-9 text-sm hover:bg-white/10 transition-colors min-w-[90px]"
+      >
+        {SelectedIcon ? <SelectedIcon className="w-4 h-4 text-neon-purple shrink-0" /> : <span className="text-gray-500">Ícone</span>}
+        {value && <span className="text-xs text-gray-400 truncate max-w-[60px]">{value}</span>}
+      </button>
+      {open && (
+        <div className="absolute z-50 top-full mt-1 left-0 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl p-3 w-72">
+          <div className="flex items-center gap-2 mb-3 bg-white/5 border border-white/10 rounded-lg px-2">
+            <Search className="w-3 h-3 text-gray-500 shrink-0" />
+            <input
+              autoFocus
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar ícone..."
+              className="bg-transparent text-white text-sm py-1.5 outline-none w-full placeholder-gray-500"
+            />
+          </div>
+          <div className="grid grid-cols-8 gap-1 max-h-48 overflow-y-auto">
+            {allIcons.map(name => {
+              const Icon = (LucideIcons as any)[name];
+              if (!Icon) return null;
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  title={name}
+                  onClick={() => { onChange(name); setOpen(false); setSearch(''); }}
+                  className={`p-2 rounded-lg hover:bg-neon-purple/20 transition-colors flex items-center justify-center ${value === name ? 'bg-neon-purple/30 border border-neon-purple/50' : ''}`}
+                >
+                  <Icon className="w-4 h-4 text-gray-300" />
+                </button>
+              );
+            })}
+          </div>
+          {value && (
+            <button
+              type="button"
+              onClick={() => { onChange(''); setOpen(false); }}
+              className="mt-2 w-full text-xs text-gray-500 hover:text-red-400 transition-colors text-center"
+            >
+              Remover ícone
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useQuery, useMutation } from "convex/react";
@@ -643,6 +714,10 @@ export default function AdminProjects() {
                       </div>
                       {metrics.map((m, i) => (
                         <div key={i} className="flex gap-2 items-center">
+                          <IconPicker
+                            value={m.icon}
+                            onChange={icon => setMetrics(metrics.map((x, idx) => idx === i ? { ...x, icon } : x))}
+                          />
                           <Input
                             value={m.value}
                             onChange={e => setMetrics(metrics.map((x, idx) => idx === i ? { ...x, value: e.target.value } : x))}
@@ -654,12 +729,6 @@ export default function AdminProjects() {
                             onChange={e => setMetrics(metrics.map((x, idx) => idx === i ? { ...x, label: e.target.value } : x))}
                             placeholder="Rótulo"
                             className="bg-white/5 border-white/10 text-white flex-1"
-                          />
-                          <Input
-                            value={m.icon ?? ''}
-                            onChange={e => setMetrics(metrics.map((x, idx) => idx === i ? { ...x, icon: e.target.value } : x))}
-                            placeholder="Ícone (ex: Zap)"
-                            className="bg-white/5 border-white/10 text-white w-28"
                           />
                           <Button
                             type="button"

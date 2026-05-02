@@ -3,6 +3,7 @@ import { SEO } from "@/components/SEO";
 import { useState, useEffect } from "react";
 import { useRoute, Link } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
+import * as LucideIcons from "lucide-react";
 import {
   ArrowLeft,
   ExternalLink,
@@ -11,7 +12,6 @@ import {
   Lightbulb,
   TrendingUp,
   ZoomIn,
-  X,
   ChevronLeft,
   ChevronRight,
   Quote,
@@ -31,6 +31,13 @@ import { useI18n } from "@/i18n/context/I18nContext";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useProjectBySlug } from "@/hooks/usePortfolio";
 import { portfolioRepository } from "@/repositories/instances";
+
+function DynamicIcon({ name, className }: { name?: string; className?: string }) {
+  if (!name) return null;
+  const Icon = (LucideIcons as any)[name] as React.ComponentType<{ className?: string }>;
+  if (!Icon) return null;
+  return <Icon className={className} />;
+}
 
 const narrativeSections = [
   {
@@ -191,7 +198,7 @@ export default function ProjectCaseStudy() {
                 className={`rounded-xl border ${borderColor} ${bgColor} p-6`}
               >
                 <div className="flex items-center gap-3 mb-3">
-                  <Icon className={`h-5 w-5 ${iconColor}`} />
+                  <Icon className={`h-5 w-5 ${iconColor} shrink-0`} />
                   <h2 className="text-lg font-semibold text-white">{t(labelKey)}</h2>
                 </div>
                 <p className="text-gray-300 leading-relaxed whitespace-pre-line">{cs[key]}</p>
@@ -211,10 +218,13 @@ export default function ProjectCaseStudy() {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.07 }}
-                  className="bg-white/5 border border-white/10 rounded-xl p-6 text-center"
+                  className="bg-white/5 border border-white/10 rounded-xl p-4 flex flex-col items-center justify-center text-center gap-2 min-h-[100px]"
                 >
-                  <div className="text-3xl font-bold text-neon-purple mb-1">{metric.value}</div>
-                  <div className="text-sm text-gray-400">{metric.label}</div>
+                  {metric.icon && (
+                    <DynamicIcon name={metric.icon} className="h-5 w-5 text-neon-purple shrink-0" />
+                  )}
+                  <div className="text-2xl font-bold text-neon-purple leading-tight break-words w-full">{metric.value}</div>
+                  <div className="text-xs text-gray-400 leading-snug">{metric.label}</div>
                 </motion.div>
               ))}
             </div>
@@ -270,26 +280,40 @@ export default function ProjectCaseStudy() {
         )}
       </motion.div>
 
-      {/* Fullscreen image */}
+      {/* Fullscreen image — ocupa quase toda a tela */}
       <AnimatePresence>
         {expandedImage && (
           <Dialog open onOpenChange={() => setExpandedImage(null)}>
-            <DialogContent className="max-w-5xl bg-black/95 border-white/10 p-2">
+            <DialogContent
+              showCloseButton={false}
+              className="!fixed !inset-2 !max-w-none !w-auto !h-auto !translate-x-0 !translate-y-0 !top-0 !left-0 bg-black/97 border-white/10 p-0 flex flex-col"
+            >
               <VisuallyHidden>
                 <span>{t("portfolio.expandImage")}</span>
               </VisuallyHidden>
-              <div className="relative">
+
+              {/* Controls bar */}
+              <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 shrink-0">
+                <span className="text-gray-400 text-sm">
+                  {expandedImage.index + 1} {t("portfolio.of")} {expandedImage.images.length}
+                </span>
+                <button
+                  onClick={() => setExpandedImage(null)}
+                  className="bg-white/10 hover:bg-white/20 text-white p-2 rounded-full transition-colors"
+                  aria-label="Fechar"
+                >
+                  <LucideIcons.X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {/* Image area */}
+              <div className="relative flex-1 flex items-center justify-center overflow-hidden p-4">
                 <img
                   src={expandedImage.url}
                   alt=""
-                  className="w-full max-h-[80vh] object-contain rounded-lg"
+                  className="max-w-full max-h-full object-contain rounded-lg"
                 />
-                <button
-                  onClick={() => setExpandedImage(null)}
-                  className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+
                 {expandedImage.images.length > 1 && (
                   <>
                     <button
@@ -297,26 +321,23 @@ export default function ProjectCaseStudy() {
                         const prev = expandedImage.index > 0 ? expandedImage.index - 1 : expandedImage.images.length - 1;
                         setExpandedImage({ ...expandedImage, index: prev, url: expandedImage.images[prev] });
                       }}
-                      className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-colors"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-colors"
                       aria-label={t("portfolio.previousImage")}
                     >
-                      <ChevronLeft className="w-5 h-5" />
+                      <ChevronLeft className="w-6 h-6" />
                     </button>
                     <button
                       onClick={() => {
                         const next = expandedImage.index < expandedImage.images.length - 1 ? expandedImage.index + 1 : 0;
                         setExpandedImage({ ...expandedImage, index: next, url: expandedImage.images[next] });
                       }}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-2 rounded-full transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-3 rounded-full transition-colors"
                       aria-label={t("portfolio.nextImage")}
                     >
-                      <ChevronRight className="w-5 h-5" />
+                      <ChevronRight className="w-6 h-6" />
                     </button>
                   </>
                 )}
-                <div className="text-center text-gray-400 text-sm mt-2">
-                  {expandedImage.index + 1} {t("portfolio.of")} {expandedImage.images.length}
-                </div>
               </div>
             </DialogContent>
           </Dialog>
