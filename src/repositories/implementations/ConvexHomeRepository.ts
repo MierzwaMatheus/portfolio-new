@@ -38,7 +38,7 @@ export class ConvexHomeRepository implements HomeRepository {
   }
 
   async getTestimonials(): Promise<Testimonial[]> {
-    const data = await client.query(api.testimonials.list, {});
+    const data = await client.query(api.testimonials.list, { onlyHome: true });
     return Array.isArray(data) ? data.map(mapTestimonial) : [];
   }
 

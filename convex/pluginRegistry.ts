@@ -147,7 +147,7 @@ export const PLUGIN_REGISTRY: PluginDefinition[] = [
     defaultEnabled: true,
     tables: ['testimonialSubmissions'],
     adminRoutes: ['/admin/depoimentos'],
-    publicRoutes: [],
+    publicRoutes: ['/depoimentos'],
     minRole: 'admin',
   },
 ];

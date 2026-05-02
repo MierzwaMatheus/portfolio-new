@@ -47,6 +47,7 @@ import { ContactWizardModal } from "./components/ContactWizardModal";
 import AdminContactRequests from "./pages/admin/ContactRequests";
 import AdminPlugins from "./pages/admin/Plugins";
 import AdminTestimonials from "./pages/admin/Testimonials";
+import TestimonialsPage from "./pages/Testimonials";
 import { PluginsProvider } from "./contexts/PluginsContext";
 import { PluginRoute } from "./components/PluginRoute";
 import Playground from "./pages/Playground";
@@ -280,6 +281,13 @@ function Router() {
           <PublicRoute>
             <PluginRoute pluginId="payments">
               <PaymentSuccess />
+            </PluginRoute>
+          </PublicRoute>
+        </Route>
+        <Route path="/depoimentos">
+          <PublicRoute>
+            <PluginRoute pluginId="testimonials-intake">
+              <TestimonialsPage />
             </PluginRoute>
           </PublicRoute>
         </Route>

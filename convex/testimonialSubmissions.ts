@@ -310,19 +310,28 @@ export const reject = mutation({
     const doc = await ctx.db.get(id);
     if (!doc) throw new Error('Not found');
 
-    if (doc.videoStorageId) {
-      await ctx.storage.delete(doc.videoStorageId);
+    if (doc.status === 'published' && doc.testimonialId) {
+      await ctx.db.delete(doc.testimonialId);
     }
-    if (doc.avatarStorageId) {
-      await ctx.storage.delete(doc.avatarStorageId);
+
+    if (doc.status !== 'published') {
+      if (doc.videoStorageId) {
+        await ctx.storage.delete(doc.videoStorageId);
+      }
+      if (doc.avatarStorageId) {
+        await ctx.storage.delete(doc.avatarStorageId);
+      }
     }
 
     await ctx.db.patch(id, {
       status: 'rejected',
+      testimonialId: undefined,
       reviewedAt: Date.now(),
       reviewedBy: userId,
-      videoStorageId: undefined,
-      avatarStorageId: undefined,
+      ...(doc.status !== 'published' && {
+        videoStorageId: undefined,
+        avatarStorageId: undefined,
+      }),
     });
 
     await logAudit(ctx, {
@@ -432,11 +441,13 @@ export const publish = mutation({
       imageUrl,
       text: doc.text,
       orderIndex: nextOrder,
+      showOnHome: false,
       createdAt: Date.now(),
     });
 
     await ctx.db.patch(id, {
       status: 'published',
+      testimonialId,
       reviewedAt: Date.now(),
       reviewedBy: userId,
     });
@@ -491,11 +502,13 @@ export const approveAndPublish = mutation({
       imageUrl,
       text: doc.text,
       orderIndex: nextOrder,
+      showOnHome: false,
       createdAt: Date.now(),
     });
 
     await ctx.db.patch(id, {
       status: 'published',
+      testimonialId,
       reviewedAt: Date.now(),
       reviewedBy: userId,
     });

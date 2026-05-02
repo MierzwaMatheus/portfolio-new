@@ -6,7 +6,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Video, FileText, Check, X, RotateCcw, Globe, Loader2 } from "lucide-react";
+import { Video, FileText, Check, X, RotateCcw, Globe, Loader2, Home, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type SubmissionStatus = "pending" | "approved" | "rejected" | "published";
@@ -55,6 +55,7 @@ interface Submission {
   avatarUrl?: string | null;
   imageUrl?: string;
   status: SubmissionStatus;
+  testimonialId?: Id<"testimonials">;
   createdAt: number;
 }
 
@@ -64,6 +65,13 @@ function SubmissionCard({ item }: { item: Submission }) {
   const restoreMutation = useMutation(api.testimonialSubmissions.restore);
   const publishMutation = useMutation(api.testimonialSubmissions.publish);
   const approveAndPublishMutation = useMutation(api.testimonialSubmissions.approveAndPublish);
+  const unpublishMutation = useMutation(api.testimonials.unpublish);
+  const toggleShowOnHomeMutation = useMutation(api.testimonials.toggleShowOnHome);
+
+  const testimonialDoc = useQuery(
+    api.testimonials.getById,
+    item.testimonialId ? { id: item.testimonialId } : "skip",
+  );
 
   const [loading, setLoading] = useState<string | null>(null);
 
@@ -74,8 +82,10 @@ function SubmissionCard({ item }: { item: Submission }) {
       toast.success(
         action === "approve" ? "Aprovado com sucesso" :
         action === "reject" ? "Rejeitado" :
-        action === "publish" ? "Publicado na home!" :
-        action === "approveAndPublish" ? "Aprovado e publicado na home!" :
+        action === "publish" ? "Publicado!" :
+        action === "approveAndPublish" ? "Aprovado e publicado!" :
+        action === "unpublish" ? "Despublicado — voltou para aprovados" :
+        action === "toggleHome" ? (testimonialDoc?.showOnHome ? "Removido da home" : "Exibindo na home!") :
         "Restaurado para pendente",
       );
     } catch (err) {
@@ -171,6 +181,7 @@ function SubmissionCard({ item }: { item: Submission }) {
                 className="bg-neon-lime text-black hover:bg-neon-lime/90 text-xs font-semibold"
               >
                 {loading === "approveAndPublish" ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Globe className="w-3 h-3 mr-1" />Aprovar e Publicar</>}
+
               </Button>
             )}
             <Button
@@ -203,7 +214,7 @@ function SubmissionCard({ item }: { item: Submission }) {
                 disabled={loading !== null}
                 className="bg-neon-lime text-black hover:bg-neon-lime/90 text-xs font-semibold"
               >
-                {loading === "publish" ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Globe className="w-3 h-3 mr-1" />Publicar na Home</>}
+                {loading === "publish" ? <Loader2 className="w-3 h-3 animate-spin" /> : <><Globe className="w-3 h-3 mr-1" />Publicar</>}
               </Button>
             )}
             <Button
@@ -231,9 +242,49 @@ function SubmissionCard({ item }: { item: Submission }) {
         )}
 
         {item.status === "published" && (
-          <Badge className="bg-neon-lime/20 text-neon-lime border border-neon-lime/30 text-xs">
-            <Globe className="w-3 h-3 mr-1 inline" />Publicado na home
-          </Badge>
+          <>
+            {item.testimonialId && (
+              <Button
+                size="sm"
+                onClick={() => run("toggleHome", () => toggleShowOnHomeMutation({ id: item.testimonialId! }))}
+                disabled={loading !== null}
+                variant="outline"
+                className={cn(
+                  "text-xs",
+                  testimonialDoc?.showOnHome
+                    ? "border-neon-lime/50 text-neon-lime hover:bg-neon-lime/10"
+                    : "border-gray-700 text-gray-400 hover:bg-gray-900/20",
+                )}
+              >
+                {loading === "toggleHome" ? <Loader2 className="w-3 h-3 animate-spin" /> : (
+                  testimonialDoc?.showOnHome
+                    ? <><EyeOff className="w-3 h-3 mr-1" />Remover da home</>
+                    : <><Home className="w-3 h-3 mr-1" />Exibir na home</>
+                )}
+              </Button>
+            )}
+            <Button
+              size="sm"
+              onClick={() => run("unpublish", () => unpublishMutation({ submissionId: item._id }))}
+              disabled={loading !== null}
+              variant="outline"
+              className="border-yellow-700 text-yellow-400 hover:bg-yellow-900/20 text-xs"
+            >
+              {loading === "unpublish" ? <Loader2 className="w-3 h-3 animate-spin" /> : <><RotateCcw className="w-3 h-3 mr-1" />Despublicar</>}
+            </Button>
+            <Button
+              size="sm"
+              onClick={() => run("reject", () => rejectMutation({ id: item._id }))}
+              disabled={loading !== null}
+              variant="outline"
+              className="border-red-800 text-red-400 hover:bg-red-900/20 text-xs"
+            >
+              {loading === "reject" ? <Loader2 className="w-3 h-3 animate-spin" /> : <><X className="w-3 h-3 mr-1" />Rejeitar</>}
+            </Button>
+            <Badge className="bg-neon-lime/20 text-neon-lime border border-neon-lime/30 text-xs">
+              <Globe className="w-3 h-3 mr-1 inline" />Publicado
+            </Badge>
+          </>
         )}
       </div>
     </div>

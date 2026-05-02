@@ -4,13 +4,14 @@ import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
 
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { onlyHome: v.optional(v.boolean()) },
+  handler: async (ctx, { onlyHome }) => {
     const items = await ctx.db
       .query('testimonials')
       .withIndex('by_orderIndex')
       .order('asc')
-      .collect();
+      .collect()
+      .then((all) => (onlyHome ? all.filter((t) => t.showOnHome === true) : all));
 
     return Promise.all(
       items.map(async (t) => ({
@@ -22,6 +23,13 @@ export const list = query({
           : t.imageUrl,
       })),
     );
+  },
+});
+
+export const getById = query({
+  args: { id: v.id('testimonials') },
+  handler: async (ctx, { id }) => {
+    return ctx.db.get(id);
   },
 });
 
@@ -77,6 +85,39 @@ export const remove = mutation({
   handler: async (ctx, args) => {
     await requireRole(ctx, ['root', 'admin']);
     await ctx.db.delete(args.id);
+    await markPendingChanges(ctx);
+  },
+});
+
+export const toggleShowOnHome = mutation({
+  args: { id: v.id('testimonials') },
+  handler: async (ctx, { id }) => {
+    await requireRole(ctx, ['root', 'admin']);
+    const doc = await ctx.db.get(id);
+    if (!doc) throw new Error('Not found');
+    await ctx.db.patch(id, { showOnHome: !doc.showOnHome });
+    await markPendingChanges(ctx);
+    return !doc.showOnHome;
+  },
+});
+
+export const unpublish = mutation({
+  args: { submissionId: v.id('testimonialSubmissions') },
+  handler: async (ctx, { submissionId }) => {
+    await requireRole(ctx, ['root', 'admin']);
+    const submission = await ctx.db.get(submissionId);
+    if (!submission) throw new Error('Not found');
+    if (submission.status !== 'published') throw new Error('Depoimento não está publicado');
+
+    if (submission.testimonialId) {
+      await ctx.db.delete(submission.testimonialId);
+    }
+
+    await ctx.db.patch(submissionId, {
+      status: 'approved',
+      testimonialId: undefined,
+    });
+
     await markPendingChanges(ctx);
   },
 });

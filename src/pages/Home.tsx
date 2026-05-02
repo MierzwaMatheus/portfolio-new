@@ -21,6 +21,7 @@ import { useMatrixText } from "@/hooks/useMatrixText";
 import { AvailabilityBadge } from "@/components/AvailabilityBadge";
 import { TestimonialWizard } from "@/components/TestimonialWizard";
 import { usePlugin } from "@/contexts/PluginsContext";
+import { Link } from "wouter";
 
 export default function Home() {
   const { t, tValue } = useTranslation();
@@ -255,7 +256,13 @@ export default function Home() {
           </div>
 
           {testimonialsIntakeEnabled && (
-            <div className="text-center mt-8">
+            <div className="text-center mt-8 flex flex-col items-center gap-3">
+              <Link
+                href="/depoimentos"
+                className="text-sm text-gray-500 hover:text-gray-300 transition-colors underline underline-offset-4"
+              >
+                Ver todos os depoimentos →
+              </Link>
               <button
                 onClick={() => setWizardOpen(true)}
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-neon-purple/40 bg-neon-purple/5 text-neon-purple hover:bg-neon-purple/10 hover:border-neon-purple transition-all text-sm font-medium"

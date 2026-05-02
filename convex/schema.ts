@@ -223,10 +223,12 @@ export default defineSchema({
     text: v.string(),
     textTranslations: i18nString,
     orderIndex: v.optional(v.number()),
+    showOnHome: v.optional(v.boolean()),
     createdAt: v.number(),
   })
     .index('by_orderIndex', ['orderIndex'])
-    .index('by_imageId', ['imageId']),
+    .index('by_imageId', ['imageId'])
+    .index('by_showOnHome', ['showOnHome']),
 
   // ── homeContent ────────────────────────────────────────────────────────────
   homeContent: defineTable({
@@ -469,6 +471,7 @@ export default defineSchema({
       v.literal('rejected'),
       v.literal('published'),
     ),
+    testimonialId: v.optional(v.id('testimonials')),
     createdAt: v.number(),
     reviewedAt: v.optional(v.number()),
     reviewedBy: v.optional(v.id('users')),
