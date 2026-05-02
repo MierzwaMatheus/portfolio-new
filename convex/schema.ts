@@ -460,6 +460,8 @@ export default defineSchema({
     text: v.optional(v.string()),
     videoStorageId: v.optional(v.id('_storage')),
     videoFileSize: v.optional(v.number()),
+    avatarStorageId: v.optional(v.id('_storage')),
+    avatarFileSize: v.optional(v.number()),
     imageUrl: v.optional(v.string()),
     status: v.union(
       v.literal('pending'),

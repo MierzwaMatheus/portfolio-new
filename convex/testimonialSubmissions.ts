@@ -7,6 +7,7 @@ import { requirePlugin } from './plugins';
 
 const MB = 1024 * 1024;
 const MAX_VIDEO_SIZE_BYTES = 20 * MB;
+const MAX_AVATAR_SIZE_BYTES = 1 * MB;
 const DAILY_VIDEO_LIMIT_BYTES = 100 * MB;
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -48,6 +49,19 @@ export const generateVideoUploadUrl = mutation({
   },
 });
 
+export const generateAvatarUploadUrl = mutation({
+  args: { fileSizeBytes: v.number() },
+  handler: async (ctx, { fileSizeBytes }) => {
+    await requirePlugin(ctx, 'testimonials-intake');
+
+    if (fileSizeBytes > MAX_AVATAR_SIZE_BYTES) {
+      throw new Error('AVATAR_TOO_LARGE');
+    }
+
+    return ctx.storage.generateUploadUrl();
+  },
+});
+
 export const submit = mutation({
   args: {
     name: v.string(),
@@ -58,6 +72,8 @@ export const submit = mutation({
     text: v.optional(v.string()),
     videoStorageId: v.optional(v.id('_storage')),
     videoFileSize: v.optional(v.number()),
+    avatarStorageId: v.optional(v.id('_storage')),
+    avatarFileSize: v.optional(v.number()),
     imageUrl: v.optional(v.string()),
     ipAddress: v.optional(v.string()),
     userAgent: v.optional(v.string()),
@@ -152,6 +168,8 @@ export const submit = mutation({
       text: args.text,
       videoStorageId: args.videoStorageId,
       videoFileSize: args.videoFileSize,
+      avatarStorageId: args.avatarStorageId,
+      avatarFileSize: args.avatarFileSize,
       imageUrl: args.imageUrl,
       status: 'pending',
       createdAt: now,
@@ -254,6 +272,7 @@ export const list = query({
       filtered.map(async (s) => ({
         ...s,
         videoUrl: s.videoStorageId ? await ctx.storage.getUrl(s.videoStorageId) : null,
+        avatarUrl: s.avatarStorageId ? await ctx.storage.getUrl(s.avatarStorageId) : null,
       })),
     );
   },
@@ -294,12 +313,16 @@ export const reject = mutation({
     if (doc.videoStorageId) {
       await ctx.storage.delete(doc.videoStorageId);
     }
+    if (doc.avatarStorageId) {
+      await ctx.storage.delete(doc.avatarStorageId);
+    }
 
     await ctx.db.patch(id, {
       status: 'rejected',
       reviewedAt: Date.now(),
       reviewedBy: userId,
       videoStorageId: undefined,
+      avatarStorageId: undefined,
     });
 
     await logAudit(ctx, {
@@ -339,6 +362,40 @@ export const restore = mutation({
   },
 });
 
+async function resolveTestimonialsFolder(ctx: any): Promise<string | undefined> {
+  const existing = await ctx.db
+    .query('imageFolders')
+    .withIndex('by_path', (q: any) => q.eq('path', 'testimonials'))
+    .unique();
+  if (existing) return existing._id;
+
+  return ctx.db.insert('imageFolders', {
+    name: 'Depoimentos',
+    path: 'testimonials',
+    createdAt: Date.now(),
+  });
+}
+
+async function createAvatarMetadata(
+  ctx: any,
+  userId: string,
+  doc: { avatarStorageId: string; avatarFileSize?: number; name: string; createdAt: number },
+): Promise<string> {
+  const folderId = await resolveTestimonialsFolder(ctx);
+  const displayName = `${doc.name} — ${new Date(doc.createdAt).toLocaleDateString('pt-BR')}`;
+  return ctx.db.insert('imageMetadata', {
+    storageId: doc.avatarStorageId,
+    folderId,
+    displayName,
+    altText: doc.name,
+    mimeType: 'image/jpeg',
+    fileSize: doc.avatarFileSize ?? 0,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    createdBy: userId,
+  });
+}
+
 export const publish = mutation({
   args: { id: v.id('testimonialSubmissions') },
   handler: async (ctx, { id }) => {
@@ -356,10 +413,23 @@ export const publish = mutation({
       .first();
     const nextOrder = (existing?.orderIndex ?? 0) + 1;
 
+    let imageId: string | undefined;
+    let imageUrl = doc.imageUrl;
+    if (doc.avatarStorageId) {
+      imageId = await createAvatarMetadata(ctx, userId, {
+        avatarStorageId: doc.avatarStorageId,
+        avatarFileSize: doc.avatarFileSize,
+        name: doc.name,
+        createdAt: doc.createdAt,
+      });
+      imageUrl = (await ctx.storage.getUrl(doc.avatarStorageId)) ?? imageUrl;
+    }
+
     const testimonialId = await ctx.db.insert('testimonials', {
       name: doc.name,
       role: doc.role,
-      imageUrl: doc.imageUrl,
+      imageId: imageId as any,
+      imageUrl,
       text: doc.text,
       orderIndex: nextOrder,
       createdAt: Date.now(),
@@ -402,10 +472,23 @@ export const approveAndPublish = mutation({
       .first();
     const nextOrder = (existing?.orderIndex ?? 0) + 1;
 
+    let imageId: string | undefined;
+    let imageUrl = doc.imageUrl;
+    if (doc.avatarStorageId) {
+      imageId = await createAvatarMetadata(ctx, userId, {
+        avatarStorageId: doc.avatarStorageId,
+        avatarFileSize: doc.avatarFileSize,
+        name: doc.name,
+        createdAt: doc.createdAt,
+      });
+      imageUrl = (await ctx.storage.getUrl(doc.avatarStorageId)) ?? imageUrl;
+    }
+
     const testimonialId = await ctx.db.insert('testimonials', {
       name: doc.name,
       role: doc.role,
-      imageUrl: doc.imageUrl,
+      imageId: imageId as any,
+      imageUrl,
       text: doc.text,
       orderIndex: nextOrder,
       createdAt: Date.now(),

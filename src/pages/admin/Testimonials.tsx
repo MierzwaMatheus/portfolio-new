@@ -52,6 +52,7 @@ interface Submission {
   text?: string;
   videoUrl?: string | null;
   videoFileSize?: number;
+  avatarUrl?: string | null;
   imageUrl?: string;
   status: SubmissionStatus;
   createdAt: number;
@@ -102,9 +103,9 @@ function SubmissionCard({ item }: { item: Submission }) {
     <div className="bg-[#1a1a1a] border border-white/5 rounded-xl p-5 space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          {item.imageUrl ? (
+          {(item.avatarUrl || item.imageUrl) ? (
             <img
-              src={item.imageUrl}
+              src={item.avatarUrl ?? item.imageUrl}
               alt={item.name}
               className="w-10 h-10 rounded-full object-cover border border-white/10 flex-shrink-0"
             />

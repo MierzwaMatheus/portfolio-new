@@ -7,7 +7,6 @@ export interface PersonalInfo {
   role: string;
   company: string;
   email: string;
-  imageUrl: string;
 }
 
 interface State {
@@ -18,6 +17,8 @@ interface State {
   videoFileSize: number | null;
   videoFileName: string | null;
   personalInfo: PersonalInfo;
+  avatarFile: Blob | null;
+  avatarPreviewUrl: string;
   isSubmitting: boolean;
   isSuccess: boolean;
   error: string | null;
@@ -28,6 +29,8 @@ type Action =
   | { type: 'SET_TEXT'; payload: string }
   | { type: 'SET_VIDEO'; payload: { storageId: string; fileSize: number; fileName: string } }
   | { type: 'SET_PERSONAL_INFO'; payload: PersonalInfo }
+  | { type: 'SET_AVATAR'; payload: { file: Blob; previewUrl: string } }
+  | { type: 'CLEAR_AVATAR' }
   | { type: 'NEXT_STEP' }
   | { type: 'PREV_STEP' }
   | { type: 'SUBMIT_START' }
@@ -40,7 +43,6 @@ const initialPersonalInfo: PersonalInfo = {
   role: '',
   company: '',
   email: '',
-  imageUrl: '',
 };
 
 const initialState: State = {
@@ -51,6 +53,8 @@ const initialState: State = {
   videoFileSize: null,
   videoFileName: null,
   personalInfo: initialPersonalInfo,
+  avatarFile: null,
+  avatarPreviewUrl: '',
   isSubmitting: false,
   isSuccess: false,
   error: null,
@@ -71,6 +75,12 @@ function reducer(state: State, action: Action): State {
       };
     case 'SET_PERSONAL_INFO':
       return { ...state, personalInfo: action.payload };
+    case 'SET_AVATAR':
+      if (state.avatarPreviewUrl) URL.revokeObjectURL(state.avatarPreviewUrl);
+      return { ...state, avatarFile: action.payload.file, avatarPreviewUrl: action.payload.previewUrl };
+    case 'CLEAR_AVATAR':
+      if (state.avatarPreviewUrl) URL.revokeObjectURL(state.avatarPreviewUrl);
+      return { ...state, avatarFile: null, avatarPreviewUrl: '' };
     case 'NEXT_STEP':
       return { ...state, step: state.step + 1, error: null };
     case 'PREV_STEP':

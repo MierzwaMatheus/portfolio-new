@@ -4,6 +4,8 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import ReactCrop, { type Crop, type PixelCrop, centerCrop, makeAspectCrop } from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
 import {
   ArrowLeft,
   ArrowRight,
@@ -15,6 +17,7 @@ import {
   X,
   Star,
   Loader2,
+  Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,12 +38,216 @@ import {
 
 const MAX_VIDEO_MB = 20;
 const MAX_VIDEO_BYTES = MAX_VIDEO_MB * 1024 * 1024;
+const MAX_AVATAR_MB = 1;
+const MAX_AVATAR_BYTES = MAX_AVATAR_MB * 1024 * 1024;
+const MAX_AVATAR_DIMENSION = 2048;
 
 const slideVariants = {
   enter: (dir: number) => ({ x: dir > 0 ? 40 : -40, opacity: 0 }),
   center: { x: 0, opacity: 1 },
   exit: (dir: number) => ({ x: dir > 0 ? -40 : 40, opacity: 0 }),
 };
+
+// ── AvatarUploader ────────────────────────────────────────────────────────────
+
+function getCroppedBlob(image: HTMLImageElement, crop: PixelCrop): Promise<Blob> {
+  const canvas = document.createElement("canvas");
+  const scaleX = image.naturalWidth / image.width;
+  const scaleY = image.naturalHeight / image.height;
+  canvas.width = crop.width;
+  canvas.height = crop.height;
+  const ctx = canvas.getContext("2d")!;
+  ctx.drawImage(
+    image,
+    crop.x * scaleX,
+    crop.y * scaleY,
+    crop.width * scaleX,
+    crop.height * scaleY,
+    0,
+    0,
+    crop.width,
+    crop.height,
+  );
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error("Canvas is empty"));
+    }, "image/jpeg", 0.92);
+  });
+}
+
+function AvatarUploader() {
+  const { state, dispatch } = useTestimonialWizard();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [rawSrc, setRawSrc] = useState<string>("");
+  const [showCrop, setShowCrop] = useState(false);
+  const [crop, setCrop] = useState<Crop>();
+  const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
+
+  function onImageLoad(e: React.SyntheticEvent<HTMLImageElement>) {
+    const { naturalWidth, naturalHeight, width, height } = e.currentTarget;
+    const isSquare = Math.abs(naturalWidth - naturalHeight) <= 5;
+    if (isSquare) {
+      confirmCrop(e.currentTarget, {
+        unit: "px",
+        x: 0,
+        y: 0,
+        width,
+        height,
+      });
+      return;
+    }
+    const initial = centerCrop(
+      makeAspectCrop({ unit: "%", width: 90 }, 1, width, height),
+      width,
+      height,
+    );
+    setCrop(initial);
+  }
+
+  async function confirmCrop(img?: HTMLImageElement, fallbackCrop?: PixelCrop) {
+    const image = img ?? imgRef.current;
+    const pixelCrop = fallbackCrop ?? completedCrop;
+    if (!image || !pixelCrop) return;
+
+    try {
+      const blob = await getCroppedBlob(image, pixelCrop);
+      if (blob.size > MAX_AVATAR_BYTES) {
+        toast.error(`A foto deve ter no máximo ${MAX_AVATAR_MB} MB após o corte.`);
+        cancelCrop();
+        return;
+      }
+      const previewUrl = URL.createObjectURL(blob);
+      dispatch({ type: "SET_AVATAR", payload: { file: blob, previewUrl } });
+      setShowCrop(false);
+      setRawSrc("");
+    } catch {
+      toast.error("Erro ao processar a imagem.");
+    }
+  }
+
+  function cancelCrop() {
+    setShowCrop(false);
+    setRawSrc("");
+    setCrop(undefined);
+  }
+
+  async function handleFile(file: File) {
+    if (!file.type.startsWith("image/")) {
+      toast.error("Selecione um arquivo de imagem.");
+      return;
+    }
+    if (file.size > MAX_AVATAR_BYTES * 5) {
+      toast.error(`A foto é muito grande. Selecione uma imagem menor.`);
+      return;
+    }
+
+    const bitmap = await createImageBitmap(file);
+    if (bitmap.width > MAX_AVATAR_DIMENSION || bitmap.height > MAX_AVATAR_DIMENSION) {
+      toast.error(`A resolução máxima permitida é ${MAX_AVATAR_DIMENSION}×${MAX_AVATAR_DIMENSION} px.`);
+      return;
+    }
+
+    const src = URL.createObjectURL(file);
+    setRawSrc(src);
+    setShowCrop(true);
+  }
+
+  return (
+    <div>
+      <Label className="text-gray-300 text-sm mb-1.5 block">
+        Foto de perfil <span className="text-gray-500 text-xs">(opcional)</span>
+      </Label>
+
+      {state.avatarPreviewUrl ? (
+        <div className="flex items-center gap-3">
+          <img
+            src={state.avatarPreviewUrl}
+            alt="Avatar"
+            className="w-14 h-14 rounded-full object-cover border border-white/20"
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="text-xs text-gray-400 hover:text-white underline underline-offset-2"
+            >
+              Trocar foto
+            </button>
+            <span className="text-gray-600">·</span>
+            <button
+              type="button"
+              onClick={() => dispatch({ type: "CLEAR_AVATAR" })}
+              className="text-xs text-red-400 hover:text-red-300 underline underline-offset-2"
+            >
+              Remover
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/3 hover:bg-white/5 hover:border-white/20 transition-colors text-sm text-gray-400 hover:text-white"
+        >
+          <Camera className="w-4 h-4" />
+          Escolher foto
+        </button>
+      )}
+
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          e.target.value = "";
+          if (f) handleFile(f);
+        }}
+      />
+
+      {showCrop && rawSrc && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4">
+          <div className="bg-[#1a1a1a] rounded-2xl border border-white/10 p-5 space-y-4 w-full max-w-sm">
+            <p className="text-white font-semibold text-sm">Ajustar foto</p>
+            <div className="overflow-hidden rounded-lg">
+              <ReactCrop
+                crop={crop}
+                onChange={(c) => setCrop(c)}
+                onComplete={(c) => setCompletedCrop(c)}
+                aspect={1}
+                circularCrop
+              >
+                <img
+                  ref={imgRef}
+                  src={rawSrc}
+                  alt="Crop"
+                  className="max-h-72 w-full object-contain"
+                  onLoad={onImageLoad}
+                />
+              </ReactCrop>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button variant="ghost" size="sm" onClick={cancelCrop} className="text-gray-400">
+                Cancelar
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => confirmCrop()}
+                disabled={!completedCrop}
+                className="bg-neon-lime text-black hover:bg-neon-lime/90 font-semibold"
+              >
+                Confirmar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ── Step 0: MediaChoice ───────────────────────────────────────────────────────
 
@@ -377,18 +584,7 @@ function PersonalInfoStep() {
           />
         </div>
 
-        <div>
-          <Label className="text-gray-300 text-sm mb-1.5 block">
-            URL da sua foto (opcional)
-          </Label>
-          <Input
-            value={info.imageUrl}
-            onChange={(e) => update("imageUrl", e.target.value)}
-            placeholder="https://... (LinkedIn, GitHub, etc.)"
-            className="bg-[#1a1a1a] border-white/10 text-white placeholder:text-gray-600"
-          />
-          <p className="text-xs text-gray-600 mt-1">Cole a URL da sua foto de perfil</p>
-        </div>
+        <AvatarUploader />
       </div>
 
       <div className="flex justify-between pt-2">
@@ -416,11 +612,23 @@ function PersonalInfoStep() {
 function SummaryStep({ onClose }: { onClose: () => void }) {
   const { state, dispatch } = useTestimonialWizard();
   const submitMutation = useMutation(api.testimonialSubmissions.submit);
+  const generateAvatarUrl = useMutation(api.testimonialSubmissions.generateAvatarUploadUrl);
   const info = state.personalInfo;
 
   async function handleSubmit() {
     dispatch({ type: "SUBMIT_START" });
     try {
+      let avatarStorageId: string | undefined;
+      let avatarFileSize: number | undefined;
+
+      if (state.avatarFile) {
+        const uploadUrl = await generateAvatarUrl({ fileSizeBytes: state.avatarFile.size });
+        const res = await fetch(uploadUrl, { method: "POST", body: state.avatarFile });
+        const { storageId } = await res.json();
+        avatarStorageId = storageId;
+        avatarFileSize = state.avatarFile.size;
+      }
+
       await submitMutation({
         name: info.name.trim(),
         role: info.role.trim(),
@@ -433,13 +641,16 @@ function SummaryStep({ onClose }: { onClose: () => void }) {
             ? (state.videoStorageId as Parameters<typeof submitMutation>[0]["videoStorageId"])
             : undefined,
         videoFileSize: state.videoFileSize ?? undefined,
-        imageUrl: info.imageUrl.trim() || undefined,
+        avatarStorageId: avatarStorageId as Parameters<typeof submitMutation>[0]["avatarStorageId"],
+        avatarFileSize,
       });
       dispatch({ type: "SUBMIT_SUCCESS" });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "";
       if (msg.includes("RATE_LIMITED")) {
         dispatch({ type: "SUBMIT_ERROR", payload: "Você já enviou um depoimento recentemente. Tente novamente em 7 dias." });
+      } else if (msg.includes("AVATAR_TOO_LARGE")) {
+        dispatch({ type: "SUBMIT_ERROR", payload: `A foto deve ter no máximo ${MAX_AVATAR_MB} MB.` });
       } else {
         dispatch({ type: "SUBMIT_ERROR", payload: "Erro ao enviar. Tente novamente." });
       }
@@ -472,8 +683,8 @@ function SummaryStep({ onClose }: { onClose: () => void }) {
 
       <div className="space-y-3 bg-[#1a1a1a] rounded-xl p-4 border border-white/5">
         <div className="flex items-center gap-3">
-          {info.imageUrl ? (
-            <img src={info.imageUrl} alt={info.name} className="w-10 h-10 rounded-full object-cover border border-white/10" />
+          {state.avatarPreviewUrl ? (
+            <img src={state.avatarPreviewUrl} alt={info.name} className="w-10 h-10 rounded-full object-cover border border-white/10" />
           ) : (
             <div className="w-10 h-10 rounded-full bg-neon-purple/20 flex items-center justify-center text-neon-purple font-bold text-sm flex-shrink-0">
               {info.name.charAt(0).toUpperCase()}
