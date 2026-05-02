@@ -18,6 +18,7 @@ import AdminCreateUser from "./pages/admin/CreateUser";
 import AdminPaymentLinks from "./pages/admin/PaymentLinks";
 import AdminAbout from "./pages/admin/About";
 import AdminAiResumes from "./pages/admin/AiResumes";
+import AdminLogs from "./pages/admin/Logs";
 import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { I18nProvider } from "./i18n/context/I18nContext";
@@ -115,6 +116,9 @@ function Router() {
         </Route>
         <Route path="/admin/users/new">
           <ProtectedRoute component={AdminCreateUser} allowedRoles={["root"]} />
+        </Route>
+        <Route path="/admin/logs">
+          <ProtectedRoute component={AdminLogs} allowedRoles={["root"]} />
         </Route>
       </Switch>
     );

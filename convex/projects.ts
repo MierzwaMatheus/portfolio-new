@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
+import { logAudit } from './audit';
 
 export const list = query({
   args: { tag: v.optional(v.string()) },
@@ -103,10 +104,11 @@ export const create = mutation({
     orderIndex: v.number(),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     const now = Date.now();
     const id = await ctx.db.insert('projects', { ...args, createdAt: now });
     await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.create', actorType: 'user', actorId: userId, targetType: 'project', targetId: id, success: true });
     return id;
   },
 });
@@ -134,19 +136,21 @@ export const update = mutation({
     orderIndex: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     const { id, ...fields } = args;
     await ctx.db.patch(id, { ...fields, updatedAt: Date.now() });
     await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.update', actorType: 'user', actorId: userId, targetType: 'project', targetId: id, success: true });
   },
 });
 
 export const remove = mutation({
   args: { id: v.id('projects') },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     await ctx.db.delete(args.id);
     await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'project', targetId: args.id, success: true });
   },
 });
 
@@ -155,10 +159,11 @@ export const reorder = mutation({
     items: v.array(v.object({ id: v.id('projects'), orderIndex: v.number() })),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     for (const { id, orderIndex } of args.items) {
       await ctx.db.patch(id, { orderIndex });
     }
     await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.reorder', actorType: 'user', actorId: userId, targetType: 'project', success: true });
   },
 });

@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
+import { logAudit } from './audit';
 
 const RESUME_TYPES = ['skill', 'experience', 'education', 'course', 'soft_skill', 'volunteer', 'language'] as const;
 type ResumeType = typeof RESUME_TYPES[number];
@@ -50,12 +51,13 @@ export const create = mutation({
     orderIndex: v.number(),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     const id = await ctx.db.insert('resumeItems', {
       ...args,
       createdAt: Date.now(),
     } as Parameters<typeof ctx.db.insert<'resumeItems'>>[1]);
     await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.create', actorType: 'user', actorId: userId, targetType: 'resumeItem', targetId: id, metadata: { type: args.type }, success: true });
     return id;
   },
 });
@@ -68,19 +70,21 @@ export const update = mutation({
     orderIndex: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     const { id, ...fields } = args;
     await ctx.db.patch(id, { ...fields, updatedAt: Date.now() } as Parameters<typeof ctx.db.patch<'resumeItems'>>[1]);
     await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.update', actorType: 'user', actorId: userId, targetType: 'resumeItem', targetId: id, success: true });
   },
 });
 
 export const remove = mutation({
   args: { id: v.id('resumeItems') },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     await ctx.db.delete(args.id);
     await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'resumeItem', targetId: args.id, success: true });
   },
 });
 
@@ -89,10 +93,11 @@ export const reorder = mutation({
     items: v.array(v.object({ id: v.id('resumeItems'), orderIndex: v.number() })),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     for (const { id, orderIndex } of args.items) {
       await ctx.db.patch(id, { orderIndex } as Parameters<typeof ctx.db.patch<'resumeItems'>>[1]);
     }
     await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.reorder', actorType: 'user', actorId: userId, targetType: 'resumeItem', success: true });
   },
 });

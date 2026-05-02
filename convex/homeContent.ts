@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
+import { logAudit } from './audit';
 
 export const getByKey = query({
   args: { key: v.string() },
@@ -26,7 +27,7 @@ export const set = mutation({
     value: v.any(),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     const now = Date.now();
     const existing = await ctx.db
       .query('homeContent')
@@ -43,5 +44,6 @@ export const set = mutation({
       });
     }
     await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.update', actorType: 'user', actorId: userId, targetType: 'homeContent', metadata: { key: args.key }, success: true });
   },
 });

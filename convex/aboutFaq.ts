@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
+import { logAudit } from './audit';
 
 export const list = query({
   args: {},
@@ -23,9 +24,10 @@ export const create = mutation({
     displayOrder: v.number(),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     const id = await ctx.db.insert('aboutFaq', { ...args, createdAt: Date.now() });
     await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.create', actorType: 'user', actorId: userId, targetType: 'aboutFaq', targetId: id, success: true });
     return id;
   },
 });
@@ -44,18 +46,20 @@ export const update = mutation({
     displayOrder: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     const { id, ...fields } = args;
     await ctx.db.patch(id, { ...fields, updatedAt: Date.now() });
     await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.update', actorType: 'user', actorId: userId, targetType: 'aboutFaq', targetId: id, success: true });
   },
 });
 
 export const remove = mutation({
   args: { id: v.id('aboutFaq') },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     await ctx.db.delete(args.id);
     await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'aboutFaq', targetId: args.id, success: true });
   },
 });

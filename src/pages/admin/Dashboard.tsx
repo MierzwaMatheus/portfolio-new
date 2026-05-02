@@ -18,6 +18,7 @@ import {
   Plus,
   CreditCard,
   Sparkles,
+  ScrollText,
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
@@ -100,6 +101,12 @@ function AdminSidebar() {
       icon: UserPlus,
       label: "Criar Usuário",
       path: "/admin/users/new",
+      roles: ["root"],
+    },
+    {
+      icon: ScrollText,
+      label: "Logs",
+      path: "/admin/logs",
       roles: ["root"],
     },
   ];

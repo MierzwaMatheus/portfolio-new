@@ -4,6 +4,7 @@ import { paginationOptsValidator } from 'convex/server';
 import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
 import { getAuthUserId } from '@convex-dev/auth/server';
+import { logAudit } from './audit';
 
 export const listAllPublished = query({
   args: {},
@@ -153,6 +154,7 @@ export const create = mutation({
       createdAt: now,
     });
     if (args.status === 'published') await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.create', actorType: 'user', actorId: userId ?? undefined, targetType: 'post', targetId: id, success: true });
     return id;
   },
 });
@@ -180,39 +182,43 @@ export const update = mutation({
     readTime: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     const { id, ...fields } = args;
     await ctx.db.patch(id, { ...fields, updatedAt: Date.now() });
     const post = await ctx.db.get(id);
     if (post?.status === 'published') await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.update', actorType: 'user', actorId: userId, targetType: 'post', targetId: id, success: true });
   },
 });
 
 export const publish = mutation({
   args: { id: v.id('posts') },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     const now = Date.now();
     await ctx.db.patch(args.id, { status: 'published', publishedAt: now, updatedAt: now });
     await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.publish', actorType: 'user', actorId: userId, targetType: 'post', targetId: args.id, success: true });
   },
 });
 
 export const unpublish = mutation({
   args: { id: v.id('posts') },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     await ctx.db.patch(args.id, { status: 'draft', updatedAt: Date.now() });
     await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.unpublish', actorType: 'user', actorId: userId, targetType: 'post', targetId: args.id, success: true });
   },
 });
 
 export const remove = mutation({
   args: { id: v.id('posts') },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     const post = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
     if (post?.status === 'published') await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'post', targetId: args.id, success: true });
   },
 });

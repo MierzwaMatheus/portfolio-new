@@ -31,14 +31,36 @@ export async function logAudit(
 export const recent = query({
   args: {
     limit: v.optional(v.number()),
+    eventType: v.optional(v.string()),
+    targetType: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     await requireRole(ctx, ['root']);
-    return ctx.db
+    const logs = await ctx.db
       .query('auditLog')
       .withIndex('by_createdAt')
       .order('desc')
-      .take(args.limit ?? 50);
+      .take(500);
+
+    const filtered = logs
+      .filter((l) => !args.eventType || l.eventType === args.eventType)
+      .filter((l) => !args.targetType || l.targetType === args.targetType)
+      .slice(0, args.limit ?? 100);
+
+    const userCache = new Map<string, string | null>();
+    return Promise.all(
+      filtered.map(async (log) => {
+        let actorEmail: string | null = null;
+        if (log.actorId && log.actorType === 'user') {
+          if (!userCache.has(log.actorId)) {
+            const user = await ctx.db.get(log.actorId as Parameters<typeof ctx.db.get>[0]);
+            userCache.set(log.actorId, (user as { email?: string } | null)?.email ?? null);
+          }
+          actorEmail = userCache.get(log.actorId) ?? null;
+        }
+        return { ...log, actorEmail };
+      }),
+    );
   },
 });
 

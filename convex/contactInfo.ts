@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
+import { logAudit } from './audit';
 
 export const get = query({
   args: {},
@@ -32,7 +33,7 @@ export const update = mutation({
     behanceUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     const existing = await ctx.db.query('contactInfo').first();
     const now = Date.now();
 
@@ -52,5 +53,6 @@ export const update = mutation({
       });
     }
     await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.update', actorType: 'user', actorId: userId, targetType: 'contactInfo', success: true });
   },
 });
