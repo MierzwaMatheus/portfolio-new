@@ -3,10 +3,12 @@ import { mutation, query } from './_generated/server';
 import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
 import { logAudit } from './audit';
+import { requirePlugin, isPluginEnabled } from './plugins';
 
 export const list = query({
   args: {},
   handler: async (ctx) => {
+    if (!(await isPluginEnabled(ctx, 'about'))) return [];
     const items = await ctx.db
       .query('aboutDailyRoutine')
       .withIndex('by_displayOrder')
@@ -40,6 +42,7 @@ export const create = mutation({
     displayOrder: v.number(),
   },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'about');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     const id = await ctx.db.insert('aboutDailyRoutine', { ...args, createdAt: Date.now() });
     await markPendingChanges(ctx);
@@ -61,6 +64,7 @@ export const update = mutation({
     displayOrder: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'about');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     const existing = await ctx.db.get(args.id);
     const { id, ...fields } = args;
@@ -73,6 +77,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id('aboutDailyRoutine') },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'about');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     const existing = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);

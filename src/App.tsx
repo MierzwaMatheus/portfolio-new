@@ -45,6 +45,9 @@ import { useState, useEffect } from "react";
 import { ContactWizardProvider } from "./contexts/ContactWizardContext";
 import { ContactWizardModal } from "./components/ContactWizardModal";
 import AdminContactRequests from "./pages/admin/ContactRequests";
+import AdminPlugins from "./pages/admin/Plugins";
+import { PluginsProvider } from "./contexts/PluginsContext";
+import { PluginRoute } from "./components/PluginRoute";
 
 const translationService = new ConvexTranslationService(convex);
 
@@ -69,19 +72,19 @@ function Router() {
         </Route>
         <Route path="/admin/projects">
           <ProtectedRoute
-            component={AdminProjects}
+            component={() => <PluginRoute pluginId="portfolio"><AdminProjects /></PluginRoute>}
             allowedRoles={["root", "admin"]}
           />
         </Route>
         <Route path="/admin/blog">
           <ProtectedRoute
-            component={AdminBlog}
+            component={() => <PluginRoute pluginId="blog"><AdminBlog /></PluginRoute>}
             allowedRoles={["root", "admin"]}
           />
         </Route>
         <Route path="/admin/resume">
           <ProtectedRoute
-            component={AdminResume}
+            component={() => <PluginRoute pluginId="resume"><AdminResume /></PluginRoute>}
             allowedRoles={["root", "admin"]}
           />
         </Route>
@@ -93,7 +96,7 @@ function Router() {
         </Route>
         <Route path="/admin/about">
           <ProtectedRoute
-            component={AdminAbout}
+            component={() => <PluginRoute pluginId="about"><AdminAbout /></PluginRoute>}
             allowedRoles={["root", "admin"]}
           />
         </Route>
@@ -105,19 +108,19 @@ function Router() {
         </Route>
         <Route path="/admin/proposals">
           <ProtectedRoute
-            component={AdminProposals}
+            component={() => <PluginRoute pluginId="proposals"><AdminProposals /></PluginRoute>}
             allowedRoles={["root", "admin", "proposal-editor"]}
           />
         </Route>
         <Route path="/admin/payment-links">
           <ProtectedRoute
-            component={AdminPaymentLinks}
+            component={() => <PluginRoute pluginId="payments"><AdminPaymentLinks /></PluginRoute>}
             allowedRoles={["root", "admin"]}
           />
         </Route>
         <Route path="/admin/ai-resumes">
           <ProtectedRoute
-            component={AdminAiResumes}
+            component={() => <PluginRoute pluginId="ai-resumes"><AdminAiResumes /></PluginRoute>}
             allowedRoles={["root", "admin"]}
           />
         </Route>
@@ -125,10 +128,22 @@ function Router() {
           <ProtectedRoute component={AdminCreateUser} allowedRoles={["root"]} />
         </Route>
         <Route path="/admin/logs">
-          <ProtectedRoute component={AdminLogs} allowedRoles={["root"]} />
+          <ProtectedRoute
+            component={() => <PluginRoute pluginId="audit-log"><AdminLogs /></PluginRoute>}
+            allowedRoles={["root"]}
+          />
         </Route>
         <Route path="/admin/contatos">
-          <ProtectedRoute component={AdminContactRequests} allowedRoles={["root", "admin"]} />
+          <ProtectedRoute
+            component={() => <PluginRoute pluginId="contact-wizard"><AdminContactRequests /></PluginRoute>}
+            allowedRoles={["root", "admin"]}
+          />
+        </Route>
+        <Route path="/admin/plugins">
+          <ProtectedRoute
+            component={AdminPlugins}
+            allowedRoles={["root", "admin"]}
+          />
         </Route>
       </Switch>
     );
@@ -145,52 +160,72 @@ function Router() {
         <Route path={"/login"} component={Login} />
         <Route path="/sobre">
           <PublicRoute>
-            <About />
+            <PluginRoute pluginId="about">
+              <About />
+            </PluginRoute>
           </PublicRoute>
         </Route>
         <Route path="/curriculo">
           <PublicRoute>
-            <Resume />
+            <PluginRoute pluginId="resume">
+              <Resume />
+            </PluginRoute>
           </PublicRoute>
         </Route>
         <Route path="/portfolio">
           <PublicRoute>
-            <Portfolio />
+            <PluginRoute pluginId="portfolio">
+              <Portfolio />
+            </PluginRoute>
           </PublicRoute>
         </Route>
         <Route path="/portfolio/:slug">
           <PublicRoute>
-            <ProjectCaseStudy />
+            <PluginRoute pluginId="portfolio">
+              <ProjectCaseStudy />
+            </PluginRoute>
           </PublicRoute>
         </Route>
         <Route path="/blog">
           <PublicRoute>
-            <Blog />
+            <PluginRoute pluginId="blog">
+              <Blog />
+            </PluginRoute>
           </PublicRoute>
         </Route>
         <Route path="/blog/:slug">
           <PublicRoute>
-            <BlogPost />
+            <PluginRoute pluginId="blog">
+              <BlogPost />
+            </PluginRoute>
           </PublicRoute>
         </Route>
         <Route path="/proposta/:id">
           <PublicRoute>
-            <Proposal />
+            <PluginRoute pluginId="proposals">
+              <Proposal />
+            </PluginRoute>
           </PublicRoute>
         </Route>
         <Route path="/proposta/:slug/aceitar">
           <PublicRoute>
-            <ProposalAccept />
+            <PluginRoute pluginId="proposals">
+              <ProposalAccept />
+            </PluginRoute>
           </PublicRoute>
         </Route>
         <Route path="/checkout/:uniqueLink">
           <PublicRoute>
-            <Checkout />
+            <PluginRoute pluginId="payments">
+              <Checkout />
+            </PluginRoute>
           </PublicRoute>
         </Route>
         <Route path="/payment-success/:uniqueLink">
           <PublicRoute>
-            <PaymentSuccess />
+            <PluginRoute pluginId="payments">
+              <PaymentSuccess />
+            </PluginRoute>
           </PublicRoute>
         </Route>
         <Route path="/404" component={NotFound} />
@@ -244,10 +279,12 @@ function App() {
                 <ThemeProvider defaultTheme="dark">
                   <TooltipProvider>
                     <Toaster />
-                    <ContactWizardProvider>
-                      <AppContent />
-                      <ContactWizardModal />
-                    </ContactWizardProvider>
+                    <PluginsProvider>
+                      <ContactWizardProvider>
+                        <AppContent />
+                        <ContactWizardModal />
+                      </ContactWizardProvider>
+                    </PluginsProvider>
                   </TooltipProvider>
                 </ThemeProvider>
               </I18nProvider>

@@ -20,7 +20,10 @@ import {
   Sparkles,
   ScrollText,
   MessageSquare,
+  Puzzle,
 } from "lucide-react";
+import { usePlugins } from "@/contexts/PluginsContext";
+import type { PluginId } from "../../../convex/pluginRegistry";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "convex/react";
@@ -35,9 +38,16 @@ import { PublishStatus } from "@/components/admin/PublishStatus";
 function AdminSidebar() {
   const [location] = useLocation();
   const { logout, checkRole } = useAuth();
+  const { isEnabled } = usePlugins();
   const [isOpen, setIsOpen] = useState(false);
 
-  const navItems = [
+  const navItems: Array<{
+    icon: React.ElementType;
+    label: string;
+    path: string;
+    roles: string[];
+    pluginId?: PluginId;
+  }> = [
     {
       icon: LayoutDashboard,
       label: "Dashboard",
@@ -49,24 +59,28 @@ function AdminSidebar() {
       label: "Projetos",
       path: "/admin/projects",
       roles: ["root", "admin"],
+      pluginId: "portfolio",
     },
     {
       icon: FileText,
       label: "Blog",
       path: "/admin/blog",
       roles: ["root", "admin"],
+      pluginId: "blog",
     },
     {
       icon: User,
       label: "Currículo",
       path: "/admin/resume",
       roles: ["root", "admin"],
+      pluginId: "resume",
     },
     {
       icon: FileSignature,
       label: "Propostas",
       path: "/admin/proposals",
       roles: ["root", "admin", "proposal-editor"],
+      pluginId: "proposals",
     },
     {
       icon: Home,
@@ -79,24 +93,35 @@ function AdminSidebar() {
       label: "Sobre Mim",
       path: "/admin/about",
       roles: ["root", "admin"],
+      pluginId: "about",
     },
     {
       icon: Mail,
       label: "Contato",
       path: "/admin/contact",
       roles: ["root", "admin"],
+      pluginId: "contact-wizard",
+    },
+    {
+      icon: MessageSquare,
+      label: "Contatos",
+      path: "/admin/contatos",
+      roles: ["root", "admin"],
+      pluginId: "contact-wizard",
     },
     {
       icon: CreditCard,
       label: "Links de Pagamento",
       path: "/admin/payment-links",
       roles: ["root", "admin"],
+      pluginId: "payments",
     },
     {
       icon: Sparkles,
       label: "CV com IA",
       path: "/admin/ai-resumes",
       roles: ["root", "admin"],
+      pluginId: "ai-resumes",
     },
     {
       icon: UserPlus,
@@ -105,20 +130,23 @@ function AdminSidebar() {
       roles: ["root"],
     },
     {
-      icon: MessageSquare,
-      label: "Contatos",
-      path: "/admin/contatos",
-      roles: ["root", "admin"],
-    },
-    {
       icon: ScrollText,
       label: "Logs",
       path: "/admin/logs",
       roles: ["root"],
+      pluginId: "audit-log",
+    },
+    {
+      icon: Puzzle,
+      label: "Plugins",
+      path: "/admin/plugins",
+      roles: ["root", "admin"],
     },
   ];
 
-  const filteredNavItems = navItems.filter(item => checkRole(item.roles));
+  const filteredNavItems = navItems.filter(
+    item => checkRole(item.roles) && (!item.pluginId || isEnabled(item.pluginId))
+  );
 
   return (
     <>

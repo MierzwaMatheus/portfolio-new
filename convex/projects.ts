@@ -3,10 +3,12 @@ import { mutation, query } from './_generated/server';
 import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
 import { logAudit } from './audit';
+import { requirePlugin, isPluginEnabled } from './plugins';
 
 export const list = query({
   args: { tag: v.optional(v.string()) },
   handler: async (ctx, args) => {
+    if (!(await isPluginEnabled(ctx, 'portfolio'))) return [];
     const projects = await ctx.db
       .query('projects')
       .withIndex('by_orderIndex')
@@ -50,6 +52,7 @@ export const list = query({
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
+    if (!(await isPluginEnabled(ctx, 'portfolio'))) return null;
     const project = await ctx.db
       .query('projects')
       .withIndex('by_slug', (q) => q.eq('slug', args.slug))
@@ -149,6 +152,7 @@ export const create = mutation({
     orderIndex: v.number(),
   },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'portfolio');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     const now = Date.now();
     const id = await ctx.db.insert('projects', { ...args, createdAt: now });
@@ -193,6 +197,7 @@ export const update = mutation({
     orderIndex: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'portfolio');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     const existing = await ctx.db.get(args.id);
     const { id, ...fields } = args;
@@ -205,6 +210,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id('projects') },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'portfolio');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     const existing = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
@@ -218,6 +224,7 @@ export const reorder = mutation({
     items: v.array(v.object({ id: v.id('projects'), orderIndex: v.number() })),
   },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'portfolio');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     for (const { id, orderIndex } of args.items) {
       await ctx.db.patch(id, { orderIndex });

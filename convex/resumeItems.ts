@@ -3,6 +3,7 @@ import { mutation, query } from './_generated/server';
 import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
 import { logAudit } from './audit';
+import { requirePlugin, isPluginEnabled } from './plugins';
 
 const RESUME_TYPES = ['skill', 'experience', 'education', 'course', 'soft_skill', 'volunteer', 'language'] as const;
 type ResumeType = typeof RESUME_TYPES[number];
@@ -27,6 +28,7 @@ export const listByType = query({
     ),
   },
   handler: async (ctx, args) => {
+    if (!(await isPluginEnabled(ctx, 'resume'))) return [];
     return ctx.db
       .query('resumeItems')
       .withIndex('by_type_and_orderIndex', (q) => q.eq('type', args.type))
@@ -38,6 +40,7 @@ export const listByType = query({
 export const listAll = query({
   args: {},
   handler: async (ctx) => {
+    if (!(await isPluginEnabled(ctx, 'resume'))) return [];
     return ctx.db.query('resumeItems').withIndex('by_orderIndex').order('asc').collect();
   },
 });
@@ -58,6 +61,7 @@ export const create = mutation({
     orderIndex: v.number(),
   },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'resume');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     const id = await ctx.db.insert('resumeItems', {
       ...args,
@@ -77,6 +81,7 @@ export const update = mutation({
     orderIndex: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'resume');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     const existing = await ctx.db.get(args.id);
     const { id, ...fields } = args;
@@ -90,6 +95,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id('resumeItems') },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'resume');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     const existing = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
@@ -104,6 +110,7 @@ export const reorder = mutation({
     items: v.array(v.object({ id: v.id('resumeItems'), orderIndex: v.number() })),
   },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'resume');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     for (const { id, orderIndex } of args.items) {
       await ctx.db.patch(id, { orderIndex } as Parameters<typeof ctx.db.patch<'resumeItems'>>[1]);

@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { internalMutation, query } from './_generated/server';
 import { MutationCtx } from './_generated/server';
 import { requireRole } from './auth';
+import { isPluginEnabled } from './plugins';
 
 const TWO_YEARS_MS = 2 * 365 * 24 * 60 * 60 * 1000;
 
@@ -36,6 +37,7 @@ export const recent = query({
   },
   handler: async (ctx, args) => {
     await requireRole(ctx, ['root']);
+    if (!(await isPluginEnabled(ctx, 'audit-log'))) return [];
     const logs = await ctx.db
       .query('auditLog')
       .withIndex('by_createdAt')

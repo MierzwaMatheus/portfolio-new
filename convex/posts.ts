@@ -5,10 +5,12 @@ import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
 import { getAuthUserId } from '@convex-dev/auth/server';
 import { logAudit } from './audit';
+import { requirePlugin, isPluginEnabled } from './plugins';
 
 export const listAllPublished = query({
   args: {},
   handler: async (ctx) => {
+    if (!(await isPluginEnabled(ctx, 'blog'))) return [];
     const posts = await ctx.db
       .query('posts')
       .withIndex('by_status_and_publishedAt', (q) => q.eq('status', 'published'))
@@ -34,6 +36,9 @@ export const listPublished = query({
     tag: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    if (!(await isPluginEnabled(ctx, 'blog'))) {
+      return { page: [], isDone: true, continueCursor: '' };
+    }
     const result = await ctx.db
       .query('posts')
       .withIndex('by_status_and_publishedAt', (q) => q.eq('status', 'published'))
@@ -86,6 +91,7 @@ export const listAdmin = query({
 export const getBySlug = query({
   args: { slug: v.string() },
   handler: async (ctx, args) => {
+    if (!(await isPluginEnabled(ctx, 'blog'))) return null;
     const post = await ctx.db
       .query('posts')
       .withIndex('by_slug', (q) => q.eq('slug', args.slug))
@@ -137,6 +143,7 @@ export const create = mutation({
     readTime: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'blog');
     await requireRole(ctx, ['root', 'admin']);
     const userId = await getAuthUserId(ctx);
 
@@ -182,6 +189,7 @@ export const update = mutation({
     readTime: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'blog');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     const existing = await ctx.db.get(args.id);
     const { id, ...fields } = args;
@@ -195,6 +203,7 @@ export const update = mutation({
 export const publish = mutation({
   args: { id: v.id('posts') },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'blog');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     const post = await ctx.db.get(args.id);
     const now = Date.now();
@@ -207,6 +216,7 @@ export const publish = mutation({
 export const unpublish = mutation({
   args: { id: v.id('posts') },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'blog');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     const post = await ctx.db.get(args.id);
     await ctx.db.patch(args.id, { status: 'draft', updatedAt: Date.now() });
@@ -218,6 +228,7 @@ export const unpublish = mutation({
 export const remove = mutation({
   args: { id: v.id('posts') },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'blog');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     const post = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);

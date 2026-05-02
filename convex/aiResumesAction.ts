@@ -141,6 +141,9 @@ export const generate = action({
     jobDescription: v.string(),
   },
   handler: async (ctx, args): Promise<{ id: string }> => {
+    const enabled = await ctx.runQuery(api.plugins.checkPlugin, { pluginId: 'ai-resumes' });
+    if (!enabled) throw new Error('PLUGIN_DISABLED:ai-resumes');
+
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
 

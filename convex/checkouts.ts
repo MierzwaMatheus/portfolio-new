@@ -3,10 +3,12 @@ import { internalMutation, mutation, query } from './_generated/server';
 import { internal } from './_generated/api';
 import { requireRole } from './auth';
 import { logAudit } from './audit';
+import { requirePlugin, isPluginEnabled } from './plugins';
 
 export const getByLink = query({
   args: { uniqueLink: v.string() },
   handler: async (ctx, args) => {
+    if (!(await isPluginEnabled(ctx, 'payments'))) return null;
     return ctx.db
       .query('checkouts')
       .withIndex('by_uniqueLink', (q) => q.eq('uniqueLink', args.uniqueLink))
@@ -59,6 +61,7 @@ export const create = mutation({
     expiresAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'payments');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
 
     const existing = await ctx.db
@@ -121,6 +124,7 @@ export const updatePayment = mutation({
 export const remove = mutation({
   args: { id: v.id('checkouts') },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'payments');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     const checkout = await ctx.db.get(args.id);
     if (!checkout) throw new Error('Not found');

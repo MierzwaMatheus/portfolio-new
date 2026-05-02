@@ -3,6 +3,7 @@ import { mutation, query, internalAction, internalQuery } from './_generated/ser
 import { internal } from './_generated/api';
 import { requireRole, requireAuth } from './auth';
 import { logAudit } from './audit';
+import { requirePlugin } from './plugins';
 
 const HOUR_MS = 60 * 60 * 1000;
 const DAY_MS = 24 * HOUR_MS;
@@ -207,14 +208,7 @@ export const submit = mutation({
       );
     }
 
-    // Kill switch: check if contact wizard is enabled
-    const enabledSetting = await ctx.db
-      .query('homeContent')
-      .withIndex('by_key', (q) => q.eq('key', 'contact_wizard_enabled'))
-      .unique();
-    if (enabledSetting !== null && enabledSetting.value === false) {
-      throw new Error('CONTACT_DISABLED');
-    }
+    await requirePlugin(ctx, 'contact-wizard');
 
     const id = await ctx.db.insert('contactRequests', {
       type: args.type,

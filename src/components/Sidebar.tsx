@@ -26,6 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useI18n } from "@/i18n/context/I18nContext";
 import { useContactWizard } from "@/contexts/ContactWizardContext";
+import { usePlugins } from "@/contexts/PluginsContext";
 import { useHome } from "@/hooks/useHome";
 import { MessageSquare } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
@@ -36,12 +37,14 @@ import { sidebarRepository, resumeRepository, portfolioRepository, homeRepositor
 import type { SidebarContactInfo } from "@/repositories/interfaces/SidebarRepository";
 import { generateCV } from "@/utils/cvPDF";
 
-const NAV_ITEMS_KEYS = [
+import type { PluginId } from "../../convex/pluginRegistry";
+
+const NAV_ITEMS_KEYS: Array<{ key: string; href: string; icon: React.ElementType; pluginId?: PluginId }> = [
   { key: "home", href: "/", icon: Home },
-  { key: "resume", href: "/curriculo", icon: Briefcase },
-  { key: "portfolio", href: "/portfolio", icon: FolderOpen },
-  { key: "about", href: "/sobre", icon: User },
-  { key: "blog", href: "/blog", icon: PenTool },
+  { key: "resume", href: "/curriculo", icon: Briefcase, pluginId: "resume" },
+  { key: "portfolio", href: "/portfolio", icon: FolderOpen, pluginId: "portfolio" },
+  { key: "about", href: "/sobre", icon: User, pluginId: "about" },
+  { key: "blog", href: "/blog", icon: PenTool, pluginId: "blog" },
 ];
 
 const SOCIAL_CONFIG = [
@@ -66,6 +69,7 @@ export function Sidebar() {
   const { t } = useTranslation();
   const { locale, setLocale } = useI18n();
   const { openWizard } = useContactWizard();
+  const { isEnabled } = usePlugins();
   const { contactWizardEnabled: wizardEnabled } = useHome(homeRepository);
   const [location] = useLocation();
   const { contactInfo, isLoading } = useSidebar(sidebarRepository);
@@ -77,10 +81,12 @@ export function Sidebar() {
     staleTime: Infinity,
   });
 
-const NAV_ITEMS = NAV_ITEMS_KEYS.map(item => ({
-    ...item,
-    label: t(`navigation.${item.key}`)
-  }));
+const NAV_ITEMS = NAV_ITEMS_KEYS
+    .filter(item => !item.pluginId || isEnabled(item.pluginId))
+    .map(item => ({
+      ...item,
+      label: t(`navigation.${item.key}`)
+    }));
 
   const handleLanguageChange = (checked: boolean) => {
     setLocale(checked ? 'en-US' : 'pt-BR');

@@ -5,6 +5,7 @@ import { requireRole, requireAuth } from './auth';
 import { logAudit } from './audit';
 import { checkRateLimit, recordRateLimitAttempt, resetRateLimit } from './rateLimit';
 import { getAuthUserId } from '@convex-dev/auth/server';
+import { requirePlugin, isPluginEnabled } from './plugins';
 
 const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
 
@@ -32,6 +33,7 @@ export const listAdmin = query({
 export const getPublic = query({
   args: { slug: v.string(), token: v.optional(v.string()) },
   handler: async (ctx, args) => {
+    if (!(await isPluginEnabled(ctx, 'proposals'))) return null;
     const proposal = await ctx.db
       .query('proposals')
       .withIndex('by_slug', (q) => q.eq('slug', args.slug))
@@ -140,6 +142,7 @@ export const create = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'proposals');
     const { userId } = await requireRole(ctx, ['root', 'admin', 'proposal-editor']);
 
     const existing = await ctx.db
@@ -220,6 +223,7 @@ export const update = mutation({
 export const remove = mutation({
   args: { id: v.id('proposals') },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'proposals');
     const { userId } = await requireRole(ctx, ['root', 'admin']);
 
     const proposal = await ctx.db.get(args.id);
