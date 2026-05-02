@@ -3,12 +3,13 @@ import { internal } from './_generated/api';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
-async function sha256Hex(text: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(text);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+async function hmacKeyFingerprint(apiKey: string): Promise<string> {
+  const pepper = process.env.PLAYGROUND_KEY_PEPPER ?? 'dev-pepper';
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(pepper), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
+  );
+  const sig = await crypto.subtle.sign('HMAC', keyMaterial, new TextEncoder().encode(apiKey));
+  return Array.from(new Uint8Array(sig)).slice(0, 4).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 async function callOpenRouter(
@@ -202,8 +203,7 @@ export const aiProxy = httpAction(async (ctx, req) => {
     return json({ error: 'jobDescription is required' }, 400, origin);
   }
 
-  const keyHash = await sha256Hex(apiKey);
-  const keyFingerprint = keyHash.slice(-8);
+  const keyFingerprint = await hmacKeyFingerprint(apiKey);
   const models = mode === 'production'
     ? ['google/gemini-2.0-flash-001', 'openai/gpt-4o-mini', 'anthropic/claude-sonnet-4-6']
     : ['google/gemini-flash-1.5'];

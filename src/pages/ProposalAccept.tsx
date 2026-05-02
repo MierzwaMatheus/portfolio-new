@@ -402,44 +402,16 @@ export default function ProposalAccept() {
     setIsSigning(true);
 
     try {
-      const ipAddress = await fetch('https://api.ipify.org?format=json')
-        .then(res => res.json())
-        .then(data => data.ip)
-        .catch(() => null);
-
+      const acceptedAtTs = Date.now();
       const userAgent = navigator.userAgent;
 
-      // Build content snapshot/hash for the contract
-      const acceptedAtTs = Date.now();
-      const acceptanceForSnapshot = {
-        client_name: clientName.trim(),
-        client_document: clientDocument.replace(/\D/g, ''),
-        client_email: clientEmail.trim(),
-        client_role: clientRole.trim() || null,
-        client_declaration: clientDeclaration.trim() || null,
-        accepted_at: new Date(acceptedAtTs).toISOString(),
-        ip_address: ipAddress || null,
-        user_agent: userAgent || null,
-      };
-      const contentSnapshot = JSON.stringify({
-        proposal: {
-          id: proposal.id,
-          title: proposal.title,
-          objective: proposal.objective,
-          investment_value: proposal.investment_value,
-          scope: proposal.scope,
-          timeline: proposal.timeline,
-          conditions: proposal.conditions,
-          rescision_policy: proposal.rescision_policy,
-        },
-        acceptance: acceptanceForSnapshot,
-      });
-      const contentHash = await generateContentHash(contentSnapshot);
-
-      // Upload signature to Convex storage
+      // Upload signature to Convex storage (server validates session)
       let signatureStorageId: string | undefined;
       try {
-        const uploadUrl = await generateUploadUrl();
+        const uploadUrl = await generateUploadUrl({
+          slug: slugStr,
+          token: sessionToken ?? undefined,
+        });
         const blob = await (await fetch(signatureDataUrl)).blob();
         const uploadRes = await fetch(uploadUrl, {
           method: "POST",
@@ -461,9 +433,6 @@ export default function ProposalAccept() {
           clientEmail: clientEmail.trim(),
           clientRole: clientRole.trim() || undefined,
           clientDeclaration: clientDeclaration.trim() || undefined,
-          contentSnapshot,
-          contentHash,
-          ipAddress: ipAddress || "0.0.0.0",
           userAgent: userAgent || "unknown",
           signatureStorageId: signatureStorageId as any,
         });
@@ -490,9 +459,9 @@ export default function ProposalAccept() {
         client_role: clientRole.trim() || undefined,
         client_declaration: clientDeclaration.trim() || undefined,
         accepted_at: new Date(acceptedAtTs).toISOString(),
-        ip_address: ipAddress || null,
+        ip_address: null,
         user_agent: userAgent || null,
-        content_hash: contentHash,
+        content_hash: undefined,
         proposal_version: String(rawProposal?.version ?? 1),
       };
 
@@ -510,14 +479,5 @@ export default function ProposalAccept() {
     } finally {
       setIsSigning(false);
     }
-  }
-
-
-  async function generateContentHash(contentSnapshot: string): Promise<string> {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(contentSnapshot);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 }

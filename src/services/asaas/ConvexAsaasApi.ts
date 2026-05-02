@@ -36,8 +36,8 @@ export class ConvexAsaasApi implements AsaasApi {
     throw new Error(NOT_IMPLEMENTED);
   }
 
-  async createCustomer(input: CreateCustomerInput): Promise<Customer> {
-    return (await client.action(api.asaas.createCustomer, input as any)) as unknown as Customer;
+  async createCustomer(_input: CreateCustomerInput): Promise<Customer> {
+    throw new Error('createCustomer is internal — use checkouts.initiatePayment');
   }
 
   async getCustomer(_customerId: string): Promise<Customer> {
@@ -56,8 +56,8 @@ export class ConvexAsaasApi implements AsaasApi {
     throw new Error(NOT_IMPLEMENTED);
   }
 
-  async createCharge(input: CreateChargeInput): Promise<Charge> {
-    return (await client.action(api.asaas.createCharge, input as any)) as unknown as Charge;
+  async createCharge(_input: CreateChargeInput): Promise<Charge> {
+    throw new Error('createCharge is internal — use checkouts.initiatePayment');
   }
 
   async getCharge(chargeId: string): Promise<Charge> {

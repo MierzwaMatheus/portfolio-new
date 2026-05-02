@@ -1,11 +1,11 @@
 import { v } from 'convex/values';
-import { internalMutation, mutation, query } from './_generated/server';
+import { action, internalMutation, internalQuery, mutation, query } from './_generated/server';
+import { internal } from './_generated/api';
+import { requireRole } from './auth';
 
 function escapeTgHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
-import { internal } from './_generated/api';
-import { requireRole } from './auth';
 import { logAudit } from './audit';
 import { requirePlugin, isPluginEnabled } from './plugins';
 import { softDeleteDoc, restoreDoc } from './lib/softDelete';
@@ -14,11 +14,20 @@ export const getByLink = query({
   args: { uniqueLink: v.string() },
   handler: async (ctx, args) => {
     if (!(await isPluginEnabled(ctx, 'payments'))) return null;
-    return ctx.db
+    const doc = await ctx.db
       .query('checkouts')
       .withIndex('by_uniqueLink', (q) => q.eq('uniqueLink', args.uniqueLink))
       .unique();
+    if (!doc) return null;
+    // Strip sensitive PII — CPF/CNPJ and phone are not needed client-side
+    const { customerCpfCnpj: _cpf, customerMobilePhone: _phone, customerPhone: _phone2, customerCompany: _company, ...safe } = doc;
+    return safe;
   },
+});
+
+export const _getById = internalQuery({
+  args: { id: v.id('checkouts') },
+  handler: async (ctx, args) => ctx.db.get(args.id),
 });
 
 export const listAdmin = query({
@@ -101,27 +110,87 @@ export const create = mutation({
   },
 });
 
-export const updatePayment = mutation({
+export const _patchGatewayData = internalMutation({
   args: {
     id: v.id('checkouts'),
-    status: v.optional(
-      v.union(
-        v.literal('payment_selected'),
-        v.literal('payment_confirmed'),
-      ),
-    ),
-    paymentMethod: v.optional(v.string()),
+    status: v.union(v.literal('payment_selected'), v.literal('payment_confirmed')),
+    paymentMethod: v.string(),
     asaasChargeId: v.optional(v.string()),
     pixQrCode: v.optional(v.string()),
     pixQrCodeImage: v.optional(v.string()),
     bankSlipUrl: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await requirePlugin(ctx, 'payments');
     const { id, ...fields } = args;
     const checkout = await ctx.db.get(id);
     if (!checkout) throw new Error('Checkout not found');
     await ctx.db.patch(id, { ...fields, updatedAt: Date.now() });
+  },
+});
+
+export const initiatePayment = action({
+  args: {
+    id: v.id('checkouts'),
+    billingType: v.union(v.literal('PIX'), v.literal('BOLETO'), v.literal('CREDIT_CARD')),
+  },
+  handler: async (ctx, args): Promise<{
+    chargeId: string;
+    pixCode: string | undefined;
+    invoiceUrl: string | undefined;
+    status: string;
+  }> => {
+    const checkout = await ctx.runQuery(internal.checkouts._getById, { id: args.id });
+    if (!checkout) throw new Error('Checkout not found');
+    if (checkout.deletedAt) throw new Error('Not found');
+    if (checkout.status === 'paid') throw new Error('Already paid');
+
+    // Idempotency: return existing charge data if billing type matches
+    if (
+      checkout.asaasChargeId &&
+      checkout.paymentMethod &&
+      checkout.paymentMethod.toUpperCase() === args.billingType
+    ) {
+      return {
+        chargeId: checkout.asaasChargeId,
+        pixCode: checkout.pixQrCode ?? undefined,
+        invoiceUrl: checkout.bankSlipUrl ?? undefined,
+        status: checkout.status,
+      };
+    }
+
+    const { customerId } = await ctx.runAction(internal.asaas.createCustomer, {
+      name: checkout.customerName,
+      email: checkout.customerEmail,
+      cpfCnpj: checkout.customerCpfCnpj,
+      phone: checkout.customerMobilePhone,
+    });
+
+    const charge = await ctx.runAction(internal.asaas.createCharge, {
+      customerId,
+      amountCents: Math.round(checkout.value * 100),
+      description: checkout.description ?? `Pagamento - ${checkout.uniqueLink}`,
+      billingType: args.billingType,
+      dueDate: checkout.dueDate,
+      externalReference: checkout.uniqueLink,
+    });
+
+    const status = args.billingType === 'CREDIT_CARD' ? 'payment_confirmed' : 'payment_selected';
+
+    await ctx.runMutation(internal.checkouts._patchGatewayData, {
+      id: args.id,
+      status,
+      paymentMethod: args.billingType.toLowerCase(),
+      asaasChargeId: charge.chargeId,
+      pixQrCode: charge.pixCode,
+      bankSlipUrl: charge.invoiceUrl,
+    });
+
+    return {
+      chargeId: charge.chargeId,
+      pixCode: charge.pixCode,
+      invoiceUrl: charge.invoiceUrl,
+      status,
+    };
   },
 });
 

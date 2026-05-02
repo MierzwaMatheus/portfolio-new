@@ -38,7 +38,7 @@ export const logEvent = mutation({
     userAgent: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const identifier = args.ipAddress ?? args.sessionId;
+    const identifier = args.sessionId;
     const { allowed, blockedUntil } = await checkRateLimit(ctx, 'playground_log', identifier);
     if (!allowed) {
       throw new Error(`RATE_LIMITED:${blockedUntil ?? 0}`);

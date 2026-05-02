@@ -385,7 +385,7 @@ export default function AdminProposals() {
         .map((customText) => ({ text: customText, checked: true }))
     ));
 
-    setPassword(proposal.password || "");
+    setPassword("");
     setRescisionPolicy(proposal.rescissionPolicy || DEFAULT_RESCISION_POLICY);
     setIsModalOpen(true);
   };
@@ -807,7 +807,7 @@ export default function AdminProposals() {
                       <Input
                         type="text"
                         className="bg-background border-input flex-1"
-                        placeholder="Deixe em branco para acesso público"
+                        placeholder="Deixe em branco para manter ou remover proteção"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                       />
@@ -819,10 +819,9 @@ export default function AdminProposals() {
                           className="shrink-0"
                           onClick={() => {
                             const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                            let randomPassword = '';
-                            for (let i = 0; i < 8; i++) {
-                              randomPassword += chars.charAt(Math.floor(Math.random() * chars.length));
-                            }
+                            const arr = new Uint8Array(10);
+                            crypto.getRandomValues(arr);
+                            const randomPassword = Array.from(arr, (b) => chars[b % chars.length]).join('');
                             setPassword(randomPassword);
                             toast.success("Senha gerada com sucesso!");
                           }}
@@ -1023,21 +1022,7 @@ export default function AdminProposals() {
                       </TableCell>
                       <TableCell className="text-gray-400">
                         {proposal.password ? (
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-sm">{proposal.password}</span>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-gray-400 hover:text-white hover:bg-white/10"
-                              onClick={() => {
-                                navigator.clipboard.writeText(proposal.password);
-                                toast.success("Senha copiada para a área de transferência!");
-                              }}
-                              title="Copiar senha"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </Button>
-                          </div>
+                          <span className="text-yellow-400 text-sm font-medium">Protegida</span>
                         ) : (
                           <span className="text-gray-500 text-sm">Pública</span>
                         )}

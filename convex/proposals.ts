@@ -8,6 +8,33 @@ import { getAuthUserId } from '@convex-dev/auth/server';
 import { requirePlugin, isPluginEnabled } from './plugins';
 import { softDeleteDoc, restoreDoc } from './lib/softDelete';
 
+async function hashPassword(password: string): Promise<string> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const saltHex = Array.from(salt).map((b) => b.toString(16).padStart(2, '0')).join('');
+  const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, keyMaterial, 256);
+  const hashHex = Array.from(new Uint8Array(bits)).map((b) => b.toString(16).padStart(2, '0')).join('');
+  return `pbkdf2:${saltHex}:${hashHex}`;
+}
+
+async function verifyPassword(password: string, stored: string): Promise<boolean> {
+  if (!stored.startsWith('pbkdf2:')) return false;
+  const parts = stored.split(':');
+  if (parts.length !== 3) return false;
+  const saltHex = parts[1];
+  const storedHash = parts[2];
+  const salt = new Uint8Array(saltHex.match(/.{2}/g)!.map((b) => parseInt(b, 16)));
+  const keyMaterial = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' }, keyMaterial, 256);
+  const computedHash = Array.from(new Uint8Array(bits)).map((b) => b.toString(16).padStart(2, '0')).join('');
+  if (computedHash.length !== storedHash.length) return false;
+  const a = new TextEncoder().encode(computedHash);
+  const b = new TextEncoder().encode(storedHash);
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+  return diff === 0;
+}
+
 const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
 
 function escapeTgHtml(s: string): string {
@@ -76,9 +103,30 @@ export const getPublic = query({
 });
 
 export const generateSignatureUploadUrl = mutation({
-  args: {},
-  handler: async (ctx) => {
-    return await ctx.storage.generateUploadUrl();
+  args: {
+    slug: v.string(),
+    token: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const proposal = await ctx.db
+      .query('proposals')
+      .withIndex('by_slug', (q) => q.eq('slug', args.slug))
+      .unique();
+    if (!proposal) throw new Error('Proposal not found');
+    if (proposal.isAccepted) throw new Error('Proposal already accepted');
+    if (proposal.expiresAt < now) throw new Error('Proposal expired');
+    if (proposal.password) {
+      if (!args.token) throw new Error('Session required');
+      const session = await ctx.db
+        .query('proposalSessions')
+        .withIndex('by_token', (q) => q.eq('token', args.token!))
+        .unique();
+      if (!session || session.proposalId !== proposal._id || session.expiresAt < now) {
+        throw new Error('Invalid or expired session');
+      }
+    }
+    return ctx.storage.generateUploadUrl();
   },
 });
 
@@ -160,8 +208,10 @@ export const create = mutation({
     if (existing) throw new Error('Slug already in use');
 
     const now = Date.now();
+    const hashedPassword = args.password ? await hashPassword(args.password) : undefined;
     const id = await ctx.db.insert('proposals', {
       ...args,
+      password: hashedPassword,
       userId,
       version: 1,
       isAccepted: false,
@@ -213,10 +263,16 @@ export const update = mutation({
     if (!proposal) throw new Error('Proposal not found');
     if (proposal.isAccepted) throw new Error('Accepted proposals are immutable');
 
-    const { id, ...fields } = args;
+    const { id, password: plainPassword, ...fields } = args;
     const newVersion = proposal.version + 1;
+    const hashedPassword = plainPassword ? await hashPassword(plainPassword) : undefined;
 
-    await ctx.db.patch(id, { ...fields, version: newVersion, updatedAt: Date.now() });
+    await ctx.db.patch(id, {
+      ...fields,
+      ...(hashedPassword !== undefined ? { password: hashedPassword } : {}),
+      version: newVersion,
+      updatedAt: Date.now(),
+    });
 
     await logAudit(ctx, {
       eventType: 'admin.update',
@@ -317,7 +373,8 @@ export const createSession = mutation({
       .unique();
     if (!proposal) throw new Error('Proposal not found');
     if (!proposal.password) throw new Error('This proposal has no password');
-    if (proposal.password !== args.password) {
+    const valid = await verifyPassword(args.password, proposal.password);
+    if (!valid) {
       await recordRateLimitAttempt(ctx, 'proposal_password', rateLimitKey);
       throw new Error('Invalid password');
     }
@@ -354,9 +411,6 @@ export const accept = mutation({
     clientEmail: v.string(),
     clientRole: v.optional(v.string()),
     clientDeclaration: v.optional(v.string()),
-    contentSnapshot: v.string(),
-    contentHash: v.string(),
-    ipAddress: v.string(),
     userAgent: v.string(),
     signatureStorageId: v.optional(v.id('_storage')),
   },
@@ -383,6 +437,32 @@ export const accept = mutation({
       }
     }
 
+    // Build content snapshot server-side from authoritative DB data
+    const contentSnapshot = JSON.stringify({
+      proposal: {
+        id: proposal._id,
+        version: proposal.version,
+        title: proposal.title,
+        objective: proposal.objective,
+        investmentValue: proposal.investmentValue,
+        scope: proposal.scope,
+        timeline: proposal.timeline,
+        conditions: proposal.conditions,
+        rescissionPolicy: proposal.rescissionPolicy,
+        deliveryDate: proposal.deliveryDate,
+      },
+      acceptance: {
+        clientName: args.clientName,
+        clientDocument: args.clientDocument,
+        clientEmail: args.clientEmail,
+        clientRole: args.clientRole ?? null,
+        clientDeclaration: args.clientDeclaration ?? null,
+        acceptedAt: new Date(now).toISOString(),
+      },
+    });
+    const hashBuffer = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(contentSnapshot));
+    const contentHash = Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, '0')).join('');
+
     const acceptanceId = await ctx.db.insert('proposalAcceptances', {
       proposalId: proposal._id,
       proposalVersion: proposal.version,
@@ -392,10 +472,10 @@ export const accept = mutation({
       clientEmail: args.clientEmail,
       clientRole: args.clientRole,
       clientDeclaration: args.clientDeclaration,
-      contentSnapshot: args.contentSnapshot,
-      contentSnapshotVersion: 'v1',
-      contentHash: args.contentHash,
-      ipAddress: args.ipAddress,
+      contentSnapshot,
+      contentSnapshotVersion: 'v2-server',
+      contentHash,
+      ipAddress: 'client-reported',
       userAgent: args.userAgent.substring(0, 512),
       signatureStorageId: args.signatureStorageId,
       acceptedAt: now,
@@ -412,11 +492,10 @@ export const accept = mutation({
     await logAudit(ctx, {
       eventType: 'proposal.accepted',
       actorType: 'external',
-      actorId: args.ipAddress,
+      actorId: args.clientEmail,
       targetType: 'proposal',
       targetId: proposal._id,
-      metadata: { version: proposal.version, email: args.clientEmail },
-      ipAddress: args.ipAddress,
+      metadata: { version: proposal.version, email: args.clientEmail, contentHash },
       userAgent: args.userAgent,
       success: true,
     });
@@ -474,6 +553,37 @@ export const exportTitularData = query({
       .query('proposalAcceptances')
       .withIndex('by_clientDocument', (q) => q.eq('clientDocument', args.clientDocument))
       .collect();
+  },
+});
+
+export const resetPassword = mutation({
+  args: {
+    id: v.id('proposals'),
+    newPassword: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'proposals');
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'proposal-editor']);
+
+    const proposal = await ctx.db.get(args.id);
+    if (!proposal) throw new Error('Proposal not found');
+
+    const hashedPassword = args.newPassword ? await hashPassword(args.newPassword) : undefined;
+
+    await ctx.db.patch(args.id, {
+      password: hashedPassword,
+      updatedAt: Date.now(),
+    });
+
+    await logAudit(ctx, {
+      eventType: 'admin.update',
+      actorType: 'user',
+      actorId: userId,
+      targetType: 'proposal',
+      targetId: args.id,
+      metadata: { action: 'password_reset', hadPassword: !!args.newPassword },
+      success: true,
+    });
   },
 });
 

@@ -1,9 +1,9 @@
 import { v } from 'convex/values';
-import { action } from './_generated/server';
+import { action, internalAction } from './_generated/server';
 
 // Asaas integration stubs — replace with real Asaas API calls when ready
 
-export const createCustomer = action({
+export const createCustomer = internalAction({
   args: {
     name: v.string(),
     email: v.string(),
@@ -17,7 +17,7 @@ export const createCustomer = action({
   },
 });
 
-export const createCharge = action({
+export const createCharge = internalAction({
   args: {
     customerId: v.string(),
     amountCents: v.number(),

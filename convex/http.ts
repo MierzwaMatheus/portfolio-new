@@ -63,7 +63,7 @@ http.route({
   handler: httpAction(async (ctx, req) => {
     const secret = process.env.IMPORT_SECRET;
     if (!secret) return new Response('IMPORT_SECRET not set', { status: 500 });
-    if (req.headers.get('x-import-secret') !== secret) return new Response('Unauthorized', { status: 401 });
+    if (!timingSafeEqual(req.headers.get('x-import-secret') ?? '', secret)) return new Response('Unauthorized', { status: 401 });
     const rows = await req.json() as unknown[];
     const idMap = await ctx.runMutation(internal.importCsv._bulkInsertImageFolders, { rows });
     return new Response(JSON.stringify({ ok: true, idMap }), {
@@ -78,7 +78,7 @@ http.route({
   handler: httpAction(async (ctx, req) => {
     const secret = process.env.IMPORT_SECRET;
     if (!secret) return new Response('IMPORT_SECRET not set', { status: 500 });
-    if (req.headers.get('x-import-secret') !== secret) return new Response('Unauthorized', { status: 401 });
+    if (!timingSafeEqual(req.headers.get('x-import-secret') ?? '', secret)) return new Response('Unauthorized', { status: 401 });
 
     const displayName = req.headers.get('x-display-name') ?? 'image';
     const folderId = req.headers.get('x-folder-id') ?? undefined;
@@ -121,7 +121,7 @@ http.route({
   handler: httpAction(async (ctx, req) => {
     const secret = process.env.IMPORT_SECRET;
     if (!secret) return new Response('IMPORT_SECRET not set', { status: 500 });
-    if (req.headers.get('x-import-secret') !== secret) return new Response('Unauthorized', { status: 401 });
+    if (!timingSafeEqual(req.headers.get('x-import-secret') ?? '', secret)) return new Response('Unauthorized', { status: 401 });
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const body = await req.json() as any;
     const linked = await ctx.runMutation(internal.importCsv._linkImages, body);
@@ -222,7 +222,7 @@ http.route({
     const secret = req.headers.get('x-webhook-secret');
     const expectedSecret = process.env.VERCEL_WEBHOOK_SECRET;
 
-    if (expectedSecret && secret !== expectedSecret) {
+    if (expectedSecret && !timingSafeEqual(secret ?? '', expectedSecret)) {
       return new Response('Unauthorized', { status: 401 });
     }
 

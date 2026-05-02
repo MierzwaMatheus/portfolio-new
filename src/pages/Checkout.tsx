@@ -23,9 +23,7 @@ export default function CheckoutPage() {
   const isLoading = checkoutData === undefined;
   const checkout: any = checkoutData ?? null;
 
-  const updatePayment = useMutation(api.checkouts.updatePayment);
-  const createCustomer = useAction(api.asaas.createCustomer);
-  const createCharge = useAction(api.asaas.createCharge);
+  const initiatePayment = useAction(api.checkouts.initiatePayment);
 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<PaymentMethod | null>(null);
   const [selectedInstallment, setSelectedInstallment] = useState<InstallmentOption | null>(null);
@@ -189,42 +187,6 @@ export default function CheckoutPage() {
     }
   };
 
-  const ensureCharge = async (
-    billingType: 'PIX' | 'BOLETO' | 'CREDIT_CARD',
-  ): Promise<{ chargeId: string; invoiceUrl: string; pixCode?: string }> => {
-    if (!checkout) throw new Error('Checkout não encontrado');
-
-    // Reuse existing if it matches the billingType
-    if (checkout.asaasChargeId && checkout.paymentMethod && checkout.paymentMethod.toUpperCase() === billingType) {
-      return {
-        chargeId: checkout.asaasChargeId,
-        invoiceUrl: checkout.bankSlipUrl ?? '',
-        pixCode: checkout.pixQrCode ?? undefined,
-      };
-    }
-
-    const customer = await createCustomer({
-      name: checkout.customerName,
-      email: checkout.customerEmail ?? '',
-      cpfCnpj: checkout.customerCpfCnpj,
-      phone: checkout.customerMobilePhone ?? checkout.customerPhone ?? undefined,
-    });
-
-    const result = await createCharge({
-      customerId: customer.customerId,
-      amountCents: Math.round((checkout.value ?? 0) * 100),
-      description: checkout.description ?? 'Pagamento',
-      billingType,
-      dueDate: checkout.dueDate,
-      externalReference: checkout.uniqueLink,
-    });
-
-    return {
-      chargeId: result.chargeId,
-      invoiceUrl: result.invoiceUrl,
-      pixCode: result.pixCode ?? undefined,
-    };
-  };
 
   const handleConfirmPayment = async () => {
     if (!checkout || !selectedPaymentMethod) return;
@@ -260,16 +222,14 @@ export default function CheckoutPage() {
           return;
         }
 
-        // Create charge in Asaas (stub) for credit card
-        const charge = await ensureCharge('CREDIT_CARD');
-
-        // Update checkout: payment method and charge id — status confirmed via Asaas webhook
-        await updatePayment({
+        const result = await initiatePayment({
           id: checkout._id,
-          paymentMethod: selectedPaymentMethod,
-          asaasChargeId: charge.chargeId,
-          status: 'payment_confirmed',
+          billingType: 'CREDIT_CARD',
         });
+
+        if (result.status !== 'payment_confirmed') {
+          throw new Error('Falha ao processar pagamento com cartão');
+        }
 
         toast.success('Pagamento processado com sucesso!');
         setShowConfirmDialog(false);
@@ -280,26 +240,16 @@ export default function CheckoutPage() {
 
       // PIX or Boleto
       const billingType = selectedPaymentMethod === 'pix' ? 'PIX' : 'BOLETO';
-      const charge = await ensureCharge(billingType);
-
-      await updatePayment({
-        id: checkout._id,
-        status: 'payment_selected',
-        paymentMethod: selectedPaymentMethod,
-        asaasChargeId: charge.chargeId,
-        pixQrCode: charge.pixCode,
-        pixQrCodeImage: undefined,
-        bankSlipUrl: charge.invoiceUrl,
-      });
+      const result = await initiatePayment({ id: checkout._id, billingType });
 
       toast.success('Método de pagamento confirmado!');
       setShowConfirmDialog(false);
 
       if (selectedPaymentMethod === 'pix') {
-        setPixData({ payload: charge.pixCode ?? '', encodedImage: undefined });
+        setPixData({ payload: result.pixCode ?? '', encodedImage: undefined });
         setPixExpiration(new Date(Date.now() + 8 * 60 * 1000));
       } else {
-        setBoletoData({ barCode: charge.invoiceUrl });
+        setBoletoData({ barCode: result.invoiceUrl ?? '' });
       }
     } catch (error: any) {
       console.error('Error confirming payment:', error);

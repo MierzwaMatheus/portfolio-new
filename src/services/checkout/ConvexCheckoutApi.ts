@@ -24,14 +24,10 @@ export class ConvexCheckoutApi implements CheckoutApi {
   }
 
   async updateCheckout(
-    id: string,
-    input: UpdateCheckoutInput
+    _id: string,
+    _input: UpdateCheckoutInput
   ): Promise<Checkout> {
-    await client.mutation(api.checkouts.updatePayment, {
-      id: id as any,
-      ...(input as any),
-    });
-    return { _id: id, ...input } as unknown as Checkout;
+    throw new Error('updateCheckout is no longer supported — use initiatePayment action');
   }
 
   async listCheckouts(
