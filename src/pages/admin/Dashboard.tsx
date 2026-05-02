@@ -160,7 +160,8 @@ function AdminSidebar() {
   ];
 
   const filteredNavItems = navItems.filter(
-    item => checkRole(item.roles) && (!item.pluginId || isEnabled(item.pluginId))
+    item =>
+      checkRole(item.roles) && (!item.pluginId || isEnabled(item.pluginId))
   );
 
   return (
@@ -182,7 +183,7 @@ function AdminSidebar() {
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <div className="flex flex-col h-full p-6">
+        <div className="flex flex-col h-full overflow-y-auto p-6">
           <div className="mb-8 flex items-center space-x-2">
             <div className="h-8 w-8 rounded bg-neon-purple flex items-center justify-center">
               <span className="font-bold text-white">A</span>
@@ -242,7 +243,8 @@ export default function Dashboard() {
   const stats = useQuery(api.stats.getDashboard);
   const isLoading = stats === undefined;
   const projectsCount = stats?.projects.total ?? 0;
-  const articlesCount = (stats?.posts.published ?? 0) + (stats?.posts.draft ?? 0);
+  const articlesCount =
+    (stats?.posts.published ?? 0) + (stats?.posts.draft ?? 0);
   const proposalsCount = stats?.proposals.total ?? 0;
 
   const [isProjectOpen, setIsProjectOpen] = useState(false);
