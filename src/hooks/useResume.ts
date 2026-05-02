@@ -29,7 +29,11 @@ export function useResume(repository: ResumeRepository) {
           item.content;
 
         // Simple types store translations as plain strings; re-wrap into content shape
-        if (typeof raw === "string" && item.content && typeof item.content === "object") {
+        if (
+          typeof raw === "string" &&
+          item.content &&
+          typeof item.content === "object"
+        ) {
           if ("text" in item.content) {
             translatedContent = { ...item.content, text: raw };
           } else if ("name" in item.content) {
@@ -37,6 +41,15 @@ export function useResume(repository: ResumeRepository) {
           } else {
             translatedContent = raw;
           }
+        } else if (
+          typeof raw === "object" &&
+          raw !== null &&
+          item.content &&
+          typeof item.content === "object"
+        ) {
+          // Complex types (experience, education, volunteer): merge translated fields with original
+          // This preserves non-translated fields like company, institution, period, level
+          translatedContent = { ...item.content, ...raw };
         } else {
           translatedContent = raw;
         }
