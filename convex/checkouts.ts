@@ -82,6 +82,7 @@ export const create = mutation({
       actorId: userId,
       targetType: 'checkout',
       targetId: id,
+      metadata: { label: args.description ?? args.uniqueLink, customerName: args.customerName },
       success: true,
     });
 
@@ -131,6 +132,7 @@ export const remove = mutation({
       actorId: userId,
       targetType: 'checkout',
       targetId: args.id,
+      metadata: { label: checkout.description ?? checkout.uniqueLink, customerName: checkout.customerName },
       success: true,
     });
   },

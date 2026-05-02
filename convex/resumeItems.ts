@@ -7,6 +7,13 @@ import { logAudit } from './audit';
 const RESUME_TYPES = ['skill', 'experience', 'education', 'course', 'soft_skill', 'volunteer', 'language'] as const;
 type ResumeType = typeof RESUME_TYPES[number];
 
+function resumeItemLabel(type: string, content: Record<string, unknown>): string {
+  if (type === 'experience' || type === 'volunteer') return (content.role as string) || (content.text as string) || '';
+  if (type === 'education') return (content.degree as string) || '';
+  if (type === 'course' || type === 'soft_skill') return (content.text as string) || '';
+  return (content.name as string) || '';
+}
+
 export const listByType = query({
   args: {
     type: v.union(
@@ -57,7 +64,7 @@ export const create = mutation({
       createdAt: Date.now(),
     } as Parameters<typeof ctx.db.insert<'resumeItems'>>[1]);
     await markPendingChanges(ctx);
-    await logAudit(ctx, { eventType: 'admin.create', actorType: 'user', actorId: userId, targetType: 'resumeItem', targetId: id, metadata: { type: args.type }, success: true });
+    await logAudit(ctx, { eventType: 'admin.create', actorType: 'user', actorId: userId, targetType: 'resumeItem', targetId: id, metadata: { type: args.type, label: resumeItemLabel(args.type, args.content as Record<string, unknown>) }, success: true });
     return id;
   },
 });
@@ -71,10 +78,12 @@ export const update = mutation({
   },
   handler: async (ctx, args) => {
     const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const existing = await ctx.db.get(args.id);
     const { id, ...fields } = args;
     await ctx.db.patch(id, { ...fields, updatedAt: Date.now() } as Parameters<typeof ctx.db.patch<'resumeItems'>>[1]);
     await markPendingChanges(ctx);
-    await logAudit(ctx, { eventType: 'admin.update', actorType: 'user', actorId: userId, targetType: 'resumeItem', targetId: id, success: true });
+    const label = existing ? resumeItemLabel(existing.type, existing.content as Record<string, unknown>) : undefined;
+    await logAudit(ctx, { eventType: 'admin.update', actorType: 'user', actorId: userId, targetType: 'resumeItem', targetId: id, metadata: { type: existing?.type, label }, success: true });
   },
 });
 
@@ -82,9 +91,11 @@ export const remove = mutation({
   args: { id: v.id('resumeItems') },
   handler: async (ctx, args) => {
     const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const existing = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
     await markPendingChanges(ctx);
-    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'resumeItem', targetId: args.id, success: true });
+    const label = existing ? resumeItemLabel(existing.type, existing.content as Record<string, unknown>) : undefined;
+    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'resumeItem', targetId: args.id, metadata: { type: existing?.type, label }, success: true });
   },
 });
 

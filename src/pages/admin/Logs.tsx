@@ -137,13 +137,17 @@ export default function AdminLogs() {
                     </TableCell>
                     <TableCell className="text-sm">
                       {log.targetType ? (
-                        <span>
+                        <span className="flex flex-col gap-0.5">
                           <span className="font-medium">{log.targetType}</span>
-                          {log.targetId && (
-                            <span className="text-muted-foreground ml-1 text-xs font-mono truncate max-w-24 inline-block align-bottom">
+                          {(log.metadata as Record<string, unknown> | null)?.label ? (
+                            <span className="text-muted-foreground text-xs">
+                              {String((log.metadata as Record<string, unknown>).label)}
+                            </span>
+                          ) : log.targetId ? (
+                            <span className="text-muted-foreground text-xs font-mono truncate max-w-32">
                               {log.targetId}
                             </span>
-                          )}
+                          ) : null}
                         </span>
                       ) : (
                         <span className="text-muted-foreground">—</span>

@@ -163,6 +163,7 @@ export const create = mutation({
       actorId: userId,
       targetType: 'proposal',
       targetId: id,
+      metadata: { label: args.title, clientName: args.clientName },
       success: true,
     });
 
@@ -231,6 +232,7 @@ export const remove = mutation({
       actorId: userId,
       targetType: 'proposal',
       targetId: args.id,
+      metadata: { label: proposal.title, clientName: proposal.clientName },
       success: true,
     });
   },

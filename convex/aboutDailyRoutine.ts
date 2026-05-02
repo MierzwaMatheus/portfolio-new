@@ -43,7 +43,7 @@ export const create = mutation({
     const { userId } = await requireRole(ctx, ['root', 'admin']);
     const id = await ctx.db.insert('aboutDailyRoutine', { ...args, createdAt: Date.now() });
     await markPendingChanges(ctx);
-    await logAudit(ctx, { eventType: 'admin.create', actorType: 'user', actorId: userId, targetType: 'aboutDailyRoutine', targetId: id, success: true });
+    await logAudit(ctx, { eventType: 'admin.create', actorType: 'user', actorId: userId, targetType: 'aboutDailyRoutine', targetId: id, metadata: { label: args.description }, success: true });
     return id;
   },
 });
@@ -62,10 +62,11 @@ export const update = mutation({
   },
   handler: async (ctx, args) => {
     const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const existing = await ctx.db.get(args.id);
     const { id, ...fields } = args;
     await ctx.db.patch(id, { ...fields, updatedAt: Date.now() });
     await markPendingChanges(ctx);
-    await logAudit(ctx, { eventType: 'admin.update', actorType: 'user', actorId: userId, targetType: 'aboutDailyRoutine', targetId: id, success: true });
+    await logAudit(ctx, { eventType: 'admin.update', actorType: 'user', actorId: userId, targetType: 'aboutDailyRoutine', targetId: id, metadata: { label: existing?.description }, success: true });
   },
 });
 
@@ -73,8 +74,9 @@ export const remove = mutation({
   args: { id: v.id('aboutDailyRoutine') },
   handler: async (ctx, args) => {
     const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const existing = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
     await markPendingChanges(ctx);
-    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'aboutDailyRoutine', targetId: args.id, success: true });
+    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'aboutDailyRoutine', targetId: args.id, metadata: { label: existing?.description }, success: true });
   },
 });

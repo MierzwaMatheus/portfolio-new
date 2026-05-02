@@ -154,7 +154,7 @@ export const create = mutation({
       createdAt: now,
     });
     if (args.status === 'published') await markPendingChanges(ctx);
-    await logAudit(ctx, { eventType: 'admin.create', actorType: 'user', actorId: userId ?? undefined, targetType: 'post', targetId: id, success: true });
+    await logAudit(ctx, { eventType: 'admin.create', actorType: 'user', actorId: userId ?? undefined, targetType: 'post', targetId: id, metadata: { label: args.title }, success: true });
     return id;
   },
 });
@@ -183,11 +183,12 @@ export const update = mutation({
   },
   handler: async (ctx, args) => {
     const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const existing = await ctx.db.get(args.id);
     const { id, ...fields } = args;
     await ctx.db.patch(id, { ...fields, updatedAt: Date.now() });
     const post = await ctx.db.get(id);
     if (post?.status === 'published') await markPendingChanges(ctx);
-    await logAudit(ctx, { eventType: 'admin.update', actorType: 'user', actorId: userId, targetType: 'post', targetId: id, success: true });
+    await logAudit(ctx, { eventType: 'admin.update', actorType: 'user', actorId: userId, targetType: 'post', targetId: id, metadata: { label: existing?.title }, success: true });
   },
 });
 
@@ -195,10 +196,11 @@ export const publish = mutation({
   args: { id: v.id('posts') },
   handler: async (ctx, args) => {
     const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const post = await ctx.db.get(args.id);
     const now = Date.now();
     await ctx.db.patch(args.id, { status: 'published', publishedAt: now, updatedAt: now });
     await markPendingChanges(ctx);
-    await logAudit(ctx, { eventType: 'admin.publish', actorType: 'user', actorId: userId, targetType: 'post', targetId: args.id, success: true });
+    await logAudit(ctx, { eventType: 'admin.publish', actorType: 'user', actorId: userId, targetType: 'post', targetId: args.id, metadata: { label: post?.title }, success: true });
   },
 });
 
@@ -206,9 +208,10 @@ export const unpublish = mutation({
   args: { id: v.id('posts') },
   handler: async (ctx, args) => {
     const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const post = await ctx.db.get(args.id);
     await ctx.db.patch(args.id, { status: 'draft', updatedAt: Date.now() });
     await markPendingChanges(ctx);
-    await logAudit(ctx, { eventType: 'admin.unpublish', actorType: 'user', actorId: userId, targetType: 'post', targetId: args.id, success: true });
+    await logAudit(ctx, { eventType: 'admin.unpublish', actorType: 'user', actorId: userId, targetType: 'post', targetId: args.id, metadata: { label: post?.title }, success: true });
   },
 });
 
@@ -219,6 +222,6 @@ export const remove = mutation({
     const post = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
     if (post?.status === 'published') await markPendingChanges(ctx);
-    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'post', targetId: args.id, success: true });
+    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'post', targetId: args.id, metadata: { label: post?.title }, success: true });
   },
 });
