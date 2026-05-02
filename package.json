@@ -5,7 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite --host & npx convex dev",
-    "build": "npx convex deploy && tsx scripts/fetch-static-data.ts && tsx scripts/generate-rss-feed.ts && vite build",
+    "build": "npx convex deploy && tsx scripts/fetch-static-data.ts && tsx scripts/generate-rss-feed.ts && tsx scripts/generate-sitemap.ts && vite build",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",
     "format": "prettier --write .",

@@ -2,5 +2,13 @@
   "about_text": {
     "enUS": "I am a Solutions Architect and Frontend Tech Lead with over 4 years of experience spearheading digital transformations. My expertise extends beyond code: I design scalable architectures, define technical standards, and drive strategic decisions that impact entire products.\n\nSpecialized in React, TypeScript, and modern infrastructure, I have a proven track record of revitalizing critical platforms, architecting complex authentication systems (Keycloak), implementing CI/CD from the ground up, and intelligently integrating AI into interfaces. I lead technical teams with a focus on innovation, quality, and scalability, transforming business challenges into robust and elegant digital solutions.",
     "ptBR": "Sou Arquiteto de Soluções e Tech Lead Frontend com mais de 4 anos de experiência liderando transformações digitais. Minha expertise vai além de código — desenho arquiteturas escaláveis, defino padrões técnicos e conduzo decisões estratégicas que impactam produtos inteiros.\n\nEspecializado em React, TypeScript e infraestrutura moderna, tenho um histórico comprovado em revitalizar plataformas críticas, arquitetar sistemas complexos de autenticação (Keycloak), implementar CI/CD do zero, e integrar IA de forma inteligente em interfaces. Lidero equipes técnicas com foco em inovação, qualidade e escalabilidade, transformando desafios de negócio em soluções digitais robustas e elegantes."
-  }
+  },
+  "availability_status": {
+    "available": true,
+    "label": {
+      "enUS": "available for new projects",
+      "ptBR": "disponível para novos projetos"
+    }
+  },
+  "contact_wizard_enabled": true
 }

@@ -6,7 +6,7 @@
     "demoLink": "https://youtu.be/VuJWWDeVPqI",
     "description": "A Toca do Gordzilla tinha um problema: o sistema de pedidos era eficiente, mas a marca se perdia. Em um mercado saturado, ser \"apenas mais um\" não é uma opção.",
     "descriptionTranslations": {
-      "enUS": "Gordzilla's Lair had a problem: their ordering system was efficient, but their brand was getting lost. In a saturated market, being \"just another option\" is not a viable strategy.",
+      "enUS": "Gordzilla's Lair had a problem: their ordering system was efficient, but their brand was getting lost. In a saturated market, being \"just another one\" is not an option.",
       "ptBR": "A Toca do Gordzilla tinha um problema: o sistema de pedidos era eficiente, mas a marca se perdia. Em um mercado saturado, ser \"apenas mais um\" não é uma opção."
     },
     "imageIds": [
@@ -33,8 +33,7 @@
       "kn73wz35p00tj2fvhev683f6g185wbjf",
       "kn71k2pe4h88f1qwtq75rcbpax85x16x",
       "kn78e8qf0pqrd1n5ddksrxm7ad85wn1a",
-      "kn7989z9cyj1zbe1s231j666gd85x7f1",
-      "kn76y295a1qweb72gmx3ytark985w8x1"
+      "kn7989z9cyj1zbe1s231j666gd85x7f1"
     ],
     "images": [
       {
@@ -300,21 +299,11 @@
         "mimeType": "image/png",
         "storageId": "kg2arbc5wkm7jmze3p1dg6a7dx85wy4j",
         "url": "https://precise-husky-581.convex.cloud/api/storage/e8d61e8d-9806-407a-9de8-52355de77e4a"
-      },
-      {
-        "_creationTime": 1777642612990.783,
-        "_id": "kn76y295a1qweb72gmx3ytark985w8x1",
-        "createdAt": 1777642612990,
-        "displayName": "24.png",
-        "fileSize": 134674,
-        "folderId": "kh7af99w1ercjymwyxvvravtj585w6gc",
-        "mimeType": "image/png",
-        "storageId": "kg22mgn07h1vv09vz9hbf7skcd85x6nw",
-        "url": "https://precise-husky-581.convex.cloud/api/storage/f2ddf5e8-0d64-46b1-920f-fcff21725d23"
       }
     ],
+    "longDescription": "A Toca do Gordzilla tinha um problema: o sistema de pedidos era eficiente, mas a marca se perdia. Em um mercado saturado, ser \"apenas mais um\" não é uma opção.\n\nA solução? Construir um sistema próprio, onde a interface é a extensão da identidade da marca.\n\nA gente transformou o cardápio em um campo de batalha temático:\n🍔 **Produtos viraram \"Monstros\"**\n🧬 **Adicionais viraram \"Mutações\"** que deixam o Monstro mais forte.\n\nO sistema administrativo fala a mesma língua: \"A fera está dormindo\" (sem pedidos), \"Enviar para a chapa\", etc.\n\nE o design? Usamos o **Neo-Brutalismo** para dar a cara da marca: cores chapadas, bordas retas, sombras marcadas. Uma estética que grita exclusividade e força.\n\nO resultado é um sistema que não só gerencia pedidos, mas **vende a experiência** da Toca do Gordzilla. É a prova de que a tecnologia deve servir à personalidade da marca, e não o contrário.\n\nLink completo para o projeto no blog: https://www.mmlo.com.br/blog/toca-do-gordzilla",
     "longDescriptionTranslations": {
-      "enUS": "Gordzilla's Lair had a problem: their ordering system was efficient, but the brand got lost in the shuffle. In a saturated market, being \"just another\" option is not a viable strategy.\n\nThe solution? Build a proprietary system where the interface is an extension of the brand's identity.\n\nWe transformed the menu into a thematic battleground:\n🍔 **Products became \"Monsters.\"**\n🧬 **Add-ons became \"Mutations\"** that make the Monster stronger.\n\nThe administrative system speaks the same language: \"The beast is sleeping\" (no orders), \"Send to the grill,\" etc.\n\nAnd the design? We used **Neo-Brutalism** to showcase the brand's personality: flat colors, straight edges, strong shadows. An aesthetic that screams exclusivity and power.\n\nThe result is a system that not only manages orders but **sells the Gordzilla's Lair experience**. It's proof that technology should serve the brand's personality, not the other way around.\n\nFull project link on the blog: https://www.mmlo.com.br/blog/toca-do-gordzilla",
+      "enUS": "Gordzilla's Lair had a problem: their ordering system was efficient, but their brand got lost in the shuffle. In a saturated market, being \"just another\" option is not a viable strategy.\n\nThe solution? Build a proprietary system where the interface is an extension of the brand's identity.\n\nWe transformed the menu into a themed battlefield:\n🍔 **Products became \"Monsters.\"**\n🧬 **Add-ons became \"Mutations\"** that make the Monster stronger.\n\nThe administrative system speaks the same language: \"The beast is sleeping\" (no orders), \"Send to the grill,\" etc.\n\nAnd the design? We used **Neo-Brutalism** to create the brand's look and feel: solid colors, straight edges, pronounced shadows. An aesthetic that screams exclusivity and power.\n\nThe result is a system that not only manages orders but **sells the experience** of Gordzilla's Lair. It's proof that technology should serve the brand's personality, not the other way around.\n\nFull project link on the blog: https://www.mmlo.com.br/blog/toca-do-gordzilla",
       "ptBR": "A Toca do Gordzilla tinha um problema: o sistema de pedidos era eficiente, mas a marca se perdia. Em um mercado saturado, ser \"apenas mais um\" não é uma opção.\n\nA solução? Construir um sistema próprio, onde a interface é a extensão da identidade da marca.\n\nA gente transformou o cardápio em um campo de batalha temático:\n🍔 **Produtos viraram \"Monstros\"**\n🧬 **Adicionais viraram \"Mutações\"** que deixam o Monstro mais forte.\n\nO sistema administrativo fala a mesma língua: \"A fera está dormindo\" (sem pedidos), \"Enviar para a chapa\", etc.\n\nE o design? Usamos o **Neo-Brutalismo** para dar a cara da marca: cores chapadas, bordas retas, sombras marcadas. Uma estética que grita exclusividade e força.\n\nO resultado é um sistema que não só gerencia pedidos, mas **vende a experiência** da Toca do Gordzilla. É a prova de que a tecnologia deve servir à personalidade da marca, e não o contrário.\n\nLink completo para o projeto no blog: https://www.mmlo.com.br/blog/toca-do-gordzilla"
     },
     "orderIndex": 0,
@@ -327,11 +316,12 @@
       "Cursor",
       "Vercel"
     ],
-    "title": "Toca do Gordzilla",
+    "title": "Toca do Gordzills",
     "titleTranslations": {
-      "enUS": "Gordzilla's Den",
-      "ptBR": "Toca do Gordzilla"
-    }
+      "enUS": "Gordzills' Lair",
+      "ptBR": "Toca do Gordzills"
+    },
+    "updatedAt": 1777683530348
   },
   {
     "_creationTime": 1777643674133.415,
@@ -455,9 +445,53 @@
   {
     "_creationTime": 1777643674133.4148,
     "_id": "kx784getc21zm569trbx6tdw6h85w2xc",
+    "caseStudy": {
+      "metrics": [
+        {
+          "icon": "Lock",
+          "label": "Sistemas de autenticação",
+          "value": "2 fluxos distintos"
+        },
+        {
+          "icon": "Shield",
+          "label": "Isolamento de dados",
+          "value": "100% multi-tenant"
+        },
+        {
+          "icon": "Database",
+          "label": "Camada de dados dinâmica",
+          "value": "Collections flexíveis"
+        },
+        {
+          "icon": "Key",
+          "label": "Controle de acesso",
+          "value": "RLS implementado"
+        },
+        {
+          "icon": "Globe",
+          "label": "Aplicação cliente real",
+          "value": "1 integração completa"
+        }
+      ],
+      "problem": "Após dominar projetos básicos com a stack MERN, surgiu uma limitação clara: a ausência de desafios que exigissem decisões arquiteturais reais. Projetos simples não forçavam a lidar com problemas como escalabilidade, segurança avançada ou isolamento de dados. Isso criava uma lacuna entre o conhecimento adquirido em tutoriais e a complexidade de sistemas reais.\n\nAlém disso, faltava experiência prática com conceitos críticos de backend moderno, como multi-tenancy, autenticação em múltiplos níveis e controle granular de acesso a dados. Sem um projeto que centralizasse esses desafios, o aprendizado permanecia fragmentado e superficial.",
+      "results": "O projeto resultou em um sistema BaaS funcional, com autenticação robusta, isolamento completo entre tenants e controle granular de acesso a dados. Mais importante, proporcionou domínio prático sobre conceitos avançados de backend, incluindo segurança de APIs, arquitetura multi-tenant e design de sistemas escaláveis.\n\nA validação com uma aplicação cliente real demonstrou que o OliBase vai além de um projeto acadêmico, funcionando como uma base sólida para sistemas reais. O aprendizado obtido elevou significativamente a capacidade de projetar e implementar soluções complexas de forma estruturada e segura.",
+      "solution": "A solução foi desenvolver o OliBase, um Backend as a Service inspirado em Firebase e Supabase, com foco em aprendizado profundo. A arquitetura foi construída sobre a stack MERN, com Node.js e Express gerenciando a API, MongoDB como banco de dados e React para o dashboard administrativo. Redis foi utilizado para otimizações e gerenciamento de sessões.\n\nO sistema foi projetado desde o início como multi-tenant real, exigindo a separação completa de dados entre projetos. Foram implementados dois fluxos de autenticação distintos: um para administradores do dashboard e outro para usuários finais das aplicações clientes. A segurança foi reforçada com API Keys por projeto e JWTs com validação rigorosa de pertencimento.\\n\\nUm dos principais diferenciais foi a criação de um Data Layer dinâmico, permitindo collections e documentos flexíveis. Sobre isso, foi implementado um sistema de Row Level Security (RLS), garantindo que cada usuário acessasse apenas seus próprios dados. Essa lógica foi construída com middlewares complexos e regras customizáveis.\n\nPara validar o sistema, foi desenvolvida uma aplicação cliente real chamada Eventum, que consome a API do OliBase, realiza autenticação, operações CRUD e gera logs visíveis no dashboard. Isso comprovou a aplicabilidade prática da arquitetura."
+    },
+    "caseStudyTranslations": {
+      "enUS": {
+        "problem": "After mastering basic projects with the MERN stack, a clear limitation emerged: the absence of challenges that demanded real architectural decisions. Simple projects didn't force me to deal with problems like scalability, advanced security, or data isolation. This created a gap between the knowledge acquired in tutorials and the complexity of real-world systems.\n\nFurthermore, I lacked practical experience with critical modern backend concepts such as multi-tenancy, multi-level authentication, and granular data access control. Without a project that centralized these challenges, learning remained fragmented and superficial.",
+        "results": "The project resulted in a functional BaaS system featuring robust authentication, complete tenant isolation, and granular data access control. More importantly, it provided practical mastery of advanced backend concepts, including API security, multi-tenant architecture, and scalable system design.\n\nValidation with a real client application demonstrated that OliBase goes beyond an academic project, serving as a solid foundation for real-world systems. The knowledge gained significantly enhanced the ability to design and implement complex solutions in a structured and secure manner.",
+        "solution": "The solution was to develop OliBase, a Backend as a Service inspired by Firebase and Supabase, with a focus on deep learning. The architecture was built on the MERN stack, with Node.js and Express managing the API, MongoDB as the database, and React for the administrative dashboard. Redis was used for optimizations and session management.\n\nThe system was designed from the outset as truly multi-tenant, requiring complete data separation between projects. Two distinct authentication flows were implemented: one for dashboard administrators and another for end-users of client applications. Security was reinforced with API Keys per project and JWTs with rigorous ownership validation.\n\nOne of the main differentiators was the creation of a dynamic Data Layer, allowing flexible collections and documents. On top of this, a Row Level Security (RLS) system was implemented, ensuring that each user only accessed their own data. This logic was built with complex middleware and customizable rules.\n\nTo validate the system, a real client application called Eventum was developed, which consumes the OliBase API, performs authentication, CRUD operations, and generates logs visible in the dashboard. This proved the practical applicability of the architecture."
+      },
+      "ptBR": {
+        "problem": "Após dominar projetos básicos com a stack MERN, surgiu uma limitação clara: a ausência de desafios que exigissem decisões arquiteturais reais. Projetos simples não forçavam a lidar com problemas como escalabilidade, segurança avançada ou isolamento de dados. Isso criava uma lacuna entre o conhecimento adquirido em tutoriais e a complexidade de sistemas reais.\n\nAlém disso, faltava experiência prática com conceitos críticos de backend moderno, como multi-tenancy, autenticação em múltiplos níveis e controle granular de acesso a dados. Sem um projeto que centralizasse esses desafios, o aprendizado permanecia fragmentado e superficial.",
+        "results": "O projeto resultou em um sistema BaaS funcional, com autenticação robusta, isolamento completo entre tenants e controle granular de acesso a dados. Mais importante, proporcionou domínio prático sobre conceitos avançados de backend, incluindo segurança de APIs, arquitetura multi-tenant e design de sistemas escaláveis.\n\nA validação com uma aplicação cliente real demonstrou que o OliBase vai além de um projeto acadêmico, funcionando como uma base sólida para sistemas reais. O aprendizado obtido elevou significativamente a capacidade de projetar e implementar soluções complexas de forma estruturada e segura.",
+        "solution": "A solução foi desenvolver o OliBase, um Backend as a Service inspirado em Firebase e Supabase, com foco em aprendizado profundo. A arquitetura foi construída sobre a stack MERN, com Node.js e Express gerenciando a API, MongoDB como banco de dados e React para o dashboard administrativo. Redis foi utilizado para otimizações e gerenciamento de sessões.\n\nO sistema foi projetado desde o início como multi-tenant real, exigindo a separação completa de dados entre projetos. Foram implementados dois fluxos de autenticação distintos: um para administradores do dashboard e outro para usuários finais das aplicações clientes. A segurança foi reforçada com API Keys por projeto e JWTs com validação rigorosa de pertencimento.\\n\\nUm dos principais diferenciais foi a criação de um Data Layer dinâmico, permitindo collections e documentos flexíveis. Sobre isso, foi implementado um sistema de Row Level Security (RLS), garantindo que cada usuário acessasse apenas seus próprios dados. Essa lógica foi construída com middlewares complexos e regras customizáveis.\n\nPara validar o sistema, foi desenvolvida uma aplicação cliente real chamada Eventum, que consome a API do OliBase, realiza autenticação, operações CRUD e gera logs visíveis no dashboard. Isso comprovou a aplicabilidade prática da arquitetura."
+      }
+    },
     "createdAt": 1777643674133,
     "demoLink": "https://youtu.be/Ryy0Fvo4A68",
-    "description": "O OliBase é a prova de que um projeto de estudos pode se transformar em um desafio arquitetural de alto nível. Inspirado em BaaS como Firebase e Supabase, este projeto MERN (MongoDB, Express, React, Node) foi construído do zero para dominar a criação de sistemas complexos, implementando autenticação multi-tenant, isolamento de dados rigoroso e Row Level Security (RLS), culminando em um BaaS funcional com dashboard de gerenciamento e um aplicativo cliente real (Eventum) para validar cada camada de segurança e arquitetura.\n",
+    "description": "O OliBase é a prova de que um projeto de estudos pode se transformar em um desafio arquitetural de alto nível. Inspirado em BaaS como Firebase e Supabase, este projeto MERN (MongoDB, Express, React, Node) foi construído do zero para dominar a criação de sistemas complexos, implementando autenticação multi-tenant, isolamento de dados rigoroso e Row Level Security (RLS), culminando em um BaaS funcional com dashboard de gerenciamento e um aplicativo cliente real (Eventum) para validar cada camada de segurança e arquitetura.",
     "descriptionTranslations": {
       "enUS": "OliBase is proof that a study project can evolve into a high-level architectural undertaking. Inspired by BaaS solutions like Firebase and Supabase, this MERN (MongoDB, Express, React, Node) project was built from the ground up to master the creation of complex systems. It implements multi-tenant authentication, strict data isolation, and Row Level Security (RLS), culminating in a functional BaaS with a management dashboard and a real-world client application (Eventum) to validate each layer of security and architecture.",
       "ptBR": "O OliBase é a prova de que um projeto de estudos pode se transformar em um desafio arquitetural de alto nível. Inspirado em BaaS como Firebase e Supabase, este projeto MERN (MongoDB, Express, React, Node) foi construído do zero para dominar a criação de sistemas complexos, implementando autenticação multi-tenant, isolamento de dados rigoroso e Row Level Security (RLS), culminando em um BaaS funcional com dashboard de gerenciamento e um aplicativo cliente real (Eventum) para validar cada camada de segurança e arquitetura."
@@ -575,11 +609,13 @@
         "url": "https://precise-husky-581.convex.cloud/api/storage/98034f76-261d-4f90-9b41-674c5ae0d534"
       }
     ],
+    "longDescription": "A jornada começou com a imersão no MERN Stack (MongoDB, Express, React, Node). Embora os projetos pequenos fossem concluídos com sucesso, faltava um desafio que forçasse a tomada de decisões arquiteturais complexas. O objetivo era ir além do tutorial, abraçar a refatoração e entender o \"porquê\" das coisas.\n\nA inspiração veio dos Backends as a Service (BaaS) como Firebase e Supabase. A ideia foi construir um clone simplificado, o OliBase, usando MERN, não como produto comercial, mas como um projeto técnico profundo focado em aprendizado.\n\nO projeto nasceu com uma regra de ouro: ser multi-tenant de verdade. Isso exigiu a criação de dois sistemas de autenticação separados: um para os usuários do dashboard (administradores) e outro para os usuários finais das aplicações. A segurança foi garantida por API Keys vinculadas a projetos e JWTs com validação rígida de pertencimento. Essa fase forçou o estudo aprofundado de auth flows, segurança de APIs e separação de responsabilidades.\n\nO ponto de virada foi a implementação do Data Layer próprio, com Collections e Documents dinâmicos. O OliBase ganhou o Row Level Security (RLS), inspirado no Supabase, garantindo que usuários só acessassem seus próprios dados e que projetos nunca enxergassem os dados uns dos outros. Cada regra de RLS exigiu testes e ajustes de middleware, revelando a profundidade do backend \"de verdade\".\n\nPara gerenciar essa complexidade, foi criado um dashboard completo em React, consumindo a própria API construída em Node + Express e MongoDB. O dashboard permite o gerenciamento de projetos, usuários finais, collections, RLS e a visualização de logs de execução.\n\nA validação final veio com o Eventum, uma aplicação cliente real. O Eventum autentica usuários via OliBase, realiza operações CRUD protegidas por RLS e gera logs visíveis no dashboard. Isso provou que o OliBase não é apenas um backend teórico, mas um sistema funcional usado por uma aplicação real.\n\nO que começou como um projeto de estudos se tornou um BaaS funcional com autenticação robusta, isolamento multi-tenant, RLS e um app cliente real. Este projeto consolida o domínio prático de MongoDB, Express, React e Node, provando a capacidade de construir sistemas complexos.\n\nPost Completo no Blog: https://www.mmlo.com.br/blog/odisseia-do-olibase",
     "longDescriptionTranslations": {
       "enUS": "The journey began with immersion in the MERN Stack (MongoDB, Express, React, Node). Although small projects were completed successfully, there was a lack of a challenge that would force complex architectural decisions. The goal was to go beyond the tutorial, embrace refactoring, and understand the \"why\" behind things.\n\nThe inspiration came from Backends as a Service (BaaS) like Firebase and Supabase. The idea was to build a simplified clone, OliBase, using MERN, not as a commercial product, but as a deep technical project focused on learning.\n\nThe project was born with a golden rule: to be truly multi-tenant. This required the creation of two separate authentication systems: one for dashboard users (administrators) and another for end-users of the applications. Security was ensured by API Keys linked to projects and JWTs with strict ownership validation. This phase forced an in-depth study of auth flows, API security, and separation of concerns.\n\nThe turning point was the implementation of our own Data Layer, with dynamic Collections and Documents. OliBase gained Row Level Security (RLS), inspired by Supabase, ensuring that users only accessed their own data and that projects never saw each other's data. Each RLS rule required middleware testing and adjustments, revealing the depth of a \"real\" backend.\n\nTo manage this complexity, a complete dashboard was created in React, consuming its own API built in Node + Express and MongoDB. The dashboard allows management of projects, end-users, collections, RLS, and viewing execution logs.\n\nThe final validation came with Eventum, a real client application. Eventum authenticates users via OliBase, performs CRUD operations protected by RLS, and generates logs visible in the dashboard. This proved that OliBase is not just a theoretical backend, but a functional system used by a real application.\n\nWhat started as a study project became a functional BaaS with robust authentication, multi-tenant isolation, RLS, and a real client app. This project consolidates the practical mastery of MongoDB, Express, React, and Node, proving the ability to build complex systems.\n\nFull Post on the Blog: https://www.mmlo.com.br/blog/odisseia-do-olibase",
       "ptBR": "A jornada começou com a imersão no MERN Stack (MongoDB, Express, React, Node). Embora os projetos pequenos fossem concluídos com sucesso, faltava um desafio que forçasse a tomada de decisões arquiteturais complexas. O objetivo era ir além do tutorial, abraçar a refatoração e entender o \"porquê\" das coisas.\n\nA inspiração veio dos Backends as a Service (BaaS) como Firebase e Supabase. A ideia foi construir um clone simplificado, o OliBase, usando MERN, não como produto comercial, mas como um projeto técnico profundo focado em aprendizado.\n\nO projeto nasceu com uma regra de ouro: ser multi-tenant de verdade. Isso exigiu a criação de dois sistemas de autenticação separados: um para os usuários do dashboard (administradores) e outro para os usuários finais das aplicações. A segurança foi garantida por API Keys vinculadas a projetos e JWTs com validação rígida de pertencimento. Essa fase forçou o estudo aprofundado de auth flows, segurança de APIs e separação de responsabilidades.\n\nO ponto de virada foi a implementação do Data Layer próprio, com Collections e Documents dinâmicos. O OliBase ganhou o Row Level Security (RLS), inspirado no Supabase, garantindo que usuários só acessassem seus próprios dados e que projetos nunca enxergassem os dados uns dos outros. Cada regra de RLS exigiu testes e ajustes de middleware, revelando a profundidade do backend \"de verdade\".\n\nPara gerenciar essa complexidade, foi criado um dashboard completo em React, consumindo a própria API construída em Node + Express e MongoDB. O dashboard permite o gerenciamento de projetos, usuários finais, collections, RLS e a visualização de logs de execução.\n\nA validação final veio com o Eventum, uma aplicação cliente real. O Eventum autentica usuários via OliBase, realiza operações CRUD protegidas por RLS e gera logs visíveis no dashboard. Isso provou que o OliBase não é apenas um backend teórico, mas um sistema funcional usado por uma aplicação real.\n\nO que começou como um projeto de estudos se tornou um BaaS funcional com autenticação robusta, isolamento multi-tenant, RLS e um app cliente real. Este projeto consolida o domínio prático de MongoDB, Express, React e Node, provando a capacidade de construir sistemas complexos.\n\nPost Completo no Blog: https://www.mmlo.com.br/blog/odisseia-do-olibase"
     },
     "orderIndex": 2,
+    "slug": "olibase",
     "tags": [
       "MongoDB",
       "Express",
@@ -593,7 +629,8 @@
     "titleTranslations": {
       "enUS": "OliBase: Micro BaaS",
       "ptBR": "OliBase: Micro BaaS"
-    }
+    },
+    "updatedAt": 1777691700935
   },
   {
     "_creationTime": 1777643674133.413,

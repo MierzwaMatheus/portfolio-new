@@ -94,16 +94,6 @@
     "type": "education"
   },
   {
-    "_creationTime": 1777643671869.0017,
-    "_id": "mn75gtdsrym05jea8rzz46atv185xrcj",
-    "content": {
-      "text": "Arquitetura de Sistemas"
-    },
-    "createdAt": 1777643671869,
-    "orderIndex": 1,
-    "type": "soft_skill"
-  },
-  {
     "_creationTime": 1777643671869.0085,
     "_id": "mn77e3ae3hg6qkzy373sjh13v185xqzx",
     "content": {
@@ -576,21 +566,6 @@
     "type": "skill"
   },
   {
-    "_creationTime": 1777643671869.0063,
-    "_id": "mn79d44527szzrbvkebkkg91mh85x75k",
-    "content": {
-      "level": "Intermediário",
-      "name": "Espanhol"
-    },
-    "contentTranslations": {
-      "enUS": "Spanish",
-      "ptBR": "Espanhol"
-    },
-    "createdAt": 1777643671869,
-    "orderIndex": 23,
-    "type": "language"
-  },
-  {
     "_creationTime": 1777643671869.013,
     "_id": "mn7862xwz82533d0j3f14a7bd185wrgc",
     "content": {
@@ -903,20 +878,6 @@
     },
     "createdAt": 1777643671869,
     "orderIndex": 47,
-    "type": "volunteer"
-  },
-  {
-    "_creationTime": 1777643671869.0066,
-    "_id": "mn7f4behy470w1r43s5dw9j8e985xksy",
-    "content": {
-      "text": "Revitalização Gratuita de Sites de ONGs e Movimentos Sociais"
-    },
-    "contentTranslations": {
-      "enUS": "Free Website Revitalization for NGOs and Social Movements",
-      "ptBR": "Revitalização Gratuita de Sites de ONGs e Movimentos Sociais"
-    },
-    "createdAt": 1777643671869,
-    "orderIndex": 48,
     "type": "volunteer"
   }
 ]
