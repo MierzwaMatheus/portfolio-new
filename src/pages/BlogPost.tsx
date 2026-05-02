@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import { PageSkeleton } from "@/components/PageSkeleton";
 import { useRoute } from "wouter";
 import { Badge } from "@/components/ui/badge";
@@ -96,7 +97,7 @@ export default function BlogPost() {
 
                 <div
                     className="blog-content"
-                    dangerouslySetInnerHTML={{ __html: post.content }}
+                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }}
                 />
             </motion.article>
     );

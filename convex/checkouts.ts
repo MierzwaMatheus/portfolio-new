@@ -1,5 +1,9 @@
 import { v } from 'convex/values';
 import { internalMutation, mutation, query } from './_generated/server';
+
+function escapeTgHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 import { internal } from './_generated/api';
 import { requireRole } from './auth';
 import { logAudit } from './audit';
@@ -104,9 +108,6 @@ export const updatePayment = mutation({
       v.union(
         v.literal('payment_selected'),
         v.literal('payment_confirmed'),
-        v.literal('paid'),
-        v.literal('expired'),
-        v.literal('failed'),
       ),
     ),
     paymentMethod: v.optional(v.string()),
@@ -114,9 +115,9 @@ export const updatePayment = mutation({
     pixQrCode: v.optional(v.string()),
     pixQrCodeImage: v.optional(v.string()),
     bankSlipUrl: v.optional(v.string()),
-    completedAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'payments');
     const { id, ...fields } = args;
     const checkout = await ctx.db.get(id);
     if (!checkout) throw new Error('Checkout not found');
@@ -209,7 +210,7 @@ export const markPaidByLink = internalMutation({
     });
 
     await ctx.scheduler.runAfter(0, internal.telegram.notifyAdmin, {
-      message: `💰 <b>Pagamento confirmado!</b>\n\nCliente: ${checkout.customerName}\nEmail: ${checkout.customerEmail}\nValor: R$ ${checkout.value.toFixed(2)}\nLink: <code>${checkout.uniqueLink}</code>`,
+      message: `💰 <b>Pagamento confirmado!</b>\n\nCliente: ${escapeTgHtml(checkout.customerName)}\nEmail: ${escapeTgHtml(checkout.customerEmail)}\nValor: R$ ${checkout.value.toFixed(2)}\nLink: <code>${escapeTgHtml(checkout.uniqueLink)}</code>`,
     });
   },
 });

@@ -263,13 +263,12 @@ export default function CheckoutPage() {
         // Create charge in Asaas (stub) for credit card
         const charge = await ensureCharge('CREDIT_CARD');
 
-        // Update checkout: payment method, installment info, status, charge id
+        // Update checkout: payment method and charge id — status confirmed via Asaas webhook
         await updatePayment({
           id: checkout._id,
           paymentMethod: selectedPaymentMethod,
           asaasChargeId: charge.chargeId,
-          status: 'paid',
-          completedAt: Date.now(),
+          status: 'payment_confirmed',
         });
 
         toast.success('Pagamento processado com sucesso!');

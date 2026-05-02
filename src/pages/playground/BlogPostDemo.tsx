@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { PlaygroundLayout } from "@/components/PlaygroundLayout";
@@ -176,7 +177,7 @@ export default function BlogPostDemo() {
             {previewPost && (
               <article className="prose prose-invert max-w-none">
                 {previewPost.subtitle && <p className="text-xl text-muted-foreground">{previewPost.subtitle}</p>}
-                <div dangerouslySetInnerHTML={{ __html: previewPost.content || "<p><em>Sem conteúdo</em></p>" }} />
+                <div dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(previewPost.content || "<p><em>Sem conteúdo</em></p>") }} />
               </article>
             )}
           </DialogContent>

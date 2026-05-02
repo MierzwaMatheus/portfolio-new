@@ -593,13 +593,15 @@ export default defineSchema({
     userAgent: v.optional(v.string()),
     adminNotes: v.optional(v.string()),
     handledBy: v.optional(v.string()),
+    deletedAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
     .index('by_status', ['status'])
     .index('by_type', ['type'])
     .index('by_createdAt', ['createdAt'])
-    .index('by_status_and_createdAt', ['status', 'createdAt']),
+    .index('by_status_and_createdAt', ['status', 'createdAt'])
+    .index('by_deletedAt', ['deletedAt']),
 
   // ── playgroundAuditLog ────────────────────────────────────────────────────
   playgroundAuditLog: defineTable({

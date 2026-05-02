@@ -159,6 +159,11 @@ export const changePassword = action({
     newPassword: v.string(),
   },
   handler: async (ctx, args) => {
+    if (args.newPassword.length < 12) throw new Error('A senha deve ter no mínimo 12 caracteres');
+    if (!/[A-Z]/.test(args.newPassword)) throw new Error('A senha deve conter ao menos uma letra maiúscula');
+    if (!/[a-z]/.test(args.newPassword)) throw new Error('A senha deve conter ao menos uma letra minúscula');
+    if (!/[0-9]/.test(args.newPassword)) throw new Error('A senha deve conter ao menos um número');
+
     const actorData = await ctx.runQuery(internal.auth.requireAuthQuery, {});
 
     await modifyAccountCredentials(ctx, {

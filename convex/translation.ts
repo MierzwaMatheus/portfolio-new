@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import { action, internalAction } from './_generated/server';
+import { internal } from './_generated/api';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'google/gemini-2.0-flash-001';
@@ -38,7 +39,12 @@ export const translateBatch = action({
     source: v.optional(v.string()),
     target: v.optional(v.string()),
   },
-  handler: async (_ctx, args): Promise<{ translatedTexts: string[] }> => {
+  handler: async (ctx, args): Promise<{ translatedTexts: string[] }> => {
+    const actorData = await ctx.runQuery(internal.auth.requireAuthQuery, {});
+    const roleDoc = await ctx.runQuery(internal.auth.getUserRoleQuery, { userId: actorData.userId });
+    const allowedRoles = ['root', 'admin', 'content-editor', 'blog-editor'];
+    if (!roleDoc || !allowedRoles.includes(roleDoc.role)) throw new Error('Forbidden');
+
     const apiKey = process.env.OPENROUTER_API_KEY;
     if (!apiKey) {
       throw new Error('OPENROUTER_API_KEY not configured');

@@ -1,5 +1,9 @@
 import { v } from 'convex/values';
 import { mutation, query, internalAction, internalQuery } from './_generated/server';
+
+function escapeTgHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
 import { internal } from './_generated/api';
 import { requireRole, requireAuth } from './auth';
 import { logAudit } from './audit';
@@ -256,7 +260,7 @@ export const sendNotification = internalAction({
     const answers = doc.answers as Record<string, string> ?? {};
 
     const answersBlock = Object.entries(answers)
-      .map(([k, v]) => `<b>${answerLabels[k] ?? k}:</b> ${resolveAnswerValue(k, v)}`)
+      .map(([k, v]) => `<b>${escapeTgHtml(answerLabels[k] ?? k)}:</b> ${escapeTgHtml(resolveAnswerValue(k, v))}`)
       .join('\n');
 
     const ts = new Date(doc.createdAt).toLocaleString('pt-BR', {
@@ -268,17 +272,17 @@ export const sendNotification = internalAction({
     const lines = [
       `🔔 <b>Nova solicitação de contato</b>`,
       ``,
-      `${typeLabel}`,
-      `📍 <b>Origem:</b> ${doc.sourceContext ?? 'desconhecida'}`,
+      `${escapeTgHtml(typeLabel)}`,
+      `📍 <b>Origem:</b> ${escapeTgHtml(doc.sourceContext ?? 'desconhecida')}`,
       `🕐 <b>Recebido:</b> ${ts}`,
       ``,
       `─────────────────────────`,
       `👤 <b>CONTATO</b>`,
-      `<b>Nome:</b> ${name}`,
-      `<b>E-mail:</b> ${email}`,
-      phone ? `<b>Telefone:</b> ${phone}` : null,
-      linkedin ? `<b>LinkedIn:</b> ${linkedin}` : null,
-      company ? `<b>Empresa:</b> ${company}` : null,
+      `<b>Nome:</b> ${escapeTgHtml(name)}`,
+      `<b>E-mail:</b> ${escapeTgHtml(email)}`,
+      phone ? `<b>Telefone:</b> ${escapeTgHtml(phone)}` : null,
+      linkedin ? `<b>LinkedIn:</b> ${escapeTgHtml(linkedin)}` : null,
+      company ? `<b>Empresa:</b> ${escapeTgHtml(company)}` : null,
       ``,
       `─────────────────────────`,
       `📋 <b>RESPOSTAS</b>`,
@@ -309,6 +313,7 @@ export const list = query({
     status: v.optional(v.string()),
     type: v.optional(v.string()),
     limit: v.optional(v.number()),
+    includeDeleted: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     await requireRole(ctx, ['root', 'admin']);
@@ -319,6 +324,7 @@ export const list = query({
       .take(200);
 
     return all
+      .filter((r) => args.includeDeleted || r.deletedAt === undefined)
       .filter((r) => !args.status || r.status === args.status)
       .filter((r) => !args.type || r.type === args.type)
       .slice(0, args.limit ?? 100);

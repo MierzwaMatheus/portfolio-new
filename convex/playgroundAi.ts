@@ -152,43 +152,54 @@ async function generateProduction(apiKey: string, jobDescription: string, locale
 
 // ── HTTP Action ───────────────────────────────────────────────────────────────
 
-const CORS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Session-Id',
-};
+const ALLOWED_ORIGINS = new Set([
+  'https://portfolio.mierzwa.dev',
+  'http://localhost:5173',
+  'http://localhost:5174',
+]);
 
-function json(body: unknown, status = 200) {
+function corsHeaders(origin: string | null): Record<string, string> {
+  const allowedOrigin = origin && ALLOWED_ORIGINS.has(origin) ? origin : 'https://portfolio.mierzwa.dev';
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Session-Id',
+    'Vary': 'Origin',
+  };
+}
+
+function json(body: unknown, status = 200, origin: string | null = null) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...CORS, 'Content-Type': 'application/json' },
+    headers: { ...corsHeaders(origin), 'Content-Type': 'application/json' },
   });
 }
 
 export const aiProxy = httpAction(async (ctx, req) => {
+  const origin = req.headers.get('origin');
   if (req.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: CORS });
+    return new Response(null, { status: 204, headers: corsHeaders(origin) });
   }
 
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
   const sessionId = req.headers.get('x-session-id') ?? 'unknown';
   const apiKey = req.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
 
-  if (!apiKey) return json({ error: 'Missing API key' }, 401);
+  if (!apiKey) return json({ error: 'Missing API key' }, 401, origin);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const rateLimitResult = await ctx.runMutation(internal.playground.checkAndRecordAiRateLimit, { ip });
   if (!rateLimitResult.allowed) {
-    return json({ error: 'Rate limit exceeded', blockedUntil: rateLimitResult.blockedUntil }, 429);
+    return json({ error: 'Rate limit exceeded', blockedUntil: rateLimitResult.blockedUntil }, 429, origin);
   }
 
   let body: { jobDescription?: string; locale?: string; mode?: string; cvContent?: string };
   try { body = await req.json(); }
-  catch { return json({ error: 'Invalid JSON' }, 400); }
+  catch { return json({ error: 'Invalid JSON' }, 400, origin); }
 
   const { jobDescription, locale = 'pt-BR', mode = 'demo', cvContent } = body;
   if (!jobDescription || typeof jobDescription !== 'string') {
-    return json({ error: 'jobDescription is required' }, 400);
+    return json({ error: 'jobDescription is required' }, 400, origin);
   }
 
   const keyHash = await sha256Hex(apiKey);
@@ -220,6 +231,6 @@ export const aiProxy = httpAction(async (ctx, req) => {
     });
   } catch { /* non-fatal */ }
 
-  if (!success) return json({ error: errorMessage ?? 'Failed to generate CV' }, 500);
-  return json({ cvData, mode, models });
+  if (!success) return json({ error: errorMessage ?? 'Failed to generate CV' }, 500, origin);
+  return json({ cvData, mode, models }, 200, origin);
 });

@@ -10,6 +10,10 @@ import { softDeleteDoc, restoreDoc } from './lib/softDelete';
 
 const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
 
+function escapeTgHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 const timelineItemValidator = v.object({ step: v.string(), period: v.string() });
 
 export const listAdmin = query({
@@ -202,6 +206,7 @@ export const update = mutation({
     expiresAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'proposals');
     const { userId } = await requireRole(ctx, ['root', 'admin', 'proposal-editor']);
 
     const proposal = await ctx.db.get(args.id);
@@ -417,7 +422,7 @@ export const accept = mutation({
     });
 
     await ctx.scheduler.runAfter(0, internal.telegram.notifyAdmin, {
-      message: `✅ <b>Proposta aceita!</b>\n\nCliente: ${args.clientName}\nEmail: ${args.clientEmail}\nProposta: <code>${proposal.slug}</code>\nValor: R$ ${proposal.investmentValue.toFixed(2)}`,
+      message: `✅ <b>Proposta aceita!</b>\n\nCliente: ${escapeTgHtml(args.clientName)}\nEmail: ${escapeTgHtml(args.clientEmail)}\nProposta: <code>${escapeTgHtml(proposal.slug)}</code>\nValor: R$ ${proposal.investmentValue.toFixed(2)}`,
     });
 
     return acceptanceId;

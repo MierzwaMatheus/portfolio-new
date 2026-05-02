@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import { useMemo } from "react";
 import { useParams, useLocation } from "wouter";
 import { motion } from "framer-motion";
@@ -73,7 +74,7 @@ export default function BlogPostPreview() {
             <div className="border-t border-white/10" />
 
             {post.content ? (
-              <div className="blog-content prose prose-invert prose-headings:text-white prose-p:text-gray-300 prose-a:text-neon-purple prose-strong:text-white prose-code:text-neon-green prose-code:bg-white/5 prose-code:rounded prose-code:px-1 max-w-none" dangerouslySetInnerHTML={{ __html: post.content }} />
+              <div className="blog-content prose prose-invert prose-headings:text-white prose-p:text-gray-300 prose-a:text-neon-purple prose-strong:text-white prose-code:text-neon-green prose-code:bg-white/5 prose-code:rounded prose-code:px-1 max-w-none" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(post.content) }} />
             ) : (
               <p className="text-gray-400 italic">Este post não tem conteúdo ainda.</p>
             )}

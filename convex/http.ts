@@ -7,6 +7,43 @@ import { aiProxy } from './playgroundAi';
 
 const http = httpRouter();
 
+// Constant-time string comparison to prevent timing attacks
+function timingSafeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  const aBytes = new TextEncoder().encode(a);
+  const bBytes = new TextEncoder().encode(b);
+  let result = 0;
+  for (let i = 0; i < aBytes.length; i++) result |= aBytes[i] ^ bBytes[i];
+  return result === 0;
+}
+
+// Verify Stripe webhook signature (HMAC-SHA256)
+async function verifyStripeSignature(payload: string, header: string, secret: string): Promise<boolean> {
+  try {
+    const parts = Object.fromEntries(header.split(',').map((p) => p.split('=')));
+    const timestamp = parts['t'];
+    const v1 = parts['v1'];
+    if (!timestamp || !v1) return false;
+
+    // Reject replays older than 5 minutes
+    if (Math.abs(Date.now() / 1000 - Number(timestamp)) > 300) return false;
+
+    const signedPayload = `${timestamp}.${payload}`;
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign'],
+    );
+    const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(signedPayload));
+    const computed = Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, '0')).join('');
+    return timingSafeEqual(computed, v1);
+  } catch {
+    return false;
+  }
+}
+
 // Required by @convex-dev/auth — exposes /.well-known/openid-configuration etc.
 auth.addHttpRoutes(http);
 
@@ -103,9 +140,19 @@ http.route({
       return new Response('Missing stripe-signature header', { status: 400 });
     }
 
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      return new Response('STRIPE_WEBHOOK_SECRET not configured', { status: 500 });
+    }
+
     const body = await req.text();
 
-    // TODO: verify Stripe webhook signature with stripe.webhooks.constructEvent()
+    // Verify Stripe webhook signature using HMAC-SHA256
+    const isValid = await verifyStripeSignature(body, signature, webhookSecret);
+    if (!isValid) {
+      return new Response('Invalid signature', { status: 401 });
+    }
+
     let event: { type: string; data: { object: Record<string, unknown> } };
     try {
       event = JSON.parse(body);
@@ -134,6 +181,14 @@ http.route({
   path: '/webhooks/asaas',
   method: 'POST',
   handler: httpAction(async (ctx, req) => {
+    const asaasToken = process.env.ASAAS_WEBHOOK_TOKEN;
+    if (asaasToken) {
+      const receivedToken = req.headers.get('asaas-access-token');
+      if (!timingSafeEqual(receivedToken ?? '', asaasToken)) {
+        return new Response('Unauthorized', { status: 401 });
+      }
+    }
+
     const body = await req.text();
 
     let event: { event: string; payment?: Record<string, unknown> };

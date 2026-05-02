@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import { motion } from "framer-motion";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -116,7 +117,7 @@ export default function Resume() {
                               <div
                                 className="text-gray-300 leading-relaxed prose prose-invert prose-headings:text-white prose-strong:text-white prose-ul:text-gray-300 prose-li:text-gray-300 max-w-none [&_ul]:list-disc [&_ul]:list-outside [&_ul]:space-y-2 [&_ul]:ml-6 [&_ul]:pl-0 [&_li]:pl-2"
                                 dangerouslySetInnerHTML={{
-                                  __html: content.description,
+                                  __html: DOMPurify.sanitize(content.description),
                                 }}
                               />
                             </CardContent>
@@ -191,7 +192,7 @@ export default function Resume() {
                               <div
                                 className="text-gray-300 leading-relaxed prose prose-invert prose-headings:text-white prose-strong:text-white prose-ul:text-gray-300 prose-li:text-gray-300 max-w-none [&_ul]:list-disc [&_ul]:list-outside [&_ul]:space-y-2 [&_ul]:ml-6 [&_ul]:pl-0 [&_li]:pl-2"
                                 dangerouslySetInnerHTML={{
-                                  __html: content.description,
+                                  __html: DOMPurify.sanitize(content.description),
                                 }}
                               />
                             </CardContent>
