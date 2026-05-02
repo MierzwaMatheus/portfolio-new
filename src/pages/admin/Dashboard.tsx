@@ -22,6 +22,7 @@ import {
   MessageSquare,
   Puzzle,
   Star,
+  ShieldAlert,
 } from "lucide-react";
 import { usePlugins } from "@/contexts/PluginsContext";
 import type { PluginId } from "../../../convex/pluginRegistry";
@@ -143,6 +144,12 @@ function AdminSidebar() {
       path: "/admin/logs",
       roles: ["root"],
       pluginId: "audit-log",
+    },
+    {
+      icon: ShieldAlert,
+      label: "LGPD",
+      path: "/admin/lgpd",
+      roles: ["root"],
     },
     {
       icon: Puzzle,

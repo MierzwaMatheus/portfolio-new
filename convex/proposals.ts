@@ -549,33 +549,114 @@ export const _acceptInternal = internalMutation({
 
 export const requestErasure = mutation({
   args: {
-    clientDocument: v.string(),
+    clientDocument: v.optional(v.string()),
+    email: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { userId } = await requireRole(ctx, ['root']);
-
-    const acceptances = await ctx.db
-      .query('proposalAcceptances')
-      .withIndex('by_clientDocument', (q) => q.eq('clientDocument', args.clientDocument))
-      .collect();
+    if (!args.clientDocument && !args.email) throw new Error('clientDocument or email required');
 
     const now = Date.now();
-    for (const acc of acceptances) {
-      await ctx.db.patch(acc._id, {
-        clientName: '[ANONIMIZADO]',
-        clientEmail: '[ANONIMIZADO]@example.invalid',
-        clientRole: '[ANONIMIZADO]',
-        clientDeclaration: '[ANONIMIZADO]',
-        ipAddress: '0.0.0.0',
-        userAgent: '[ANONIMIZADO]',
-        anonymizedAt: now,
-      });
+    let totalAnonymized = 0;
+    const emailsToErase = new Set<string>();
+    if (args.email) emailsToErase.add(args.email.toLowerCase().trim());
+
+    // 1. proposalAcceptances — by clientDocument
+    if (args.clientDocument) {
+      const acceptances = await ctx.db
+        .query('proposalAcceptances')
+        .withIndex('by_clientDocument', (q) => q.eq('clientDocument', args.clientDocument!))
+        .collect();
+      for (const acc of acceptances) {
+        emailsToErase.add(acc.clientEmail);
+
+        // Redact PII from contentSnapshot while preserving the original contentHash as integrity proof
+        let redactedSnapshot = acc.contentSnapshot;
+        try {
+          const snap = JSON.parse(acc.contentSnapshot) as Record<string, unknown>;
+          if (snap.acceptance && typeof snap.acceptance === 'object') {
+            const a = snap.acceptance as Record<string, unknown>;
+            a.clientName = '[ANONIMIZADO]';
+            a.clientDocument = '[ANONIMIZADO]';
+            a.clientEmail = '[ANONIMIZADO]@example.invalid';
+            a.clientRole = '[ANONIMIZADO]';
+            a.clientDeclaration = '[ANONIMIZADO]';
+          }
+          snap._anonymizedAt = new Date(now).toISOString();
+          redactedSnapshot = JSON.stringify(snap);
+        } catch { /* keep original if JSON parse fails */ }
+
+        await ctx.db.patch(acc._id, {
+          clientName: '[ANONIMIZADO]',
+          clientDocument: '[ANONIMIZADO]',
+          clientEmail: '[ANONIMIZADO]@example.invalid',
+          clientRole: '[ANONIMIZADO]',
+          clientDeclaration: '[ANONIMIZADO]',
+          contentSnapshot: redactedSnapshot,
+          ipAddress: '0.0.0.0',
+          userAgent: '[ANONIMIZADO]',
+          anonymizedAt: now,
+        });
+        totalAnonymized++;
+      }
     }
 
-    // Also anonymize auditLog entries that reference this client's email
-    const emailSet = new Set(acceptances.map((a) => a.clientEmail));
-    const clientEmails = Array.from(emailSet);
-    for (const email of clientEmails) {
+    // 2. contactRequests — email está dentro do objeto contactInfo (sem índice direto)
+    const allContacts = await ctx.db.query('contactRequests').collect();
+    for (const contact of allContacts) {
+      if (emailsToErase.has(contact.contactInfo.email.toLowerCase())) {
+        await ctx.db.patch(contact._id, {
+          contactInfo: {
+            name: '[ANONIMIZADO]',
+            email: '[ANONIMIZADO]@example.invalid',
+            phone: undefined,
+            linkedin: undefined,
+            company: contact.contactInfo.company ? '[ANONIMIZADO]' : undefined,
+          },
+          ipAddress: '0.0.0.0',
+          userAgent: '[ANONIMIZADO]',
+        });
+        totalAnonymized++;
+      }
+    }
+
+    // 3. testimonialSubmissions — by email
+    for (const email of Array.from(emailsToErase)) {
+      const submissions = await ctx.db
+        .query('testimonialSubmissions')
+        .withIndex('by_email', (q) => q.eq('email', email))
+        .collect();
+      for (const sub of submissions) {
+        await ctx.db.patch(sub._id, {
+          name: '[ANONIMIZADO]',
+          email: '[ANONIMIZADO]@example.invalid',
+          company: sub.company ? '[ANONIMIZADO]' : undefined,
+        });
+        totalAnonymized++;
+      }
+    }
+
+    // 4. checkouts — by customerEmail
+    for (const email of Array.from(emailsToErase)) {
+      const cos = await ctx.db
+        .query('checkouts')
+        .withIndex('by_customerEmail', (q) => q.eq('customerEmail', email))
+        .collect();
+      for (const co of cos) {
+        await ctx.db.patch(co._id, {
+          customerName: '[ANONIMIZADO]',
+          customerEmail: '[ANONIMIZADO]@example.invalid',
+          customerCpfCnpj: '00000000000',
+          customerMobilePhone: undefined,
+          customerPhone: undefined,
+          customerCompany: undefined,
+        });
+        totalAnonymized++;
+      }
+    }
+
+    // 5. auditLog — by actorId (email)
+    for (const email of Array.from(emailsToErase)) {
       const auditEntries = await ctx.db
         .query('auditLog')
         .withIndex('by_actorId', (q) => q.eq('actorId', email))
@@ -583,7 +664,13 @@ export const requestErasure = mutation({
       for (const entry of auditEntries) {
         await ctx.db.patch(entry._id, {
           actorId: '[ANONIMIZADO]',
-          metadata: { ...((entry.metadata as Record<string, unknown>) ?? {}), email: '[ANONIMIZADO]', clientName: '[ANONIMIZADO]' },
+          metadata: {
+            ...((entry.metadata as Record<string, unknown>) ?? {}),
+            email: '[ANONIMIZADO]',
+            clientName: '[ANONIMIZADO]',
+            contactName: '[ANONIMIZADO]',
+            contactEmail: '[ANONIMIZADO]',
+          },
         });
       }
     }
@@ -592,22 +679,58 @@ export const requestErasure = mutation({
       eventType: 'lgpd.erasure_executed',
       actorType: 'user',
       actorId: userId,
-      metadata: { document: args.clientDocument, count: acceptances.length },
+      metadata: { document: args.clientDocument ?? null, email: args.email ?? null, count: totalAnonymized },
       success: true,
     });
 
-    return { anonymized: acceptances.length };
+    return { anonymized: totalAnonymized };
   },
 });
 
 export const exportTitularData = query({
-  args: { clientDocument: v.string() },
+  args: {
+    clientDocument: v.optional(v.string()),
+    email: v.optional(v.string()),
+  },
   handler: async (ctx, args) => {
     await requireRole(ctx, ['root']);
-    return ctx.db
-      .query('proposalAcceptances')
-      .withIndex('by_clientDocument', (q) => q.eq('clientDocument', args.clientDocument))
-      .collect();
+    if (!args.clientDocument && !args.email) throw new Error('clientDocument or email required');
+
+    const emailsToSearch = new Set<string>();
+    if (args.email) emailsToSearch.add(args.email.toLowerCase().trim());
+
+    // proposalAcceptances
+    let proposals: unknown[] = [];
+    if (args.clientDocument) {
+      proposals = await ctx.db
+        .query('proposalAcceptances')
+        .withIndex('by_clientDocument', (q) => q.eq('clientDocument', args.clientDocument!))
+        .collect();
+      (proposals as Array<{ clientEmail: string }>).forEach((p) => emailsToSearch.add(p.clientEmail));
+    }
+
+    // contactRequests — full scan (nested email field)
+    const allContacts = await ctx.db.query('contactRequests').collect();
+    const contacts = allContacts.filter((c) => emailsToSearch.has(c.contactInfo.email.toLowerCase()));
+
+    // testimonialSubmissions + checkouts — by email index
+    const testimonials: unknown[] = [];
+    const checkoutsList: unknown[] = [];
+    for (const email of Array.from(emailsToSearch)) {
+      const subs = await ctx.db
+        .query('testimonialSubmissions')
+        .withIndex('by_email', (q) => q.eq('email', email))
+        .collect();
+      testimonials.push(...subs);
+
+      const cos = await ctx.db
+        .query('checkouts')
+        .withIndex('by_customerEmail', (q) => q.eq('customerEmail', email))
+        .collect();
+      checkoutsList.push(...cos);
+    }
+
+    return { proposals, contacts, testimonials, checkouts: checkoutsList };
   },
 });
 

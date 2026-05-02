@@ -47,6 +47,7 @@ import { ContactWizardModal } from "./components/ContactWizardModal";
 import AdminContactRequests from "./pages/admin/ContactRequests";
 import AdminPlugins from "./pages/admin/Plugins";
 import AdminTestimonials from "./pages/admin/Testimonials";
+import AdminLgpdErasure from "./pages/admin/LgpdErasure";
 import TestimonialsPage from "./pages/Testimonials";
 import { PluginsProvider } from "./contexts/PluginsContext";
 import { PluginRoute } from "./components/PluginRoute";
@@ -203,6 +204,9 @@ function Router() {
             component={() => <PluginRoute pluginId="testimonials"><AdminTestimonials /></PluginRoute>}
             allowedRoles={["root", "admin", "content-editor"]}
           />
+        </Route>
+        <Route path="/admin/lgpd">
+          <ProtectedRoute component={AdminLgpdErasure} allowedRoles={["root"]} />
         </Route>
       </Switch>
       </>

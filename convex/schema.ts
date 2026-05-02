@@ -521,7 +521,8 @@ export default defineSchema({
     reviewedBy: v.optional(v.id('users')),
   })
     .index('by_status', ['status'])
-    .index('by_createdAt', ['createdAt']),
+    .index('by_createdAt', ['createdAt'])
+    .index('by_email', ['email']),
 
   // ── rateLimitAttempts ──────────────────────────────────────────────────────
   rateLimitAttempts: defineTable({
