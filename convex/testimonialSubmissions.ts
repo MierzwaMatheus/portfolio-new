@@ -340,7 +340,7 @@ export const reject = mutation({
       actorId: userId,
       targetType: 'testimonialSubmission',
       targetId: id,
-      metadata: { label: doc.name },
+      metadata: { label: doc.name, previousStatus: doc.status },
       success: true,
     });
   },

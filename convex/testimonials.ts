@@ -2,6 +2,7 @@ import { v } from 'convex/values';
 import { mutation, query } from './_generated/server';
 import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
+import { logAudit } from './audit';
 
 export const list = query({
   args: { onlyHome: v.optional(v.boolean()) },
@@ -49,8 +50,17 @@ export const create = mutation({
     orderIndex: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
-    const id = await ctx.db.insert('testimonials', { ...args, createdAt: Date.now() });
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const id = await ctx.db.insert('testimonials', { ...args, showOnHome: false, createdAt: Date.now() });
+    await logAudit(ctx, {
+      eventType: 'testimonial.created',
+      actorType: 'user',
+      actorId: userId,
+      targetType: 'testimonial',
+      targetId: id,
+      metadata: { label: args.name },
+      success: true,
+    });
     await markPendingChanges(ctx);
     return id;
   },
@@ -80,6 +90,63 @@ export const update = mutation({
   },
 });
 
+export const createWithAvatar = mutation({
+  args: {
+    name: v.string(),
+    role: v.string(),
+    text: v.string(),
+    avatarStorageId: v.optional(v.id('_storage')),
+    avatarFileSize: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const now = Date.now();
+
+    let imageId: string | undefined;
+    if (args.avatarStorageId) {
+      const existing = await ctx.db
+        .query('imageFolders')
+        .withIndex('by_path', (q) => q.eq('path', 'testimonials'))
+        .unique();
+      const folderId = existing
+        ? existing._id
+        : await ctx.db.insert('imageFolders', { name: 'Depoimentos', path: 'testimonials', createdAt: now });
+
+      imageId = await ctx.db.insert('imageMetadata', {
+        storageId: args.avatarStorageId,
+        folderId,
+        displayName: `${args.name} — ${new Date(now).toLocaleDateString('pt-BR')}`,
+        altText: args.name,
+        mimeType: 'image/jpeg',
+        fileSize: args.avatarFileSize ?? 0,
+        createdBy: userId as any,
+        createdAt: now,
+      });
+    }
+
+    const id = await ctx.db.insert('testimonials', {
+      name: args.name,
+      role: args.role,
+      text: args.text,
+      imageId: imageId as any,
+      showOnHome: false,
+      createdAt: now,
+    });
+
+    await logAudit(ctx, {
+      eventType: 'testimonial.created',
+      actorType: 'user',
+      actorId: userId,
+      targetType: 'testimonial',
+      targetId: id,
+      metadata: { label: args.name },
+      success: true,
+    });
+    await markPendingChanges(ctx);
+    return id;
+  },
+});
+
 export const remove = mutation({
   args: { id: v.id('testimonials') },
   handler: async (ctx, args) => {
@@ -104,7 +171,7 @@ export const toggleShowOnHome = mutation({
 export const unpublish = mutation({
   args: { submissionId: v.id('testimonialSubmissions') },
   handler: async (ctx, { submissionId }) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
     const submission = await ctx.db.get(submissionId);
     if (!submission) throw new Error('Not found');
     if (submission.status !== 'published') throw new Error('Depoimento não está publicado');
@@ -116,6 +183,16 @@ export const unpublish = mutation({
     await ctx.db.patch(submissionId, {
       status: 'approved',
       testimonialId: undefined,
+    });
+
+    await logAudit(ctx, {
+      eventType: 'testimonial.unpublished',
+      actorType: 'user',
+      actorId: userId,
+      targetType: 'testimonialSubmission',
+      targetId: submissionId,
+      metadata: { label: submission.name },
+      success: true,
     });
 
     await markPendingChanges(ctx);

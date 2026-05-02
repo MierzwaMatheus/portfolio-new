@@ -5,17 +5,22 @@ import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Video, FileText, Check, X, RotateCcw, Globe, Loader2, Home, EyeOff } from "lucide-react";
+import { Video, FileText, Check, X, RotateCcw, Globe, Loader2, Home, EyeOff, Plus, ChevronDown, ChevronUp, Pencil, Trash2, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type SubmissionStatus = "pending" | "approved" | "rejected" | "published";
+type ActiveTab = SubmissionStatus | "all" | "diretos";
 
-const TABS: { value: SubmissionStatus | "all"; label: string }[] = [
+const TABS: { value: ActiveTab; label: string }[] = [
   { value: "pending", label: "Pendentes" },
   { value: "approved", label: "Aprovados" },
   { value: "rejected", label: "Rejeitados" },
   { value: "published", label: "Publicados" },
+  { value: "diretos", label: "Diretos" },
 ];
 
 function VideoUsageBar() {
@@ -291,12 +296,276 @@ function SubmissionCard({ item }: { item: Submission }) {
   );
 }
 
+const MAX_AVATAR_MB = 1;
+const MAX_AVATAR_BYTES = MAX_AVATAR_MB * 1024 * 1024;
+
+function AdminCreateForm() {
+  const createMutation = useMutation(api.testimonials.createWithAvatar);
+  const generateAvatarUrl = useMutation(api.testimonialSubmissions.generateAvatarUploadUrl);
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [role, setRole] = useState("");
+  const [text, setText] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+
+  function handleAvatarChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > MAX_AVATAR_BYTES) {
+      toast.error(`A foto deve ter no máximo ${MAX_AVATAR_MB} MB`);
+      e.target.value = "";
+      return;
+    }
+    setAvatarFile(file);
+    setAvatarPreview(URL.createObjectURL(file));
+  }
+
+  function reset() {
+    setName(""); setRole(""); setText("");
+    setAvatarFile(null); setAvatarPreview(null);
+    setOpen(false);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!name.trim() || !role.trim() || !text.trim()) return;
+    setSaving(true);
+    try {
+      let avatarStorageId: string | undefined;
+      let avatarFileSize: number | undefined;
+      if (avatarFile) {
+        const uploadUrl = await generateAvatarUrl({ fileSizeBytes: avatarFile.size });
+        const res = await fetch(uploadUrl, { method: "POST", body: avatarFile });
+        const { storageId } = await res.json();
+        avatarStorageId = storageId;
+        avatarFileSize = avatarFile.size;
+      }
+      await createMutation({
+        name: name.trim(),
+        role: role.trim(),
+        text: text.trim(),
+        avatarStorageId: avatarStorageId as any,
+        avatarFileSize,
+      });
+      toast.success("Depoimento cadastrado!");
+      reset();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro ao salvar");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="bg-[#1a1a1a] border border-white/10 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between px-5 py-4 text-sm font-medium text-white hover:bg-white/5 transition-colors"
+      >
+        <span className="flex items-center gap-2">
+          <Plus className="w-4 h-4 text-neon-purple" />
+          Cadastrar depoimento manualmente
+        </span>
+        {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+      </button>
+      {open && (
+        <form onSubmit={handleSubmit} className="px-5 pb-5 space-y-4 border-t border-white/5 pt-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-gray-400">Nome *</Label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: João Silva" className="bg-white/5 border-white/10 text-white text-sm h-9" required />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-gray-400">Cargo / Empresa *</Label>
+              <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="Ex: CTO na Acme" className="bg-white/5 border-white/10 text-white text-sm h-9" required />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-gray-400">Depoimento *</Label>
+            <Textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Texto do depoimento..." className="bg-white/5 border-white/10 text-white text-sm min-h-[80px] resize-none" required />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-gray-400">Foto (opcional, máx. {MAX_AVATAR_MB} MB)</Label>
+            <div className="flex items-center gap-3">
+              {avatarPreview ? (
+                <img src={avatarPreview} alt="preview" className="w-10 h-10 rounded-full object-cover border border-white/10 flex-shrink-0" />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
+                  <ImageIcon className="w-4 h-4 text-gray-600" />
+                </div>
+              )}
+              <label className="cursor-pointer">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-white/10 bg-white/5 text-xs text-gray-300 hover:bg-white/10 transition-colors">
+                  <ImageIcon className="w-3 h-3" />
+                  {avatarPreview ? "Trocar foto" : "Adicionar foto"}
+                </span>
+                <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+              </label>
+              {avatarPreview && (
+                <button type="button" onClick={() => { setAvatarFile(null); setAvatarPreview(null); }} className="text-xs text-gray-500 hover:text-gray-300">
+                  Remover
+                </button>
+              )}
+            </div>
+          </div>
+          <p className="text-xs text-gray-600">
+            Criado diretamente como publicado. Use "Exibir na home" para mostrá-lo na seção da home.
+          </p>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" size="sm" onClick={reset} className="text-gray-400 text-xs">Cancelar</Button>
+            <Button type="submit" size="sm" disabled={saving} className="bg-neon-purple hover:bg-neon-purple/90 text-white text-xs">
+              {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : "Cadastrar"}
+            </Button>
+          </div>
+        </form>
+      )}
+    </div>
+  );
+}
+
+function DirectTestimonialsTab() {
+  const testimonials = useQuery(api.testimonials.list, {});
+  const toggleMutation = useMutation(api.testimonials.toggleShowOnHome);
+  const removeMutation = useMutation(api.testimonials.remove);
+  const updateMutation = useMutation(api.testimonials.update);
+
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editRole, setEditRole] = useState("");
+  const [editText, setEditText] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  function openEdit(item: { _id: string; name: string; role: string; roleTranslations?: any; text: string; textTranslations?: any }) {
+    setEditing(item._id);
+    setEditName(item.name);
+    setEditRole(item.roleTranslations?.ptBR ?? item.role);
+    setEditText(item.textTranslations?.ptBR ?? item.text);
+  }
+
+  async function handleSave(id: string) {
+    setSaving(true);
+    try {
+      await updateMutation({ id: id as any, name: editName, role: editRole, text: editText });
+      toast.success("Salvo!");
+      setEditing(null);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleToggle(id: string) {
+    try {
+      await toggleMutation({ id: id as any });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro");
+    }
+  }
+
+  async function handleDelete(id: string) {
+    if (!confirm("Excluir este depoimento?")) return;
+    try {
+      await removeMutation({ id: id as any });
+      toast.success("Excluído");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Erro");
+    }
+  }
+
+  if (testimonials === undefined) {
+    return <div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-gray-500" /></div>;
+  }
+
+  if (testimonials.length === 0) {
+    return <div className="text-center py-16 text-gray-500 text-sm">Nenhum depoimento publicado ainda.</div>;
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4">
+      {testimonials.map((item) => {
+        const initials = item.name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
+        const isEditing = editing === item._id;
+
+        return (
+          <div key={item._id} className="bg-[#1a1a1a] border border-white/5 rounded-xl p-5 space-y-3">
+            {isEditing ? (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs text-gray-400">Nome</Label>
+                    <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="bg-white/5 border-white/10 text-white text-sm h-8" />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs text-gray-400">Cargo</Label>
+                    <Input value={editRole} onChange={(e) => setEditRole(e.target.value)} className="bg-white/5 border-white/10 text-white text-sm h-8" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-gray-400">Texto</Label>
+                  <Textarea value={editText} onChange={(e) => setEditText(e.target.value)} className="bg-white/5 border-white/10 text-white text-sm min-h-[72px] resize-none" />
+                </div>
+                <div className="flex gap-2 justify-end">
+                  <Button size="sm" variant="ghost" onClick={() => setEditing(null)} className="text-gray-400 text-xs">Cancelar</Button>
+                  <Button size="sm" disabled={saving} onClick={() => handleSave(item._id)} className="bg-neon-purple hover:bg-neon-purple/90 text-white text-xs">
+                    {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : "Salvar"}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    {item.imageUrl ? (
+                      <img src={item.imageUrl} alt={item.name} className="w-10 h-10 rounded-full object-cover border border-white/10 flex-shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-neon-purple/20 flex items-center justify-center text-neon-purple font-bold text-sm flex-shrink-0">
+                        {initials}
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-semibold text-white text-sm">{item.name}</p>
+                      <p className="text-xs text-gray-400">{item.roleTranslations?.ptBR ?? item.role}</p>
+                    </div>
+                  </div>
+                  {item.showOnHome && (
+                    <Badge className="bg-neon-lime/20 text-neon-lime border border-neon-lime/30 text-xs flex-shrink-0">
+                      <Home className="w-3 h-3 mr-1 inline" />Na home
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-sm text-gray-300 italic border-l-2 border-white/10 pl-3 leading-relaxed">
+                  "{item.textTranslations?.ptBR ?? item.text}"
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" onClick={() => handleToggle(item._id)}
+                    className={cn("text-xs", item.showOnHome ? "border-neon-lime/50 text-neon-lime hover:bg-neon-lime/10" : "border-gray-700 text-gray-400 hover:bg-gray-900/20")}>
+                    {item.showOnHome ? <><EyeOff className="w-3 h-3 mr-1" />Remover da home</> : <><Home className="w-3 h-3 mr-1" />Exibir na home</>}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => openEdit(item)} className="border-gray-700 text-gray-400 hover:bg-gray-900/20 text-xs">
+                    <Pencil className="w-3 h-3 mr-1" />Editar
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => handleDelete(item._id)} className="border-red-800 text-red-400 hover:bg-red-900/20 text-xs">
+                    <Trash2 className="w-3 h-3 mr-1" />Excluir
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function AdminTestimonials() {
-  const [activeTab, setActiveTab] = useState<SubmissionStatus | "all">("pending");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("pending");
 
   const submissions = useQuery(
     api.testimonialSubmissions.list,
-    activeTab === "all" ? {} : { status: activeTab },
+    activeTab === "all" || activeTab === "diretos" ? {} : { status: activeTab as SubmissionStatus },
   ) as Submission[] | undefined;
 
   const pendingSubmissions = useQuery(api.testimonialSubmissions.list, { status: "pending" });
@@ -314,6 +583,8 @@ export default function AdminTestimonials() {
           </div>
           <VideoUsageBar />
         </div>
+
+        <AdminCreateForm />
 
         <div className="flex gap-1 bg-white/5 rounded-lg p-1 w-fit">
           {TABS.map((tab) => (
@@ -337,7 +608,9 @@ export default function AdminTestimonials() {
           ))}
         </div>
 
-        {submissions === undefined ? (
+        {activeTab === "diretos" ? (
+          <DirectTestimonialsTab />
+        ) : submissions === undefined ? (
           <div className="flex items-center justify-center py-16">
             <Loader2 className="w-6 h-6 animate-spin text-gray-500" />
           </div>

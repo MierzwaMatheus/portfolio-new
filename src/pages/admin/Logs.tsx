@@ -21,6 +21,13 @@ const EVENT_TYPES = [
   "user.role_removed",
   "contact.submitted",
   "contact.status_changed",
+  "testimonial.submitted",
+  "testimonial.approved",
+  "testimonial.rejected",
+  "testimonial.restored",
+  "testimonial.published",
+  "testimonial.unpublished",
+  "testimonial.created",
 ];
 
 const PLAYGROUND_EVENT_TYPES = [
@@ -43,6 +50,8 @@ const TARGET_TYPES = [
   "checkout",
   "user",
   "contactRequest",
+  "testimonialSubmission",
+  "testimonial",
 ];
 
 const EVENT_BADGE_VARIANTS: Record<string, string> = {
@@ -61,6 +70,13 @@ const EVENT_BADGE_VARIANTS: Record<string, string> = {
   "playground.post_created": "bg-green-900/20 text-green-300 border border-green-700/30",
   "playground.payment_link_created": "bg-yellow-900/20 text-yellow-300 border border-yellow-700/30",
   "playground.ai_cv_generated": "bg-pink-900/20 text-pink-300 border border-pink-700/30",
+  "testimonial.submitted": "bg-blue-900/20 text-blue-300 border border-blue-700/30",
+  "testimonial.approved": "bg-green-900/20 text-green-300 border border-green-700/30",
+  "testimonial.rejected": "bg-red-900/20 text-red-300 border border-red-700/30",
+  "testimonial.restored": "bg-yellow-900/20 text-yellow-300 border border-yellow-700/30",
+  "testimonial.published": "bg-neon-lime/10 text-lime-300 border border-lime-700/30",
+  "testimonial.unpublished": "bg-orange-900/20 text-orange-300 border border-orange-700/30",
+  "testimonial.created": "bg-teal-900/20 text-teal-300 border border-teal-700/30",
 };
 
 type TabType = "system" | "playground";
@@ -105,7 +121,7 @@ function SystemLogs() {
           actor: l.actorType === "system"
             ? { type: "system" as const }
             : l.actorType === "external"
-            ? { type: "external" as const, email: (l.metadata as Record<string, unknown> | null)?.contactEmail as string | undefined }
+            ? { type: "external" as const, email: ((l.metadata as Record<string, unknown> | null)?.email ?? (l.metadata as Record<string, unknown> | null)?.contactEmail) as string | undefined }
             : { type: "user" as const, email: l.actorEmail ?? l.actorId },
           entity: l.targetType
             ? { type: l.targetType, label: (l.metadata as Record<string, unknown> | null)?.label as string | undefined, id: l.targetId }
