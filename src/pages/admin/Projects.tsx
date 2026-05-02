@@ -19,6 +19,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStr
 import { CSS } from '@dnd-kit/utilities';
 import { toast } from "sonner";
 import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
+import { hasTranslatableChanges } from "@/i18n/utils/hasTranslatableChanges";
 
 interface ProjectImage {
   _id: Id<"imageMetadata">;
@@ -200,11 +201,27 @@ export default function AdminProjects() {
     const longDescriptionPT = formData.get('long_description') as string || '';
 
     try {
-      const toastId = toast.loading('Traduzindo conteúdo...');
       const fieldsToTranslate: Record<string, string> = { title: titlePT, description: descriptionPT };
       if (longDescriptionPT) fieldsToTranslate.longDescription = longDescriptionPT;
-      const translated = await translateFields(fieldsToTranslate);
-      toast.dismiss(toastId);
+
+      const needsTranslation = !editingProject || hasTranslatableChanges(fieldsToTranslate, {
+        title: editingProject.titleTranslations,
+        description: editingProject.descriptionTranslations,
+        longDescription: editingProject.longDescriptionTranslations,
+      });
+
+      let translated: Record<string, string>;
+      if (needsTranslation) {
+        const toastId = toast.loading('Traduzindo conteúdo...');
+        translated = await translateFields(fieldsToTranslate);
+        toast.dismiss(toastId);
+      } else {
+        translated = {
+          title: editingProject!.titleTranslations?.enUS ?? titlePT,
+          description: editingProject!.descriptionTranslations?.enUS ?? descriptionPT,
+          longDescription: editingProject!.longDescriptionTranslations?.enUS ?? longDescriptionPT,
+        };
+      }
 
       const imageIds = projectImages.map((i) => i.id);
       const baseData = {

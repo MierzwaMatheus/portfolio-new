@@ -17,6 +17,7 @@ import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
 import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
+import { hasTranslatableChanges } from "@/i18n/utils/hasTranslatableChanges";
 
 type Post = {
   _id: Id<"posts">;
@@ -119,12 +120,28 @@ export default function AdminBlog() {
     const slug = slugify(titlePT);
 
     try {
-      const toastId = toast.loading('Traduzindo conteúdo...');
       const fieldsToTranslate: Record<string, string> = { title: titlePT };
       if (subtitlePT) fieldsToTranslate.subtitle = subtitlePT;
       if (contentPT) fieldsToTranslate.content = contentPT;
-      const translated = await translateFields(fieldsToTranslate);
-      toast.dismiss(toastId);
+
+      const needsTranslation = !editingPost || hasTranslatableChanges(fieldsToTranslate, {
+        title: editingPost.titleTranslations,
+        subtitle: editingPost.subtitleTranslations,
+        content: editingPost.contentTranslations,
+      });
+
+      let translated: Record<string, string>;
+      if (needsTranslation) {
+        const toastId = toast.loading('Traduzindo conteúdo...');
+        translated = await translateFields(fieldsToTranslate);
+        toast.dismiss(toastId);
+      } else {
+        translated = {
+          title: editingPost!.titleTranslations?.enUS ?? titlePT,
+          subtitle: editingPost!.subtitleTranslations?.enUS ?? subtitlePT,
+          content: editingPost!.contentTranslations?.enUS ?? contentPT,
+        };
+      }
 
       const baseData = {
         title: titlePT,

@@ -17,6 +17,7 @@ import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
 import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
+import { hasTranslatableChanges } from "@/i18n/utils/hasTranslatableChanges";
 
 export default function AdminHome() {
   const homeContentList = useQuery(api.homeContent.getAll);
@@ -77,9 +78,23 @@ export default function AdminHome() {
         const titlePT = formData.get("title") as string;
         const descriptionPT = formData.get("description") as string;
 
-        const toastId = toast.loading('Traduzindo conteúdo...');
-        const translated = await translateFields({ title: titlePT, description: descriptionPT });
-        toast.dismiss(toastId);
+        const serviceFields = { title: titlePT, description: descriptionPT };
+        const needsTranslation = !editingItem || hasTranslatableChanges(serviceFields, {
+          title: editingItem.titleTranslations,
+          description: editingItem.descriptionTranslations,
+        });
+
+        let translated: Record<string, string>;
+        if (needsTranslation) {
+          const toastId = toast.loading('Traduzindo conteúdo...');
+          translated = await translateFields(serviceFields);
+          toast.dismiss(toastId);
+        } else {
+          translated = {
+            title: editingItem.titleTranslations?.enUS ?? titlePT,
+            description: editingItem.descriptionTranslations?.enUS ?? descriptionPT,
+          };
+        }
 
         const payload = {
           title: titlePT,
@@ -98,9 +113,23 @@ export default function AdminHome() {
         const namePT = formData.get("name") as string;
         const rolePT = formData.get("role") as string;
 
-        const toastId = toast.loading('Traduzindo conteúdo...');
-        const translated = await translateFields({ role: rolePT, text: textPT });
-        toast.dismiss(toastId);
+        const testimonialFields = { role: rolePT, text: textPT };
+        const needsTranslation = !editingItem || hasTranslatableChanges(testimonialFields, {
+          role: editingItem.roleTranslations,
+          text: editingItem.textTranslations,
+        });
+
+        let translated: Record<string, string>;
+        if (needsTranslation) {
+          const toastId = toast.loading('Traduzindo conteúdo...');
+          translated = await translateFields(testimonialFields);
+          toast.dismiss(toastId);
+        } else {
+          translated = {
+            role: editingItem.roleTranslations?.enUS ?? rolePT,
+            text: editingItem.textTranslations?.enUS ?? textPT,
+          };
+        }
 
         const payload = {
           name: namePT,
@@ -128,12 +157,27 @@ export default function AdminHome() {
 
   const handleSaveAbout = async () => {
     try {
-      const toastId = toast.loading('Traduzindo conteúdo...');
-      const translated = await translateFields({ aboutText });
-      toast.dismiss(toastId);
+      const aboutEntry = homeContentList?.find((c: any) => c.key === "about_text");
+      const savedPT = typeof aboutEntry?.value === "object" && aboutEntry?.value !== null
+        ? (aboutEntry.value as any).ptBR ?? ""
+        : (typeof aboutEntry?.value === "string" ? aboutEntry.value : "");
+      const savedEN = typeof aboutEntry?.value === "object" && aboutEntry?.value !== null
+        ? (aboutEntry.value as any).enUS ?? ""
+        : "";
+
+      let enUS: string;
+      if (aboutText.trim() !== savedPT.trim()) {
+        const toastId = toast.loading('Traduzindo conteúdo...');
+        const translated = await translateFields({ aboutText });
+        toast.dismiss(toastId);
+        enUS = translated.aboutText;
+      } else {
+        enUS = savedEN || aboutText;
+      }
+
       await setHomeContent({
         key: "about_text",
-        value: { ptBR: aboutText, enUS: translated.aboutText },
+        value: { ptBR: aboutText, enUS },
       });
       toast.success("Sobre mim salvo com sucesso!");
     } catch (error: any) {

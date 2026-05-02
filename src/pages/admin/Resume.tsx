@@ -16,6 +16,7 @@ import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
 import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
+import { hasTranslatableChanges } from "@/i18n/utils/hasTranslatableChanges";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -317,30 +318,59 @@ export default function AdminResume() {
     }
 
     try {
-      const toastId = toast.loading('Traduzindo conteúdo...');
       let contentEN = { ...content };
 
+      const existingPT = editingItem?.contentTranslations?.ptBR ?? {};
+      const existingEN = editingItem?.contentTranslations?.enUS ?? {};
+
       if (activeModal === 'experience') {
-        const translated = await translateFields({
-          ...(content.role ? { role: content.role } : {}),
-          ...(content.description ? { description: content.description } : {}),
+        const fields: Record<string, string> = {};
+        if (content.role) fields.role = content.role;
+        if (content.description) fields.description = content.description;
+        const needsTranslation = !editingItem || hasTranslatableChanges(fields, {
+          role: existingPT.role != null ? { ptBR: existingPT.role, enUS: existingEN.role } : undefined,
+          description: existingPT.description != null ? { ptBR: existingPT.description, enUS: existingEN.description } : undefined,
         });
-        contentEN = { ...content, ...translated };
+        if (needsTranslation) {
+          const toastId = toast.loading('Traduzindo conteúdo...');
+          const translated = await translateFields(fields);
+          toast.dismiss(toastId);
+          contentEN = { ...content, ...translated };
+        } else {
+          contentEN = { ...content, role: existingEN.role ?? content.role, description: existingEN.description ?? content.description };
+        }
       } else if (activeModal === 'education') {
-        const translated = await translateFields({
-          ...(content.degree ? { degree: content.degree } : {}),
-          ...(content.description ? { description: content.description } : {}),
+        const fields: Record<string, string> = {};
+        if (content.degree) fields.degree = content.degree;
+        if (content.description) fields.description = content.description;
+        const needsTranslation = !editingItem || hasTranslatableChanges(fields, {
+          degree: existingPT.degree != null ? { ptBR: existingPT.degree, enUS: existingEN.degree } : undefined,
+          description: existingPT.description != null ? { ptBR: existingPT.description, enUS: existingEN.description } : undefined,
         });
-        contentEN = { ...content, ...translated };
+        if (needsTranslation) {
+          const toastId = toast.loading('Traduzindo conteúdo...');
+          const translated = await translateFields(fields);
+          toast.dismiss(toastId);
+          contentEN = { ...content, ...translated };
+        } else {
+          contentEN = { ...content, degree: existingEN.degree ?? content.degree, description: existingEN.description ?? content.description };
+        }
       } else if (activeModal === 'skill') {
-        const translated = await translateFields({
-          ...(content.name ? { name: content.name } : {}),
+        const fields: Record<string, string> = {};
+        if (content.name) fields.name = content.name;
+        const needsTranslation = !editingItem || hasTranslatableChanges(fields, {
+          name: existingPT.name != null ? { ptBR: existingPT.name, enUS: existingEN.name } : undefined,
         });
-        contentEN = { ...content, ...translated };
+        if (needsTranslation) {
+          const toastId = toast.loading('Traduzindo conteúdo...');
+          const translated = await translateFields(fields);
+          toast.dismiss(toastId);
+          contentEN = { ...content, ...translated };
+        } else {
+          contentEN = { ...content, name: existingEN.name ?? content.name };
+        }
       }
       // language: name é substantivo próprio, level é enum — não traduzir
-
-      toast.dismiss(toastId);
       const contentTranslations = { ptBR: content, enUS: contentEN };
 
       if (editingItem) {
@@ -434,12 +464,23 @@ export default function AdminResume() {
     }
 
     try {
-      const toastId = toast.loading('Traduzindo conteúdo...');
-      const translated = await translateFields({ text: editingSimpleText.trim() });
-      toast.dismiss(toastId);
-      const content = { text: editingSimpleText.trim() };
-      const contentTranslations = { ptBR: content, enUS: { text: translated.text } };
       const target = items.find(i => i._id === id);
+      const savedText = target?.contentTranslations?.ptBR?.text ?? target?.content?.text ?? '';
+      const savedEN = target?.contentTranslations?.enUS?.text ?? '';
+      const newText = editingSimpleText.trim();
+
+      let translatedText: string;
+      if (newText !== savedText.trim()) {
+        const toastId = toast.loading('Traduzindo conteúdo...');
+        const translated = await translateFields({ text: newText });
+        toast.dismiss(toastId);
+        translatedText = translated.text;
+      } else {
+        translatedText = savedEN || newText;
+      }
+
+      const content = { text: newText };
+      const contentTranslations = { ptBR: content, enUS: { text: translatedText } };
       await updateItem({
         id,
         content,
