@@ -8,13 +8,18 @@ export async function isPluginEnabled(
   ctx: QueryCtx | MutationCtx,
   id: PluginId,
 ): Promise<boolean> {
+  const plugin = getPlugin(id);
+  if (plugin.parentId) {
+    const parentEnabled = await isPluginEnabled(ctx, plugin.parentId);
+    if (!parentEnabled) return false;
+  }
   const key = pluginKey(id);
   const setting = await ctx.db
     .query('homeContent')
     .withIndex('by_key', q => q.eq('key', key))
     .unique();
   if (setting !== null) return setting.value !== false;
-  return getPlugin(id).defaultEnabled;
+  return plugin.defaultEnabled;
 }
 
 export async function requirePlugin(

@@ -115,7 +115,7 @@ function AdminSidebar() {
       label: "Depoimentos",
       path: "/admin/depoimentos",
       roles: ["root", "admin"],
-      pluginId: "testimonials-intake",
+      pluginId: "testimonials",
     },
     {
       icon: CreditCard,

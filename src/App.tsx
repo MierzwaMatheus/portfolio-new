@@ -197,7 +197,7 @@ function Router() {
         </Route>
         <Route path="/admin/depoimentos">
           <ProtectedRoute
-            component={() => <PluginRoute pluginId="testimonials-intake"><AdminTestimonials /></PluginRoute>}
+            component={() => <PluginRoute pluginId="testimonials"><AdminTestimonials /></PluginRoute>}
             allowedRoles={["root", "admin"]}
           />
         </Route>
@@ -286,7 +286,7 @@ function Router() {
         </Route>
         <Route path="/depoimentos">
           <PublicRoute>
-            <PluginRoute pluginId="testimonials-intake">
+            <PluginRoute pluginId="testimonials">
               <TestimonialsPage />
             </PluginRoute>
           </PublicRoute>

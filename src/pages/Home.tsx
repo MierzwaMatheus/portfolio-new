@@ -29,6 +29,7 @@ export default function Home() {
   const { contactRole, aboutText, services, testimonials, availability, isLoading } =
     useHome(homeRepository);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const testimonialsEnabled = usePlugin("testimonials");
   const testimonialsIntakeEnabled = usePlugin("testimonials-intake");
 
   const matrixAboutText = useMatrixText({
@@ -255,7 +256,7 @@ export default function Home() {
             ))}
           </div>
 
-          {testimonialsIntakeEnabled && (
+          {testimonialsEnabled && (
             <div className="text-center mt-8 flex flex-col items-center gap-3">
               <Link
                 href="/depoimentos"
@@ -263,13 +264,15 @@ export default function Home() {
               >
                 Ver todos os depoimentos →
               </Link>
-              <button
-                onClick={() => setWizardOpen(true)}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-neon-purple/40 bg-neon-purple/5 text-neon-purple hover:bg-neon-purple/10 hover:border-neon-purple transition-all text-sm font-medium"
-              >
-                <Star className="w-4 h-4" />
-                Deixar meu depoimento
-              </button>
+              {testimonialsIntakeEnabled && (
+                <button
+                  onClick={() => setWizardOpen(true)}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-neon-purple/40 bg-neon-purple/5 text-neon-purple hover:bg-neon-purple/10 hover:border-neon-purple transition-all text-sm font-medium"
+                >
+                  <Star className="w-4 h-4" />
+                  Deixar meu depoimento
+                </button>
+              )}
             </div>
           )}
 

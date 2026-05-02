@@ -11,6 +11,7 @@ export type PluginId =
   | 'media-manager'
   | 'i18n'
   | 'playground'
+  | 'testimonials'
   | 'testimonials-intake';
 
 export interface PluginDefinition {
@@ -22,6 +23,7 @@ export interface PluginDefinition {
   adminRoutes: string[];
   publicRoutes?: string[];
   minRole: 'root' | 'admin';
+  parentId?: PluginId;
 }
 
 export const PLUGIN_REGISTRY: PluginDefinition[] = [
@@ -141,14 +143,25 @@ export const PLUGIN_REGISTRY: PluginDefinition[] = [
     minRole: 'root',
   },
   {
-    id: 'testimonials-intake',
-    label: 'Envio de Depoimentos',
-    description: 'Permite que visitantes enviem depoimentos (texto ou vídeo) para moderação',
+    id: 'testimonials',
+    label: 'Depoimentos',
+    description: 'Exibição pública de depoimentos e inserção manual pelo admin',
     defaultEnabled: true,
-    tables: ['testimonialSubmissions'],
+    tables: ['testimonials'],
     adminRoutes: ['/admin/depoimentos'],
     publicRoutes: ['/depoimentos'],
     minRole: 'admin',
+  },
+  {
+    id: 'testimonials-intake',
+    label: 'Envio Público de Depoimentos',
+    description: 'Permite que visitantes enviem depoimentos via formulário (texto ou vídeo) para moderação',
+    defaultEnabled: true,
+    tables: ['testimonialSubmissions'],
+    adminRoutes: [],
+    publicRoutes: [],
+    minRole: 'admin',
+    parentId: 'testimonials',
   },
 ];
 
