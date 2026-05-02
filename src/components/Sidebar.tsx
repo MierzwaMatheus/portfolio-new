@@ -298,6 +298,10 @@ const NAV_ITEMS = NAV_ITEMS_KEYS.map(item => ({
             <FileText className="mr-2 h-3 w-3" />
             {t("sidebar.downloadCV")}
           </Button>
+
+          <p className="text-center text-[10px] text-white/20 font-mono mt-1">
+            Press <kbd className="px-1 py-0.5 rounded bg-white/10 text-white/40">~</kbd> for terminal
+          </p>
         </div>
       </div>
     );

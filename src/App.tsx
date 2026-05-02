@@ -38,6 +38,9 @@ import { PublicRoute } from "./components/PublicRoute";
 import { QueryProvider } from "./providers/QueryProvider";
 import { ConvexClientProvider, convex } from "./providers/ConvexClientProvider";
 import { ConvexTranslationService } from "./i18n/implementations/ConvexTranslationService";
+import { Terminal } from "./components/Terminal";
+import { AnimatePresence } from "framer-motion";
+import { useState, useEffect } from "react";
 
 const translationService = new ConvexTranslationService(convex);
 
@@ -185,6 +188,39 @@ function Router() {
   );
 }
 
+function AppContent() {
+  const [location] = useLocation();
+  const isAdminRoute = location.startsWith("/admin");
+  const [terminalOpen, setTerminalOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (isAdminRoute) return;
+      const tag = (e.target as HTMLElement).tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA") return;
+      if (e.key === "`" || e.key === "~" || e.code === "Backquote") {
+        e.preventDefault();
+        setTerminalOpen(prev => !prev);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isAdminRoute]);
+
+  return (
+    <>
+      <Router />
+      <AnimatePresence>
+        {terminalOpen && !isAdminRoute && (
+          <Terminal onClose={() => setTerminalOpen(false)} />
+        )}
+      </AnimatePresence>
+      <Analytics />
+      <SpeedInsights />
+    </>
+  );
+}
+
 function App() {
   return (
     <HelmetProvider>
@@ -196,9 +232,7 @@ function App() {
                 <ThemeProvider defaultTheme="dark">
                   <TooltipProvider>
                     <Toaster />
-                    <Router />
-                    <Analytics />
-                    <SpeedInsights />
+                    <AppContent />
                   </TooltipProvider>
                 </ThemeProvider>
               </I18nProvider>
