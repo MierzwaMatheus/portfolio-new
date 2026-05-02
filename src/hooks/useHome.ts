@@ -35,11 +35,18 @@ export function useHome(repository: HomeRepository) {
     staleTime: Infinity,
   });
 
+  const { data: availabilityRaw, isLoading: isLoadingAvailability } = useQuery({
+    queryKey: ["home", "availability"],
+    queryFn: () => repository.getAvailability(),
+    staleTime: Infinity,
+  });
+
   const isLoading =
     isLoadingContact ||
     isLoadingAbout ||
     isLoadingServices ||
-    isLoadingTestimonials;
+    isLoadingTestimonials ||
+    isLoadingAvailability;
 
   // Deriva role traduzido baseado no locale atual (sem refetch)
   const contactRole = useMemo(() => {
@@ -97,11 +104,23 @@ export function useHome(repository: HomeRepository) {
     }));
   }, [testimonialsRaw, locale]);
 
+  const availability = useMemo(() => {
+    if (!availabilityRaw) return null;
+    return {
+      available: availabilityRaw.available,
+      label:
+        availabilityRaw.label?.[locale] ||
+        availabilityRaw.label?.["pt-BR"] ||
+        null,
+    };
+  }, [availabilityRaw, locale]);
+
   return {
     contactRole,
     aboutText,
     services,
     testimonials,
+    availability,
     isLoading,
   };
 }

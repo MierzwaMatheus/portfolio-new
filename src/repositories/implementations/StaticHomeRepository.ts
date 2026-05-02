@@ -4,6 +4,7 @@ import {
   AboutData,
   Service,
   Testimonial,
+  AvailabilityData,
 } from "../interfaces/HomeRepository";
 import {
   mapContactInfo,
@@ -62,6 +63,21 @@ export class StaticHomeRepository implements HomeRepository {
     } catch (error) {
       console.error("Error loading static about data:", error);
       return [];
+    }
+  }
+
+  async getAvailability(): Promise<AvailabilityData | null> {
+    try {
+      const response = await fetch("/data/home.json");
+      if (!response.ok) return null;
+      const data = await response.json();
+      if (!data?.availability_status) return null;
+      return {
+        available: Boolean(data.availability_status.available),
+        label: data.availability_status.label ?? {},
+      };
+    } catch {
+      return null;
     }
   }
 }

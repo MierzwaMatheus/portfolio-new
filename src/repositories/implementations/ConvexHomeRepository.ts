@@ -5,6 +5,7 @@ import {
   AboutData,
   Service,
   Testimonial,
+  AvailabilityData,
 } from "../interfaces/HomeRepository";
 import {
   mapContactInfo,
@@ -39,5 +40,17 @@ export class ConvexHomeRepository implements HomeRepository {
   async getTestimonials(): Promise<Testimonial[]> {
     const data = await client.query(api.testimonials.list, {});
     return Array.isArray(data) ? data.map(mapTestimonial) : [];
+  }
+
+  async getAvailability(): Promise<AvailabilityData | null> {
+    const data = await client.query(api.homeContent.getByKey, {
+      key: "availability_status",
+    });
+    if (!data) return null;
+    const value = (data as any).value ?? {};
+    return {
+      available: Boolean(value.available),
+      label: value.label ?? {},
+    };
   }
 }

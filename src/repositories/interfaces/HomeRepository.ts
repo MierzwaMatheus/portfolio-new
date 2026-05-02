@@ -25,10 +25,16 @@ export interface Testimonial {
   text_translations?: Record<string, string>;
 }
 
+export interface AvailabilityData {
+  available: boolean;
+  label?: Record<string, string>;
+}
+
 export interface HomeRepository {
   getContactInfo(): Promise<ContactInfo | null>;
   getAboutData(): Promise<AboutData | null>;
   getServices(): Promise<Service[]>;
   getTestimonials(): Promise<Testimonial[]>;
+  getAvailability(): Promise<AvailabilityData | null>;
 }
 

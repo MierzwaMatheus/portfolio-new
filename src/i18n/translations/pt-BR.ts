@@ -46,6 +46,9 @@ export const ptBR = {
     skills: {
       title: "O que eu faço",
     },
+    availability: {
+      label: "disponível para novos projetos",
+    },
   },
   portfolio: {
     title: "Portfólio",

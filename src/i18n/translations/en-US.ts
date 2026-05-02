@@ -46,6 +46,9 @@ export const enUS = {
     skills: {
       title: "What I do",
     },
+    availability: {
+      label: "available for new projects",
+    },
   },
   portfolio: {
     title: "Portfolio",

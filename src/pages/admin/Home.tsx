@@ -9,7 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Trash2, Pencil, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash2, Pencil, Image as ImageIcon, Briefcase } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { useQuery, useMutation } from "convex/react";
@@ -34,6 +35,9 @@ export default function AdminHome() {
 
   const { translateFields, isTranslating } = useTranslateContent();
   const [aboutText, setAboutText] = useState("");
+  const [availabilityEnabled, setAvailabilityEnabled] = useState(false);
+  const [availabilityLabelPT, setAvailabilityLabelPT] = useState("");
+  const [availabilityLabelEN, setAvailabilityLabelEN] = useState("");
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
   const [selectedImage, setSelectedImage] = useState<string>("");
@@ -48,6 +52,14 @@ export default function AdminHome() {
         } else {
           setAboutText(typeof value === "string" ? value : "");
         }
+      }
+
+      const availabilityEntry = homeContentList.find((c: any) => c.key === "availability_status");
+      if (availabilityEntry) {
+        const v = availabilityEntry.value ?? {};
+        setAvailabilityEnabled(Boolean(v.available));
+        setAvailabilityLabelPT(v.label?.ptBR ?? "");
+        setAvailabilityLabelEN(v.label?.enUS ?? "");
       }
     }
   }, [homeContentList]);
@@ -182,6 +194,25 @@ export default function AdminHome() {
     }
   };
 
+  const handleSaveAvailability = async () => {
+    try {
+      await setHomeContent({
+        key: "availability_status",
+        value: {
+          available: availabilityEnabled,
+          label: {
+            ptBR: availabilityLabelPT || "disponível para novos projetos",
+            enUS: availabilityLabelEN || "available for new projects",
+          },
+        },
+      });
+      toast.success("Disponibilidade salva com sucesso!");
+    } catch (error) {
+      console.error("Error saving availability:", error);
+      toast.error("Erro ao salvar disponibilidade.");
+    }
+  };
+
   const handleDelete = async (type: string, id: string) => {
     if (confirm("Tem certeza que deseja excluir este item?")) {
       try {
@@ -206,9 +237,10 @@ export default function AdminHome() {
         </div>
 
         <Tabs defaultValue="about" className="w-full">
-          <TabsList className="bg-white/5 border border-white/10 w-full grid grid-cols-2">
+          <TabsList className="bg-white/5 border border-white/10 w-full grid grid-cols-3">
             <TabsTrigger value="about">Sobre Mim</TabsTrigger>
             <TabsTrigger value="testimonials">Depoimentos</TabsTrigger>
+            <TabsTrigger value="availability">Disponibilidade</TabsTrigger>
           </TabsList>
 
           <TabsContent value="about" className="space-y-8 mt-6">
@@ -298,6 +330,77 @@ export default function AdminHome() {
                 </Card>
               ))}
             </div>
+          </TabsContent>
+          <TabsContent value="availability" className="space-y-6 mt-6">
+            <Card className="bg-card border-white/10">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Briefcase className="w-5 h-5 text-neon-lime" />
+                  Badge de Disponibilidade
+                </CardTitle>
+                <p className="text-gray-400 text-sm">
+                  Controla o badge exibido na home indicando disponibilidade para novos projetos
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10">
+                  <div>
+                    <p className="text-white font-medium">Status de disponibilidade</p>
+                    <p className="text-gray-400 text-sm mt-1">
+                      {availabilityEnabled
+                        ? "Badge visível na home (disponível)"
+                        : "Badge oculto na home (indisponível)"}
+                    </p>
+                  </div>
+                  <Switch
+                    checked={availabilityEnabled}
+                    onCheckedChange={setAvailabilityEnabled}
+                  />
+                </div>
+
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-white">Mensagem (Português)</Label>
+                    <Input
+                      value={availabilityLabelPT}
+                      onChange={(e) => setAvailabilityLabelPT(e.target.value)}
+                      placeholder="disponível para novos projetos"
+                      className="bg-white/5 border-white/10 text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-white">Mensagem (English)</Label>
+                    <Input
+                      value={availabilityLabelEN}
+                      onChange={(e) => setAvailabilityLabelEN(e.target.value)}
+                      placeholder="available for new projects"
+                      className="bg-white/5 border-white/10 text-white"
+                    />
+                  </div>
+                </div>
+
+                {availabilityEnabled && (
+                  <div className="p-4 bg-neon-lime/5 border border-neon-lime/20 rounded-lg">
+                    <p className="text-neon-lime text-xs font-mono mb-2">Preview:</p>
+                    <div className="inline-flex items-center px-4 py-1.5 bg-neon-lime/10 border border-neon-lime/30 rounded-full">
+                      <span className="w-2 h-2 rounded-full bg-neon-lime mr-2" />
+                      <span className="text-neon-lime text-sm font-mono">
+                        {availabilityLabelPT || "disponível para novos projetos"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end">
+                  <Button
+                    onClick={handleSaveAvailability}
+                    className="bg-neon-purple hover:bg-neon-purple/90 text-white"
+                  >
+                    Salvar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
 

@@ -17,11 +17,12 @@ import { useI18n } from "@/i18n/context/I18nContext";
 import { useHome } from "@/hooks/useHome";
 import { homeRepository } from "@/repositories/instances";
 import { useMatrixText } from "@/hooks/useMatrixText";
+import { AvailabilityBadge } from "@/components/AvailabilityBadge";
 
 export default function Home() {
   const { t, tValue } = useTranslation();
   const { isLoading: i18nLoading } = useI18n();
-  const { contactRole, aboutText, services, testimonials, isLoading } =
+  const { contactRole, aboutText, services, testimonials, availability, isLoading } =
     useHome(homeRepository);
 
   const matrixAboutText = useMatrixText({
@@ -74,6 +75,10 @@ export default function Home() {
         {/* Hero Section */}
         <motion.section variants={item}>
           <div className="mb-8">
+            {availability?.available && (
+              <AvailabilityBadge label={availability.label} />
+            )}
+
             <div className="inline-flex items-center px-4 py-1.5 mb-6 bg-white/5 border border-white/10 rounded-full backdrop-blur-sm">
               <Terminal className="w-3 h-3 text-neon-purple mr-2" />
               <p className="text-sm font-medium text-neon-purple font-mono">
