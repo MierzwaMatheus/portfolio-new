@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Search, Filter, Eye, EyeOff, Star } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Filter, Eye, EyeOff, Star, RotateCcw, ShieldAlert } from "lucide-react";
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
@@ -18,6 +18,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
 import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
 import { getChangedTranslatableFields } from "@/i18n/utils/hasTranslatableChanges";
+import { useIsRoot } from "@/hooks/useIsRoot";
 
 type Post = {
   _id: Id<"posts">;
@@ -40,12 +41,16 @@ type Post = {
 };
 
 export default function AdminBlog() {
-  const postsData = useQuery(api.posts.listAdmin, { limit: 100 }) as Post[] | undefined;
+  const isRoot = useIsRoot();
+  const [includeDeleted, setIncludeDeleted] = useState(false);
+  const postsData = useQuery(api.posts.listAdmin, { limit: 100, includeDeleted: isRoot && includeDeleted }) as Post[] | undefined;
   const createPost = useMutation(api.posts.create);
   const updatePost = useMutation(api.posts.update);
   const publishPost = useMutation(api.posts.publish);
   const unpublishPost = useMutation(api.posts.unpublish);
   const removePost = useMutation(api.posts.remove);
+  const permanentDeletePost = useMutation(api.posts.permanentDelete);
+  const restorePost = useMutation(api.posts.restore);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingPost, setEditingPost] = useState<Post | null>(null);
@@ -194,14 +199,25 @@ export default function AdminBlog() {
   };
 
   const handleDelete = async (id: Id<"posts">) => {
-    if (confirm("Tem certeza que deseja excluir este post?")) {
-      try {
-        await removePost({ id });
-        toast.success("Post excluído com sucesso!");
-      } catch (error) {
-        console.error('Error deleting post:', error);
-        toast.error("Erro ao excluir post");
+    if (isRoot) {
+      const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
+      if (permanent) {
+        try { await permanentDeletePost({ id }); toast.success('Deletado permanentemente'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+      } else {
+        try { await removePost({ id }); toast.success('Post desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
       }
+    } else {
+      if (!confirm('Tem certeza? O post será desativado.')) return;
+      try { await removePost({ id }); toast.success('Post desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+    }
+  };
+
+  const handleRestore = async (id: Id<"posts">) => {
+    try {
+      await restorePost({ id });
+      toast.success('Post restaurado com sucesso');
+    } catch (error) {
+      toast.error('Erro ao restaurar post');
     }
   };
 
@@ -252,10 +268,25 @@ export default function AdminBlog() {
             <h1 className="text-3xl font-bold text-white">Blog</h1>
             <p className="text-gray-400">Gerencie seus artigos e publicações</p>
           </div>
-          <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white" onClick={() => handleOpenDialog()}>
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Artigo
-          </Button>
+          <div className="flex gap-2 items-center">
+            {isRoot && (
+              <button
+                onClick={() => setIncludeDeleted(!includeDeleted)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                  includeDeleted
+                    ? 'border-red-500/50 bg-red-500/10 text-red-400'
+                    : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
+                }`}
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                {includeDeleted ? 'Ocultar deletados' : 'Ver deletados'}
+              </button>
+            )}
+            <Button className="bg-neon-purple hover:bg-neon-purple/90 text-white" onClick={() => handleOpenDialog()}>
+              <Plus className="w-4 h-4 mr-2" />
+              Novo Artigo
+            </Button>
+          </div>
         </div>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -364,8 +395,9 @@ export default function AdminBlog() {
               const publishedDate = post.publishedAt
                 ? new Date(post.publishedAt).toISOString().slice(0, 10)
                 : '';
+              const isDeleted = !!(post as any).deletedAt;
               return (
-                <Card key={post._id} className="bg-card border-white/10 hover:border-neon-purple/30 transition-colors">
+                <Card key={post._id} className={`bg-card hover:border-neon-purple/30 transition-colors ${isDeleted ? 'opacity-60 border-red-500/30' : 'border-white/10'}`}>
                   <div className="flex flex-col md:flex-row gap-4 p-4">
                     <img src={imageSrc} alt={post.title} className="w-full md:w-48 h-32 object-cover rounded-lg" />
                     <div className="flex-1 space-y-2">
@@ -376,50 +408,70 @@ export default function AdminBlog() {
                             {post.featured && <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />}
                           </h3>
                           <p className="text-gray-400 text-sm">{post.subtitle}</p>
+                          {isDeleted && (
+                            <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-0.5 w-fit mt-1">
+                              <ShieldAlert className="w-3 h-3" />
+                              Deletado
+                            </div>
+                          )}
                         </div>
                         <div className="flex gap-2">
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => toggleFeatured(post)}
-                                  className={post.featured ? "text-yellow-400" : "text-gray-500"}
-                                >
-                                  <Star className={`w-4 h-4 ${post.featured ? "fill-yellow-400" : ""}`} />
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{post.featured ? "Remover destaque" : "Destacar post"}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                          {!isDeleted && (
+                            <>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      onClick={() => toggleFeatured(post)}
+                                      className={post.featured ? "text-yellow-400" : "text-gray-500"}
+                                    >
+                                      <Star className={`w-4 h-4 ${post.featured ? "fill-yellow-400" : ""}`} />
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{post.featured ? "Remover destaque" : "Destacar post"}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
 
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  size="icon"
-                                  variant="ghost"
-                                  onClick={() => toggleStatus(post)}
-                                  className={post.status === "published" ? "text-green-400" : "text-gray-500"}
-                                >
-                                  {post.status === "published" ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent>
-                                <p>{post.status === "published" ? "Despublicar" : "Publicar"}</p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      onClick={() => toggleStatus(post)}
+                                      className={post.status === "published" ? "text-green-400" : "text-gray-500"}
+                                    >
+                                      {post.status === "published" ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                                    </Button>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>{post.status === "published" ? "Despublicar" : "Publicar"}</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
 
-                          <Button size="icon" variant="ghost" onClick={() => handleOpenDialog(post)}>
-                            <Pencil className="w-4 h-4 text-blue-400" />
-                          </Button>
-                          <Button size="icon" variant="ghost" onClick={() => handleDelete(post._id)}>
-                            <Trash2 className="w-4 h-4 text-red-400" />
-                          </Button>
+                              <Button size="icon" variant="ghost" onClick={() => handleOpenDialog(post)}>
+                                <Pencil className="w-4 h-4 text-blue-400" />
+                              </Button>
+                            </>
+                          )}
+                          {isDeleted ? (
+                            <button
+                              onClick={() => handleRestore(post._id)}
+                              className="p-1.5 text-green-400 hover:bg-green-400/10 rounded transition-colors"
+                              title="Restaurar"
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </button>
+                          ) : (
+                            <Button size="icon" variant="ghost" onClick={() => handleDelete(post._id)}>
+                              <Trash2 className="w-4 h-4 text-red-400" />
+                            </Button>
+                          )}
                         </div>
                       </div>
 

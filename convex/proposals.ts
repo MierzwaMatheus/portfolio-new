@@ -6,6 +6,7 @@ import { logAudit } from './audit';
 import { checkRateLimit, recordRateLimitAttempt, resetRateLimit } from './rateLimit';
 import { getAuthUserId } from '@convex-dev/auth/server';
 import { requirePlugin, isPluginEnabled } from './plugins';
+import { softDeleteDoc, restoreDoc } from './lib/softDelete';
 
 const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
 
@@ -15,18 +16,21 @@ export const listAdmin = query({
   args: {
     filter: v.optional(v.union(v.literal('all'), v.literal('accepted'), v.literal('pending'))),
     limit: v.optional(v.number()),
+    includeDeleted: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     await requireRole(ctx, ['root', 'admin', 'proposal-editor']);
 
-    if (args.filter === 'accepted') {
-      return ctx.db
-        .query('proposals')
-        .withIndex('by_isAccepted', (q) => q.eq('isAccepted', true))
-        .order('desc')
-        .take(args.limit ?? 50);
-    }
-    return ctx.db.query('proposals').order('desc').take(args.limit ?? 50);
+    const all = args.filter === 'accepted'
+      ? await ctx.db
+          .query('proposals')
+          .withIndex('by_isAccepted', (q) => q.eq('isAccepted', true))
+          .order('desc')
+          .take(200)
+      : await ctx.db.query('proposals').order('desc').take(200);
+
+    const filtered = args.includeDeleted ? all : all.filter((p) => p.deletedAt === undefined);
+    return filtered.slice(0, args.limit ?? 50);
   },
 });
 
@@ -230,9 +234,54 @@ export const remove = mutation({
     if (!proposal) throw new Error('Not found');
     if (proposal.isAccepted) throw new Error('Cannot delete accepted proposal');
 
-    await ctx.db.delete(args.id);
+    await softDeleteDoc(ctx, 'proposals', args.id, userId);
     await logAudit(ctx, {
       eventType: 'admin.delete',
+      actorType: 'user',
+      actorId: userId,
+      targetType: 'proposal',
+      targetId: args.id,
+      metadata: { label: proposal.title, clientName: proposal.clientName, softDelete: true },
+      success: true,
+    });
+  },
+});
+
+export const permanentDelete = mutation({
+  args: { id: v.id('proposals') },
+  handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'proposals');
+    const { userId } = await requireRole(ctx, ['root']);
+
+    const proposal = await ctx.db.get(args.id);
+    if (!proposal) throw new Error('Not found');
+    if (proposal.isAccepted) throw new Error('Cannot delete accepted proposal');
+
+    await ctx.db.delete(args.id);
+    await logAudit(ctx, {
+      eventType: 'admin.permanent_delete',
+      actorType: 'user',
+      actorId: userId,
+      targetType: 'proposal',
+      targetId: args.id,
+      metadata: { label: proposal.title, clientName: proposal.clientName },
+      success: true,
+    });
+  },
+});
+
+export const restore = mutation({
+  args: { id: v.id('proposals') },
+  handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'proposals');
+    const { userId } = await requireRole(ctx, ['root']);
+
+    const proposal = await ctx.db.get(args.id);
+    if (!proposal) throw new Error('Not found');
+
+    await restoreDoc(ctx, 'proposals', args.id);
+    await logAudit(ctx, {
+      eventType: 'admin.restore',
       actorType: 'user',
       actorId: userId,
       targetType: 'proposal',

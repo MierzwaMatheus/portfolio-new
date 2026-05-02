@@ -4,16 +4,18 @@ import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
 import { logAudit } from './audit';
 import { requirePlugin, isPluginEnabled } from './plugins';
+import { softDeleteDoc, restoreDoc } from './lib/softDelete';
 
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { includeDeleted: v.optional(v.boolean()) },
+  handler: async (ctx, args) => {
     if (!(await isPluginEnabled(ctx, 'about'))) return [];
-    const items = await ctx.db
+    const all = await ctx.db
       .query('aboutDailyRoutine')
       .withIndex('by_displayOrder')
       .order('asc')
       .collect();
+    const items = args.includeDeleted ? all : all.filter((i) => i.deletedAt === undefined);
 
     return Promise.all(
       items.map(async (item) => {
@@ -80,8 +82,32 @@ export const remove = mutation({
     await requirePlugin(ctx, 'about');
     const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const existing = await ctx.db.get(args.id);
+    await softDeleteDoc(ctx, 'aboutDailyRoutine', args.id, userId);
+    await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'aboutDailyRoutine', targetId: args.id, metadata: { label: existing?.description, softDelete: true }, success: true });
+  },
+});
+
+export const permanentDelete = mutation({
+  args: { id: v.id('aboutDailyRoutine') },
+  handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'about');
+    const { userId } = await requireRole(ctx, ['root']);
+    const existing = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
     await markPendingChanges(ctx);
-    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'aboutDailyRoutine', targetId: args.id, metadata: { label: existing?.description }, success: true });
+    await logAudit(ctx, { eventType: 'admin.permanent_delete', actorType: 'user', actorId: userId, targetType: 'aboutDailyRoutine', targetId: args.id, metadata: { label: existing?.description }, success: true });
+  },
+});
+
+export const restore = mutation({
+  args: { id: v.id('aboutDailyRoutine') },
+  handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'about');
+    const { userId } = await requireRole(ctx, ['root']);
+    const existing = await ctx.db.get(args.id);
+    await restoreDoc(ctx, 'aboutDailyRoutine', args.id);
+    await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.restore', actorType: 'user', actorId: userId, targetType: 'aboutDailyRoutine', targetId: args.id, metadata: { label: existing?.description }, success: true });
   },
 });

@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Pencil, Trash2, GripVertical, X, Upload, Copy, Check, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, GripVertical, X, Upload, Copy, Check, Search, RotateCcw, ShieldAlert } from "lucide-react";
 import * as LucideIcons from "lucide-react";
 import { CASE_STUDY_AI_PROMPT } from "@/constants/caseStudyPrompt";
 
@@ -94,6 +94,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { toast } from "sonner";
 import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
 import { getChangedTranslatableFields } from "@/i18n/utils/hasTranslatableChanges";
+import { useIsRoot } from "@/hooks/useIsRoot";
 
 interface ProjectImage {
   _id: Id<"imageMetadata">;
@@ -139,11 +140,13 @@ interface Project {
 function SortableProjectCard({
   project,
   onEdit,
-  onDelete
+  onDelete,
+  onRestore
 }: {
   project: Project;
   onEdit: (project: Project) => void;
   onDelete: (id: Id<"projects">) => void;
+  onRestore: (id: Id<"projects">) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: project._id });
 
@@ -153,10 +156,11 @@ function SortableProjectCard({
   };
 
   const coverUrl = project.images?.[0]?.url || null;
+  const isDeleted = !!(project as any).deletedAt;
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Card className="bg-card border-white/10 overflow-hidden group">
+      <Card className={`bg-card overflow-hidden group ${isDeleted ? 'opacity-60 border-red-500/30' : 'border-white/10'}`}>
         <div className="relative h-48">
           {coverUrl ? (
             <img src={coverUrl} alt={project.title} className="w-full h-full object-cover" />
@@ -166,21 +170,40 @@ function SortableProjectCard({
           <div className="absolute top-2 right-2 bg-background/60 px-2 py-1 rounded text-xs text-white">
             {project.images?.length || 0} imagens
           </div>
-          <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-            <Button size="icon" variant="secondary" onClick={() => onEdit(project)}>
-              <Pencil className="w-4 h-4" />
-            </Button>
-            <Button size="icon" variant="destructive" onClick={() => onDelete(project._id)}>
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          </div>
+          {!isDeleted && (
+            <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <Button size="icon" variant="secondary" onClick={() => onEdit(project)}>
+                <Pencil className="w-4 h-4" />
+              </Button>
+              <Button size="icon" variant="destructive" onClick={() => onDelete(project._id)}>
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+          {isDeleted && (
+            <div className="absolute inset-0 bg-background/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+              <Button size="icon" variant="secondary" onClick={() => onRestore(project._id)} className="text-green-400 hover:bg-green-400/10">
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
         </div>
         <CardHeader>
           <CardTitle className="text-white flex justify-between items-start">
-            {project.title}
-            <div {...attributes} {...listeners} className="cursor-move">
-              <GripVertical className="w-5 h-5 text-gray-500 hover:text-white transition-colors" />
+            <div className="flex flex-col gap-1">
+              {project.title}
+              {isDeleted && (
+                <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-0.5 w-fit">
+                  <ShieldAlert className="w-3 h-3" />
+                  Deletado
+                </div>
+              )}
             </div>
+            {!isDeleted && (
+              <div {...attributes} {...listeners} className="cursor-move">
+                <GripVertical className="w-5 h-5 text-gray-500 hover:text-white transition-colors" />
+              </div>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -245,10 +268,14 @@ function SortableImageItem({
 }
 
 export default function AdminProjects() {
-  const projectsData = useQuery(api.projects.list, {}) as Project[] | undefined;
+  const isRoot = useIsRoot();
+  const [includeDeleted, setIncludeDeleted] = useState(false);
+  const projectsData = useQuery(api.projects.list, { includeDeleted: isRoot && includeDeleted }) as Project[] | undefined;
   const createProject = useMutation(api.projects.create);
   const updateProject = useMutation(api.projects.update);
   const removeProject = useMutation(api.projects.remove);
+  const permanentDeleteProject = useMutation(api.projects.permanentDelete);
+  const restoreProject = useMutation(api.projects.restore);
   const reorderProjects = useMutation(api.projects.reorder);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -427,14 +454,25 @@ export default function AdminProjects() {
   };
 
   const handleDelete = async (id: Id<"projects">) => {
-    if (confirm("Tem certeza que deseja excluir este projeto?")) {
-      try {
-        await removeProject({ id });
-        toast.success("Projeto excluído com sucesso");
-      } catch (error) {
-        console.error('Error deleting project:', error);
-        toast.error('Erro ao excluir projeto');
+    if (isRoot) {
+      const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
+      if (permanent) {
+        try { await permanentDeleteProject({ id }); toast.success('Deletado permanentemente'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+      } else {
+        try { await removeProject({ id }); toast.success('Projeto desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
       }
+    } else {
+      if (!confirm('Tem certeza? O projeto será desativado.')) return;
+      try { await removeProject({ id }); toast.success('Projeto desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+    }
+  };
+
+  const handleRestore = async (id: Id<"projects">) => {
+    try {
+      await restoreProject({ id });
+      toast.success('Projeto restaurado com sucesso');
+    } catch (error) {
+      toast.error('Erro ao restaurar projeto');
     }
   };
 
@@ -555,7 +593,20 @@ export default function AdminProjects() {
             <h1 className="text-3xl font-bold text-white">Projetos</h1>
             <p className="text-gray-400">Gerencie os projetos exibidos no seu portfólio</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 items-center">
+            {isRoot && (
+              <button
+                onClick={() => setIncludeDeleted(!includeDeleted)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                  includeDeleted
+                    ? 'border-red-500/50 bg-red-500/10 text-red-400'
+                    : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
+                }`}
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                {includeDeleted ? 'Ocultar deletados' : 'Ver deletados'}
+              </button>
+            )}
             <Button variant="outline" className="border-white/10 text-white hover:bg-white/5" onClick={() => setIsImportOpen(true)}>
               <Upload className="w-4 h-4 mr-2" />
               Importar JSON
@@ -800,6 +851,7 @@ export default function AdminProjects() {
                     project={project}
                     onEdit={handleOpenDialog}
                     onDelete={handleDelete}
+                    onRestore={handleRestore}
                   />
                 ))}
               </div>

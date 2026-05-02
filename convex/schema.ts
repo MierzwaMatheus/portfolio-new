@@ -33,6 +33,8 @@ const resumeItemVariants = v.union(
     orderIndex: v.number(),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id('users')),
   }),
   v.object({
     type: v.literal('experience'),
@@ -51,6 +53,8 @@ const resumeItemVariants = v.union(
     orderIndex: v.number(),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id('users')),
   }),
   v.object({
     type: v.literal('education'),
@@ -69,6 +73,8 @@ const resumeItemVariants = v.union(
     orderIndex: v.number(),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id('users')),
   }),
   v.object({
     type: v.literal('course'),
@@ -77,6 +83,8 @@ const resumeItemVariants = v.union(
     orderIndex: v.number(),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id('users')),
   }),
   v.object({
     type: v.literal('soft_skill'),
@@ -85,6 +93,8 @@ const resumeItemVariants = v.union(
     orderIndex: v.number(),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id('users')),
   }),
   v.object({
     type: v.literal('volunteer'),
@@ -101,6 +111,8 @@ const resumeItemVariants = v.union(
     orderIndex: v.number(),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id('users')),
   }),
   v.object({
     type: v.literal('language'),
@@ -109,6 +121,8 @@ const resumeItemVariants = v.union(
     orderIndex: v.number(),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id('users')),
   }),
 );
 
@@ -169,10 +183,13 @@ export default defineSchema({
     orderIndex: v.number(),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id('users')),
   })
     .index('by_orderIndex', ['orderIndex'])
     .index('by_createdAt', ['createdAt'])
-    .index('by_slug', ['slug']),
+    .index('by_slug', ['slug'])
+    .index('by_deletedAt', ['deletedAt']),
 
   // ── posts ──────────────────────────────────────────────────────────────────
   posts: defineTable({
@@ -193,18 +210,22 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
     authorId: v.optional(v.id('users')),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id('users')),
   })
     .index('by_slug', ['slug'])
     .index('by_status', ['status'])
     .index('by_status_and_publishedAt', ['status', 'publishedAt'])
     .index('by_featured', ['featured'])
     .index('by_imageId', ['imageId'])
+    .index('by_deletedAt', ['deletedAt'])
     .searchIndex('search_title', { searchField: 'title', filterFields: ['status'] }),
 
   // ── resumeItems ────────────────────────────────────────────────────────────
   resumeItems: defineTable(resumeItemVariants)
     .index('by_type_and_orderIndex', ['type', 'orderIndex'])
-    .index('by_orderIndex', ['orderIndex']),
+    .index('by_orderIndex', ['orderIndex'])
+    .index('by_deletedAt', ['deletedAt']),
 
   // ── services ───────────────────────────────────────────────────────────────
   services: defineTable({
@@ -214,7 +235,11 @@ export default defineSchema({
     descriptionTranslations: i18nString,
     orderIndex: v.optional(v.number()),
     createdAt: v.number(),
-  }).index('by_orderIndex', ['orderIndex']),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id('users')),
+  })
+    .index('by_orderIndex', ['orderIndex'])
+    .index('by_deletedAt', ['deletedAt']),
 
   // ── testimonials ───────────────────────────────────────────────────────────
   testimonials: defineTable({
@@ -228,10 +253,13 @@ export default defineSchema({
     orderIndex: v.optional(v.number()),
     showOnHome: v.optional(v.boolean()),
     createdAt: v.number(),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id('users')),
   })
     .index('by_orderIndex', ['orderIndex'])
     .index('by_imageId', ['imageId'])
-    .index('by_showOnHome', ['showOnHome']),
+    .index('by_showOnHome', ['showOnHome'])
+    .index('by_deletedAt', ['deletedAt']),
 
   // ── homeContent ────────────────────────────────────────────────────────────
   homeContent: defineTable({
@@ -251,8 +279,11 @@ export default defineSchema({
     displayOrder: v.number(),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id('users')),
   })
-    .index('by_displayOrder', ['displayOrder']),
+    .index('by_displayOrder', ['displayOrder'])
+    .index('by_deletedAt', ['deletedAt']),
 
   // ── aboutFaq ───────────────────────────────────────────────────────────────
   aboutFaq: defineTable({
@@ -263,7 +294,11 @@ export default defineSchema({
     displayOrder: v.number(),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
-  }).index('by_displayOrder', ['displayOrder']),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id('users')),
+  })
+    .index('by_displayOrder', ['displayOrder'])
+    .index('by_deletedAt', ['deletedAt']),
 
   // ── contactInfo (singleton) ────────────────────────────────────────────────
   contactInfo: defineTable({
@@ -345,11 +380,14 @@ export default defineSchema({
     expiresAt: v.number(),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id('users')),
   })
     .index('by_slug', ['slug'])
     .index('by_userId', ['userId'])
     .index('by_isAccepted', ['isAccepted'])
-    .index('by_expiresAt', ['expiresAt']),
+    .index('by_expiresAt', ['expiresAt'])
+    .index('by_deletedAt', ['deletedAt']),
 
   // ── proposalVersions ───────────────────────────────────────────────────────
   proposalVersions: defineTable({
@@ -439,12 +477,15 @@ export default defineSchema({
     completedAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id('users')),
   })
     .index('by_uniqueLink', ['uniqueLink'])
     .index('by_asaasChargeId', ['asaasChargeId'])
     .index('by_status', ['status'])
     .index('by_customerEmail', ['customerEmail'])
-    .index('by_expiresAt', ['expiresAt']),
+    .index('by_expiresAt', ['expiresAt'])
+    .index('by_deletedAt', ['deletedAt']),
 
   // ── deployStatus (singleton) ───────────────────────────────────────────────
   deployStatus: defineTable({
@@ -517,7 +558,11 @@ export default defineSchema({
     cvData: v.any(),
     createdBy: v.id('users'),
     createdAt: v.number(),
-  }).index('by_createdAt', ['createdAt']),
+    deletedAt: v.optional(v.number()),
+    deletedBy: v.optional(v.id('users')),
+  })
+    .index('by_createdAt', ['createdAt'])
+    .index('by_deletedAt', ['deletedAt']),
 
   // ── contactRequests ────────────────────────────────────────────────────────
   contactRequests: defineTable({

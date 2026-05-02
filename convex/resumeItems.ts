@@ -4,6 +4,7 @@ import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
 import { logAudit } from './audit';
 import { requirePlugin, isPluginEnabled } from './plugins';
+import { softDeleteDoc, restoreDoc } from './lib/softDelete';
 
 const RESUME_TYPES = ['skill', 'experience', 'education', 'course', 'soft_skill', 'volunteer', 'language'] as const;
 type ResumeType = typeof RESUME_TYPES[number];
@@ -26,22 +27,25 @@ export const listByType = query({
       v.literal('volunteer'),
       v.literal('language'),
     ),
+    includeDeleted: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     if (!(await isPluginEnabled(ctx, 'resume'))) return [];
-    return ctx.db
+    const all = await ctx.db
       .query('resumeItems')
       .withIndex('by_type_and_orderIndex', (q) => q.eq('type', args.type))
       .order('asc')
       .collect();
+    return args.includeDeleted ? all : all.filter((i) => i.deletedAt === undefined);
   },
 });
 
 export const listAll = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { includeDeleted: v.optional(v.boolean()) },
+  handler: async (ctx, args) => {
     if (!(await isPluginEnabled(ctx, 'resume'))) return [];
-    return ctx.db.query('resumeItems').withIndex('by_orderIndex').order('asc').collect();
+    const all = await ctx.db.query('resumeItems').withIndex('by_orderIndex').order('asc').collect();
+    return args.includeDeleted ? all : all.filter((i) => i.deletedAt === undefined);
   },
 });
 
@@ -98,10 +102,36 @@ export const remove = mutation({
     await requirePlugin(ctx, 'resume');
     const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const existing = await ctx.db.get(args.id);
+    await softDeleteDoc(ctx, 'resumeItems', args.id, userId);
+    await markPendingChanges(ctx);
+    const label = existing ? resumeItemLabel(existing.type, existing.content as Record<string, unknown>) : undefined;
+    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'resumeItem', targetId: args.id, metadata: { type: existing?.type, label, softDelete: true }, success: true });
+  },
+});
+
+export const permanentDelete = mutation({
+  args: { id: v.id('resumeItems') },
+  handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'resume');
+    const { userId } = await requireRole(ctx, ['root']);
+    const existing = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
     await markPendingChanges(ctx);
     const label = existing ? resumeItemLabel(existing.type, existing.content as Record<string, unknown>) : undefined;
-    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'resumeItem', targetId: args.id, metadata: { type: existing?.type, label }, success: true });
+    await logAudit(ctx, { eventType: 'admin.permanent_delete', actorType: 'user', actorId: userId, targetType: 'resumeItem', targetId: args.id, metadata: { type: existing?.type, label }, success: true });
+  },
+});
+
+export const restore = mutation({
+  args: { id: v.id('resumeItems') },
+  handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'resume');
+    const { userId } = await requireRole(ctx, ['root']);
+    const existing = await ctx.db.get(args.id);
+    await restoreDoc(ctx, 'resumeItems', args.id);
+    await markPendingChanges(ctx);
+    const label = existing ? resumeItemLabel(existing.type, existing.content as Record<string, unknown>) : undefined;
+    await logAudit(ctx, { eventType: 'admin.restore', actorType: 'user', actorId: userId, targetType: 'resumeItem', targetId: args.id, metadata: { type: existing?.type, label }, success: true });
   },
 });
 

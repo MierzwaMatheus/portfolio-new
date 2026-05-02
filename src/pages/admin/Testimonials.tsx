@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Video, FileText, Check, X, RotateCcw, Globe, Loader2, Home, EyeOff, Plus, ChevronDown, ChevronUp, Pencil, Trash2, ImageIcon } from "lucide-react";
+import { Video, FileText, Check, X, RotateCcw, Globe, Loader2, Home, EyeOff, Plus, ChevronDown, ChevronUp, Pencil, Trash2, ImageIcon, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsRoot } from "@/hooks/useIsRoot";
 
 type SubmissionStatus = "pending" | "approved" | "rejected" | "published";
 type ActiveTab = SubmissionStatus | "all" | "diretos";
@@ -426,9 +427,13 @@ function AdminCreateForm() {
 }
 
 function DirectTestimonialsTab() {
-  const testimonials = useQuery(api.testimonials.list, {});
+  const isRoot = useIsRoot();
+  const [includeDeleted, setIncludeDeleted] = useState(false);
+  const testimonials = useQuery(api.testimonials.list, { includeDeleted: isRoot && includeDeleted });
   const toggleMutation = useMutation(api.testimonials.toggleShowOnHome);
   const removeMutation = useMutation(api.testimonials.remove);
+  const permanentDeleteMutation = useMutation(api.testimonials.permanentDelete);
+  const restoreMutation = useMutation(api.testimonials.restore);
   const updateMutation = useMutation(api.testimonials.update);
 
   const [editing, setEditing] = useState<string | null>(null);
@@ -466,12 +471,25 @@ function DirectTestimonialsTab() {
   }
 
   async function handleDelete(id: string) {
-    if (!confirm("Excluir este depoimento?")) return;
+    if (isRoot) {
+      const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
+      if (permanent) {
+        try { await permanentDeleteMutation({ id: id as any }); toast.success('Deletado permanentemente'); } catch (err) { toast.error(err instanceof Error ? err.message : 'Erro'); }
+      } else {
+        try { await removeMutation({ id: id as any }); toast.success('Depoimento desativado'); } catch (err) { toast.error(err instanceof Error ? err.message : 'Erro'); }
+      }
+    } else {
+      if (!confirm("Excluir este depoimento?")) return;
+      try { await removeMutation({ id: id as any }); toast.success("Excluído"); } catch (err) { toast.error(err instanceof Error ? err.message : "Erro"); }
+    }
+  }
+
+  async function handleRestore(id: string) {
     try {
-      await removeMutation({ id: id as any });
-      toast.success("Excluído");
+      await restoreMutation({ id: id as any });
+      toast.success('Depoimento restaurado com sucesso');
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erro");
+      toast.error(err instanceof Error ? err.message : 'Erro');
     }
   }
 
@@ -484,13 +502,30 @@ function DirectTestimonialsTab() {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4">
+    <div className="space-y-4">
+      {isRoot && (
+        <div className="flex justify-end">
+          <button
+            onClick={() => setIncludeDeleted(!includeDeleted)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+              includeDeleted
+                ? 'border-red-500/50 bg-red-500/10 text-red-400'
+                : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
+            }`}
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            {includeDeleted ? 'Ocultar deletados' : 'Ver deletados'}
+          </button>
+        </div>
+      )}
+      <div className="grid grid-cols-1 gap-4">
       {testimonials.map((item) => {
         const initials = item.name.split(" ").slice(0, 2).map((n) => n[0]).join("").toUpperCase();
         const isEditing = editing === item._id;
+        const isDeleted = !!(item as any).deletedAt;
 
         return (
-          <div key={item._id} className="bg-[#1a1a1a] border border-white/5 rounded-xl p-5 space-y-3">
+          <div key={item._id} className={`bg-[#1a1a1a] border rounded-xl p-5 space-y-3 ${isDeleted ? 'opacity-60 border-red-500/30' : 'border-white/5'}`}>
             {isEditing ? (
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
@@ -527,35 +562,53 @@ function DirectTestimonialsTab() {
                     )}
                     <div>
                       <p className="font-semibold text-white text-sm">{item.name}</p>
-                      <p className="text-xs text-gray-400">{item.roleTranslations?.ptBR ?? item.role}</p>
+                      <p className="text-xs text-gray-400">{(item as any).roleTranslations?.ptBR ?? item.role}</p>
                     </div>
                   </div>
-                  {item.showOnHome && (
-                    <Badge className="bg-neon-lime/20 text-neon-lime border border-neon-lime/30 text-xs flex-shrink-0">
-                      <Home className="w-3 h-3 mr-1 inline" />Na home
-                    </Badge>
-                  )}
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {isDeleted && (
+                      <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-0.5">
+                        <ShieldAlert className="w-3 h-3" />Deletado
+                      </div>
+                    )}
+                    {item.showOnHome && !isDeleted && (
+                      <Badge className="bg-neon-lime/20 text-neon-lime border border-neon-lime/30 text-xs">
+                        <Home className="w-3 h-3 mr-1 inline" />Na home
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 <p className="text-sm text-gray-300 italic border-l-2 border-white/10 pl-3 leading-relaxed">
-                  "{item.textTranslations?.ptBR ?? item.text}"
+                  "{(item as any).textTranslations?.ptBR ?? item.text}"
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  <Button size="sm" variant="outline" onClick={() => handleToggle(item._id)}
-                    className={cn("text-xs", item.showOnHome ? "border-neon-lime/50 text-neon-lime hover:bg-neon-lime/10" : "border-gray-700 text-gray-400 hover:bg-gray-900/20")}>
-                    {item.showOnHome ? <><EyeOff className="w-3 h-3 mr-1" />Remover da home</> : <><Home className="w-3 h-3 mr-1" />Exibir na home</>}
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => openEdit(item)} className="border-gray-700 text-gray-400 hover:bg-gray-900/20 text-xs">
-                    <Pencil className="w-3 h-3 mr-1" />Editar
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleDelete(item._id)} className="border-red-800 text-red-400 hover:bg-red-900/20 text-xs">
-                    <Trash2 className="w-3 h-3 mr-1" />Excluir
-                  </Button>
+                  {!isDeleted && (
+                    <>
+                      <Button size="sm" variant="outline" onClick={() => handleToggle(item._id)}
+                        className={cn("text-xs", item.showOnHome ? "border-neon-lime/50 text-neon-lime hover:bg-neon-lime/10" : "border-gray-700 text-gray-400 hover:bg-gray-900/20")}>
+                        {item.showOnHome ? <><EyeOff className="w-3 h-3 mr-1" />Remover da home</> : <><Home className="w-3 h-3 mr-1" />Exibir na home</>}
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => openEdit(item)} className="border-gray-700 text-gray-400 hover:bg-gray-900/20 text-xs">
+                        <Pencil className="w-3 h-3 mr-1" />Editar
+                      </Button>
+                    </>
+                  )}
+                  {isDeleted ? (
+                    <Button size="sm" variant="outline" onClick={() => handleRestore(item._id)} className="border-green-700 text-green-400 hover:bg-green-900/20 text-xs">
+                      <RotateCcw className="w-3 h-3 mr-1" />Restaurar
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={() => handleDelete(item._id)} className="border-red-800 text-red-400 hover:bg-red-900/20 text-xs">
+                      <Trash2 className="w-3 h-3 mr-1" />Excluir
+                    </Button>
+                  )}
                 </div>
               </>
             )}
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

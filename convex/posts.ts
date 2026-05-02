@@ -6,16 +6,17 @@ import { markPendingChanges } from './publishStatus';
 import { getAuthUserId } from '@convex-dev/auth/server';
 import { logAudit } from './audit';
 import { requirePlugin, isPluginEnabled } from './plugins';
+import { softDeleteDoc, restoreDoc } from './lib/softDelete';
 
 export const listAllPublished = query({
   args: {},
   handler: async (ctx) => {
     if (!(await isPluginEnabled(ctx, 'blog'))) return [];
-    const posts = await ctx.db
+    const posts = (await ctx.db
       .query('posts')
       .withIndex('by_status_and_publishedAt', (q) => q.eq('status', 'published'))
       .order('desc')
-      .collect();
+      .collect()).filter((p) => p.deletedAt === undefined);
 
     return Promise.all(
       posts.map(async (post) => ({
@@ -45,9 +46,10 @@ export const listPublished = query({
       .order('desc')
       .paginate(args.paginationOpts);
 
+    const nonDeleted = { ...result, page: result.page.filter((p) => p.deletedAt === undefined) };
     const filtered = args.tag
-      ? { ...result, page: result.page.filter((p) => p.tags.includes(args.tag!)) }
-      : result;
+      ? { ...nonDeleted, page: nonDeleted.page.filter((p) => p.tags.includes(args.tag!)) }
+      : nonDeleted;
 
     return {
       ...filtered,
@@ -66,14 +68,15 @@ export const listPublished = query({
 });
 
 export const listAdmin = query({
-  args: { limit: v.optional(v.number()) },
+  args: { limit: v.optional(v.number()), includeDeleted: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
     await requireRole(ctx, ['root', 'admin', 'content-editor', 'blog-editor']);
-    const posts = await ctx.db
+    const all = await ctx.db
       .query('posts')
       .withIndex('by_status_and_publishedAt')
       .order('desc')
-      .take(args.limit ?? 50);
+      .take(args.limit ?? 200);
+    const posts = args.includeDeleted ? all : all.filter((p) => p.deletedAt === undefined).slice(0, args.limit ?? 50);
 
     return Promise.all(
       posts.map(async (post) => ({
@@ -96,7 +99,7 @@ export const getBySlug = query({
       .query('posts')
       .withIndex('by_slug', (q) => q.eq('slug', args.slug))
       .unique();
-    if (!post) return null;
+    if (!post || post.deletedAt !== undefined) return null;
 
     const imageUrl = post.imageId
       ? await ctx.db
@@ -231,8 +234,32 @@ export const remove = mutation({
     await requirePlugin(ctx, 'blog');
     const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor', 'blog-editor']);
     const post = await ctx.db.get(args.id);
+    await softDeleteDoc(ctx, 'posts', args.id, userId);
+    if (post?.status === 'published') await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'post', targetId: args.id, metadata: { label: post?.title, softDelete: true }, success: true });
+  },
+});
+
+export const permanentDelete = mutation({
+  args: { id: v.id('posts') },
+  handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'blog');
+    const { userId } = await requireRole(ctx, ['root']);
+    const post = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
     if (post?.status === 'published') await markPendingChanges(ctx);
-    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'post', targetId: args.id, metadata: { label: post?.title }, success: true });
+    await logAudit(ctx, { eventType: 'admin.permanent_delete', actorType: 'user', actorId: userId, targetType: 'post', targetId: args.id, metadata: { label: post?.title }, success: true });
+  },
+});
+
+export const restore = mutation({
+  args: { id: v.id('posts') },
+  handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'blog');
+    const { userId } = await requireRole(ctx, ['root']);
+    const post = await ctx.db.get(args.id);
+    await restoreDoc(ctx, 'posts', args.id);
+    if (post?.status === 'published') await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.restore', actorType: 'user', actorId: userId, targetType: 'post', targetId: args.id, metadata: { label: post?.title }, success: true });
   },
 });

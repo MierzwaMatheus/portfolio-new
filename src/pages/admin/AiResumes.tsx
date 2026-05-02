@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Trash2, FileDown, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
+import { Loader2, Trash2, FileDown, Sparkles, ChevronDown, ChevronUp, RotateCcw, ShieldAlert } from "lucide-react";
 import { useQuery, useMutation, useAction } from "convex/react";
+import { useIsRoot } from "@/hooks/useIsRoot";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
@@ -42,9 +43,11 @@ function FitScoreBadge({ score }: { score: number }) {
 function ResumeCard({
   resume,
   onDelete,
+  onRestore,
 }: {
   resume: any;
   onDelete: () => void;
+  onRestore?: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -62,8 +65,10 @@ function ResumeCard({
     }
   }
 
+  const isDeleted = !!(resume as any).deletedAt;
+
   return (
-    <Card>
+    <Card className={isDeleted ? 'opacity-60 border-red-500/30' : ''}>
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
@@ -72,36 +77,57 @@ function ResumeCard({
               <Badge variant="outline" className="text-xs">
                 {resume.locale}
               </Badge>
-              <FitScoreBadge score={resume.fitScore} />
+              {isDeleted ? (
+                <span className="flex items-center gap-1 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-0.5">
+                  <ShieldAlert className="w-3 h-3" />
+                  Deletado
+                </span>
+              ) : (
+                <FitScoreBadge score={resume.fitScore} />
+              )}
             </div>
             <p className="text-xs text-muted-foreground mt-1">
               {new Date(resume.createdAt).toLocaleString("pt-BR")}
             </p>
           </div>
           <div className="flex gap-2 shrink-0">
-            <Button size="sm" variant="outline" onClick={handleGeneratePdf}>
-              <FileDown className="h-4 w-4 mr-1" />
-              PDF
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => setExpanded(v => !v)}
-            >
-              {expanded ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              className="text-destructive hover:text-destructive"
-              onClick={onDelete}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            {isDeleted ? (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="text-green-600 hover:text-green-700"
+                onClick={onRestore}
+                title="Restaurar"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+            ) : (
+              <>
+                <Button size="sm" variant="outline" onClick={handleGeneratePdf}>
+                  <FileDown className="h-4 w-4 mr-1" />
+                  PDF
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setExpanded(v => !v)}
+                >
+                  {expanded ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
+                  onClick={onDelete}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -146,14 +172,18 @@ function ResumeCard({
 }
 
 export default function AiResumes() {
+  const isRoot = useIsRoot();
   const [title, setTitle] = useState("");
   const [locale, setLocale] = useState<Locale>("pt-BR");
   const [jobDescription, setJobDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const [includeDeleted, setIncludeDeleted] = useState(false);
 
-  const resumes = useQuery(api.aiResumes.list, {});
+  const resumes = useQuery(api.aiResumes.list, { includeDeleted: isRoot && includeDeleted });
   const generate = useAction(api.aiResumesAction.generate);
   const remove = useMutation(api.aiResumes.remove);
+  const permanentDelete = useMutation(api.aiResumes.permanentDelete);
+  const restore = useMutation(api.aiResumes.restore);
 
   async function handleGenerate() {
     if (!title.trim()) {
@@ -179,20 +209,43 @@ export default function AiResumes() {
   }
 
   async function handleDelete(id: Id<"aiGeneratedResumes">) {
-    try {
-      await remove({ id });
-      toast.success("CV removido");
-    } catch {
-      toast.error("Erro ao remover CV");
+    if (isRoot) {
+      const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
+      if (permanent) {
+        try { await permanentDelete({ id }); toast.success("CV deletado permanentemente"); } catch (e: any) { toast.error(e?.message || "Erro"); }
+      } else {
+        try { await remove({ id }); toast.success("CV desativado"); } catch (e: any) { toast.error(e?.message || "Erro"); }
+      }
+    } else {
+      try { await remove({ id }); toast.success("CV desativado"); } catch (e: any) { toast.error(e?.message || "Erro"); }
     }
+  }
+
+  async function handleRestore(id: Id<"aiGeneratedResumes">) {
+    try { await restore({ id }); toast.success("CV restaurado"); } catch (e: any) { toast.error(e?.message || "Erro"); }
   }
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5" />
-          <h1 className="text-2xl font-bold">Gerador de CV com IA</h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-5 w-5" />
+            <h1 className="text-2xl font-bold">Gerador de CV com IA</h1>
+          </div>
+          {isRoot && (
+            <button
+              onClick={() => setIncludeDeleted(!includeDeleted)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                includeDeleted
+                  ? 'border-red-500/50 bg-red-500/10 text-red-400'
+                  : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
+              }`}
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              {includeDeleted ? 'Ocultar deletados' : 'Ver deletados'}
+            </button>
+          )}
         </div>
 
         <Card>
@@ -282,6 +335,7 @@ export default function AiResumes() {
                 key={resume._id}
                 resume={resume}
                 onDelete={() => handleDelete(resume._id)}
+                onRestore={() => handleRestore(resume._id)}
               />
             ))}
           </div>

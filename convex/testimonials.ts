@@ -3,16 +3,18 @@ import { mutation, query } from './_generated/server';
 import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
 import { logAudit } from './audit';
+import { softDeleteDoc, restoreDoc } from './lib/softDelete';
 
 export const list = query({
-  args: { onlyHome: v.optional(v.boolean()) },
-  handler: async (ctx, { onlyHome }) => {
-    const items = await ctx.db
+  args: { onlyHome: v.optional(v.boolean()), includeDeleted: v.optional(v.boolean()) },
+  handler: async (ctx, { onlyHome, includeDeleted }) => {
+    const all = await ctx.db
       .query('testimonials')
       .withIndex('by_orderIndex')
       .order('asc')
-      .collect()
-      .then((all) => (onlyHome ? all.filter((t) => t.showOnHome === true) : all));
+      .collect();
+    const nonDeleted = includeDeleted ? all : all.filter((t) => t.deletedAt === undefined);
+    const items = onlyHome ? nonDeleted.filter((t) => t.showOnHome === true) : nonDeleted;
 
     return Promise.all(
       items.map(async (t) => ({
@@ -150,9 +152,33 @@ export const createWithAvatar = mutation({
 export const remove = mutation({
   args: { id: v.id('testimonials') },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin', 'content-editor']);
+    const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
+    const existing = await ctx.db.get(args.id);
+    await softDeleteDoc(ctx, 'testimonials', args.id, userId);
+    await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'testimonial', targetId: args.id, metadata: { label: existing?.name, softDelete: true }, success: true });
+  },
+});
+
+export const permanentDelete = mutation({
+  args: { id: v.id('testimonials') },
+  handler: async (ctx, args) => {
+    const { userId } = await requireRole(ctx, ['root']);
+    const existing = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
     await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.permanent_delete', actorType: 'user', actorId: userId, targetType: 'testimonial', targetId: args.id, metadata: { label: existing?.name }, success: true });
+  },
+});
+
+export const restore = mutation({
+  args: { id: v.id('testimonials') },
+  handler: async (ctx, args) => {
+    const { userId } = await requireRole(ctx, ['root']);
+    const existing = await ctx.db.get(args.id);
+    await restoreDoc(ctx, 'testimonials', args.id);
+    await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.restore', actorType: 'user', actorId: userId, targetType: 'testimonial', targetId: args.id, metadata: { label: existing?.name }, success: true });
   },
 });
 

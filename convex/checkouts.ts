@@ -4,6 +4,7 @@ import { internal } from './_generated/api';
 import { requireRole } from './auth';
 import { logAudit } from './audit';
 import { requirePlugin, isPluginEnabled } from './plugins';
+import { softDeleteDoc, restoreDoc } from './lib/softDelete';
 
 export const getByLink = query({
   args: { uniqueLink: v.string() },
@@ -29,17 +30,19 @@ export const listAdmin = query({
       ),
     ),
     limit: v.optional(v.number()),
+    includeDeleted: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     await requireRole(ctx, ['root', 'admin']);
-    if (args.status) {
-      return ctx.db
-        .query('checkouts')
-        .withIndex('by_status', (q) => q.eq('status', args.status!))
-        .order('desc')
-        .take(args.limit ?? 50);
-    }
-    return ctx.db.query('checkouts').order('desc').take(args.limit ?? 50);
+    const all = args.status
+      ? await ctx.db
+          .query('checkouts')
+          .withIndex('by_status', (q) => q.eq('status', args.status!))
+          .order('desc')
+          .take(200)
+      : await ctx.db.query('checkouts').order('desc').take(200);
+    const filtered = args.includeDeleted ? all : all.filter((c) => c.deletedAt === undefined);
+    return filtered.slice(0, args.limit ?? 50);
   },
 });
 
@@ -130,9 +133,50 @@ export const remove = mutation({
     if (!checkout) throw new Error('Not found');
     if (checkout.status === 'paid') throw new Error('Cannot delete paid checkout');
 
-    await ctx.db.delete(args.id);
+    await softDeleteDoc(ctx, 'checkouts', args.id, userId);
     await logAudit(ctx, {
       eventType: 'admin.delete',
+      actorType: 'user',
+      actorId: userId,
+      targetType: 'checkout',
+      targetId: args.id,
+      metadata: { label: checkout.description ?? checkout.uniqueLink, customerName: checkout.customerName, softDelete: true },
+      success: true,
+    });
+  },
+});
+
+export const permanentDelete = mutation({
+  args: { id: v.id('checkouts') },
+  handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'payments');
+    const { userId } = await requireRole(ctx, ['root']);
+    const checkout = await ctx.db.get(args.id);
+    if (!checkout) throw new Error('Not found');
+    if (checkout.status === 'paid') throw new Error('Cannot delete paid checkout');
+    await ctx.db.delete(args.id);
+    await logAudit(ctx, {
+      eventType: 'admin.permanent_delete',
+      actorType: 'user',
+      actorId: userId,
+      targetType: 'checkout',
+      targetId: args.id,
+      metadata: { label: checkout.description ?? checkout.uniqueLink, customerName: checkout.customerName },
+      success: true,
+    });
+  },
+});
+
+export const restore = mutation({
+  args: { id: v.id('checkouts') },
+  handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'payments');
+    const { userId } = await requireRole(ctx, ['root']);
+    const checkout = await ctx.db.get(args.id);
+    if (!checkout) throw new Error('Not found');
+    await restoreDoc(ctx, 'checkouts', args.id);
+    await logAudit(ctx, {
+      eventType: 'admin.restore',
       actorType: 'user',
       actorId: userId,
       targetType: 'checkout',

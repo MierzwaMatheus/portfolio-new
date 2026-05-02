@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Trash2, Pencil, Briefcase } from "lucide-react";
+import { Plus, Trash2, Pencil, Briefcase, RotateCcw, ShieldAlert } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useQuery, useMutation } from "convex/react";
@@ -18,15 +18,20 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
 import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
 import { getChangedTranslatableFields } from "@/i18n/utils/hasTranslatableChanges";
+import { useIsRoot } from "@/hooks/useIsRoot";
 
 export default function AdminHome() {
+  const isRoot = useIsRoot();
+  const [includeDeleted, setIncludeDeleted] = useState(false);
   const homeContentList = useQuery(api.homeContent.getAll);
-  const services = useQuery(api.services.list, {}) ?? [];
+  const services = useQuery(api.services.list, { includeDeleted: isRoot && includeDeleted }) ?? [];
 
   const setHomeContent = useMutation(api.homeContent.set);
   const createService = useMutation(api.services.create);
   const updateService = useMutation(api.services.update);
   const removeService = useMutation(api.services.remove);
+  const permanentDeleteService = useMutation(api.services.permanentDelete);
+  const restoreService = useMutation(api.services.restore);
 
   const { translateFields, isTranslating } = useTranslateContent();
   const [aboutText, setAboutText] = useState("");
@@ -167,14 +172,28 @@ export default function AdminHome() {
   };
 
   const handleDelete = async (type: string, id: string) => {
-    if (confirm("Tem certeza que deseja excluir este item?")) {
-      try {
-        if (type === "service") {
-          await removeService({ id: id as Id<"services"> });
+    if (type === "service") {
+      if (isRoot) {
+        const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
+        if (permanent) {
+          try { await permanentDeleteService({ id: id as Id<"services"> }); toast.success('Deletado permanentemente'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+        } else {
+          try { await removeService({ id: id as Id<"services"> }); toast.success('Item desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
         }
+      } else {
+        if (!confirm('Tem certeza? O item será desativado.')) return;
+        try { await removeService({ id: id as Id<"services"> }); toast.success('Item desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+      }
+    }
+  };
+
+  const handleRestore = async (type: string, id: string) => {
+    if (type === "service") {
+      try {
+        await restoreService({ id: id as Id<"services"> });
+        toast.success('Item restaurado com sucesso');
       } catch (error) {
-        console.error("Error deleting:", error);
-        toast.error("Erro ao excluir.");
+        toast.error('Erro ao restaurar item');
       }
     }
   };
@@ -215,32 +234,64 @@ export default function AdminHome() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-semibold text-white">O que eu faço</h2>
-                <Button onClick={() => handleOpenModal("service")} className="bg-neon-purple hover:bg-neon-purple/90 text-white">
-                  <Plus className="w-4 h-4 mr-2" /> Adicionar Item
-                </Button>
+                <div className="flex gap-2 items-center">
+                  {isRoot && (
+                    <button
+                      onClick={() => setIncludeDeleted(!includeDeleted)}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                        includeDeleted
+                          ? 'border-red-500/50 bg-red-500/10 text-red-400'
+                          : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      {includeDeleted ? 'Ocultar deletados' : 'Ver deletados'}
+                    </button>
+                  )}
+                  <Button onClick={() => handleOpenModal("service")} className="bg-neon-purple hover:bg-neon-purple/90 text-white">
+                    <Plus className="w-4 h-4 mr-2" /> Adicionar Item
+                  </Button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {services.map(item => (
-                  <Card key={item._id} className="bg-card border-white/10 group">
-                    <CardContent className="pt-6 space-y-4">
-                      <h3 className="text-lg font-semibold text-white">
-                        {item.titleTranslations?.ptBR || item.title}
-                      </h3>
-                      <p className="text-gray-400 text-sm leading-relaxed">
-                        {item.descriptionTranslations?.ptBR || item.description}
-                      </p>
-                      <div className="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="sm" onClick={() => handleOpenModal("service", item)} className="text-white hover:text-neon-purple">
-                          <Pencil className="w-4 h-4 mr-2" /> Editar
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete("service", item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
-                          <Trash2 className="w-4 h-4 mr-2" /> Excluir
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                {(services as any[]).map(item => {
+                  const isDeleted = !!item.deletedAt;
+                  return (
+                    <Card key={item._id} className={`bg-card group ${isDeleted ? 'opacity-60 border-red-500/30' : 'border-white/10'}`}>
+                      <CardContent className="pt-6 space-y-4">
+                        <h3 className="text-lg font-semibold text-white">
+                          {item.titleTranslations?.ptBR || item.title}
+                        </h3>
+                        {isDeleted && (
+                          <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-0.5 w-fit">
+                            <ShieldAlert className="w-3 h-3" />
+                            Deletado
+                          </div>
+                        )}
+                        <p className="text-gray-400 text-sm leading-relaxed">
+                          {item.descriptionTranslations?.ptBR || item.description}
+                        </p>
+                        <div className="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {!isDeleted && (
+                            <Button variant="ghost" size="sm" onClick={() => handleOpenModal("service", item)} className="text-white hover:text-neon-purple">
+                              <Pencil className="w-4 h-4 mr-2" /> Editar
+                            </Button>
+                          )}
+                          {isDeleted ? (
+                            <Button variant="ghost" size="sm" onClick={() => handleRestore("service", item._id)} className="text-green-400 hover:text-green-300 hover:bg-green-400/10">
+                              <RotateCcw className="w-4 h-4 mr-2" /> Restaurar
+                            </Button>
+                          ) : (
+                            <Button variant="ghost" size="sm" onClick={() => handleDelete("service", item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
+                              <Trash2 className="w-4 h-4 mr-2" /> Excluir
+                            </Button>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
           </TabsContent>

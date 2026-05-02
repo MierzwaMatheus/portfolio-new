@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, Pencil, Image as ImageIcon, GripVertical } from "lucide-react";
+import { Plus, Trash2, Pencil, Image as ImageIcon, GripVertical, RotateCcw, ShieldAlert } from "lucide-react";
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
@@ -21,11 +21,13 @@ import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, us
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { toast } from "sonner";
+import { useIsRoot } from "@/hooks/useIsRoot";
 
 type SpanSize = "1x1" | "1x2" | "2x1";
 
-function SortableDailyRoutineCard({ item, onEdit, onDelete, t }: { item: any, onEdit: (item: any) => void, onDelete: (id: string) => void, t: (key: string) => string }) {
+function SortableDailyRoutineCard({ item, onEdit, onDelete, onRestore, t }: { item: any, onEdit: (item: any) => void, onDelete: (id: string) => void, onRestore: (id: string) => void, t: (key: string) => string }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item._id });
+  const isDeleted = !!item.deletedAt;
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -34,7 +36,7 @@ function SortableDailyRoutineCard({ item, onEdit, onDelete, t }: { item: any, on
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Card className="bg-card border-white/10 group">
+      <Card className={`bg-card group ${isDeleted ? 'opacity-60 border-red-500/30' : 'border-white/10'}`}>
         <CardContent className="pt-6 space-y-4">
           <div className="relative aspect-video rounded-lg overflow-hidden border border-white/10">
             {item.image?.url && (
@@ -43,22 +45,39 @@ function SortableDailyRoutineCard({ item, onEdit, onDelete, t }: { item: any, on
           </div>
           <div>
             <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
-              <div {...attributes} {...listeners} className="cursor-move">
-                <GripVertical className="w-4 h-4 text-gray-500 hover:text-white" />
-              </div>
+              {!isDeleted && (
+                <div {...attributes} {...listeners} className="cursor-move">
+                  <GripVertical className="w-4 h-4 text-gray-500 hover:text-white" />
+                </div>
+              )}
               {item.descriptionTranslations?.ptBR || item.description}
             </h3>
-            <p className="text-gray-400 text-xs">
-              {t('admin.about.spanSize')}: {item.spanSize}
-            </p>
+            {isDeleted && (
+              <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-0.5 w-fit mb-1">
+                <ShieldAlert className="w-3 h-3" />Deletado
+              </div>
+            )}
+            {!isDeleted && (
+              <p className="text-gray-400 text-xs">
+                {t('admin.about.spanSize')}: {item.spanSize}
+              </p>
+            )}
           </div>
           <div className="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button variant="ghost" size="sm" onClick={() => onEdit(item)} className="text-white hover:text-neon-purple">
-              <Pencil className="w-4 h-4 mr-2" /> {t('common.edit')}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => onDelete(item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
-              <Trash2 className="w-4 h-4 mr-2" /> {t('common.delete')}
-            </Button>
+            {!isDeleted && (
+              <Button variant="ghost" size="sm" onClick={() => onEdit(item)} className="text-white hover:text-neon-purple">
+                <Pencil className="w-4 h-4 mr-2" /> {t('common.edit')}
+              </Button>
+            )}
+            {isDeleted ? (
+              <Button variant="ghost" size="sm" onClick={() => onRestore(item._id)} className="text-green-400 hover:text-green-300 hover:bg-green-400/10">
+                <RotateCcw className="w-4 h-4 mr-2" /> Restaurar
+              </Button>
+            ) : (
+              <Button variant="ghost" size="sm" onClick={() => onDelete(item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
+                <Trash2 className="w-4 h-4 mr-2" /> {t('common.delete')}
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -66,8 +85,9 @@ function SortableDailyRoutineCard({ item, onEdit, onDelete, t }: { item: any, on
   );
 }
 
-function SortableFaqCard({ item, onEdit, onDelete, t }: { item: any, onEdit: (item: any) => void, onDelete: (id: string) => void, t: (key: string) => string }) {
+function SortableFaqCard({ item, onEdit, onDelete, onRestore, t }: { item: any, onEdit: (item: any) => void, onDelete: (id: string) => void, onRestore: (id: string) => void, t: (key: string) => string }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item._id });
+  const isDeleted = !!item.deletedAt;
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -76,26 +96,41 @@ function SortableFaqCard({ item, onEdit, onDelete, t }: { item: any, onEdit: (it
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Card className="bg-card border-white/10 group">
+      <Card className={`bg-card group ${isDeleted ? 'opacity-60 border-red-500/30' : 'border-white/10'}`}>
         <CardContent className="pt-6 space-y-4">
           <div>
             <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
-              <div {...attributes} {...listeners} className="cursor-move">
-                <GripVertical className="w-4 h-4 text-gray-500 hover:text-white" />
-              </div>
+              {!isDeleted && (
+                <div {...attributes} {...listeners} className="cursor-move">
+                  <GripVertical className="w-4 h-4 text-gray-500 hover:text-white" />
+                </div>
+              )}
               {item.questionTranslations?.ptBR || item.question}
             </h3>
+            {isDeleted && (
+              <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-0.5 w-fit mb-1">
+                <ShieldAlert className="w-3 h-3" />Deletado
+              </div>
+            )}
             <p className="text-gray-400 text-sm leading-relaxed">
               {item.answerTranslations?.ptBR || item.answer}
             </p>
           </div>
           <div className="flex justify-end gap-2 pt-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button variant="ghost" size="sm" onClick={() => onEdit(item)} className="text-white hover:text-neon-purple">
-              <Pencil className="w-4 h-4 mr-2" /> {t('common.edit')}
-            </Button>
-            <Button variant="ghost" size="sm" onClick={() => onDelete(item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
-              <Trash2 className="w-4 h-4 mr-2" /> {t('common.delete')}
-            </Button>
+            {!isDeleted && (
+              <Button variant="ghost" size="sm" onClick={() => onEdit(item)} className="text-white hover:text-neon-purple">
+                <Pencil className="w-4 h-4 mr-2" /> {t('common.edit')}
+              </Button>
+            )}
+            {isDeleted ? (
+              <Button variant="ghost" size="sm" onClick={() => onRestore(item._id)} className="text-green-400 hover:text-green-300 hover:bg-green-400/10">
+                <RotateCcw className="w-4 h-4 mr-2" /> Restaurar
+              </Button>
+            ) : (
+              <Button variant="ghost" size="sm" onClick={() => onDelete(item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
+                <Trash2 className="w-4 h-4 mr-2" /> {t('common.delete')}
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -106,18 +141,24 @@ function SortableFaqCard({ item, onEdit, onDelete, t }: { item: any, onEdit: (it
 export default function AdminAbout() {
   const { t } = useTranslation();
   const { translateFields, isTranslating } = useTranslateContent();
+  const isRoot = useIsRoot();
+  const [includeDeleted, setIncludeDeleted] = useState(false);
 
-  const dailyRoutineData = useQuery(api.aboutDailyRoutine.list, {});
-  const faqData = useQuery(api.aboutFaq.list, {});
+  const dailyRoutineData = useQuery(api.aboutDailyRoutine.list, { includeDeleted: isRoot && includeDeleted });
+  const faqData = useQuery(api.aboutFaq.list, { includeDeleted: isRoot && includeDeleted });
   const dailyRoutine = dailyRoutineData ?? [];
   const faq = faqData ?? [];
 
   const createDailyRoutine = useMutation(api.aboutDailyRoutine.create);
   const updateDailyRoutine = useMutation(api.aboutDailyRoutine.update);
   const removeDailyRoutine = useMutation(api.aboutDailyRoutine.remove);
+  const permanentDeleteDailyRoutine = useMutation(api.aboutDailyRoutine.permanentDelete);
+  const restoreDailyRoutine = useMutation(api.aboutDailyRoutine.restore);
   const createFaq = useMutation(api.aboutFaq.create);
   const updateFaq = useMutation(api.aboutFaq.update);
   const removeFaq = useMutation(api.aboutFaq.remove);
+  const permanentDeleteFaq = useMutation(api.aboutFaq.permanentDelete);
+  const restoreFaq = useMutation(api.aboutFaq.restore);
 
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [editingItem, setEditingItem] = useState<any>(null);
@@ -256,18 +297,47 @@ export default function AdminAbout() {
   };
 
   const handleDelete = async (type: string, id: string) => {
-    if (confirm(t('admin.about.deleteConfirm'))) {
+    if (isRoot) {
+      const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
+      if (type === "dailyRoutine") {
+        if (permanent) {
+          try { await permanentDeleteDailyRoutine({ id: id as Id<"aboutDailyRoutine"> }); toast.success('Deletado permanentemente'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+        } else {
+          try { await removeDailyRoutine({ id: id as Id<"aboutDailyRoutine"> }); toast.success('Item desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+        }
+      } else if (type === "faq") {
+        if (permanent) {
+          try { await permanentDeleteFaq({ id: id as Id<"aboutFaq"> }); toast.success('Deletado permanentemente'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+        } else {
+          try { await removeFaq({ id: id as Id<"aboutFaq"> }); toast.success('Item desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+        }
+      }
+    } else {
+      if (!confirm(t('admin.about.deleteConfirm'))) return;
       try {
         if (type === "dailyRoutine") {
           await removeDailyRoutine({ id: id as Id<"aboutDailyRoutine"> });
-        }
-        if (type === "faq") {
+        } else if (type === "faq") {
           await removeFaq({ id: id as Id<"aboutFaq"> });
         }
+        toast.success('Item desativado');
       } catch (error) {
         console.error("Error deleting:", error);
         toast.error(t('admin.about.deleteError'));
       }
+    }
+  };
+
+  const handleRestore = async (type: string, id: string) => {
+    try {
+      if (type === "dailyRoutine") {
+        await restoreDailyRoutine({ id: id as Id<"aboutDailyRoutine"> });
+      } else if (type === "faq") {
+        await restoreFaq({ id: id as Id<"aboutFaq"> });
+      }
+      toast.success('Item restaurado com sucesso');
+    } catch (error) {
+      toast.error('Erro ao restaurar item');
     }
   };
 
@@ -323,9 +393,24 @@ export default function AdminAbout() {
           <TabsContent value="dailyRoutine" className="space-y-6 mt-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">{t('admin.about.dailyRoutine')}</h2>
-              <Button onClick={() => handleOpenModal("dailyRoutine")} className="bg-neon-purple hover:bg-neon-purple/90 text-white">
-                <Plus className="w-4 h-4 mr-2" /> {t('admin.about.addDailyRoutine')}
-              </Button>
+              <div className="flex gap-2 items-center">
+                {isRoot && (
+                  <button
+                    onClick={() => setIncludeDeleted(!includeDeleted)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                      includeDeleted
+                        ? 'border-red-500/50 bg-red-500/10 text-red-400'
+                        : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    {includeDeleted ? 'Ocultar deletados' : 'Ver deletados'}
+                  </button>
+                )}
+                <Button onClick={() => handleOpenModal("dailyRoutine")} className="bg-neon-purple hover:bg-neon-purple/90 text-white">
+                  <Plus className="w-4 h-4 mr-2" /> {t('admin.about.addDailyRoutine')}
+                </Button>
+              </div>
             </div>
 
             <Card className="bg-card border-white/10">
@@ -350,6 +435,7 @@ export default function AdminAbout() {
                       item={item}
                       onEdit={(item) => handleOpenModal("dailyRoutine", item)}
                       onDelete={(id) => handleDelete("dailyRoutine", id)}
+                      onRestore={(id) => handleRestore("dailyRoutine", id)}
                       t={t}
                     />
                   ))}
@@ -361,9 +447,24 @@ export default function AdminAbout() {
           <TabsContent value="faq" className="space-y-6 mt-6">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold text-white">{t('admin.about.faq')}</h2>
-              <Button onClick={() => handleOpenModal("faq")} className="bg-neon-purple hover:bg-neon-purple/90 text-white">
-                <Plus className="w-4 h-4 mr-2" /> {t('admin.about.addFaq')}
-              </Button>
+              <div className="flex gap-2 items-center">
+                {isRoot && (
+                  <button
+                    onClick={() => setIncludeDeleted(!includeDeleted)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                      includeDeleted
+                        ? 'border-red-500/50 bg-red-500/10 text-red-400'
+                        : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
+                    }`}
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    {includeDeleted ? 'Ocultar deletados' : 'Ver deletados'}
+                  </button>
+                )}
+                <Button onClick={() => handleOpenModal("faq")} className="bg-neon-purple hover:bg-neon-purple/90 text-white">
+                  <Plus className="w-4 h-4 mr-2" /> {t('admin.about.addFaq')}
+                </Button>
+              </div>
             </div>
 
             <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={(e) => handleDragEnd(e, 'faq')}>
@@ -375,6 +476,7 @@ export default function AdminAbout() {
                       item={item}
                       onEdit={(item) => handleOpenModal("faq", item)}
                       onDelete={(id) => handleDelete("faq", id)}
+                      onRestore={(id) => handleRestore("faq", id)}
                       t={t}
                     />
                   ))}

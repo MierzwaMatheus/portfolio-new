@@ -1,6 +1,8 @@
 import { v } from 'convex/values';
 import { internalMutation, query, mutation } from './_generated/server';
 import { requireRole } from './auth';
+import { logAudit } from './audit';
+import { softDeleteDoc, restoreDoc } from './lib/softDelete';
 
 export const save = internalMutation({
   args: {
@@ -23,10 +25,11 @@ export const save = internalMutation({
 });
 
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { includeDeleted: v.optional(v.boolean()) },
+  handler: async (ctx, args) => {
     await requireRole(ctx, ['root', 'admin']);
-    return await ctx.db.query('aiGeneratedResumes').order('desc').collect();
+    const all = await ctx.db.query('aiGeneratedResumes').order('desc').collect();
+    return args.includeDeleted ? all : all.filter((r) => r.deletedAt === undefined);
   },
 });
 
@@ -41,7 +44,29 @@ export const getById = query({
 export const remove = mutation({
   args: { id: v.id('aiGeneratedResumes') },
   handler: async (ctx, args) => {
-    await requireRole(ctx, ['root', 'admin']);
+    const { userId } = await requireRole(ctx, ['root', 'admin']);
+    const existing = await ctx.db.get(args.id);
+    await softDeleteDoc(ctx, 'aiGeneratedResumes', args.id, userId);
+    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'aiGeneratedResume', targetId: args.id, metadata: { label: existing?.title, softDelete: true }, success: true });
+  },
+});
+
+export const permanentDelete = mutation({
+  args: { id: v.id('aiGeneratedResumes') },
+  handler: async (ctx, args) => {
+    const { userId } = await requireRole(ctx, ['root']);
+    const existing = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
+    await logAudit(ctx, { eventType: 'admin.permanent_delete', actorType: 'user', actorId: userId, targetType: 'aiGeneratedResume', targetId: args.id, metadata: { label: existing?.title }, success: true });
+  },
+});
+
+export const restore = mutation({
+  args: { id: v.id('aiGeneratedResumes') },
+  handler: async (ctx, args) => {
+    const { userId } = await requireRole(ctx, ['root']);
+    const existing = await ctx.db.get(args.id);
+    await restoreDoc(ctx, 'aiGeneratedResumes', args.id);
+    await logAudit(ctx, { eventType: 'admin.restore', actorType: 'user', actorId: userId, targetType: 'aiGeneratedResume', targetId: args.id, metadata: { label: existing?.title }, success: true });
   },
 });

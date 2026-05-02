@@ -66,6 +66,50 @@ export const recent = query({
   },
 });
 
+export const listSoftDeleted = query({
+  args: { limit: v.optional(v.number()) },
+  handler: async (ctx, args) => {
+    await requireRole(ctx, ['root']);
+    if (!(await isPluginEnabled(ctx, 'audit-log'))) return [];
+    const logs = await ctx.db
+      .query('auditLog')
+      .withIndex('by_eventType_and_createdAt', (q) => q.eq('eventType', 'admin.delete'))
+      .order('desc')
+      .take(500);
+
+    const softDeletedLogs = logs.filter((l) => (l.metadata as any)?.softDelete === true);
+
+    const userCache = new Map<string, string | null>();
+    const results = await Promise.all(
+      softDeletedLogs.slice(0, args.limit ?? 100).map(async (log) => {
+        let actorEmail: string | null = null;
+        if (log.actorId && log.actorType === 'user') {
+          if (!userCache.has(log.actorId)) {
+            const user = await ctx.db.get(log.actorId as Parameters<typeof ctx.db.get>[0]);
+            userCache.set(log.actorId, (user as { email?: string } | null)?.email ?? null);
+          }
+          actorEmail = userCache.get(log.actorId) ?? null;
+        }
+
+        // Check if item still exists (is restorable)
+        let isRestorable = false;
+        if (log.targetId && log.targetType) {
+          try {
+            const doc = await ctx.db.get(log.targetId as Parameters<typeof ctx.db.get>[0]);
+            isRestorable = doc !== null && (doc as any).deletedAt !== undefined;
+          } catch {
+            isRestorable = false;
+          }
+        }
+
+        return { ...log, actorEmail, isRestorable };
+      }),
+    );
+
+    return results;
+  },
+});
+
 export const cleanupExpired = internalMutation({
   args: {},
   handler: async (ctx) => {

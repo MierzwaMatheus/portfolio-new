@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Pencil, Trash2, RefreshCw, Link as LinkIcon, X, Copy, KeyRound, Upload, Download } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Link as LinkIcon, X, Copy, KeyRound, Upload, Download, RotateCcw, ShieldAlert } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 import { useQuery, useMutation } from "convex/react";
@@ -17,6 +17,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 import { toast } from "sonner";
 import { printContractPDF } from "@/utils/contractPDF";
+import { useIsRoot } from "@/hooks/useIsRoot";
 
 const TEN_DAYS_MS = 10 * 24 * 60 * 60 * 1000;
 
@@ -162,13 +163,17 @@ function DownloadContractButton({ proposal }: { proposal: any }) {
 }
 
 export default function AdminProposals() {
-  const proposalsData = useQuery(api.proposals.listAdmin, { filter: "all" });
+  const isRoot = useIsRoot();
+  const [includeDeleted, setIncludeDeleted] = useState(false);
+  const proposalsData = useQuery(api.proposals.listAdmin, { filter: "all", includeDeleted: isRoot && includeDeleted });
   const proposals = proposalsData ?? [];
   const isLoading = proposalsData === undefined;
 
   const createProposal = useMutation(api.proposals.create);
   const updateProposal = useMutation(api.proposals.update);
   const removeProposal = useMutation(api.proposals.remove);
+  const permanentDeleteProposal = useMutation(api.proposals.permanentDelete);
+  const restoreProposal = useMutation(api.proposals.restore);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isJsonImportModalOpen, setIsJsonImportModalOpen] = useState(false);
@@ -342,15 +347,21 @@ export default function AdminProposals() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Tem certeza que deseja excluir esta proposta?")) return;
-
-    try {
-      await removeProposal({ id: id as Id<"proposals"> });
-      toast.success("Proposta excluída com sucesso!");
-    } catch (error: any) {
-      console.error("Error deleting proposal:", error);
-      toast.error(error?.message || "Erro ao excluir proposta.");
+    if (isRoot) {
+      const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
+      if (permanent) {
+        try { await permanentDeleteProposal({ id: id as Id<"proposals"> }); toast.success('Proposta deletada permanentemente'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+      } else {
+        try { await removeProposal({ id: id as Id<"proposals"> }); toast.success('Proposta desativada'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+      }
+    } else {
+      if (!confirm('Tem certeza? A proposta será desativada.')) return;
+      try { await removeProposal({ id: id as Id<"proposals"> }); toast.success('Proposta desativada'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
     }
+  };
+
+  const handleRestore = async (id: string) => {
+    try { await restoreProposal({ id: id as Id<"proposals"> }); toast.success('Proposta restaurada'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
   };
 
   const handleEdit = (proposal: any) => {
@@ -500,6 +511,19 @@ export default function AdminProposals() {
             <span className="text-neon-purple">📄</span> Propostas Comerciais
           </h1>
           <div className="flex flex-wrap gap-2">
+            {isRoot && (
+              <button
+                onClick={() => setIncludeDeleted(!includeDeleted)}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                  includeDeleted
+                    ? 'border-red-500/50 bg-red-500/10 text-red-400'
+                    : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
+                }`}
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                {includeDeleted ? 'Ocultar deletados' : 'Ver deletados'}
+              </button>
+            )}
             <Dialog open={isJsonImportModalOpen} onOpenChange={setIsJsonImportModalOpen}>
               <DialogTrigger asChild>
                 <Button
@@ -890,23 +914,33 @@ export default function AdminProposals() {
                   {isLoading ? (
                     <TableRow><TableCell colSpan={5} className="text-center text-gray-400 py-8">Carregando...</TableCell></TableRow>
                   ) : proposals.filter((p: any) => !p.isAccepted).map((proposal: any) => (
-                    <TableRow key={proposal._id} className="border-white/10 hover:bg-white/5">
+                    <TableRow key={proposal._id} className={`border-white/10 hover:bg-white/5 ${proposal.deletedAt ? 'opacity-60' : ''}`}>
                       <TableCell className="font-medium text-white">
-                        {proposal.clientName}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {proposal.clientName}
+                          {proposal.deletedAt && (
+                            <span className="flex items-center gap-1 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-0.5">
+                              <ShieldAlert className="w-3 h-3" />
+                              Deletado
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="text-gray-400">{formatTimestampDate(proposal.createdAt)}</TableCell>
                       <TableCell className="text-gray-400">{calculateValidUntilTs(proposal.createdAt)}</TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
-                          <Badge
-                            variant="outline"
-                            className={`${getStatus(proposal.createdAt) === "Ativo"
-                                ? "bg-green-500/10 text-green-500 border-green-500/20"
-                                : "bg-gray-500/10 text-gray-500 border-gray-500/20"
-                              }`}
-                          >
-                            {getStatus(proposal.createdAt)}
-                          </Badge>
+                          {!proposal.deletedAt && (
+                            <Badge
+                              variant="outline"
+                              className={`${getStatus(proposal.createdAt) === "Ativo"
+                                  ? "bg-green-500/10 text-green-500 border-green-500/20"
+                                  : "bg-gray-500/10 text-gray-500 border-gray-500/20"
+                                }`}
+                            >
+                              {getStatus(proposal.createdAt)}
+                            </Badge>
+                          )}
                           {proposal.version > 1 && (
                             <span className="text-xs text-gray-500">v{proposal.version}</span>
                           )}
@@ -914,6 +948,18 @@ export default function AdminProposals() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
+                          {proposal.deletedAt ? (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-green-400 hover:text-green-300 hover:bg-green-400/10"
+                              onClick={() => handleRestore(proposal._id)}
+                              title="Restaurar"
+                            >
+                              <RotateCcw className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -946,6 +992,8 @@ export default function AdminProposals() {
                           >
                             <LinkIcon className="h-4 w-4" />
                           </Button>
+                            </>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

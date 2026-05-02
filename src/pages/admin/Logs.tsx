@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { AdminLayout } from "./Dashboard";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { CheckCircle, XCircle, FlaskConical } from "lucide-react";
+import { CheckCircle, XCircle, FlaskConical, RotateCcw, ShieldAlert } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { toast } from "sonner";
 
 const EVENT_TYPES = [
   "admin.create",
@@ -79,7 +81,7 @@ const EVENT_BADGE_VARIANTS: Record<string, string> = {
   "testimonial.created": "bg-teal-900/20 text-teal-300 border border-teal-700/30",
 };
 
-type TabType = "system" | "playground";
+type TabType = "system" | "playground" | "deleted";
 
 function SystemLogs() {
   const [eventType, setEventType] = useState<string | undefined>(undefined);
@@ -297,6 +299,139 @@ function LogTable({
   );
 }
 
+function SoftDeletedLogs() {
+  const logs = useQuery(api.audit.listSoftDeleted, { limit: 100 });
+
+  const restoreProject = useMutation(api.projects.restore);
+  const restorePost = useMutation(api.posts.restore);
+  const restoreResumeItem = useMutation(api.resumeItems.restore);
+  const restoreService = useMutation(api.services.restore);
+  const restoreTestimonial = useMutation(api.testimonials.restore);
+  const restoreAboutDailyRoutine = useMutation(api.aboutDailyRoutine.restore);
+  const restoreAboutFaq = useMutation(api.aboutFaq.restore);
+  const restoreCheckout = useMutation(api.checkouts.restore);
+  const restoreProposal = useMutation(api.proposals.restore);
+  const restoreAiResume = useMutation(api.aiResumes.restore);
+
+  const restoreMap: Record<string, (id: string) => Promise<any>> = {
+    project: (id) => restoreProject({ id: id as any }),
+    post: (id) => restorePost({ id: id as any }),
+    resumeItem: (id) => restoreResumeItem({ id: id as any }),
+    service: (id) => restoreService({ id: id as any }),
+    testimonial: (id) => restoreTestimonial({ id: id as any }),
+    aboutDailyRoutine: (id) => restoreAboutDailyRoutine({ id: id as any }),
+    aboutFaq: (id) => restoreAboutFaq({ id: id as any }),
+    checkout: (id) => restoreCheckout({ id: id as any }),
+    proposal: (id) => restoreProposal({ id: id as any }),
+    aiGeneratedResume: (id) => restoreAiResume({ id: id as any }),
+  };
+
+  const handleRestore = async (targetType: string, targetId: string) => {
+    const fn = restoreMap[targetType];
+    if (!fn) { toast.error(`Restauração não suportada para tipo: ${targetType}`); return; }
+    try {
+      await fn(targetId);
+      toast.success('Item restaurado com sucesso');
+    } catch (e: any) {
+      toast.error(e?.message || 'Erro ao restaurar item');
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Itens desativados por usuários não-root. Itens marcados como "Restaurável" ainda existem no banco e podem ser reativados.
+      </p>
+
+      <div className="rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-40">Data/Hora</TableHead>
+              <TableHead>Entidade</TableHead>
+              <TableHead>Deletado por</TableHead>
+              <TableHead>Metadata</TableHead>
+              <TableHead className="w-24 text-center">Status</TableHead>
+              <TableHead className="w-24 text-center">Ação</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {logs === undefined ? (
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Carregando...</TableCell></TableRow>
+            ) : logs.length === 0 ? (
+              <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Nenhum item desativado encontrado</TableCell></TableRow>
+            ) : (
+              logs.map((log) => (
+                <TableRow key={log._id} className={(log as any).isRestorable ? '' : 'opacity-50'}>
+                  <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                    {format(new Date(log.createdAt), "dd/MM/yyyy HH:mm:ss", { locale: ptBR })}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {log.targetType ? (
+                      <span className="flex flex-col gap-0.5">
+                        <span className="font-medium">{log.targetType}</span>
+                        {(log.metadata as any)?.label && (
+                          <span className="text-muted-foreground text-xs">{(log.metadata as any).label}</span>
+                        )}
+                      </span>
+                    ) : '—'}
+                  </TableCell>
+                  <TableCell className="text-xs text-muted-foreground">
+                    {log.actorEmail ?? log.actorId ?? '—'}
+                  </TableCell>
+                  <TableCell>
+                    {log.metadata ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="text-xs text-muted-foreground cursor-default truncate max-w-32 inline-block">
+                            {JSON.stringify(log.metadata)}
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <pre className="text-xs">{JSON.stringify(log.metadata, null, 2)}</pre>
+                        </TooltipContent>
+                      </Tooltip>
+                    ) : '—'}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {(log as any).isRestorable ? (
+                      <span className="flex items-center gap-1 justify-center text-xs text-green-400">
+                        <ShieldAlert className="w-3.5 h-3.5" />
+                        Restaurável
+                      </span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">Permanente</span>
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {(log as any).isRestorable && log.targetType && log.targetId && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-green-400 hover:text-green-300 hover:bg-green-500/10"
+                        onClick={() => handleRestore(log.targetType!, log.targetId!)}
+                      >
+                        <RotateCcw className="w-3.5 h-3.5 mr-1" />
+                        Restaurar
+                      </Button>
+                    )}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      {logs && (
+        <p className="text-xs text-muted-foreground text-right">
+          {logs.length} registro{logs.length !== 1 ? "s" : ""}
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function AdminLogs() {
   const [tab, setTab] = useState<TabType>("system");
 
@@ -322,9 +457,15 @@ export default function AdminLogs() {
           >
             <FlaskConical className="h-3.5 w-3.5" /> Playground
           </button>
+          <button
+            onClick={() => setTab("deleted")}
+            className={`flex items-center gap-1.5 px-4 py-2 text-sm font-mono transition-colors border-b-2 -mb-px ${tab === "deleted" ? "border-red-400 text-red-400" : "border-transparent text-muted-foreground hover:text-foreground"}`}
+          >
+            <ShieldAlert className="h-3.5 w-3.5" /> Deletados
+          </button>
         </div>
 
-        {tab === "system" ? <SystemLogs /> : <PlaygroundLogs />}
+        {tab === "system" ? <SystemLogs /> : tab === "deleted" ? <SoftDeletedLogs /> : <PlaygroundLogs />}
       </div>
     </AdminLayout>
   );

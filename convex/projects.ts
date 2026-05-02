@@ -4,16 +4,19 @@ import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
 import { logAudit } from './audit';
 import { requirePlugin, isPluginEnabled } from './plugins';
+import { softDeleteDoc, restoreDoc } from './lib/softDelete';
 
 export const list = query({
-  args: { tag: v.optional(v.string()) },
+  args: { tag: v.optional(v.string()), includeDeleted: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
     if (!(await isPluginEnabled(ctx, 'portfolio'))) return [];
-    const projects = await ctx.db
+    const all = await ctx.db
       .query('projects')
       .withIndex('by_orderIndex')
       .order('asc')
       .collect();
+
+    const projects = args.includeDeleted ? all : all.filter((p) => p.deletedAt === undefined);
 
     const filtered = args.tag
       ? projects.filter((p) => p.tags.includes(args.tag!))
@@ -57,7 +60,7 @@ export const getBySlug = query({
       .query('projects')
       .withIndex('by_slug', (q) => q.eq('slug', args.slug))
       .unique();
-    if (!project) return null;
+    if (!project || project.deletedAt !== undefined) return null;
 
     const images: Array<Record<string, unknown>> = [];
 
@@ -213,9 +216,33 @@ export const remove = mutation({
     await requirePlugin(ctx, 'portfolio');
     const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const existing = await ctx.db.get(args.id);
+    await softDeleteDoc(ctx, 'projects', args.id, userId);
+    await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'project', targetId: args.id, metadata: { label: existing?.title, softDelete: true }, success: true });
+  },
+});
+
+export const permanentDelete = mutation({
+  args: { id: v.id('projects') },
+  handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'portfolio');
+    const { userId } = await requireRole(ctx, ['root']);
+    const existing = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
     await markPendingChanges(ctx);
-    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'project', targetId: args.id, metadata: { label: existing?.title }, success: true });
+    await logAudit(ctx, { eventType: 'admin.permanent_delete', actorType: 'user', actorId: userId, targetType: 'project', targetId: args.id, metadata: { label: existing?.title }, success: true });
+  },
+});
+
+export const restore = mutation({
+  args: { id: v.id('projects') },
+  handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'portfolio');
+    const { userId } = await requireRole(ctx, ['root']);
+    const existing = await ctx.db.get(args.id);
+    await restoreDoc(ctx, 'projects', args.id);
+    await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.restore', actorType: 'user', actorId: userId, targetType: 'project', targetId: args.id, metadata: { label: existing?.title }, success: true });
   },
 });
 

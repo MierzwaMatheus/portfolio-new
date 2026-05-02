@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Trash2, GripVertical, Pencil, Loader2, Check, X } from "lucide-react";
+import { Plus, Trash2, GripVertical, Pencil, Loader2, Check, X, RotateCcw, ShieldAlert } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
@@ -17,6 +17,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { toast } from "sonner";
 import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
 import { getChangedTranslatableFields } from "@/i18n/utils/hasTranslatableChanges";
+import { useIsRoot } from "@/hooks/useIsRoot";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { RichTextEditor } from "@/components/admin/RichTextEditor";
@@ -41,7 +42,9 @@ function SortableSimpleItem({
   onSave,
   onCancel,
   onTextChange,
-  onDelete
+  onDelete,
+  onRestore,
+  isDeleted
 }: {
   id: Id<"resumeItems">,
   text: string,
@@ -51,7 +54,9 @@ function SortableSimpleItem({
   onSave: (id: Id<"resumeItems">) => void,
   onCancel: () => void,
   onTextChange: (text: string) => void,
-  onDelete: (id: Id<"resumeItems">) => void
+  onDelete: (id: Id<"resumeItems">) => void,
+  onRestore: (id: Id<"resumeItems">) => void,
+  isDeleted?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id, disabled: isEditing });
 
@@ -84,42 +89,63 @@ function SortableSimpleItem({
   }
 
   return (
-    <div ref={setNodeRef} style={style} className="flex items-center gap-2 bg-card border border-white/10 p-3 rounded-md group">
-      <div {...attributes} {...listeners} className="cursor-move text-gray-500 hover:text-white">
-        <GripVertical className="w-4 h-4" />
-      </div>
+    <div ref={setNodeRef} style={style} className={`flex items-center gap-2 bg-card border p-3 rounded-md group ${isDeleted ? 'opacity-60 border-red-500/30' : 'border-white/10'}`}>
+      {!isDeleted && (
+        <div {...attributes} {...listeners} className="cursor-move text-gray-500 hover:text-white">
+          <GripVertical className="w-4 h-4" />
+        </div>
+      )}
       <span className="flex-1 text-white">{text}</span>
-      <Button variant="ghost" size="icon" onClick={() => onEdit(id)} className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Pencil className="w-4 h-4" />
-      </Button>
-      <Button variant="ghost" size="icon" onClick={() => onDelete(id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-opacity">
-        <Trash2 className="w-4 h-4" />
-      </Button>
+      {isDeleted && (
+        <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-0.5">
+          <ShieldAlert className="w-3 h-3" />Deletado
+        </div>
+      )}
+      {!isDeleted && (
+        <Button variant="ghost" size="icon" onClick={() => onEdit(id)} className="text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Pencil className="w-4 h-4" />
+        </Button>
+      )}
+      {isDeleted ? (
+        <button onClick={() => onRestore(id)} className="p-1.5 text-green-400 hover:bg-green-400/10 rounded transition-colors opacity-0 group-hover:opacity-100" title="Restaurar">
+          <RotateCcw className="w-4 h-4" />
+        </button>
+      ) : (
+        <Button variant="ghost" size="icon" onClick={() => onDelete(id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Trash2 className="w-4 h-4" />
+        </Button>
+      )}
     </div>
   );
 }
 
-function SortableExperienceCard({ item, onEdit, onDelete }: { item: ResumeItem, onEdit: (item: ResumeItem) => void, onDelete: (id: Id<"resumeItems">) => void }) {
+function SortableExperienceCard({ item, onEdit, onDelete, onRestore }: { item: ResumeItem, onEdit: (item: ResumeItem) => void, onDelete: (id: Id<"resumeItems">) => void, onRestore: (id: Id<"resumeItems">) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item._id });
   const style = { transform: CSS.Transform.toString(transform), transition };
+  const isDeleted = !!(item as any).deletedAt;
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Card className="bg-card border-white/10 group">
+      <Card className={`bg-card group ${isDeleted ? 'opacity-60 border-red-500/30' : 'border-white/10'}`}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-lg font-medium text-white flex items-center gap-2">
-            <div {...attributes} {...listeners} className="cursor-move">
-              <GripVertical className="w-4 h-4 text-gray-500 hover:text-white" />
+            {!isDeleted && <div {...attributes} {...listeners} className="cursor-move"><GripVertical className="w-4 h-4 text-gray-500 hover:text-white" /></div>}
+            <div className="flex flex-col gap-1">
+              {item.content.role}
+              {isDeleted && (
+                <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-0.5 w-fit">
+                  <ShieldAlert className="w-3 h-3" />Deletado
+                </div>
+              )}
             </div>
-            {item.content.role}
           </CardTitle>
           <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
-              <Pencil className="w-4 h-4 text-blue-400" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => onDelete(item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            {!isDeleted && <Button variant="ghost" size="icon" onClick={() => onEdit(item)}><Pencil className="w-4 h-4 text-blue-400" /></Button>}
+            {isDeleted ? (
+              <button onClick={() => onRestore(item._id)} className="p-1.5 text-green-400 hover:bg-green-400/10 rounded transition-colors" title="Restaurar"><RotateCcw className="w-4 h-4" /></button>
+            ) : (
+              <Button variant="ghost" size="icon" onClick={() => onDelete(item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10"><Trash2 className="w-4 h-4" /></Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -131,27 +157,33 @@ function SortableExperienceCard({ item, onEdit, onDelete }: { item: ResumeItem, 
   );
 }
 
-function SortableEducationCard({ item, onEdit, onDelete }: { item: ResumeItem, onEdit: (item: ResumeItem) => void, onDelete: (id: Id<"resumeItems">) => void }) {
+function SortableEducationCard({ item, onEdit, onDelete, onRestore }: { item: ResumeItem, onEdit: (item: ResumeItem) => void, onDelete: (id: Id<"resumeItems">) => void, onRestore: (id: Id<"resumeItems">) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item._id });
   const style = { transform: CSS.Transform.toString(transform), transition };
+  const isDeleted = !!(item as any).deletedAt;
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Card className="bg-card border-white/10 group">
+      <Card className={`bg-card group ${isDeleted ? 'opacity-60 border-red-500/30' : 'border-white/10'}`}>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-lg font-medium text-white flex items-center gap-2">
-            <div {...attributes} {...listeners} className="cursor-move">
-              <GripVertical className="w-4 h-4 text-gray-500 hover:text-white" />
+            {!isDeleted && <div {...attributes} {...listeners} className="cursor-move"><GripVertical className="w-4 h-4 text-gray-500 hover:text-white" /></div>}
+            <div className="flex flex-col gap-1">
+              {item.content.degree}
+              {isDeleted && (
+                <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-0.5 w-fit">
+                  <ShieldAlert className="w-3 h-3" />Deletado
+                </div>
+              )}
             </div>
-            {item.content.degree}
           </CardTitle>
           <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
-              <Pencil className="w-4 h-4 text-blue-400" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => onDelete(item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            {!isDeleted && <Button variant="ghost" size="icon" onClick={() => onEdit(item)}><Pencil className="w-4 h-4 text-blue-400" /></Button>}
+            {isDeleted ? (
+              <button onClick={() => onRestore(item._id)} className="p-1.5 text-green-400 hover:bg-green-400/10 rounded transition-colors" title="Restaurar"><RotateCcw className="w-4 h-4" /></button>
+            ) : (
+              <Button variant="ghost" size="icon" onClick={() => onDelete(item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10"><Trash2 className="w-4 h-4" /></Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -163,35 +195,41 @@ function SortableEducationCard({ item, onEdit, onDelete }: { item: ResumeItem, o
   );
 }
 
-function SortableSkillCard({ item, onEdit, onDelete }: { item: ResumeItem, onEdit: (item: ResumeItem) => void, onDelete: (id: Id<"resumeItems">) => void }) {
+function SortableSkillCard({ item, onEdit, onDelete, onRestore }: { item: ResumeItem, onEdit: (item: ResumeItem) => void, onDelete: (id: Id<"resumeItems">) => void, onRestore: (id: Id<"resumeItems">) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item._id });
   const style = { transform: CSS.Transform.toString(transform), transition };
+  const isDeleted = !!(item as any).deletedAt;
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Card className="bg-card border-white/10 group">
+      <Card className={`bg-card group ${isDeleted ? 'opacity-60 border-red-500/30' : 'border-white/10'}`}>
         <CardContent className="pt-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div {...attributes} {...listeners} className="cursor-move">
-              <GripVertical className="w-4 h-4 text-gray-500 hover:text-white" />
-            </div>
+            {!isDeleted && <div {...attributes} {...listeners} className="cursor-move"><GripVertical className="w-4 h-4 text-gray-500 hover:text-white" /></div>}
             <div>
               <h4 className="text-white font-medium">{item.content.name}</h4>
-              <div className="flex items-center gap-2 mt-2">
-                <div className="w-32 h-2 bg-white/10 rounded-full overflow-hidden">
-                  <div className="h-full bg-neon-green" style={{ width: `${item.content.level}%` }} />
+              {isDeleted && (
+                <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-0.5 w-fit mt-1">
+                  <ShieldAlert className="w-3 h-3" />Deletado
                 </div>
-                <span className="text-neon-green text-sm font-medium">{item.content.level}%</span>
-              </div>
+              )}
+              {!isDeleted && (
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="w-32 h-2 bg-white/10 rounded-full overflow-hidden">
+                    <div className="h-full bg-neon-green" style={{ width: `${item.content.level}%` }} />
+                  </div>
+                  <span className="text-neon-green text-sm font-medium">{item.content.level}%</span>
+                </div>
+              )}
             </div>
           </div>
           <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
-              <Pencil className="w-4 h-4 text-blue-400" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => onDelete(item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            {!isDeleted && <Button variant="ghost" size="icon" onClick={() => onEdit(item)}><Pencil className="w-4 h-4 text-blue-400" /></Button>}
+            {isDeleted ? (
+              <button onClick={() => onRestore(item._id)} className="p-1.5 text-green-400 hover:bg-green-400/10 rounded transition-colors" title="Restaurar"><RotateCcw className="w-4 h-4" /></button>
+            ) : (
+              <Button variant="ghost" size="icon" onClick={() => onDelete(item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10"><Trash2 className="w-4 h-4" /></Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -199,30 +237,34 @@ function SortableSkillCard({ item, onEdit, onDelete }: { item: ResumeItem, onEdi
   );
 }
 
-function SortableLanguageCard({ item, onEdit, onDelete }: { item: ResumeItem, onEdit: (item: ResumeItem) => void, onDelete: (id: Id<"resumeItems">) => void }) {
+function SortableLanguageCard({ item, onEdit, onDelete, onRestore }: { item: ResumeItem, onEdit: (item: ResumeItem) => void, onDelete: (id: Id<"resumeItems">) => void, onRestore: (id: Id<"resumeItems">) => void }) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: item._id });
   const style = { transform: CSS.Transform.toString(transform), transition };
+  const isDeleted = !!(item as any).deletedAt;
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Card className="bg-card border-white/10 group">
+      <Card className={`bg-card group ${isDeleted ? 'opacity-60 border-red-500/30' : 'border-white/10'}`}>
         <CardContent className="pt-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div {...attributes} {...listeners} className="cursor-move">
-              <GripVertical className="w-4 h-4 text-gray-500 hover:text-white" />
-            </div>
+            {!isDeleted && <div {...attributes} {...listeners} className="cursor-move"><GripVertical className="w-4 h-4 text-gray-500 hover:text-white" /></div>}
             <div>
               <h4 className="text-white font-medium">{item.content.name}</h4>
               <p className="text-neon-green text-sm">{item.content.level}</p>
+              {isDeleted && (
+                <div className="flex items-center gap-1.5 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-0.5 w-fit mt-1">
+                  <ShieldAlert className="w-3 h-3" />Deletado
+                </div>
+              )}
             </div>
           </div>
           <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <Button variant="ghost" size="icon" onClick={() => onEdit(item)}>
-              <Pencil className="w-4 h-4 text-blue-400" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => onDelete(item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10">
-              <Trash2 className="w-4 h-4" />
-            </Button>
+            {!isDeleted && <Button variant="ghost" size="icon" onClick={() => onEdit(item)}><Pencil className="w-4 h-4 text-blue-400" /></Button>}
+            {isDeleted ? (
+              <button onClick={() => onRestore(item._id)} className="p-1.5 text-green-400 hover:bg-green-400/10 rounded transition-colors" title="Restaurar"><RotateCcw className="w-4 h-4" /></button>
+            ) : (
+              <Button variant="ghost" size="icon" onClick={() => onDelete(item._id)} className="text-red-400 hover:text-red-300 hover:bg-red-400/10"><Trash2 className="w-4 h-4" /></Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -231,10 +273,14 @@ function SortableLanguageCard({ item, onEdit, onDelete }: { item: ResumeItem, on
 }
 
 export default function AdminResume() {
-  const itemsData = useQuery(api.resumeItems.listAll, {}) as ResumeItem[] | undefined;
+  const isRoot = useIsRoot();
+  const [includeDeleted, setIncludeDeleted] = useState(false);
+  const itemsData = useQuery(api.resumeItems.listAll, { includeDeleted: isRoot && includeDeleted }) as ResumeItem[] | undefined;
   const createItem = useMutation(api.resumeItems.create);
   const updateItem = useMutation(api.resumeItems.update);
   const removeItem = useMutation(api.resumeItems.remove);
+  const permanentDeleteItem = useMutation(api.resumeItems.permanentDelete);
+  const restoreItem = useMutation(api.resumeItems.restore);
   const reorderItems = useMutation(api.resumeItems.reorder);
 
   const { translateFields, isTranslating } = useTranslateContent();
@@ -394,14 +440,25 @@ export default function AdminResume() {
   };
 
   const handleDelete = async (id: Id<"resumeItems">) => {
-    if (confirm("Tem certeza que deseja excluir este item?")) {
-      try {
-        await removeItem({ id });
-        toast.success("Item excluído com sucesso");
-      } catch (error) {
-        console.error("Error deleting item:", error);
-        toast.error("Erro ao excluir item");
+    if (isRoot) {
+      const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
+      if (permanent) {
+        try { await permanentDeleteItem({ id }); toast.success('Deletado permanentemente'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+      } else {
+        try { await removeItem({ id }); toast.success('Item desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
       }
+    } else {
+      if (!confirm('Tem certeza? O item será desativado.')) return;
+      try { await removeItem({ id }); toast.success('Item desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+    }
+  };
+
+  const handleRestore = async (id: Id<"resumeItems">) => {
+    try {
+      await restoreItem({ id });
+      toast.success('Item restaurado com sucesso');
+    } catch (error) {
+      toast.error('Erro ao restaurar item');
     }
   };
 
@@ -528,9 +585,24 @@ export default function AdminResume() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-white">Currículo</h1>
-          <p className="text-gray-400">Gerencie suas experiências, formação e habilidades</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Currículo</h1>
+            <p className="text-gray-400">Gerencie suas experiências, formação e habilidades</p>
+          </div>
+          {isRoot && (
+            <button
+              onClick={() => setIncludeDeleted(!includeDeleted)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                includeDeleted
+                  ? 'border-red-500/50 bg-red-500/10 text-red-400'
+                  : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
+              }`}
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
+              {includeDeleted ? 'Ocultar deletados' : 'Ver deletados'}
+            </button>
+          )}
         </div>
 
         <Tabs defaultValue="experience" className="w-full">
@@ -559,6 +631,7 @@ export default function AdminResume() {
                       item={item}
                       onEdit={(item) => handleOpenModal("experience", item)}
                       onDelete={handleDelete}
+                      onRestore={handleRestore}
                     />
                   ))}
                 </div>
@@ -581,6 +654,7 @@ export default function AdminResume() {
                       item={item}
                       onEdit={(item) => handleOpenModal("education", item)}
                       onDelete={handleDelete}
+                      onRestore={handleRestore}
                     />
                   ))}
                 </div>
@@ -603,6 +677,7 @@ export default function AdminResume() {
                       item={item}
                       onEdit={(item) => handleOpenModal("skill", item)}
                       onDelete={handleDelete}
+                      onRestore={handleRestore}
                     />
                   ))}
                 </div>
@@ -639,6 +714,8 @@ export default function AdminResume() {
                       onCancel={handleCancelSimpleEdit}
                       onTextChange={setEditingSimpleText}
                       onDelete={(id) => handleDelete(id)}
+                      onRestore={handleRestore}
+                      isDeleted={!!(item as any).deletedAt}
                     />
                   ))}
                 </div>
@@ -675,6 +752,8 @@ export default function AdminResume() {
                       onCancel={handleCancelSimpleEdit}
                       onTextChange={setEditingSimpleText}
                       onDelete={(id) => handleDelete(id)}
+                      onRestore={handleRestore}
+                      isDeleted={!!(item as any).deletedAt}
                     />
                   ))}
                 </div>
@@ -697,6 +776,7 @@ export default function AdminResume() {
                       item={item}
                       onEdit={(item) => handleOpenModal("language", item)}
                       onDelete={handleDelete}
+                      onRestore={handleRestore}
                     />
                   ))}
                 </div>
@@ -733,6 +813,8 @@ export default function AdminResume() {
                       onCancel={handleCancelSimpleEdit}
                       onTextChange={setEditingSimpleText}
                       onDelete={(id) => handleDelete(id)}
+                      onRestore={handleRestore}
+                      isDeleted={!!(item as any).deletedAt}
                     />
                   ))}
                 </div>

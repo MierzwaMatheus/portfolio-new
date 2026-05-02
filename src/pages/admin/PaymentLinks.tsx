@@ -8,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Copy, Trash2, Users, FileText, Receipt } from "lucide-react";
+import { Plus, Copy, Trash2, Users, FileText, Receipt, RotateCcw, ShieldAlert } from "lucide-react";
 import { toast } from "sonner";
+import { useIsRoot } from "@/hooks/useIsRoot";
 import { ConvexAsaasApi } from "@/services/asaas/ConvexAsaasApi";
 import { CreateCustomerUseCase } from "@/usecases/asaas/CreateCustomerUseCase";
 import { ListCustomersUseCase } from "@/usecases/asaas/ListCustomersUseCase";
@@ -65,9 +66,15 @@ export default function PaymentLinks() {
   });
   const [checkoutLink, setCheckoutLink] = useState<string>("");
 
-  const checkoutsData = useQuery(api.checkouts.listAdmin, { limit: 100 });
+  const isRoot = useIsRoot();
+  const [includeDeleted, setIncludeDeleted] = useState(false);
+
+  const checkoutsData = useQuery(api.checkouts.listAdmin, { limit: 100, includeDeleted: isRoot && includeDeleted });
   const checkouts = checkoutsData ?? [];
   const createCheckout = useMutation(api.checkouts.create);
+  const removeCheckout = useMutation(api.checkouts.remove);
+  const permanentDeleteCheckout = useMutation(api.checkouts.permanentDelete);
+  const restoreCheckout = useMutation(api.checkouts.restore);
 
   useEffect(() => {
     fetchCustomers();
@@ -221,6 +228,24 @@ export default function PaymentLinks() {
     };
     const statusInfo = statusMap[status] || { label: status, color: 'bg-gray-500/20 text-gray-400 border-gray-500/50' };
     return <Badge variant="outline" className={statusInfo.color}>{statusInfo.label}</Badge>;
+  };
+
+  const handleDeleteCheckout = async (id: Id<"checkouts">) => {
+    if (isRoot) {
+      const permanent = window.confirm('Deletar permanentemente? (OK = permanente, Cancelar = desativar)');
+      if (permanent) {
+        try { await permanentDeleteCheckout({ id }); toast.success('Deletado permanentemente'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+      } else {
+        try { await removeCheckout({ id }); toast.success('Checkout desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+      }
+    } else {
+      if (!confirm('Tem certeza? O checkout será desativado.')) return;
+      try { await removeCheckout({ id }); toast.success('Checkout desativado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
+    }
+  };
+
+  const handleRestoreCheckout = async (id: Id<"checkouts">) => {
+    try { await restoreCheckout({ id }); toast.success('Checkout restaurado'); } catch (e: any) { toast.error(e?.message || 'Erro'); }
   };
 
   const handleCreateCheckout = async () => {
@@ -391,13 +416,28 @@ export default function PaymentLinks() {
                     <CardTitle>Checkouts</CardTitle>
                     <CardDescription>Gerencie os checkouts personalizados</CardDescription>
                   </div>
-                  <Button
-                    onClick={() => setIsCheckoutDialogOpen(true)}
-                    className="bg-neon-purple hover:bg-neon-purple/90"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Novo Checkout
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {isRoot && (
+                      <button
+                        onClick={() => setIncludeDeleted(!includeDeleted)}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                          includeDeleted
+                            ? 'border-red-500/50 bg-red-500/10 text-red-400'
+                            : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
+                        }`}
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        {includeDeleted ? 'Ocultar deletados' : 'Ver deletados'}
+                      </button>
+                    )}
+                    <Button
+                      onClick={() => setIsCheckoutDialogOpen(true)}
+                      className="bg-neon-purple hover:bg-neon-purple/90"
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Novo Checkout
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
@@ -412,50 +452,86 @@ export default function PaymentLinks() {
                     {checkouts.map((checkout: any) => (
                       <div
                         key={checkout._id}
-                        className="flex items-center justify-between p-4 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-colors"
+                        className={`flex items-center justify-between p-4 rounded-lg border transition-colors ${
+                          checkout.deletedAt
+                            ? 'bg-red-500/5 border-red-500/30 opacity-60'
+                            : 'bg-white/5 border-white/10 hover:bg-white/10'
+                        }`}
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2 flex-wrap">
                             <span className="font-medium text-white">
                               {checkout.customerName}
                             </span>
-                            {getCheckoutStatusBadge(checkout.status)}
-                            {checkout.paymentMethod && (
-                              <Badge variant="outline" className="border-white/20">
-                                {checkout.paymentMethod === 'pix' ? 'PIX' : checkout.paymentMethod === 'boleto' ? 'Boleto' : 'Cartão'}
-                              </Badge>
+                            {checkout.deletedAt ? (
+                              <span className="flex items-center gap-1 text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded px-2 py-0.5">
+                                <ShieldAlert className="w-3 h-3" />
+                                Deletado
+                              </span>
+                            ) : (
+                              <>
+                                {getCheckoutStatusBadge(checkout.status)}
+                                {checkout.paymentMethod && (
+                                  <Badge variant="outline" className="border-white/20">
+                                    {checkout.paymentMethod === 'pix' ? 'PIX' : checkout.paymentMethod === 'boleto' ? 'Boleto' : 'Cartão'}
+                                  </Badge>
+                                )}
+                                <Badge variant="outline" className="border-neon-purple/50 text-neon-purple bg-neon-purple/10">
+                                  {formatCurrency(checkout.value)}
+                                </Badge>
+                              </>
                             )}
-                            <Badge variant="outline" className="border-neon-purple/50 text-neon-purple bg-neon-purple/10">
-                              {formatCurrency(checkout.value)}
-                            </Badge>
                           </div>
                           <div className="flex items-center gap-4 text-sm text-gray-400">
                             <span>CPF/CNPJ: {formatCpfCnpj(checkout.customerCpfCnpj)}</span>
                             <span>Vencimento: {formatDate(checkout.dueDate)}</span>
-                            <span>Link: {checkout.uniqueLink.substring(0, 8)}...</span>
+                            {!checkout.deletedAt && <span>Link: {checkout.uniqueLink.substring(0, 8)}...</span>}
                           </div>
                         </div>
                         <div className="flex gap-2 ml-4 shrink-0">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              const link = `${window.location.origin}/checkout/${checkout.uniqueLink}`;
-                              navigator.clipboard.writeText(link);
-                              toast.success("Link copiado!");
-                            }}
-                            title="Copiar link"
-                          >
-                            <Copy className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => window.open(`${window.location.origin}/checkout/${checkout.uniqueLink}`, "_blank")}
-                            title="Abrir checkout"
-                          >
-                            <FileText className="w-4 h-4" />
-                          </Button>
+                          {checkout.deletedAt ? (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleRestoreCheckout(checkout._id)}
+                              className="text-green-400 hover:text-green-300 hover:bg-green-500/10"
+                              title="Restaurar"
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </Button>
+                          ) : (
+                            <>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                  const link = `${window.location.origin}/checkout/${checkout.uniqueLink}`;
+                                  navigator.clipboard.writeText(link);
+                                  toast.success("Link copiado!");
+                                }}
+                                title="Copiar link"
+                              >
+                                <Copy className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => window.open(`${window.location.origin}/checkout/${checkout.uniqueLink}`, "_blank")}
+                                title="Abrir checkout"
+                              >
+                                <FileText className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDeleteCheckout(checkout._id)}
+                                className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                                title="Excluir checkout"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </div>
                     ))}

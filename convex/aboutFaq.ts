@@ -4,12 +4,14 @@ import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
 import { logAudit } from './audit';
 import { requirePlugin, isPluginEnabled } from './plugins';
+import { softDeleteDoc, restoreDoc } from './lib/softDelete';
 
 export const list = query({
-  args: {},
-  handler: async (ctx) => {
+  args: { includeDeleted: v.optional(v.boolean()) },
+  handler: async (ctx, args) => {
     if (!(await isPluginEnabled(ctx, 'about'))) return [];
-    return ctx.db.query('aboutFaq').withIndex('by_displayOrder').order('asc').collect();
+    const all = await ctx.db.query('aboutFaq').withIndex('by_displayOrder').order('asc').collect();
+    return args.includeDeleted ? all : all.filter((i) => i.deletedAt === undefined);
   },
 });
 
@@ -65,8 +67,32 @@ export const remove = mutation({
     await requirePlugin(ctx, 'about');
     const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
     const existing = await ctx.db.get(args.id);
+    await softDeleteDoc(ctx, 'aboutFaq', args.id, userId);
+    await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'aboutFaq', targetId: args.id, metadata: { label: existing?.question, softDelete: true }, success: true });
+  },
+});
+
+export const permanentDelete = mutation({
+  args: { id: v.id('aboutFaq') },
+  handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'about');
+    const { userId } = await requireRole(ctx, ['root']);
+    const existing = await ctx.db.get(args.id);
     await ctx.db.delete(args.id);
     await markPendingChanges(ctx);
-    await logAudit(ctx, { eventType: 'admin.delete', actorType: 'user', actorId: userId, targetType: 'aboutFaq', targetId: args.id, metadata: { label: existing?.question }, success: true });
+    await logAudit(ctx, { eventType: 'admin.permanent_delete', actorType: 'user', actorId: userId, targetType: 'aboutFaq', targetId: args.id, metadata: { label: existing?.question }, success: true });
+  },
+});
+
+export const restore = mutation({
+  args: { id: v.id('aboutFaq') },
+  handler: async (ctx, args) => {
+    await requirePlugin(ctx, 'about');
+    const { userId } = await requireRole(ctx, ['root']);
+    const existing = await ctx.db.get(args.id);
+    await restoreDoc(ctx, 'aboutFaq', args.id);
+    await markPendingChanges(ctx);
+    await logAudit(ctx, { eventType: 'admin.restore', actorType: 'user', actorId: userId, targetType: 'aboutFaq', targetId: args.id, metadata: { label: existing?.question }, success: true });
   },
 });
