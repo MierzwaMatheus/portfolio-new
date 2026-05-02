@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import { internalMutation, mutation, query } from './_generated/server';
+import { internal } from './_generated/api';
 import { requireRole, requireAuth } from './auth';
 import { logAudit } from './audit';
 import { checkRateLimit, recordRateLimitAttempt, resetRateLimit } from './rateLimit';
@@ -360,6 +361,10 @@ export const accept = mutation({
       ipAddress: args.ipAddress,
       userAgent: args.userAgent,
       success: true,
+    });
+
+    await ctx.scheduler.runAfter(0, internal.telegram.notifyAdmin, {
+      message: `✅ <b>Proposta aceita!</b>\n\nCliente: ${args.clientName}\nEmail: ${args.clientEmail}\nProposta: <code>${proposal.slug}</code>\nValor: R$ ${proposal.investmentValue.toFixed(2)}`,
     });
 
     return acceptanceId;

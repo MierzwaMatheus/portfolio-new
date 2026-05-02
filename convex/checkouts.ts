@@ -1,5 +1,6 @@
 import { v } from 'convex/values';
 import { internalMutation, mutation, query } from './_generated/server';
+import { internal } from './_generated/api';
 import { requireRole } from './auth';
 import { logAudit } from './audit';
 
@@ -157,6 +158,10 @@ export const markPaidByLink = internalMutation({
       asaasChargeId: args.asaasChargeId,
       completedAt: now,
       updatedAt: now,
+    });
+
+    await ctx.scheduler.runAfter(0, internal.telegram.notifyAdmin, {
+      message: `💰 <b>Pagamento confirmado!</b>\n\nCliente: ${checkout.customerName}\nEmail: ${checkout.customerEmail}\nValor: R$ ${checkout.value.toFixed(2)}\nLink: <code>${checkout.uniqueLink}</code>`,
     });
   },
 });

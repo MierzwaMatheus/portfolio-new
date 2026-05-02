@@ -35,6 +35,7 @@ import type * as seed from "../seed.js";
 import type * as services from "../services.js";
 import type * as stats from "../stats.js";
 import type * as stripe from "../stripe.js";
+import type * as telegram from "../telegram.js";
 import type * as testimonials from "../testimonials.js";
 import type * as translation from "../translation.js";
 import type * as users from "../users.js";
@@ -73,6 +74,7 @@ declare const fullApi: ApiFromModules<{
   services: typeof services;
   stats: typeof stats;
   stripe: typeof stripe;
+  telegram: typeof telegram;
   testimonials: typeof testimonials;
   translation: typeof translation;
   users: typeof users;
