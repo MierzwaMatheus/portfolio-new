@@ -28,6 +28,7 @@ Este é um portfólio profissional full-stack que combina uma interface pública
 - **Performance**: Construído com Vite para build rápido e otimizado
 - **IA Integrada**: Tradução automática, geração de currículo com ATS scoring e reescrita via OpenRouter
 - **Auditoria Completa**: Log de todas as mutações administrativas
+- **Notificações Telegram**: Alertas em tempo real para o admin via bot Telegram
 
 ## 🛠 Tecnologias
 
@@ -378,6 +379,8 @@ VITE_APP_ID=id_do_app
 4. Configure as variáveis de ambiente no Convex Dashboard:
 ```
 OPENROUTER_API_KEY=sua_chave_openrouter
+TELEGRAM_BOT_TOKEN=token_do_bot
+TELEGRAM_ADMIN_CHAT_ID=seu_chat_id
 ```
 
 5. Execute o Convex em modo desenvolvimento:
@@ -436,6 +439,35 @@ Para utilizar as funcionalidades de IA:
 | Análise de vaga (CV IA) | Gemini |
 | ATS Scoring | GPT-5.4 |
 | Reescrita ATS do CV | Claude Sonnet |
+
+### Telegram (Notificações)
+
+O sistema envia notificações automáticas via bot Telegram para o admin nos seguintes eventos:
+
+| Evento | Gatilho | Conteúdo da mensagem |
+|--------|---------|----------------------|
+| ✅ Proposta aceita | Cliente aceita eletronicamente uma proposta | Nome, email, slug da proposta e valor do investimento |
+| 💰 Pagamento confirmado | Webhook Stripe (`checkout.session.completed`) ou Asaas (`PAYMENT_CONFIRMED` / `PAYMENT_RECEIVED`) confirma o pagamento | Nome do cliente, email, valor e link único do checkout |
+
+As notificações são disparadas via `internalAction` (`convex/telegram.ts`) de forma assíncrona (fire-and-forget via `ctx.scheduler.runAfter`), portanto uma falha na entrega não afeta o fluxo principal.
+
+#### Configuração
+
+1. **Criar o bot**: Fale com [@BotFather](https://t.me/BotFather) no Telegram e use `/newbot` para obter o `TELEGRAM_BOT_TOKEN`
+
+2. **Obter o chat ID**: Envie qualquer mensagem para o bot e acesse:
+   ```
+   https://api.telegram.org/bot<TOKEN>/getUpdates
+   ```
+   O campo `message.chat.id` é o seu `TELEGRAM_ADMIN_CHAT_ID`
+
+3. **Ativar o bot**: Envie `/start` para o bot antes do primeiro uso (obrigatório para o Telegram permitir o envio)
+
+4. **Configurar no Convex Dashboard** (Settings → Environment Variables):
+   - `TELEGRAM_BOT_TOKEN`
+   - `TELEGRAM_ADMIN_CHAT_ID`
+
+> As variáveis são opcionais: se não configuradas, as notificações são silenciosamente ignoradas.
 
 ### Stripe (Links de Pagamento)
 
@@ -605,7 +637,15 @@ O backend foi migrado completamente de Supabase para **Convex**:
 
 - Todas as mutações administrativas geram registros de auditoria
 - Labels descritivos para cada tipo de operação
-- Página `/admin/audit` para visualização e rastreabilidade
+- Página `/admin/logs` para visualização e rastreabilidade
+- Retenção de 2 anos com anonimização de IP após 90 dias
+
+### Notificações Telegram
+
+- Bot Telegram envia alertas em tempo real para o admin
+- **Proposta aceita**: disparado na mutation `proposals:accept`
+- **Pagamento confirmado**: disparado na mutation interna `checkouts:markPaidByLink`, chamada pelos webhooks do Stripe e Asaas
+- Implementado como `internalAction` fire-and-forget (`convex/telegram.ts`)
 
 ### Tradução Automática com IA
 
@@ -664,7 +704,7 @@ Sistema completo de aceite com validade jurídica:
 - [ ] Otimizações de SEO adicionais
 - [ ] Testes automatizados
 - [ ] PWA (Progressive Web App)
-- [ ] Notificações por e-mail ao aceitar proposta
+- [ ] Notificações por e-mail ao aceitar proposta (Telegram já implementado)
 - [ ] Dashboard de estatísticas de aceites
 
 ## 📄 Licença
