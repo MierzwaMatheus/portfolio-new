@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { AdminLayout } from "./Dashboard";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { Video, FileText, Check, X, RotateCcw, Globe, Loader2, Home, EyeOff, Plus, ChevronDown, ChevronUp, Pencil, Trash2, ImageIcon, ShieldAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsRoot } from "@/hooks/useIsRoot";
+import { useTranslateContent } from "@/i18n/hooks/useTranslateContent";
+import { getChangedTranslatableFields } from "@/i18n/utils/hasTranslatableChanges";
 
 type SubmissionStatus = "pending" | "approved" | "rejected" | "published";
 type ActiveTab = SubmissionStatus | "all" | "diretos";
@@ -70,8 +72,8 @@ function SubmissionCard({ item }: { item: Submission }) {
   const approveMutation = useMutation(api.testimonialSubmissions.approve);
   const rejectMutation = useMutation(api.testimonialSubmissions.reject);
   const restoreMutation = useMutation(api.testimonialSubmissions.restore);
-  const publishMutation = useMutation(api.testimonialSubmissions.publish);
-  const approveAndPublishMutation = useMutation(api.testimonialSubmissions.approveAndPublish);
+  const publishAction = useAction(api.testimonialSubmissions.publishAndTranslate);
+  const approveAndPublishAction = useAction(api.testimonialSubmissions.approveAndPublishAndTranslate);
   const unpublishMutation = useMutation(api.testimonials.unpublish);
   const toggleShowOnHomeMutation = useMutation(api.testimonials.toggleShowOnHome);
 
@@ -89,8 +91,8 @@ function SubmissionCard({ item }: { item: Submission }) {
       toast.success(
         action === "approve" ? "Aprovado com sucesso" :
         action === "reject" ? "Rejeitado" :
-        action === "publish" ? "Publicado!" :
-        action === "approveAndPublish" ? "Aprovado e publicado!" :
+        action === "publish" ? "Publicado e traduzido!" :
+        action === "approveAndPublish" ? "Aprovado, publicado e traduzido!" :
         action === "unpublish" ? "Despublicado — voltou para aprovados" :
         action === "toggleHome" ? (testimonialDoc?.showOnHome ? "Removido da home" : "Exibindo na home!") :
         "Restaurado para pendente",
@@ -183,7 +185,7 @@ function SubmissionCard({ item }: { item: Submission }) {
             {item.type === "text" && (
               <Button
                 size="sm"
-                onClick={() => run("approveAndPublish", () => approveAndPublishMutation({ id: item._id }))}
+                onClick={() => run("approveAndPublish", () => approveAndPublishAction({ id: item._id }))}
                 disabled={loading !== null}
                 className="bg-neon-lime text-black hover:bg-neon-lime/90 text-xs font-semibold"
               >
@@ -217,7 +219,7 @@ function SubmissionCard({ item }: { item: Submission }) {
             {item.type === "text" && (
               <Button
                 size="sm"
-                onClick={() => run("publish", () => publishMutation({ id: item._id }))}
+                onClick={() => run("publish", () => publishAction({ id: item._id }))}
                 disabled={loading !== null}
                 className="bg-neon-lime text-black hover:bg-neon-lime/90 text-xs font-semibold"
               >
@@ -304,6 +306,7 @@ const MAX_AVATAR_BYTES = MAX_AVATAR_MB * 1024 * 1024;
 function AdminCreateForm() {
   const createMutation = useMutation(api.testimonials.createWithAvatar);
   const generateAvatarUrl = useMutation(api.testimonialSubmissions.generateAvatarUploadUrl);
+  const { translateFields } = useTranslateContent();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
@@ -344,10 +347,16 @@ function AdminCreateForm() {
         avatarStorageId = storageId;
         avatarFileSize = avatarFile.size;
       }
+      const toastId = toast.loading("Traduzindo conteúdo...");
+      const translated = await translateFields({ role: role.trim(), text: text.trim() });
+      toast.dismiss(toastId);
+
       await createMutation({
         name: name.trim(),
         role: role.trim(),
         text: text.trim(),
+        roleTranslations: { ptBR: role.trim(), enUS: translated.role ?? role.trim() },
+        textTranslations: { ptBR: text.trim(), enUS: translated.text ?? text.trim() },
         avatarStorageId: avatarStorageId as any,
         avatarFileSize,
       });
@@ -436,8 +445,10 @@ function DirectTestimonialsTab() {
   const permanentDeleteMutation = useMutation(api.testimonials.permanentDelete);
   const restoreMutation = useMutation(api.testimonials.restore);
   const updateMutation = useMutation(api.testimonials.update);
+  const { translateFields } = useTranslateContent();
 
   const [editing, setEditing] = useState<string | null>(null);
+  const [editingItem, setEditingItem] = useState<{ roleTranslations?: any; textTranslations?: any } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name?: string } | null>(null);
   const [editName, setEditName] = useState("");
   const [editRole, setEditRole] = useState("");
@@ -446,6 +457,7 @@ function DirectTestimonialsTab() {
 
   function openEdit(item: { _id: string; name: string; role: string; roleTranslations?: any; text: string; textTranslations?: any }) {
     setEditing(item._id);
+    setEditingItem(item);
     setEditName(item.name);
     setEditRole(item.roleTranslations?.ptBR ?? item.role);
     setEditText(item.textTranslations?.ptBR ?? item.text);
@@ -454,9 +466,37 @@ function DirectTestimonialsTab() {
   async function handleSave(id: string) {
     setSaving(true);
     try {
-      await updateMutation({ id: id as any, name: editName, role: editRole, text: editText });
+      const changed = getChangedTranslatableFields(
+        { role: editRole, text: editText },
+        { role: editingItem?.roleTranslations, text: editingItem?.textTranslations },
+      );
+
+      let roleTranslations = editingItem?.roleTranslations;
+      let textTranslations = editingItem?.textTranslations;
+
+      if (Object.keys(changed).length > 0) {
+        const toastId = toast.loading("Traduzindo conteúdo...");
+        const translated = await translateFields(changed);
+        toast.dismiss(toastId);
+        if (changed.role !== undefined) {
+          roleTranslations = { ptBR: editRole, enUS: translated.role ?? editingItem?.roleTranslations?.enUS ?? editRole };
+        }
+        if (changed.text !== undefined) {
+          textTranslations = { ptBR: editText, enUS: translated.text ?? editingItem?.textTranslations?.enUS ?? editText };
+        }
+      }
+
+      await updateMutation({
+        id: id as any,
+        name: editName,
+        role: editRole,
+        text: editText,
+        roleTranslations,
+        textTranslations,
+      });
       toast.success("Salvo!");
       setEditing(null);
+      setEditingItem(null);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erro");
     } finally {
@@ -536,7 +576,7 @@ function DirectTestimonialsTab() {
                   <Textarea value={editText} onChange={(e) => setEditText(e.target.value)} className="bg-white/5 border-white/10 text-white text-sm min-h-[72px] resize-none" />
                 </div>
                 <div className="flex gap-2 justify-end">
-                  <Button size="sm" variant="ghost" onClick={() => setEditing(null)} className="text-gray-400 text-xs">Cancelar</Button>
+                  <Button size="sm" variant="ghost" onClick={() => { setEditing(null); setEditingItem(null); }} className="text-gray-400 text-xs">Cancelar</Button>
                   <Button size="sm" disabled={saving} onClick={() => handleSave(item._id)} className="bg-neon-purple hover:bg-neon-purple/90 text-white text-xs">
                     {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : "Salvar"}
                   </Button>

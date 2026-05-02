@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { action } from './_generated/server';
+import { action, internalAction } from './_generated/server';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODEL = 'google/gemini-2.0-flash-001';
@@ -33,6 +33,60 @@ OUTPUT RULES:
 `;
 
 export const translateBatch = action({
+  args: {
+    texts: v.array(v.string()),
+    source: v.optional(v.string()),
+    target: v.optional(v.string()),
+  },
+  handler: async (_ctx, args): Promise<{ translatedTexts: string[] }> => {
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENROUTER_API_KEY not configured');
+    }
+
+    const { texts } = args;
+
+    const translationPromises = texts.map(async (text) => {
+      if (!text || text.trim() === '') return '';
+
+      try {
+        const response = await fetch(OPENROUTER_API_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+            'HTTP-Referer': 'https://portfolio.com',
+            'X-Title': 'Portfolio Translation',
+          },
+          body: JSON.stringify({
+            model: MODEL,
+            messages: [
+              { role: 'system', content: SYSTEM_PROMPT },
+              { role: 'user', content: text },
+            ],
+            temperature: 0.3,
+          }),
+        });
+
+        if (!response.ok) {
+          console.error(`Translation error for text: ${text.substring(0, 50)}`, await response.text());
+          return text;
+        }
+
+        const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+        return data?.choices?.[0]?.message?.content?.trim() || text;
+      } catch (error) {
+        console.error('Translation request error:', error);
+        return text;
+      }
+    });
+
+    const translatedTexts = await Promise.all(translationPromises);
+    return { translatedTexts };
+  },
+});
+
+export const translateBatchInternal = internalAction({
   args: {
     texts: v.array(v.string()),
     source: v.optional(v.string()),

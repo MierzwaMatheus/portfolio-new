@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { mutation, query } from './_generated/server';
+import { mutation, query, internalMutation } from './_generated/server';
 import { requireRole } from './auth';
 import { markPendingChanges } from './publishStatus';
 import { logAudit } from './audit';
@@ -92,11 +92,24 @@ export const update = mutation({
   },
 });
 
+export const setTranslations = internalMutation({
+  args: {
+    id: v.id('testimonials'),
+    textTranslations: v.object({ ptBR: v.string(), enUS: v.string() }),
+    roleTranslations: v.object({ ptBR: v.string(), enUS: v.string() }),
+  },
+  handler: async (ctx, { id, textTranslations, roleTranslations }) => {
+    await ctx.db.patch(id, { textTranslations, roleTranslations });
+  },
+});
+
 export const createWithAvatar = mutation({
   args: {
     name: v.string(),
     role: v.string(),
     text: v.string(),
+    roleTranslations: v.optional(v.object({ ptBR: v.string(), enUS: v.optional(v.string()) })),
+    textTranslations: v.optional(v.object({ ptBR: v.string(), enUS: v.optional(v.string()) })),
     avatarStorageId: v.optional(v.id('_storage')),
     avatarFileSize: v.optional(v.number()),
   },
@@ -130,6 +143,8 @@ export const createWithAvatar = mutation({
       name: args.name,
       role: args.role,
       text: args.text,
+      roleTranslations: args.roleTranslations,
+      textTranslations: args.textTranslations,
       imageId: imageId as any,
       showOnHome: false,
       createdAt: now,

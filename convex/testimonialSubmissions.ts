@@ -1,5 +1,5 @@
 import { v } from 'convex/values';
-import { mutation, query, internalAction, internalQuery } from './_generated/server';
+import { mutation, query, internalAction, internalQuery, internalMutation, action } from './_generated/server';
 import { internal } from './_generated/api';
 import { requireRole } from './auth';
 import { logAudit } from './audit';
@@ -405,7 +405,7 @@ async function createAvatarMetadata(
   });
 }
 
-export const publish = mutation({
+export const publish = internalMutation({
   args: { id: v.id('testimonialSubmissions') },
   handler: async (ctx, { id }) => {
     const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
@@ -466,7 +466,7 @@ export const publish = mutation({
   },
 });
 
-export const approveAndPublish = mutation({
+export const approveAndPublish = internalMutation({
   args: { id: v.id('testimonialSubmissions') },
   handler: async (ctx, { id }) => {
     const { userId } = await requireRole(ctx, ['root', 'admin', 'content-editor']);
@@ -524,6 +524,52 @@ export const approveAndPublish = mutation({
     });
 
     return { testimonialId };
+  },
+});
+
+async function translateAndSave(
+  ctx: any,
+  testimonialId: string,
+  text: string,
+  role: string,
+) {
+  try {
+    const { translatedTexts } = await ctx.runAction(internal.translation.translateBatchInternal, {
+      texts: [text, role],
+    });
+    await ctx.runMutation(internal.testimonials.setTranslations, {
+      id: testimonialId,
+      textTranslations: { ptBR: text, enUS: translatedTexts[0] },
+      roleTranslations: { ptBR: role, enUS: translatedTexts[1] },
+    });
+  } catch (e) {
+    console.error('Testimonial translation failed, published without translations', e);
+  }
+}
+
+export const publishAndTranslate = action({
+  args: { id: v.id('testimonialSubmissions') },
+  handler: async (ctx, { id }): Promise<{ testimonialId: string }> => {
+    const doc = await ctx.runQuery(internal.testimonialSubmissions.getInternal, { id });
+    if (!doc || !doc.text) throw new Error('Not found or no text');
+
+    const result = await ctx.runMutation(internal.testimonialSubmissions.publish, { id }) as { testimonialId: string };
+    await translateAndSave(ctx, result.testimonialId, doc.text, doc.role);
+    return result;
+  },
+});
+
+export const approveAndPublishAndTranslate = action({
+  args: { id: v.id('testimonialSubmissions') },
+  handler: async (ctx, { id }): Promise<{ testimonialId: string }> => {
+    const doc = await ctx.runQuery(internal.testimonialSubmissions.getInternal, { id });
+    if (!doc || !doc.text) throw new Error('Not found or no text');
+
+    const result = await ctx.runMutation(
+      internal.testimonialSubmissions.approveAndPublish, { id },
+    ) as { testimonialId: string };
+    await translateAndSave(ctx, result.testimonialId, doc.text, doc.role);
+    return result;
   },
 });
 
