@@ -3,7 +3,19 @@ import { action, internalAction } from './_generated/server';
 import { internal } from './_generated/api';
 
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const MODEL = 'google/gemini-2.0-flash-001';
+
+const MODELS = [
+  'google/gemini-2.0-flash-001',
+  'google/gemini-2.5-flash-lite',
+  'openai/gpt-4o-mini',
+  'anthropic/claude-haiku-4.5',
+];
+
+const MAX_RETRIES_PER_MODEL = 2;
+const RETRY_DELAY_MS = 1000;
+
+// Erros transientes que justificam retry no mesmo modelo
+const TRANSIENT_STATUSES = new Set([429, 503]);
 
 const SYSTEM_PROMPT = `
 You are a professional, native-level English technical translator and editor.
@@ -33,6 +45,78 @@ OUTPUT RULES:
 - Do not add or remove content
 `;
 
+async function callModel(text: string, model: string, apiKey: string): Promise<string | null> {
+  const response = await fetch(OPENROUTER_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+      'HTTP-Referer': 'https://portfolio.com',
+      'X-Title': 'Portfolio Translation',
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: text },
+      ],
+      temperature: 0.3,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    console.error(`Translation error [${model}] status=${response.status}:`, body);
+    // Sinaliza erro transiente vs permanente via exceção tipada
+    const err = new Error(`HTTP ${response.status}`) as Error & { status: number };
+    err.status = response.status;
+    throw err;
+  }
+
+  const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
+  return data?.choices?.[0]?.message?.content?.trim() ?? null;
+}
+
+async function callWithRetry(text: string, apiKey: string): Promise<string> {
+  for (const model of MODELS) {
+    let attempt = 0;
+    while (attempt < MAX_RETRIES_PER_MODEL) {
+      try {
+        const result = await callModel(text, model, apiKey);
+        if (result !== null) return result;
+        break; // resposta vazia — tenta próximo modelo
+      } catch (err: unknown) {
+        const status = (err as { status?: number }).status;
+        const isTransient = status !== undefined && TRANSIENT_STATUSES.has(status);
+
+        if (isTransient && attempt < MAX_RETRIES_PER_MODEL - 1) {
+          attempt++;
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+          continue;
+        }
+        // Erro permanente ou esgotou retries → próximo modelo
+        break;
+      }
+      attempt++;
+    }
+  }
+  // Todos os modelos falharam — retorna original
+  return text;
+}
+
+export async function runTranslateBatch(
+  texts: string[],
+  apiKey: string,
+): Promise<{ translatedTexts: string[] }> {
+  const translatedTexts = await Promise.all(
+    texts.map((text) => {
+      if (!text || text.trim() === '') return Promise.resolve('');
+      return callWithRetry(text, apiKey);
+    }),
+  );
+  return { translatedTexts };
+}
+
 export const translateBatch = action({
   args: {
     texts: v.array(v.string()),
@@ -46,49 +130,9 @@ export const translateBatch = action({
     if (!roleDoc || !allowedRoles.includes(roleDoc.role)) throw new Error('Forbidden');
 
     const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) {
-      throw new Error('OPENROUTER_API_KEY not configured');
-    }
+    if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
 
-    const { texts } = args;
-
-    const translationPromises = texts.map(async (text) => {
-      if (!text || text.trim() === '') return '';
-
-      try {
-        const response = await fetch(OPENROUTER_API_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-            'HTTP-Referer': 'https://portfolio.com',
-            'X-Title': 'Portfolio Translation',
-          },
-          body: JSON.stringify({
-            model: MODEL,
-            messages: [
-              { role: 'system', content: SYSTEM_PROMPT },
-              { role: 'user', content: text },
-            ],
-            temperature: 0.3,
-          }),
-        });
-
-        if (!response.ok) {
-          console.error(`Translation error for text: ${text.substring(0, 50)}`, await response.text());
-          return text;
-        }
-
-        const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
-        return data?.choices?.[0]?.message?.content?.trim() || text;
-      } catch (error) {
-        console.error('Translation request error:', error);
-        return text;
-      }
-    });
-
-    const translatedTexts = await Promise.all(translationPromises);
-    return { translatedTexts };
+    return runTranslateBatch(args.texts, apiKey);
   },
 });
 
@@ -100,48 +144,8 @@ export const translateBatchInternal = internalAction({
   },
   handler: async (_ctx, args): Promise<{ translatedTexts: string[] }> => {
     const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) {
-      throw new Error('OPENROUTER_API_KEY not configured');
-    }
+    if (!apiKey) throw new Error('OPENROUTER_API_KEY not configured');
 
-    const { texts } = args;
-
-    const translationPromises = texts.map(async (text) => {
-      if (!text || text.trim() === '') return '';
-
-      try {
-        const response = await fetch(OPENROUTER_API_URL, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${apiKey}`,
-            'HTTP-Referer': 'https://portfolio.com',
-            'X-Title': 'Portfolio Translation',
-          },
-          body: JSON.stringify({
-            model: MODEL,
-            messages: [
-              { role: 'system', content: SYSTEM_PROMPT },
-              { role: 'user', content: text },
-            ],
-            temperature: 0.3,
-          }),
-        });
-
-        if (!response.ok) {
-          console.error(`Translation error for text: ${text.substring(0, 50)}`, await response.text());
-          return text;
-        }
-
-        const data = await response.json() as { choices?: Array<{ message?: { content?: string } }> };
-        return data?.choices?.[0]?.message?.content?.trim() || text;
-      } catch (error) {
-        console.error('Translation request error:', error);
-        return text;
-      }
-    });
-
-    const translatedTexts = await Promise.all(translationPromises);
-    return { translatedTexts };
+    return runTranslateBatch(args.texts, apiKey);
   },
 });
