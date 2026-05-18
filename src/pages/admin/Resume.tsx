@@ -474,7 +474,7 @@ export default function AdminResume() {
       const translated = await translateFields({ text });
       toast.dismiss(toastId);
       const content = { text };
-      const contentTranslations = { ptBR: content, enUS: { text: translated.text } };
+      const contentTranslations = { ptBR: text, enUS: translated.text };
       const orderIndex = items.filter(i => i.type === type).length;
       await createItem({
         type,
@@ -509,8 +509,12 @@ export default function AdminResume() {
 
     try {
       const target = items.find(i => i._id === id);
-      const savedText = target?.contentTranslations?.ptBR?.text ?? target?.content?.text ?? '';
-      const savedEN = target?.contentTranslations?.enUS?.text ?? '';
+      const savedText = (typeof target?.contentTranslations?.ptBR === 'string'
+        ? target.contentTranslations.ptBR
+        : target?.content?.text) ?? '';
+      const savedEN = (typeof target?.contentTranslations?.enUS === 'string'
+        ? target.contentTranslations.enUS
+        : '') ?? '';
       const newText = editingSimpleText.trim();
 
       let translatedText: string;
@@ -524,7 +528,7 @@ export default function AdminResume() {
       }
 
       const content = { text: newText };
-      const contentTranslations = { ptBR: content, enUS: { text: translatedText } };
+      const contentTranslations = { ptBR: newText, enUS: translatedText };
       await updateItem({
         id,
         content,
