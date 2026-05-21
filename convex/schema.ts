@@ -642,4 +642,12 @@ export default defineSchema({
     .index('by_targetType_and_targetId', ['targetType', 'targetId'])
     .index('by_createdAt', ['createdAt'])
     .index('by_expiresAt', ['expiresAt']),
+
+  // ── siteConfig ─────────────────────────────────────────────────────────────
+  siteConfig: defineTable({
+    key: v.string(),
+    value: v.any(),
+    createdAt: v.number(),
+    updatedAt: v.optional(v.number()),
+  }).index('by_key', ['key']),
 });
