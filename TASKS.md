@@ -29,11 +29,11 @@
 - [x] Adicionar índice `by_key` em `siteConfig`
 - [x] Criar `convex/siteConfig.ts` com função `getPublic` — query sem auth, retorna chaves públicas
 - [x] Criar função `getByKey` — query com verificação de auth para chaves internas
-- [ ] Criar função `getAll` — query restrita a roles root/admin
+- [x] Criar função `getAll` — query restrita a roles root/admin
 - [x] Criar função `set` — mutation com verificação root/admin, atualiza `updatedAt`, registra em auditLog
 - [x] Criar função `setBatch` — mutation upsert em lote, usada pelo seed
 - [x] Definir lista de chaves públicas e internas como constante tipada
-- [ ] Verificar que `npx convex dev` aplica o schema sem erros
+- [x] Verificar que `npx convex dev` aplica o schema sem erros
 
 ---
 
