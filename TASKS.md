@@ -10,11 +10,11 @@
 
 ### 1.1 rubrica.config.ts — closes #6
 
-- [ ] Criar interface `RubricalConfig` com todos os campos tipados (identidade, SEO, RSS, aparência)
-- [ ] Criar `rubrica.config.ts` na raiz exportando `rubricalConfig` com valores de exemplo neutros
-- [ ] Garantir que `siteName`, `authorName`, `authorEmail` têm valor vazio ou de exemplo sem dados pessoais
-- [ ] Garantir que `siteUrl` aponta para `https://exemplo.com` (nunca para domínio pessoal)
-- [ ] Verificar que `tsc --noEmit` passa sem erros após criação do arquivo
+- [x] Criar interface `RubricalConfig` com todos os campos tipados (identidade, SEO, RSS, aparência)
+- [x] Criar `rubrica.config.ts` na raiz exportando `rubricalConfig` com valores de exemplo neutros
+- [x] Garantir que `siteName`, `authorName`, `authorEmail` têm valor vazio ou de exemplo sem dados pessoais
+- [x] Garantir que `siteUrl` aponta para `https://exemplo.com` (nunca para domínio pessoal)
+- [x] Verificar que `tsc --noEmit` passa sem erros após criação do arquivo
 
 ---
 
