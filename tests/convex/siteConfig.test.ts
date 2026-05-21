@@ -21,7 +21,7 @@ vi.mock("@convex-dev/auth/providers/Password", () => ({
   Password: () => ({}),
 }));
 
-import { getPublic, getByKey, set, setBatch } from "../../convex/siteConfig";
+import { getPublic, getByKey, set, setBatch, getAll } from "../../convex/siteConfig";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
 const handler = (fn: any) => fn._handler ?? fn;
@@ -164,5 +164,42 @@ describe("convex/siteConfig · setBatch", () => {
     const docs = ctx.db._all("siteConfig").filter((d) => d.key === "lang");
     expect(docs).toHaveLength(1);
     expect(docs[0].value).toBe("pt-BR");
+  });
+});
+
+describe("convex/siteConfig · getAll", () => {
+  let ctx: MockCtx;
+  beforeEach(() => {
+    ctx = createMockCtx();
+    getAuthUserId.mockResolvedValue(null);
+  });
+
+  it("lança Forbidden para role content-editor", async () => {
+    asRole(ctx, "content-editor");
+    await expect(handler(getAll)(ctx, {})).rejects.toThrow(/[Ff]orbidden/);
+  });
+
+  it("lança Unauthorized sem autenticação", async () => {
+    getAuthUserId.mockResolvedValue(null);
+    await expect(handler(getAll)(ctx, {})).rejects.toThrow(/[Uu]nauthorized/);
+  });
+
+  it("retorna todas as chaves incluindo internas com role root", async () => {
+    asRole(ctx, "root");
+    ctx.db._seed("siteConfig", [
+      { key: "site_title", value: "T", createdAt: 1 },
+      { key: "og_image_storage_id", value: "s", createdAt: 2 },
+    ]);
+    const result = await handler(getAll)(ctx, {});
+    expect(result).toHaveLength(2);
+  });
+
+  it("retorna todas as chaves com role admin", async () => {
+    asRole(ctx, "admin");
+    ctx.db._seed("siteConfig", [
+      { key: "site_title", value: "T", createdAt: 1 },
+    ]);
+    const result = await handler(getAll)(ctx, {});
+    expect(result).toHaveLength(1);
   });
 });

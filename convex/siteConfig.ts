@@ -37,6 +37,14 @@ function isInternalKey(key: string): boolean {
   return (INTERNAL_KEYS as readonly string[]).includes(key);
 }
 
+export const getAll = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireRole(ctx, ["root", "admin"]);
+    return ctx.db.query("siteConfig").collect();
+  },
+});
+
 export const getByKey = query({
   args: { key: v.string() },
   handler: async (ctx, { key }) => {
