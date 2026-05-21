@@ -21,7 +21,7 @@ vi.mock("@convex-dev/auth/providers/Password", () => ({
   Password: () => ({}),
 }));
 
-import { getPublic, getByKey, set } from "../../convex/siteConfig";
+import { getPublic, getByKey, set, setBatch } from "../../convex/siteConfig";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
 const handler = (fn: any) => fn._handler ?? fn;
@@ -131,5 +131,38 @@ describe("convex/siteConfig · set", () => {
     const docs = ctx.db._all("siteConfig").filter((d) => d.key === "site_title");
     expect(docs).toHaveLength(1);
     expect(docs[0].value).toBe("Novo");
+  });
+});
+
+describe("convex/siteConfig · setBatch", () => {
+  let ctx: MockCtx;
+  beforeEach(() => {
+    ctx = createMockCtx();
+    getAuthUserId.mockResolvedValue(null);
+  });
+
+  it("insere múltiplas chaves em lote", async () => {
+    await handler(setBatch)(ctx, {
+      items: [
+        { key: "site_title", value: "T" },
+        { key: "lang", value: "pt-BR" },
+      ],
+    });
+    expect(ctx.db._all("siteConfig")).toHaveLength(2);
+  });
+
+  it("chamado duas vezes não duplica registros (idempotente)", async () => {
+    const items = [{ key: "site_title", value: "T" }];
+    await handler(setBatch)(ctx, { items });
+    await handler(setBatch)(ctx, { items });
+    expect(ctx.db._all("siteConfig").filter((d) => d.key === "site_title")).toHaveLength(1);
+  });
+
+  it("atualiza valor quando chave já existe", async () => {
+    ctx.db._seed("siteConfig", [{ key: "lang", value: "en-US", createdAt: 1 }]);
+    await handler(setBatch)(ctx, { items: [{ key: "lang", value: "pt-BR" }] });
+    const docs = ctx.db._all("siteConfig").filter((d) => d.key === "lang");
+    expect(docs).toHaveLength(1);
+    expect(docs[0].value).toBe("pt-BR");
   });
 });

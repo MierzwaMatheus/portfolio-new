@@ -56,6 +56,23 @@ export const getPublic = query({
   },
 });
 
+export const setBatch = mutation({
+  args: { items: v.array(v.object({ key: v.string(), value: v.any() })) },
+  handler: async (ctx, { items }) => {
+    for (const { key, value } of items) {
+      const existing = await ctx.db
+        .query("siteConfig")
+        .withIndex("by_key", (q) => q.eq("key", key))
+        .unique();
+      if (existing) {
+        await ctx.db.patch(existing._id, { value, updatedAt: Date.now() });
+      } else {
+        await ctx.db.insert("siteConfig", { key, value, createdAt: Date.now() });
+      }
+    }
+  },
+});
+
 export const set = mutation({
   args: { key: v.string(), value: v.any() },
   handler: async (ctx, { key, value }) => {
