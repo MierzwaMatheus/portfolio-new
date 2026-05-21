@@ -21,7 +21,7 @@ vi.mock("@convex-dev/auth/providers/Password", () => ({
   Password: () => ({}),
 }));
 
-import { getPublic } from "../../convex/siteConfig";
+import { getPublic, getByKey } from "../../convex/siteConfig";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
 const handler = (fn: any) => fn._handler ?? fn;
@@ -61,5 +61,39 @@ describe("convex/siteConfig · getPublic", () => {
       { key: "site_title", value: "T", createdAt: 1 },
     ]);
     await expect(handler(getPublic)(ctx, {})).resolves.toBeDefined();
+  });
+});
+
+describe("convex/siteConfig · getByKey", () => {
+  let ctx: MockCtx;
+  beforeEach(() => {
+    ctx = createMockCtx();
+    getAuthUserId.mockResolvedValue(null);
+  });
+
+  it("lança Unauthorized para chave interna sem autenticação", async () => {
+    ctx.db._seed("siteConfig", [
+      { key: "og_image_storage_id", value: "s123", createdAt: 1 },
+    ]);
+    getAuthUserId.mockResolvedValue(null);
+    await expect(handler(getByKey)(ctx, { key: "og_image_storage_id" }))
+      .rejects.toThrow(/[Uu]nauthorized/);
+  });
+
+  it("retorna valor de chave interna quando autenticado", async () => {
+    asRole(ctx, "admin");
+    ctx.db._seed("siteConfig", [
+      { key: "og_image_storage_id", value: "s123", createdAt: 1 },
+    ]);
+    const result = await handler(getByKey)(ctx, { key: "og_image_storage_id" });
+    expect(result?.value).toBe("s123");
+  });
+
+  it("retorna chave pública sem autenticação", async () => {
+    ctx.db._seed("siteConfig", [
+      { key: "site_title", value: "Meu Site", createdAt: 1 },
+    ]);
+    const result = await handler(getByKey)(ctx, { key: "site_title" });
+    expect(result?.value).toBe("Meu Site");
   });
 });

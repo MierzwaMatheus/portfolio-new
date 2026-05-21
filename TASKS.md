@@ -20,19 +20,19 @@
 
 ### 1.2 siteConfig Convex — closes #7
 
-- [ ] **[TESTE]** Escrever teste: `getPublic` retorna apenas chaves sem prefixo interno sem autenticação
+- [x] **[TESTE]** Escrever teste: `getPublic` retorna apenas chaves sem prefixo interno sem autenticação
 - [ ] **[TESTE]** Escrever teste: `getByKey` com chave interna (`og_image_storage_id`) requer autenticação
 - [ ] **[TESTE]** Escrever teste: `set` com usuário sem role root/admin retorna erro de autorização
 - [ ] **[TESTE]** Escrever teste: `setBatch` com array de `{key, value}` faz upsert idempotente
 - [ ] **[TESTE]** Escrever teste: `setBatch` chamado duas vezes com os mesmos dados não duplica registros
-- [ ] Adicionar tabela `siteConfig` em `convex/schema.ts` com campos: `key`, `value`, `createdAt`, `updatedAt`
-- [ ] Adicionar índice `by_key` em `siteConfig`
-- [ ] Criar `convex/siteConfig.ts` com função `getPublic` — query sem auth, retorna chaves públicas
+- [x] Adicionar tabela `siteConfig` em `convex/schema.ts` com campos: `key`, `value`, `createdAt`, `updatedAt`
+- [x] Adicionar índice `by_key` em `siteConfig`
+- [x] Criar `convex/siteConfig.ts` com função `getPublic` — query sem auth, retorna chaves públicas
 - [ ] Criar função `getByKey` — query com verificação de auth para chaves internas
 - [ ] Criar função `getAll` — query restrita a roles root/admin
 - [ ] Criar função `set` — mutation com verificação root/admin, atualiza `updatedAt`, registra em auditLog
 - [ ] Criar função `setBatch` — mutation upsert em lote, usada pelo seed
-- [ ] Definir lista de chaves públicas e internas como constante tipada
+- [x] Definir lista de chaves públicas e internas como constante tipada
 - [ ] Verificar que `npx convex dev` aplica o schema sem erros
 
 ---

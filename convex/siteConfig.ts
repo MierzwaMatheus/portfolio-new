@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { query } from "./_generated/server";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const PUBLIC_KEYS = [
   "site_title",
@@ -33,6 +34,17 @@ export type InternalKey = (typeof INTERNAL_KEYS)[number];
 function isInternalKey(key: string): boolean {
   return (INTERNAL_KEYS as readonly string[]).includes(key);
 }
+
+export const getByKey = query({
+  args: { key: v.string() },
+  handler: async (ctx, { key }) => {
+    if (isInternalKey(key)) {
+      const userId = await getAuthUserId(ctx);
+      if (!userId) throw new Error("Unauthorized");
+    }
+    return ctx.db.query("siteConfig").withIndex("by_key", (q) => q.eq("key", key)).unique();
+  },
+});
 
 export const getPublic = query({
   args: {},
