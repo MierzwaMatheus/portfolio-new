@@ -1,104 +1,189 @@
-# Portfolio — guia de deploy
+<div align="center">
 
-Um sistema completo de portfólio profissional pronto para você forkar, personalizar e publicar com domínio próprio.
+<img src="https://i.postimg.cc/tJ8B9H6B/rubrica-cover-post.png" alt="Rubrica" width="100%" />
 
-> **💡 Por que esse projeto existe**
-> Esse sistema foi feito para **facilitar a vida de qualquer pessoa** que queira ter um portfólio completo, organizado e fácil de manter. É um projeto **para todo mundo** — para incentivar mais profissionais a se exporem com qualidade e elevar o nível médio dos portfólios na web. Se você é dev iniciante, sênior, designer ou freelancer, a base já está aqui. Você foca no que importa: o seu conteúdo e a sua identidade.
+<br />
+<br />
 
-> **🎨 Antes de publicar, leia isto**
-> Use a base, mas **personalize o visual**. Cor, tipografia, copy, hero, ícones, animações — coloque a sua personalidade. Se todo mundo subir o portfólio com a paleta padrão, o sistema satura na web e ninguém se destaca. Soluções prontas são pontos de partida, não chegada. **Autenticidade é a chave** — usando bases prontas ou não.
+# Rubrica
 
-> Procurando a referência técnica detalhada (schema do banco, lista de features, rotas, plugins, design system)? Veja [`docs/features.md`](docs/features.md).
+### _Assine com a sua cara._
 
----
+Um sistema completo de portfólio profissional — pronto para você forkar, personalizar e publicar com domínio próprio.
 
-## 📦 O que você vai ter no ar
+<br />
 
-- **Página inicial** com hero, sobre, serviços e depoimentos
-- **Portfólio** com filtros por tags, modal detalhado e drag-and-drop de ordenação
-- **Blog** com editor rich text (TipTap), tags, busca e RSS automático
-- **Currículo** estruturado + export em PDF otimizado para ATS
-- **Propostas comerciais** com proteção por senha, aceite eletrônico, assinatura manuscrita e geração de contrato em PDF
-- **Painel admin completo** (`/admin`) — CRUD de tudo via interface
-- **Sistema de plugins** para ligar/desligar features que você não quer expor
-- (Opcional) **IA** para tradução automática e geração de CV otimizado para vagas
-- (Opcional) **Pagamentos** via Stripe e Asaas (PIX/boleto)
-- (Opcional) **Notificações** no Telegram quando alguém aceita uma proposta ou paga
+[![License](https://img.shields.io/badge/license-GPL--3.0-4D7C5F?style=flat-square)](./LICENSE)
+[![Stack](https://img.shields.io/badge/React%20%2B%20Convex-1A1A18?style=flat-square)](https://convex.dev)
+[![Deploy](https://img.shields.io/badge/deploy-Vercel-C4664A?style=flat-square)](https://vercel.com)
+[![TypeScript](https://img.shields.io/badge/TypeScript-99%25-4D7C5F?style=flat-square)](https://www.typescriptlang.org)
 
----
+</div>
 
-## ✅ Pré-requisitos
+<br />
 
-- **Node.js 18+** e **pnpm** instalados localmente
-- Conta no **GitHub** (para fork e deploy contínuo)
-- Conta no **[Convex](https://convex.dev)** (gratuita) — backend, banco e storage
-- Conta no **[Vercel](https://vercel.com)** (gratuita) — hospedagem do frontend
-- (Opcional) Contas no **[OpenRouter](https://openrouter.ai)**, **[Stripe](https://stripe.com)**, **[Asaas](https://asaas.com)** ou **[Telegram BotFather](https://t.me/BotFather)** se for usar as features opcionais
+## O que é o Rubrica
 
----
+A maioria das pessoas trava na mesma encruzilhada: começar um portfólio do zero dá trabalho demais, e os construtores prontos deixam todo mundo com a mesma cara.
 
-## 🚀 Passo a passo — do clone ao ar
+Rubrica é a base que faltava no meio do caminho. É a estrutura técnica completa — home, portfólio, blog, currículo, propostas comerciais, painel admin, pagamentos — já resolvida. Você não monta o sistema. Você forka, personaliza a identidade e publica.
 
-### Passo 1 — Fork e clone
+A base técnica é coletiva. A identidade é sua.
 
-Faça fork do repositório no GitHub e clone localmente:
+> **Por que isso existe**
+>
+> Rubrica foi feito para qualquer profissional criativo que leva o próprio trabalho a sério e quer que isso apareça. Dev iniciante ou sênior, designer, freelancer — a fundação já está pronta. Você foca no que importa: o seu conteúdo e a sua marca.
+>
+> Presença profissional não é luxo. É o mínimo que o seu trabalho merece.
+
+<br />
+
+## O que você coloca no ar
+
+| | Módulo | O que entrega |
+|---|---|---|
+| 🏠 | **Home** | Hero, sobre, serviços e depoimentos |
+| 💼 | **Portfólio** | Filtros por tags, modal detalhado, ordenação por drag-and-drop |
+| ✍️ | **Blog** | Editor rich text (TipTap), tags, busca e RSS automático |
+| 📄 | **Currículo** | Estruturado, com export em PDF otimizado para ATS |
+| 🤝 | **Propostas** | Proteção por senha, aceite eletrônico, assinatura manuscrita e contrato em PDF |
+| ⚙️ | **Admin** | CRUD de tudo via interface — sem tocar no código |
+| 🧩 | **Plugins** | Liga e desliga features que você não quer expor |
+| 🤖 | **IA** _(opcional)_ | Tradução automática e geração de CV otimizado para vagas |
+| 💳 | **Pagamentos** _(opcional)_ | Stripe e Asaas (PIX/boleto) |
+| 🔔 | **Notificações** _(opcional)_ | Telegram quando alguém aceita uma proposta ou paga |
+
+<br />
+
+## Como funciona
+
+Rubrica tem três camadas: o frontend que o mundo vê, o backend que guarda tudo, e os serviços externos que você liga só se precisar.
+
+```mermaid
+flowchart TB
+    subgraph cliente["🌐 Frontend — React + Vite"]
+        pub["Páginas públicas<br/>home · portfólio · blog · currículo"]
+        prop["Propostas<br/>aceite + assinatura + PDF"]
+        admin["Painel admin<br/>CRUD via interface"]
+    end
+
+    subgraph backend["⚡ Backend — Convex"]
+        db[("Banco de dados<br/>+ storage de imagens")]
+        fn["Queries · Mutations<br/>Actions · Auth"]
+        plugins["Sistema de plugins<br/>liga/desliga features"]
+    end
+
+    subgraph externos["🔌 Serviços externos — opcionais"]
+        ia["OpenRouter<br/>IA · tradução"]
+        pay["Stripe · Asaas<br/>pagamentos"]
+        tg["Telegram<br/>notificações"]
+    end
+
+    pub --> fn
+    prop --> fn
+    admin --> fn
+    fn --> db
+    plugins --> fn
+    fn -.-> ia
+    fn -.-> pay
+    fn -.-> tg
+
+    classDef front fill:#F5F2EA,stroke:#4D7C5F,stroke-width:2px,color:#1A1A18
+    classDef back fill:#4D7C5F,stroke:#1A1A18,stroke-width:2px,color:#F5F2EA
+    classDef ext fill:#C4664A,stroke:#1A1A18,stroke-width:2px,color:#F5F2EA
+    class pub,prop,admin front
+    class db,fn,plugins back
+    class ia,pay,tg ext
+```
+
+<br />
+
+## Pré-requisitos
+
+Antes de começar, você vai precisar de:
+
+- **Node.js 18+** e **pnpm** instalados
+- Conta no **[GitHub](https://github.com)** — para fork e deploy contínuo
+- Conta no **[Convex](https://convex.dev)** _(gratuita)_ — backend, banco e storage
+- Conta no **[Vercel](https://vercel.com)** _(gratuita)_ — hospedagem do frontend
+- _(Opcional)_ Contas no **[OpenRouter](https://openrouter.ai)**, **[Stripe](https://stripe.com)**, **[Asaas](https://asaas.com)** ou **[Telegram BotFather](https://t.me/BotFather)** — só se for usar as features opcionais
+
+<br />
+
+## Do clone ao ar
+
+O caminho completo, do fork até o domínio próprio funcionando:
+
+```mermaid
+flowchart LR
+    A["1 · Fork<br/>+ clone"] --> B["2 · Convex<br/>provisiona backend"]
+    B --> C["3 · .env<br/>local"]
+    C --> D["4 · Vars no<br/>servidor Convex"]
+    D --> E["5 · pnpm dev<br/>roda local"]
+    E --> F["6 · Cria usuário<br/>root"]
+    F --> G["7 · Preenche<br/>no /admin"]
+    G --> H["8 · Personaliza<br/>o visual ⚠️"]
+    H --> I["9 · Deploy<br/>no Vercel"]
+    I --> J["10 · Domínio<br/>próprio"]
+
+    classDef step fill:#F5F2EA,stroke:#4D7C5F,stroke-width:2px,color:#1A1A18
+    classDef highlight fill:#C4664A,stroke:#1A1A18,stroke-width:2px,color:#F5F2EA
+    class A,B,C,D,E,F,G,I,J step
+    class H highlight
+```
+
+> O passo **8 não é opcional**. É o que separa o seu portfólio de "mais um".
+
+### 1 · Fork e clone
 
 ```bash
-gh repo fork mierzwamatheus/portfolio-new --clone
-cd portfolio-new
+gh repo fork mierzwamatheus/rubrica --clone
+cd rubrica
 pnpm install
 ```
 
-### Passo 2 — Provisionar o Convex
+### 2 · Provisionar o Convex
 
-O Convex é o backend (banco de dados, storage de imagens, autenticação, funções server-side).
+O Convex é o backend completo — banco, storage de imagens, autenticação e funções server-side.
 
 ```bash
 npx convex dev
 ```
 
-Na primeira vez, o CLI:
+Na primeira vez, o CLI faz tudo sozinho: pede login no navegador, cria o projeto na sua conta, gera o `.env.local` com `VITE_CONVEX_URL` e `CONVEX_DEPLOY_KEY`, sobe o schema e as funções, e fica em modo watch. Deixe rodando enquanto desenvolve.
 
-1. Pede login (abre o navegador)
-2. Cria um novo projeto Convex na sua conta
-3. Gera o arquivo `.env.local` com `VITE_CONVEX_URL` e `CONVEX_DEPLOY_KEY` automaticamente
-4. Faz o deploy do schema (todas as tabelas) e das funções
-5. Fica em modo watch — deixe rodando enquanto desenvolve
-
-### Passo 3 — Configurar o `.env` local
-
-Copie o template e preencha:
+### 3 · Configurar o `.env` local
 
 ```bash
 cp .env.example .env
 ```
 
-Variáveis mínimas:
+Quatro variáveis e a gente explica cada uma:
 
 | Variável | De onde vem | Para quê |
 |---|---|---|
-| `VITE_CONVEX_URL` | Convex Dashboard → Settings | URL do backend (frontend) |
+| `VITE_CONVEX_URL` | Convex Dashboard → Settings | URL do backend no frontend |
 | `CONVEX_URL` | Mesma URL acima | Usado pelos scripts de build (RSS, sitemap) |
 | `CONVEX_DEPLOY_KEY` | Convex Dashboard → Settings → Deploy Keys | Necessário para `convex deploy` no build |
-| `SITE_URL` | URL final do site (ex: `https://seudominio.com`) | URL canônica do RSS e sitemap |
+| `SITE_URL` | URL final do site | URL canônica do RSS e do sitemap |
 
-### Passo 4 — Configurar variáveis no servidor Convex
+### 4 · Variáveis no servidor Convex
 
-Essas variáveis ficam **no servidor Convex**, não no `.env` local. Setam-se via CLI:
+Essas ficam **no servidor Convex**, não no `.env` local. Setam-se via CLI:
 
 ```bash
 npx convex env set NOME_DA_VAR valor
 ```
 
-**Obrigatórias para o sistema rodar:**
+**Obrigatória para o sistema rodar:**
 
-- `BOOTSTRAP_ALLOWED=true` — habilita criar o primeiro usuário (você vai remover depois)
+- `BOOTSTRAP_ALLOWED=true` — habilita criar o primeiro usuário (você remove depois)
 
-**Obrigatórias se for usar o plugin `playground`:**
+**Obrigatória se usar o plugin `playground`:**
 
 - `PLAYGROUND_KEY_PEPPER=<32+ caracteres aleatórios>` — pepper para fingerprint de API keys
 
-**Opcionais (apenas se ativar a feature correspondente):**
+**Opcionais — só se ativar a feature correspondente:**
 
 | Variável | Habilita |
 |---|---|
@@ -110,9 +195,9 @@ npx convex env set NOME_DA_VAR valor
 | `IMPORT_SECRET` | Endpoint HTTP de importação CSV |
 | `VERCEL_WEBHOOK_SECRET` | Webhook de notificação de deploy |
 
-### Passo 5 — Rodar em desenvolvimento
+### 5 · Rodar em desenvolvimento
 
-Em outro terminal (deixe o `npx convex dev` rodando):
+Em outro terminal, com o `npx convex dev` ainda rodando:
 
 ```bash
 pnpm dev
@@ -120,90 +205,110 @@ pnpm dev
 
 Abre em `http://localhost:3000`.
 
-### Passo 6 — Criar seu usuário root
+### 6 · Criar seu usuário root
 
-1. Acesse `http://localhost:3000/login` enquanto `BOOTSTRAP_ALLOWED=true` está setado
-2. A interface mostra a tela de bootstrap → crie email e senha
-3. **Depois de criar, remova o bootstrap imediatamente:**
+1. Acesse `http://localhost:3000/login` com `BOOTSTRAP_ALLOWED=true` setado
+2. A tela de bootstrap aparece → crie email e senha
+3. **Remova o bootstrap imediatamente:**
 
 ```bash
 npx convex env remove BOOTSTRAP_ALLOWED
 ```
 
-> ⚠️ Se você esquecer essa etapa, qualquer pessoa que descobrir o link consegue criar usuário root no seu sistema.
+> ⚠️ Se esquecer essa etapa, qualquer pessoa que descobrir o link consegue criar usuário root no seu sistema.
 
-### Passo 7 — Preencher o conteúdo no painel admin
+### 7 · Preencher o conteúdo no admin
 
-Logado em `/admin`, cada rota é onde você coloca o conteúdo. **Tudo é gerenciado por interface — você não precisa mexer no código para alterar texto, imagens ou dados.**
+Logado em `/admin`, tudo é gerenciado por interface. Você não toca no código para mudar texto, imagem ou dado.
 
 | Rota | O que você configura |
 |---|---|
 | `/admin/contact` | Nome, email, telefone, avatar, redes sociais |
-| `/admin/home` | Texto "sobre", status de disponibilidade, serviços/skills |
+| `/admin/home` | Texto "sobre", disponibilidade, serviços/skills |
 | `/admin/projects` | Projetos do portfólio (imagens, tags, links, case study) |
-| `/admin/blog` | Posts do blog (editor rich text, tags, destaque) |
+| `/admin/blog` | Posts (editor rich text, tags, destaque) |
 | `/admin/resume` | Currículo (experiências, formação, skills, idiomas, certificações) |
 | `/admin/about` | Rotina diária + FAQ |
 | `/admin/testimonials` | Depoimentos (curados ou recebidos via wizard público) |
 | `/admin/plugins` | **Liga/desliga features** (blog, propostas, pagamentos, etc.) |
 
-### Passo 8 — Personalize o visual (não pule!)
+### 8 · Personalize o visual _(não pule)_
 
-Esta é a etapa **mais importante** depois do deploy técnico. Lembre da observação do topo: **identidade visual é o que vai te diferenciar**. Arquivos para mexer:
+Esta é a etapa **mais importante** depois do deploy técnico. Identidade visual é o que vai te diferenciar. Onde mexer:
 
-- `src/index.css` — variáveis de cor, tema dark/light, paleta (default usa neon purple `#a855f7` + neon lime — **mude isso**)
+- `src/index.css` — variáveis de cor, tema dark/light, paleta _(o default vem com neon purple `#a855f7` + neon lime — **mude isso**)_
 - `src/components/Layout.tsx` — estrutura visual da página
 - `src/pages/Home.tsx` — hero, copy, ordem das seções, animações
-- `public/favicon.ico` — substitua pelo seu logo
-- Fontes (importe do Google Fonts no `index.html` ou via Tailwind)
-- Componentes em `src/components/ui/` — todos do shadcn/ui, fáceis de customizar
+- `public/favicon.ico` — troque pelo seu logo
+- Fontes — importe do Google Fonts no `index.html` ou via Tailwind
+- `src/components/ui/` — componentes shadcn/ui, fáceis de customizar
 
-**Teste rodando `pnpm dev` enquanto altera.** Não suba sem dar a sua cara.
+Teste com `pnpm dev` enquanto altera. Não suba sem dar a sua cara.
 
-### Passo 9 — Deploy no Vercel
+### 9 · Deploy no Vercel
 
-1. Acesse [vercel.com/new](https://vercel.com/new) e importe o repositório forkado
-2. **Framework preset**: Vite
-3. **Build command**: já vem definido no `vercel.json` (`pnpm convex deploy && pnpm vite build`) — não mude
-4. **Output directory**: `dist`
-5. **Adicione as env vars** no Vercel (Settings → Environment Variables):
-   - `VITE_CONVEX_URL`
-   - `CONVEX_URL`
-   - `CONVEX_DEPLOY_KEY` ← sem isso, o build do Vercel falha ao rodar `convex deploy`
-   - `SITE_URL`
+1. Em [vercel.com/new](https://vercel.com/new), importe o repositório forkado
+2. **Framework preset:** Vite
+3. **Build command:** já vem no `vercel.json` (`pnpm convex deploy && pnpm vite build`) — não mude
+4. **Output directory:** `dist`
+5. **Adicione as env vars** (Settings → Environment Variables): `VITE_CONVEX_URL`, `CONVEX_URL`, `CONVEX_DEPLOY_KEY` _(sem essa, o build falha)_ e `SITE_URL`
 6. Clique em **Deploy**
 
-A partir daqui, todo `git push` para a branch principal dispara um deploy automático.
+A partir daqui, todo `git push` na branch principal dispara um deploy automático.
 
-### Passo 10 — Configurar domínio próprio
+### 10 · Domínio próprio
 
-1. **Vercel Dashboard → seu projeto → Settings → Domains → Add Domain**
+1. **Vercel → seu projeto → Settings → Domains → Add Domain**
 2. Adicione `seudominio.com` e `www.seudominio.com`
-3. **Configure o DNS** no seu registrador (Registro.br, Cloudflare, GoDaddy, etc.):
-   - Domínio raiz (`seudominio.com`): registro **A** apontando para `76.76.21.21`
-   - Subdomínio `www`: registro **CNAME** apontando para `cname.vercel-dns.com`
-4. Aguarde a propagação (alguns minutos a algumas horas)
-5. SSL é emitido automaticamente pela Vercel via Let's Encrypt
-6. **Atualize a `SITE_URL`** no Vercel para a URL final do seu domínio
-7. Force um redeploy para regenerar `sitemap.xml` e `rss.xml` com a URL nova
+3. **Configure o DNS** no seu registrador (Registro.br, Cloudflare, GoDaddy…):
+   - Raiz (`seudominio.com`): registro **A** → `76.76.21.21`
+   - `www`: registro **CNAME** → `cname.vercel-dns.com`
+4. Aguarde a propagação (minutos a horas)
+5. O SSL é emitido automaticamente pela Vercel via Let's Encrypt
+6. **Atualize a `SITE_URL`** no Vercel para a URL final
+7. Force um redeploy para regenerar `sitemap.xml` e `rss.xml`
 
----
+<br />
 
-## 🧩 Features opcionais — quando ativar cada uma
+## O fluxo de propostas
 
-| Feature | Plugin (em `/admin/plugins`) | Env vars necessárias | Conta externa |
+É aqui que o Rubrica vira ferramenta de fechar negócio, não só de mostrar trabalho. Da criação ao contrato assinado:
+
+```mermaid
+sequenceDiagram
+    participant V as Você
+    participant R as Rubrica
+    participant C as Cliente
+    participant T as Telegram
+
+    V->>R: Cria proposta no /admin
+    R->>R: Protege com senha
+    V->>C: Envia o link
+    C->>R: Abre e digita a senha
+    R->>C: Mostra a proposta
+    C->>R: Aceita + assina (manuscrita)
+    R->>R: Gera contrato em PDF
+    R-->>T: Notifica você 🔔
+    Note over R,C: Aceite eletrônico registrado
+```
+
+<br />
+
+## Quando ativar cada feature opcional
+
+| Feature | Plugin (`/admin/plugins`) | Env vars | Conta externa |
 |---|---|---|---|
 | Pagamentos via Stripe | `payments` | `STRIPE_WEBHOOK_SECRET` | Stripe |
 | Pagamentos PIX/Boleto | `payments` | `ASAAS_WEBHOOK_TOKEN` | Asaas |
 | Geração de CV com IA | `ai-resumes` | `OPENROUTER_API_KEY` | OpenRouter |
 | Tradução automática (i18n) | `i18n` | `OPENROUTER_API_KEY` | OpenRouter |
-| Notificações Telegram | (built-in) | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_ADMIN_CHAT_ID` | BotFather |
+| Notificações Telegram | _(built-in)_ | `TELEGRAM_BOT_TOKEN` + `TELEGRAM_ADMIN_CHAT_ID` | BotFather |
 
-**Dica do plugin manager:** se você só quer um portfólio simples (home + projetos + currículo), desative blog, propostas, pagamentos, IA e playground em `/admin/plugins`. As rotas correspondentes somem da sidebar e do roteador.
+> **Quer só o básico?** Se você quer apenas home + projetos + currículo, desative blog, propostas, pagamentos, IA e playground em `/admin/plugins`. As rotas somem da sidebar e do roteador.
 
----
+<br />
 
-## 🛠 Scripts úteis
+## Scripts úteis
 
 ```bash
 pnpm dev          # dev local + convex em watch (porta 3000)
@@ -214,18 +319,18 @@ pnpm format       # prettier
 pnpm test         # vitest
 ```
 
----
+<br />
 
-## 📁 Estrutura mínima do projeto
+## Estrutura do projeto
 
 ```
-portfolio-new/
+rubrica/
 ├── convex/              # Backend: schema, queries, mutations, actions
 ├── src/
 │   ├── pages/           # Páginas públicas + /admin/*
 │   ├── components/      # Componentes (UI, admin, layout)
 │   ├── contexts/        # AuthContext, ThemeContext, PluginsContext
-│   └── index.css        # ⬅ Personalize cores e tema aqui
+│   └── index.css        # ← Personalize cores e tema aqui
 ├── scripts/             # Build-time: RSS, sitemap, fetch de dados estáticos
 ├── public/              # Assets estáticos (favicon, dados gerados)
 ├── docs/features.md     # Referência técnica completa
@@ -233,30 +338,42 @@ portfolio-new/
 └── vercel.json          # Build command, rewrites SPA, security headers
 ```
 
----
+> Procurando a referência técnica detalhada — schema do banco, lista de features, rotas, plugins, design system? Veja [`docs/features.md`](./docs/features.md).
 
-## 🩹 Troubleshooting
+<br />
 
-- **`convex deploy` falha no Vercel** → falta `CONVEX_DEPLOY_KEY` nas env vars do Vercel
-- **Login não funciona / tela de bootstrap não aparece** → `BOOTSTRAP_ALLOWED` foi removido antes de você criar o primeiro usuário; sete de novo, crie e remova
-- **Plugin desativado ainda aparece em produção** → falta um redeploy para regenerar `public/data/plugins.json`
-- **Notificações Telegram não chegam** → você não enviou `/start` para o seu bot ainda (Telegram só permite o bot mandar mensagem depois)
-- **Imagens quebradas após deploy** → os IDs do Convex Storage são por deployment; ao migrar entre dev e prod, reupload é necessário
+## Troubleshooting
 
----
+| Sintoma | Causa provável |
+|---|---|
+| `convex deploy` falha no Vercel | Falta `CONVEX_DEPLOY_KEY` nas env vars do Vercel |
+| Login não funciona / bootstrap não aparece | `BOOTSTRAP_ALLOWED` removido antes de criar o primeiro usuário — sete de novo, crie e remova |
+| Plugin desativado ainda aparece em produção | Falta um redeploy para regenerar `public/data/plugins.json` |
+| Notificações Telegram não chegam | Você ainda não enviou `/start` para o seu bot |
+| Imagens quebradas após deploy | IDs do Convex Storage são por deployment; ao migrar dev → prod, reupload é necessário |
 
-## 🔁 Lembrete final
+<br />
 
-> Esse sistema é **para todo mundo**. Foi feito para que mais profissionais tenham um portfólio decente sem começar do zero, e para elevar o nível médio do que se vê na web. Se ele te ajudou, considere mandar um PR de melhoria — o objetivo é coletivo.
+## Uma palavra antes de você publicar
 
-> Mas portfólio sem cara é portfólio igual. Aproveite a base técnica, **gaste tempo na sua identidade visual e na sua copy**. Autenticidade é o que separa um portfólio "mais um" de um portfólio que marca. Use soluções prontas sem culpa — e use bem.
+Rubrica não é produto de empresa. É infraestrutura de comunidade. Quanto mais gente usa, melhora e distribui, mais sobe o nível médio de como profissionais se apresentam na web.
 
----
+Mas portfólio sem cara é portfólio igual. Use a base sem culpa — e use bem. Gaste o tempo que economizou na sua identidade visual e na sua copy. É ali que mora a diferença entre "mais um" e um portfólio que marca.
 
-## 📜 Licença
+Se o Rubrica te ajudou, considere mandar um PR. O objetivo é coletivo.
 
-GNU GPL v3.0 — veja o arquivo `LICENSE`.
+<br />
 
-## 👤 Autor
+## Licença
 
-Feito com ❤️ por **Matheus Mierzwa**.
+GNU GPL v3.0 — veja [`LICENSE`](./LICENSE).
+
+<br />
+
+<div align="center">
+
+Feito com ❤️ por **[Matheus Mierzwa](https://github.com/MierzwaMatheus)**
+
+_Assine com a sua cara._
+
+</div>
