@@ -1,0 +1,458 @@
+# Rubrica — Tasks
+
+> Ordenadas por dependência. Seções marcadas com **"Integração:"** são pontos de conexão entre subsistemas — devem ser revisadas sempre que os dois lados estiverem prontos.
+>
+> **Metodologia:** TDD em toda a CLI e nas novas funções Convex. Tasks de teste precedem tasks de implementação em cada módulo.
+
+---
+
+## Fase 1 — Desacoplamento de Dados Pessoais
+
+### 1.1 rubrica.config.ts — closes #6
+
+- [ ] Criar interface `RubricalConfig` com todos os campos tipados (identidade, SEO, RSS, aparência)
+- [ ] Criar `rubrica.config.ts` na raiz exportando `rubricalConfig` com valores de exemplo neutros
+- [ ] Garantir que `siteName`, `authorName`, `authorEmail` têm valor vazio ou de exemplo sem dados pessoais
+- [ ] Garantir que `siteUrl` aponta para `https://exemplo.com` (nunca para domínio pessoal)
+- [ ] Verificar que `tsc --noEmit` passa sem erros após criação do arquivo
+
+---
+
+### 1.2 siteConfig Convex — closes #7
+
+- [ ] **[TESTE]** Escrever teste: `getPublic` retorna apenas chaves sem prefixo interno sem autenticação
+- [ ] **[TESTE]** Escrever teste: `getByKey` com chave interna (`og_image_storage_id`) requer autenticação
+- [ ] **[TESTE]** Escrever teste: `set` com usuário sem role root/admin retorna erro de autorização
+- [ ] **[TESTE]** Escrever teste: `setBatch` com array de `{key, value}` faz upsert idempotente
+- [ ] **[TESTE]** Escrever teste: `setBatch` chamado duas vezes com os mesmos dados não duplica registros
+- [ ] Adicionar tabela `siteConfig` em `convex/schema.ts` com campos: `key`, `value`, `createdAt`, `updatedAt`
+- [ ] Adicionar índice `by_key` em `siteConfig`
+- [ ] Criar `convex/siteConfig.ts` com função `getPublic` — query sem auth, retorna chaves públicas
+- [ ] Criar função `getByKey` — query com verificação de auth para chaves internas
+- [ ] Criar função `getAll` — query restrita a roles root/admin
+- [ ] Criar função `set` — mutation com verificação root/admin, atualiza `updatedAt`, registra em auditLog
+- [ ] Criar função `setBatch` — mutation upsert em lote, usada pelo seed
+- [ ] Definir lista de chaves públicas e internas como constante tipada
+- [ ] Verificar que `npx convex dev` aplica o schema sem erros
+
+---
+
+### 1.3 seed.ts — closes #12
+
+- [ ] **[TESTE]** Escrever teste: `seedSiteConfig` com banco vazio insere todas as chaves de `rubricalConfig`
+- [ ] **[TESTE]** Escrever teste: `seedSiteConfig` com banco já populado não duplica nem sobrescreve registros (idempotente)
+- [ ] **[TESTE]** Escrever teste: chave `site_title` recebe valor de `rubricalConfig.siteName`
+- [ ] **[TESTE]** Escrever teste: chave `rss_title` recebe valor de `rubricalConfig.rssTitle`
+- [ ] **[TESTE]** Escrever teste: chave `theme_accent_color` recebe valor de `rubricalConfig.accentColor`
+- [ ] Criar `convex/seed.ts` com `seedSiteConfig` como `internalMutation`
+- [ ] Implementar leitura de todos os campos de `rubricalConfig` e mapeamento para chaves do `siteConfig`
+- [ ] Implementar verificação de banco vazio antes de inserir (guard idempotente)
+- [ ] Usar `setBatch` internamente para inserção em lote
+- [ ] Registrar chamada ao seed via mecanismo de inicialização do Convex (cron ou init function)
+
+---
+
+### 1.4 useSiteConfig() hook — closes #13
+
+- [ ] Criar `src/hooks/useSiteConfig.ts` com hook que usa `useQuery` do Convex apontando para `siteConfig.getPublic`
+- [ ] Implementar merge: valores do Convex sobrescrevem `rubricalConfig` quando disponíveis
+- [ ] Retornar objeto com todas as chaves públicas estritamente tipadas (sem `any`)
+- [ ] Retornar `isLoading: boolean` para que componentes possam mostrar fallback sem flash
+- [ ] Garantir que retorno é `rubricalConfig` integralmente enquanto Convex está carregando
+- [ ] Exportar tipo `SiteConfig` inferido do retorno do hook
+
+---
+
+### 1.5 SEO.tsx — closes #16
+
+- [ ] Identificar todos os valores hardcoded em `src/components/SEO.tsx` (siteTitle, defaultDescription, defaultImage, siteUrl, og:site_name, og:locale, twitter:creator, lógica de fullTitle)
+- [ ] Substituir `siteTitle` por `useSiteConfig().site_title`
+- [ ] Substituir `defaultDescription` por `useSiteConfig().site_description`
+- [ ] Substituir URL da OG image por `useSiteConfig().og_image_url`
+- [ ] Substituir `siteUrl` por `useSiteConfig().site_url`
+- [ ] Substituir `og:site_name` por `useSiteConfig().site_name`
+- [ ] Substituir `og:locale` por `useSiteConfig().lang`
+- [ ] Substituir `twitter:creator` por `useSiteConfig().twitter_handle` (com `@` prefixado se necessário)
+- [ ] Reescrever lógica de `fullTitle` sem nome pessoal embutido — usar `site_title` como sufixo
+- [ ] Garantir que projeto sem `rubrica.config.ts` preenchido renderiza placeholders neutros sem crash
+- [ ] Verificar que `tsc --noEmit` passa sem erros
+
+---
+
+### 1.6 Sidebar.tsx — closes #17
+
+- [ ] Localizar as 2 ocorrências do fallback `"Matheus Mierzwa"` em `src/components/Sidebar.tsx`
+- [ ] Substituir fallback de nome no `img alt` por `contactInfo.name || ""`
+- [ ] Substituir fallback de nome no `h1` por `contactInfo.name || ""`
+- [ ] Substituir fallback de role `"Front-End Developer"` por `contactInfo.role || ""`
+- [ ] Substituir fallback de avatar URL pessoal por `""` — renderizar placeholder com inicial do nome
+- [ ] Implementar componente de avatar placeholder: quando sem imagem, exibir inicial de `contactInfo.name` ou ícone genérico
+- [ ] Garantir que Sidebar funciona normalmente quando `contactInfo` tem dados completos
+- [ ] Garantir que Sidebar não crasha com `contactInfo` vazio ou `undefined`
+
+---
+
+### 1.7 cvPDF.ts — closes #18
+
+- [ ] Localizar o fallback `"MATHEUS MIERZWA"` em `src/utils/cvPDF.ts`
+- [ ] Substituir fallback por `(contactInfo.name || "").toUpperCase()`
+- [ ] Garantir que PDF gerado com `contactInfo.name` vazio não exibe nome pessoal
+- [ ] Verificar que geração de PDF funciona normalmente quando `contactInfo.name` tem valor
+
+---
+
+### 1.8 index.html — closes #14
+
+- [ ] Substituir `<title>` pessoal por `"Rubrica Portfolio"`
+- [ ] Substituir `<meta name="description">` por descrição genérica de template
+- [ ] Remover ou esvaziar `<link rel="canonical">` (será injetado pela CLI)
+- [ ] Substituir `og:title` pelo título genérico
+- [ ] Substituir `og:url` — remover domínio pessoal
+- [ ] Substituir `og:image` — remover URL de imagem pessoal
+- [ ] Substituir `og:site_name` por `"Rubrica Portfolio"`
+- [ ] Substituir `twitter:creator` — remover handle pessoal (`@matheusmierzwa`)
+- [ ] Substituir `twitter:url`, `twitter:title`, `twitter:image` por valores neutros
+- [ ] Substituir `<meta name="theme-color">` por cor neutra (ex: `#6366f1`)
+- [ ] Substituir `<meta name="author">` por `"Portfolio Author"` ou esvaziar
+- [ ] Substituir `<meta name="keywords">` por keywords genéricas de template
+- [ ] Substituir título do `<link rel="alternate" rss>` por `"Portfolio RSS Feed"`
+- [ ] Verificar que build (`pnpm build`) conclui sem erros após as alterações
+
+---
+
+### 1.9 Scripts rss + sitemap — closes #15
+
+- [ ] Importar `rubricalConfig` de `rubrica.config.ts` em `scripts/generate-rss-feed.ts`
+- [ ] Substituir `RSS_CONFIG.siteTitle` hardcoded por `rubricalConfig.rssTitle`
+- [ ] Substituir `RSS_CONFIG.siteDescription` por `rubricalConfig.rssDescription`
+- [ ] Substituir `RSS_CONFIG.authorName` por `rubricalConfig.authorName`
+- [ ] Substituir `RSS_CONFIG.authorEmail` por `rubricalConfig.authorEmail`
+- [ ] Substituir `RSS_CONFIG.copyright` por copyright derivado de `rubricalConfig.authorName`
+- [ ] Substituir fallback de `SITE_URL` hardcoded por `rubricalConfig.siteUrl`
+- [ ] Importar `rubricalConfig` em `scripts/generate-sitemap.ts`
+- [ ] Substituir fallback de `SITE_URL` em sitemap por `rubricalConfig.siteUrl`
+- [ ] Executar `pnpm generate-rss` (ou equivalente) e verificar que `public/rss.xml` gerado usa valores do config
+- [ ] Executar `pnpm generate-sitemap` e verificar que `public/sitemap.xml` não contém domínio pessoal
+
+---
+
+### 1.10 Home.tsx — closes #19
+
+- [ ] Localizar valores de SEO hardcoded em `src/pages/Home.tsx` (title e description)
+- [ ] Substituir SEO `title` por `useSiteConfig().seo_home_title` com fallback para `rubricalConfig.seoHomeTitle`
+- [ ] Substituir SEO `description` por `useSiteConfig().seo_home_description` com fallback para `rubricalConfig.seoHomeDescription`
+- [ ] Garantir que `Home.tsx` não crasha com config vazio
+- [ ] Verificar que `tsc --noEmit` passa sem erros
+
+---
+
+### 1.11 Admin /site-config — closes #20
+
+- [ ] Criar rota `/admin/site-config` no roteador da aplicação
+- [ ] Proteger rota com verificação de roles root/admin (redirecionar se não autorizado)
+- [ ] Criar `src/pages/admin/SiteConfig.tsx` com layout de duas seções: Aparência e SEO & Identidade
+- [ ] **Seção Aparência — Cor de destaque:** color picker + input hex com validação de formato
+- [ ] **Seção Aparência — Cor de destaque:** preview em tempo real das cores derivadas (usar `hexToHsl` quando implementado na CLI, ou versão inline)
+- [ ] **Seção Aparência — Fonte principal:** select com opções curadas (Inter, Chakra Petch, Playfair Display, Space Grotesk, DM Sans)
+- [ ] **Seção Aparência — Fonte mono:** select (JetBrains Mono, Fira Code, Space Mono, IBM Plex Mono)
+- [ ] **Seção Aparência — Border radius:** select com 5 opções (Nenhum / Suave / Médio / Arredondado / Pill)
+- [ ] **Seção SEO — Título padrão:** campo de texto ligado à chave `site_title`
+- [ ] **Seção SEO — Descrição padrão:** textarea ligado à chave `site_description`
+- [ ] **Seção SEO — OG Image:** upload via Convex Storage, salva `og_image_storage_id` e gera `og_image_url`
+- [ ] **Seção SEO — Twitter handle:** campo sem `@`, ligado a `twitter_handle`
+- [ ] **Seção SEO — Keywords:** input multi-valor, ligado a `keywords`
+- [ ] **Seção SEO — Home title/description:** campos ligados a `seo_home_title` e `seo_home_description`
+- [ ] Implementar salvamento via `siteConfig.setBatch` ao submeter cada seção
+- [ ] Exibir toast de sucesso/erro após salvar
+- [ ] Garantir que alterações refletem no site sem rebuild (Convex real-time)
+
+---
+
+### 1.12 Admin sidebar item — closes #21
+
+- [ ] Localizar a sidebar do painel admin no codebase
+- [ ] Adicionar item "Site & Aparência" com ícone adequado
+- [ ] Apontar item para rota `/admin/site-config`
+- [ ] Posicionar item no grupo correto (junto com Plugins e LGPD)
+- [ ] Verificar que item só aparece para roles root/admin
+
+---
+
+## Fase 2 — CLI create/config
+
+### 2.1 Setup do pacote CLI — closes #8
+
+- [ ] Criar diretório `cli/` na raiz do projeto
+- [ ] Criar `cli/package.json` com nome `create-rubrica`, bin `rubrica`, scripts `build` e `test`
+- [ ] Criar `cli/tsconfig.json` configurado para ESM, target ES2022, Node
+- [ ] Adicionar dependências: `@clack/prompts`, `tsup` (dev), `vitest` (dev), `memfs` (dev), `msw` (dev)
+- [ ] Criar estrutura de diretórios: `src/commands/`, `src/prompts/`, `src/transforms/`, `src/state/`, `src/utils/`, `src/__tests__/`
+- [ ] Configurar `tsup.config.ts` para output ESM com shebang no entry point
+- [ ] Verificar que `pnpm install` dentro de `cli/` instala sem erros
+- [ ] Verificar que `pnpm build` dentro de `cli/` compila sem erros
+- [ ] Verificar que `pnpm test` dentro de `cli/` roda (sem falhas — ainda sem testes)
+
+---
+
+### 2.2 utils/ com TDD — closes #24
+
+#### hexToHsl.ts
+
+- [ ] **[TESTE]** Escrever teste: `hexToHsl("#ff0000")` retorna `{h: 0, s: 100, l: 50}`
+- [ ] **[TESTE]** Escrever teste: `hexToHsl("#000000")` retorna `{h: 0, s: 0, l: 0}`
+- [ ] **[TESTE]** Escrever teste: `hexToHsl("#ffffff")` retorna `{h: 0, s: 0, l: 100}`
+- [ ] **[TESTE]** Escrever teste: `hexToHsl("#0065fe")` retorna valores HSL corretos
+- [ ] **[TESTE]** Escrever teste: `hexToHsl("invalid")` lança erro com mensagem descritiva
+- [ ] **[TESTE]** Escrever teste: `hexToHsl("#gggggg")` lança erro com mensagem descritiva
+- [ ] **[TESTE]** Escrever teste: `hexToHsl` aceita hex com e sem `#` inicial
+- [ ] Implementar `cli/src/utils/hexToHsl.ts`
+- [ ] Verificar 100% de cobertura de branches
+
+#### detectProject.ts
+
+- [ ] **[TESTE]** Escrever teste: `detectProject` encontra `rubrica.json` no diretório atual (mock com `memfs`)
+- [ ] **[TESTE]** Escrever teste: `detectProject` encontra `rubrica.json` dois níveis acima (mock com `memfs`)
+- [ ] **[TESTE]** Escrever teste: `detectProject` lança erro amigável quando não encontra `rubrica.json` em nenhum ancestral
+- [ ] **[TESTE]** Escrever teste: `detectProject` retorna o caminho absoluto para `rubrica.json`
+- [ ] Implementar `cli/src/utils/detectProject.ts`
+- [ ] Verificar 100% de cobertura de branches
+
+---
+
+### 2.3 state/ com TDD — closes #23
+
+#### readState.ts
+
+- [ ] **[TESTE]** Escrever teste: `readState` lê `rubrica.json` existente e retorna objeto tipado (mock com `memfs`)
+- [ ] **[TESTE]** Escrever teste: `readState` cria `rubrica.json` com defaults quando arquivo não existe
+- [ ] **[TESTE]** Escrever teste: `readState` lança erro descritivo quando campo obrigatório `version` está ausente
+- [ ] **[TESTE]** Escrever teste: `readState` lança erro descritivo quando campo obrigatório `layout` está ausente
+- [ ] **[TESTE]** Escrever teste: `readState` preserva campos desconhecidos no objeto retornado (forward-compat)
+- [ ] Implementar `cli/src/state/readState.ts`
+- [ ] Verificar 100% de cobertura de branches
+
+#### writeState.ts
+
+- [ ] **[TESTE]** Escrever teste: `writeState` persiste todas as propriedades em `rubrica.json` com formatação JSON de 2 espaços
+- [ ] **[TESTE]** Escrever teste: `writeState` merge parcial — atualizar só `version` preserva `layout`, `theme` e `plugins`
+- [ ] **[TESTE]** Escrever teste: `writeState` sobrescreve o arquivo se já existir
+- [ ] Implementar `cli/src/state/writeState.ts`
+- [ ] Verificar 100% de cobertura de branches
+
+---
+
+### 2.4 transforms/ com TDD — closes #22
+
+#### applyRubricalConfig.ts
+
+- [ ] **[TESTE]** Escrever teste: gera `rubrica.config.ts` com todos os campos do input
+- [ ] **[TESTE]** Escrever teste: campo `twitterHandle` é incluído corretamente (sem `@`)
+- [ ] **[TESTE]** Escrever teste: arquivo gerado é TypeScript válido (verificação de sintaxe básica)
+- [ ] **[TESTE]** Escrever teste: re-executar com mesmos valores produz arquivo idêntico (idempotência)
+- [ ] Implementar `cli/src/transforms/applyRubricalConfig.ts`
+- [ ] Verificar 100% de cobertura de branches
+
+#### applyTheme.ts
+
+- [ ] **[TESTE]** Escrever teste: injeta bloco `:root` com variáveis do tema preset em `src/index.css`
+- [ ] **[TESTE]** Escrever teste: injeta bloco `.dark` com variáveis do tema preset
+- [ ] **[TESTE]** Escrever teste: substitui bloco existente sem duplicar (idempotência)
+- [ ] **[TESTE]** Escrever teste: tema custom com `accentColor` gera `--primary` correto
+- [ ] **[TESTE]** Escrever teste: preset inexistente lança erro descritivo
+- [ ] Implementar `cli/src/transforms/applyTheme.ts`
+- [ ] Verificar 100% de cobertura de branches
+
+#### applyLayout.ts
+
+- [ ] **[TESTE]** Escrever teste: layout `sidebar` copia `Layout.tsx` e `Sidebar.tsx` para `src/components/`
+- [ ] **[TESTE]** Escrever teste: layout `topbar` copia `Layout.tsx` e `Navbar.tsx`, não copia `Sidebar.tsx`
+- [ ] **[TESTE]** Escrever teste: layout `centered` copia `Layout.tsx` e `Footer.tsx`, não copia `Sidebar.tsx` nem `Navbar.tsx`
+- [ ] **[TESTE]** Escrever teste: layout inexistente lança erro descritivo
+- [ ] Implementar `cli/src/transforms/applyLayout.ts`
+- [ ] Verificar 100% de cobertura de branches
+
+#### applyFont.ts
+
+- [ ] **[TESTE]** Escrever teste: atualiza `--font-sans` em `src/index.css`
+- [ ] **[TESTE]** Escrever teste: atualiza `--font-mono` em `src/index.css`
+- [ ] **[TESTE]** Escrever teste: atualiza `--radius` em `src/index.css`
+- [ ] **[TESTE]** Escrever teste: substitui `<link>` do Google Fonts em `index.html` pela fonte correta
+- [ ] **[TESTE]** Escrever teste: re-executar com mesma fonte não duplica o `<link>` (idempotência)
+- [ ] Implementar `cli/src/transforms/applyFont.ts`
+- [ ] Verificar 100% de cobertura de branches
+
+#### applyPlugins.ts
+
+- [ ] **[TESTE]** Escrever teste: plugins marcados como `true` têm `defaultEnabled: true` em `convex/pluginRegistry.ts`
+- [ ] **[TESTE]** Escrever teste: plugins marcados como `false` têm `defaultEnabled: false`
+- [ ] **[TESTE]** Escrever teste: plugin com id inexistente lança erro descritivo com o id
+- [ ] **[TESTE]** Escrever teste: re-executar com mesmos valores não altera o arquivo (idempotência)
+- [ ] Implementar `cli/src/transforms/applyPlugins.ts`
+- [ ] Verificar 100% de cobertura de branches
+
+#### applyIndexHtml.ts
+
+- [ ] **[TESTE]** Escrever teste: substitui `<link>` do Google Fonts pelo link da fonte escolhida
+- [ ] **[TESTE]** Escrever teste: atualiza `<meta name="theme-color">` com a cor do tema
+- [ ] **[TESTE]** Escrever teste: substitui `og:title` pelo `siteName` fornecido
+- [ ] **[TESTE]** Escrever teste: substitui `og:url` pelo `siteUrl` fornecido
+- [ ] **[TESTE]** Escrever teste: substitui `twitter:creator` pelo `twitterHandle` fornecido
+- [ ] **[TESTE]** Escrever teste: substitui `<meta name="author">` pelo `authorName` fornecido
+- [ ] **[TESTE]** Escrever teste: re-executar com mesmos valores produz output idêntico (idempotência)
+- [ ] Implementar `cli/src/transforms/applyIndexHtml.ts`
+- [ ] Verificar 100% de cobertura de branches
+
+---
+
+### 2.5 identityPrompt.ts — closes #25
+
+- [ ] Implementar `cli/src/prompts/identityPrompt.ts` usando `@clack/prompts`
+- [ ] Adicionar prompt de `siteName` (texto livre)
+- [ ] Adicionar prompt de `siteUrl` com validação: deve começar com `http://` ou `https://`
+- [ ] Adicionar prompt de `siteDescription` (texto livre)
+- [ ] Adicionar prompt de `authorName` (texto livre)
+- [ ] Adicionar prompt de `authorEmail` com validação de formato básico (contém `@` e `.`)
+- [ ] Adicionar prompt de `twitterHandle` (opcional — Enter para pular)
+- [ ] Adicionar prompt de `lang` como select: `pt-BR` / `en-US`
+- [ ] Suportar valores default opcionais em todos os campos (usado pelo `config`)
+- [ ] Retornar objeto tipado com todos os campos coletados
+
+---
+
+### 2.6 Layouts topbar/ e centered/ — closes #9
+
+- [ ] Criar `templates/layouts/topbar/Layout.tsx` — `flex-col`, Navbar fixa no topo (`h-16`), `main` com `pt-16`
+- [ ] Criar `templates/layouts/topbar/Navbar.tsx` — logo/nome à esquerda, links de nav filtrados por `usePlugins` à direita
+- [ ] Implementar mobile responsivo na Navbar: hamburger Sheet colapsando os links de navegação
+- [ ] Implementar dropdown de perfil (canto direito) com CV download e seletor de idioma
+- [ ] Criar `templates/layouts/centered/Layout.tsx` — sem nav persistente, `main` com `max-w-3xl mx-auto`
+- [ ] Criar `templates/layouts/centered/Footer.tsx` — links de navegação filtrados por `usePlugins`
+- [ ] Garantir que ambos os layouts não contêm dados pessoais hardcoded
+- [ ] Testar manualmente: copiar cada layout para `src/components/` e verificar renderização no browser
+
+---
+
+### 2.7 Temas CSS — closes #10
+
+- [ ] Ler `src/index.css` (ou tema cyberpunk existente) para identificar todas as variáveis CSS necessárias
+- [ ] Criar `templates/themes/minimal.css` — paleta neutra, azul, fundo branco/cinza claro no light e cinza escuro no dark
+- [ ] Criar `templates/themes/editorial.css` — creme, âmbar, tipografia serifada, tons quentes
+- [ ] Criar `templates/themes/forest.css` — verde musgo, off-white, tons terrosos
+- [ ] Garantir que cada arquivo define blocos `:root` (light) e `.dark` com todas as variáveis do tema cyberpunk
+- [ ] Verificar: aplicar cada tema manualmente substituindo o bloco em `src/index.css` e conferir visual no browser
+
+---
+
+### 2.8 Comando create — closes #26
+
+- [ ] Criar `cli/src/commands/create.ts` com estrutura do comando
+- [ ] Implementar prompt de nome do projeto com validação (sem espaços, sem caracteres especiais)
+- [ ] Encadear `identityPrompt` para coleta de identidade
+- [ ] Implementar prompt de layout como select (sidebar / topbar / centered)
+- [ ] Implementar prompt de tema como select (cyberpunk / minimal / editorial / forest / personalizado)
+- [ ] Implementar prompt de cor custom quando "personalizado" selecionado (com validação hex)
+- [ ] Implementar prompt de fonte principal como select com lista curada + opção "Outra..."
+- [ ] Implementar prompt de fonte mono como select
+- [ ] Implementar prompt de border radius como select (Nenhum / Suave / Médio / Arredondado / Pill)
+- [ ] Implementar prompt de plugins como multi-select com defaults conforme PRD
+- [ ] Implementar prompt de git init (Sim/Não)
+- [ ] Implementar prompt de gerenciador de pacotes (pnpm / npm / Não agora)
+- [ ] Chamar `download.ts` para baixar tarball da última release
+- [ ] Extrair tarball em `<nome-do-projeto>/`
+- [ ] Remover diretórios `templates/` e `cli/` do projeto extraído
+- [ ] Chamar `applyLayout` com o layout escolhido
+- [ ] Chamar `applyTheme` com o tema/cor escolhido
+- [ ] Chamar `applyFont` com as fontes e radius escolhidos
+- [ ] Chamar `applyPlugins` com os plugins selecionados
+- [ ] Chamar `applyIndexHtml` com os dados de identidade e aparência
+- [ ] Chamar `applyRubricalConfig` para gerar `rubrica.config.ts`
+- [ ] Chamar `writeState` para criar `rubrica.json`
+- [ ] Atualizar `name` em `package.json` do projeto gerado
+- [ ] Executar `git init` + commit inicial quando solicitado
+- [ ] Executar instalação de dependências (pnpm/npm) quando solicitado
+- [ ] Exibir mensagem de next steps ao final (conforme PRD seção 6.3)
+- [ ] Testar manualmente: `node dist/index.js create test-project` cria projeto válido
+
+---
+
+### 2.9 Comando config — closes #27
+
+- [ ] Criar `cli/src/commands/config.ts`
+- [ ] Chamar `detectProject` para garantir que está dentro de um projeto Rubrica
+- [ ] Ler estado atual via `readState` e `rubricalConfig` do projeto alvo
+- [ ] Implementar prompt multi-select: "O que deseja reconfigurar?" (Identidade / Aparência / Layout / Plugins)
+- [ ] Quando **Identidade** selecionada: encadear `identityPrompt` com valores atuais como defaults, chamar `applyRubricalConfig`
+- [ ] Quando **Aparência** selecionada: prompts de tema, cor, fonte, radius com valores atuais como defaults, chamar `applyTheme` + `applyFont` + `applyIndexHtml`
+- [ ] Quando **Layout** selecionado: exibir aviso de perda de customizações manuais, pedir confirmação, chamar `applyLayout`
+- [ ] Quando **Plugins** selecionado: multi-select com estado atual como defaults, chamar `applyPlugins`
+- [ ] Atualizar `rubrica.json` e `rubrica.config.ts` ao final com os novos valores
+- [ ] Exibir erro amigável se executado fora de um projeto Rubrica
+
+---
+
+### 2.10 Testes e2e + publicação npm — closes #28
+
+- [ ] **[TESTE E2E]** Escrever teste: `create` gera projeto em tmpdir com layout `sidebar` e verifica existência dos arquivos corretos
+- [ ] **[TESTE E2E]** Escrever teste: `create` com layout `topbar` não inclui `Sidebar.tsx` em `src/components/`
+- [ ] **[TESTE E2E]** Escrever teste: `create` com layout `centered` não inclui `Navbar.tsx` em `src/components/`
+- [ ] **[TESTE E2E]** Escrever teste: `create` gera `rubrica.config.ts` com todos os campos dos prompts
+- [ ] **[TESTE E2E]** Escrever teste: `create` gera `rubrica.json` com `version`, `layout`, `theme` e `plugins` corretos
+- [ ] **[TESTE E2E]** Escrever teste: `config` com opção Aparência atualiza `rubrica.json` e não toca em `rubrica.config.ts`
+- [ ] **[TESTE E2E]** Escrever teste: `config` com opção Identidade atualiza `rubrica.config.ts` e não toca no tema
+- [ ] Configurar `.npmignore` excluindo `src/`, testes e arquivos de dev
+- [ ] Escrever `README.md` do pacote CLI com: instalação, `pnpm create rubrica`, `rubrica config`, `rubrica update`
+- [ ] Verificar que `npx create-rubrica test-project` funciona via npx sem instalação prévia
+- [ ] Publicar `create-rubrica` no npm (ou marcar como pronto para publish)
+
+---
+
+## Fase 3 — CLI update
+
+### 3.1 download.ts — closes #11
+
+- [ ] **[TESTE]** Escrever teste: `getLatestVersion` retorna string semver a partir de mock da GitHub API (com `msw`)
+- [ ] **[TESTE]** Escrever teste: `getLatestVersion` lança erro amigável quando GitHub API retorna 404
+- [ ] **[TESTE]** Escrever teste: `getLatestVersion` lança erro amigável quando há erro de rede
+- [ ] **[TESTE]** Escrever teste: `downloadRelease` baixa e extrai tarball para diretório alvo (mock com `msw` + tmpdir)
+- [ ] **[TESTE]** Escrever teste: `downloadRelease` lança erro descritivo quando release não tem tarball
+- [ ] Implementar `cli/src/utils/download.ts` com funções `getLatestVersion()` e `downloadRelease(targetDir)`
+- [ ] Verificar 100% de cobertura de branches
+
+---
+
+### 3.2 update.ts — closes #29
+
+- [ ] **[TESTE]** Escrever teste: quando versão local igual à remota, nenhum arquivo é modificado
+- [ ] **[TESTE]** Escrever teste: território do usuário (`rubrica.config.ts`, `rubrica.json`, `.env`) nunca é sobrescrito diretamente
+- [ ] **[TESTE]** Escrever teste: após update, `rubrica.config.ts` é re-aplicado via `applyRubricalConfig`
+- [ ] **[TESTE]** Escrever teste: após update, layout é re-aplicado via `applyLayout`
+- [ ] **[TESTE]** Escrever teste: update de versão major exige confirmação explícita
+- [ ] **[TESTE]** Escrever teste: update de versão major cancelado não altera nenhum arquivo
+- [ ] Criar `cli/src/commands/update.ts`
+- [ ] Chamar `detectProject` para verificar que está em projeto Rubrica
+- [ ] Ler versão atual de `rubrica.json` via `readState`
+- [ ] Chamar `getLatestVersion` para obter versão remota
+- [ ] Comparar versões com semver: encerrar com mensagem se iguais
+- [ ] Exibir changelog entre as versões (se disponível na release)
+- [ ] Pedir confirmação antes de prosseguir
+- [ ] Para versão major: exibir aviso de mudanças destrutivas e link para guia de migração; exigir confirmação explícita
+- [ ] Baixar nova versão via `downloadRelease`
+- [ ] Sobrescrever território do Rubrica (lista completa do PRD seção 6.5)
+- [ ] Preservar território do usuário (nunca tocar diretamente)
+- [ ] Re-aplicar: `applyLayout` + `applyTheme` + `applyFont` + `applyPlugins` + `applyIndexHtml` + `applyRubricalConfig`
+- [ ] Atualizar `version` em `rubrica.json` via `writeState`
+- [ ] Executar `pnpm install` se `package.json` foi modificado
+
+---
+
+### 3.3 required-env.json — closes #30
+
+- [ ] **[TESTE]** Escrever teste: quando `required-env.json` da nova versão lista var `STRIPE_SECRET_KEY` e `.env` não a contém, a var aparece no output
+- [ ] **[TESTE]** Escrever teste: quando `.env` já contém a var requerida, ela não aparece no output
+- [ ] **[TESTE]** Escrever teste: quando `.env` não existe, todas as vars são listadas como faltantes
+- [ ] **[TESTE]** Escrever teste: quando `required-env.json` está vazio ou ausente, nenhuma mensagem é exibida
+- [ ] Implementar parsing de `required-env.json` após extração do tarball em `update.ts`
+- [ ] Implementar leitura de `.env` e `.env.local` do projeto alvo
+- [ ] Implementar diff: vars em `required-env.json` não presentes em `.env`/`.env.local`
+- [ ] Exibir lista de vars faltantes com nome, descrição e instrução de configuração no Convex Dashboard
+- [ ] Integrar chamada ao check de env vars no final do fluxo de `update.ts`
