@@ -1,6 +1,8 @@
 import { v } from "convex/values";
-import { query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { requireRole } from "./auth";
+import { logAudit } from "./audit";
 
 export const PUBLIC_KEYS = [
   "site_title",
@@ -51,5 +53,29 @@ export const getPublic = query({
   handler: async (ctx) => {
     const all = await ctx.db.query("siteConfig").collect();
     return all.filter((doc) => !isInternalKey(doc.key));
+  },
+});
+
+export const set = mutation({
+  args: { key: v.string(), value: v.any() },
+  handler: async (ctx, { key, value }) => {
+    const { userId } = await requireRole(ctx, ["root", "admin"]);
+    const existing = await ctx.db
+      .query("siteConfig")
+      .withIndex("by_key", (q) => q.eq("key", key))
+      .unique();
+    if (existing) {
+      await ctx.db.patch(existing._id, { value, updatedAt: Date.now() });
+    } else {
+      await ctx.db.insert("siteConfig", { key, value, createdAt: Date.now() });
+    }
+    await logAudit(ctx, {
+      eventType: "siteConfig.set",
+      actorType: "user",
+      actorId: userId,
+      targetType: "siteConfig",
+      metadata: { key },
+      success: true,
+    });
   },
 });

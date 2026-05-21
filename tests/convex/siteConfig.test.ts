@@ -21,7 +21,7 @@ vi.mock("@convex-dev/auth/providers/Password", () => ({
   Password: () => ({}),
 }));
 
-import { getPublic, getByKey } from "../../convex/siteConfig";
+import { getPublic, getByKey, set } from "../../convex/siteConfig";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
 const handler = (fn: any) => fn._handler ?? fn;
@@ -95,5 +95,41 @@ describe("convex/siteConfig · getByKey", () => {
     ]);
     const result = await handler(getByKey)(ctx, { key: "site_title" });
     expect(result?.value).toBe("Meu Site");
+  });
+});
+
+describe("convex/siteConfig · set", () => {
+  let ctx: MockCtx;
+  beforeEach(() => {
+    ctx = createMockCtx();
+    getAuthUserId.mockResolvedValue(null);
+  });
+
+  it("lança Forbidden para role content-editor", async () => {
+    asRole(ctx, "content-editor");
+    await expect(handler(set)(ctx, { key: "site_title", value: "X" }))
+      .rejects.toThrow(/[Ff]orbidden/);
+  });
+
+  it("lança Unauthorized sem autenticação", async () => {
+    getAuthUserId.mockResolvedValue(null);
+    await expect(handler(set)(ctx, { key: "site_title", value: "X" }))
+      .rejects.toThrow(/[Uu]nauthorized/);
+  });
+
+  it("cria chave quando não existe com role admin", async () => {
+    asRole(ctx, "admin");
+    await handler(set)(ctx, { key: "site_title", value: "Novo Título" });
+    const docs = ctx.db._all("siteConfig");
+    expect(docs.find((d) => d.key === "site_title")?.value).toBe("Novo Título");
+  });
+
+  it("atualiza chave existente sem duplicar com role root", async () => {
+    asRole(ctx, "root");
+    ctx.db._seed("siteConfig", [{ key: "site_title", value: "Antigo", createdAt: 1 }]);
+    await handler(set)(ctx, { key: "site_title", value: "Novo" });
+    const docs = ctx.db._all("siteConfig").filter((d) => d.key === "site_title");
+    expect(docs).toHaveLength(1);
+    expect(docs[0].value).toBe("Novo");
   });
 });
