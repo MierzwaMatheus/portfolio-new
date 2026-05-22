@@ -1,14 +1,10 @@
-import * as nodeFsPromises from "node:fs/promises";
-import * as https from "node:https";
-import * as tar from "node:stream";
+import { writeFile, mkdtemp, rm, mkdir } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { promisify } from "node:util";
 
-export interface FsModule {
-  readFile: (path: string, encoding: string) => Promise<string>;
-  writeFile: (path: string, data: string) => Promise<void>;
-  mkdir: (path: string, options: { recursive: boolean }) => Promise<void>;
-  exists: (path: string) => Promise<boolean>;
-}
-
+const execFileAsync = promisify(execFile);
 const GITHUB_REPO = "matheusmierzwa/rubrica";
 
 /**
@@ -42,27 +38,46 @@ export async function getLatestVersion(): Promise<string> {
 }
 
 /**
- * Stub: simula o download e extração do tarball criando a estrutura mínima
- * de diretórios esperada no targetDir.
- *
- * A implementação real (com fetch + tar extract) fica na task 3.1.
+ * Baixa e extrai o tarball da release indicada no diretório alvo.
+ * Usa tar do sistema operacional para extração.
  */
 export async function downloadRelease(
   targetDir: string,
-  fsModule: FsModule = nodeFsPromises as unknown as FsModule
+  version: string
 ): Promise<void> {
-  // Em produção: baixar tarball e extrair no targetDir.
-  // Por ora, cria a estrutura mínima para que os transforms possam rodar.
-  await fsModule.mkdir(targetDir, { recursive: true });
-  await fsModule.mkdir(`${targetDir}/src/components`, { recursive: true });
-  await fsModule.mkdir(`${targetDir}/src`, { recursive: true });
-  await fsModule.mkdir(`${targetDir}/templates/layouts/sidebar`, { recursive: true });
-  await fsModule.mkdir(`${targetDir}/templates/layouts/topbar`, { recursive: true });
-  await fsModule.mkdir(`${targetDir}/templates/layouts/centered`, { recursive: true });
-  await fsModule.mkdir(`${targetDir}/templates/themes`, { recursive: true });
-  await fsModule.mkdir(`${targetDir}/cli`, { recursive: true });
-  await fsModule.writeFile(`${targetDir}/src/index.css`, ":root {}\n.dark {}");
-  await fsModule.writeFile(`${targetDir}/index.html`, "<!DOCTYPE html><html></html>");
-  await fsModule.writeFile(`${targetDir}/package.json`, JSON.stringify({ name: "rubrica-template", version: "0.1.0" }, null, 2));
-  await fsModule.writeFile(`${targetDir}/convex/pluginRegistry.ts`, "// registry");
+  const tarballUrl = `https://api.github.com/repos/${GITHUB_REPO}/tarball/${version}`;
+
+  let response: Response;
+  try {
+    response = await fetch(tarballUrl, {
+      headers: { "User-Agent": "create-rubrica-cli" },
+      redirect: "follow",
+    });
+  } catch {
+    throw new Error(
+      "Erro de rede ao baixar o Rubrica. Verifique sua conexão e tente novamente."
+    );
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      `Não foi possível baixar o Rubrica (HTTP ${response.status}).`
+    );
+  }
+
+  if (!response.body) {
+    throw new Error("Release sem tarball encontrada. Tente novamente mais tarde.");
+  }
+
+  const tmpDir = await mkdtemp(join(tmpdir(), "rubrica-download-"));
+  const tmpFile = join(tmpDir, "rubrica.tar.gz");
+
+  try {
+    const buffer = await response.arrayBuffer();
+    await writeFile(tmpFile, Buffer.from(buffer));
+    await mkdir(targetDir, { recursive: true });
+    await execFileAsync("tar", ["-xzf", tmpFile, "--strip-components=1", "-C", targetDir]);
+  } finally {
+    await rm(tmpDir, { recursive: true, force: true });
+  }
 }

@@ -193,6 +193,7 @@ function makeRealDeps(
     projectsDir: "/projects",
     fs: makeFsModule(vol),
     download: makeDownloadMock(vol, opts.html, opts.registry) as RealDeps["download"],
+    getLatestVersion: vi.fn(async () => "v0.1.0"),
     applyLayout,
     applyTheme,
     applyFont,

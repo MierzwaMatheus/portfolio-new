@@ -1,7 +1,7 @@
 import { intro, outro, text, select, multiselect, confirm, isCancel, cancel } from "@clack/prompts";
 import * as nodeFsPromises from "node:fs/promises";
 import { identityPrompt as defaultIdentityPrompt } from "../prompts/identityPrompt.js";
-import { downloadRelease as defaultDownloadRelease } from "../utils/download.js";
+import { downloadRelease as defaultDownloadRelease, getLatestVersion as defaultGetLatestVersion } from "../utils/download.js";
 import { applyLayout as defaultApplyLayout } from "../transforms/applyLayout.js";
 import { applyTheme as defaultApplyTheme } from "../transforms/applyTheme.js";
 import { applyFont as defaultApplyFont } from "../transforms/applyFont.js";
@@ -43,6 +43,7 @@ export interface RunCreateDeps {
   projectsDir: string;
   fs?: FsModule;
   download?: typeof defaultDownloadRelease;
+  getLatestVersion?: typeof defaultGetLatestVersion;
   applyLayout?: typeof defaultApplyLayout;
   applyTheme?: typeof defaultApplyTheme;
   applyFont?: typeof defaultApplyFont;
@@ -87,6 +88,7 @@ export async function runCreate(
 
   const fs = deps.fs ?? (nodeFsPromises as unknown as FsModule);
   const download = deps.download ?? defaultDownloadRelease;
+  const getVersion = deps.getLatestVersion ?? defaultGetLatestVersion;
   const applyLayoutFn = deps.applyLayout ?? defaultApplyLayout;
   const applyThemeFn = deps.applyTheme ?? defaultApplyTheme;
   const applyFontFn = deps.applyFont ?? defaultApplyFont;
@@ -103,7 +105,8 @@ export async function runCreate(
   const projectDir = `${deps.projectsDir}/${projectName}`;
 
   // Ciclo 2: download
-  await download(projectDir, fs as Parameters<typeof defaultDownloadRelease>[1]);
+  const version = await getVersion();
+  await download(projectDir, version);
 
   // Ciclo 3: prompt e apply de layout (antes de remover templates/)
   const layout = await select({

@@ -157,6 +157,7 @@ function makeRealDeps(vol: InstanceType<typeof Volume>): RealDeps {
     projectsDir: "/projects",
     fs: makeFsModule(vol),
     download: makeE2eDownloadMock(vol) as RealDeps["download"],
+    getLatestVersion: vi.fn(async () => "v0.1.0"),
     applyLayout,
     applyTheme,
     applyFont,

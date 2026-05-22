@@ -78,7 +78,7 @@ function setupPrompts(opts: {
 
 /** Cria download mock que popula o volume */
 function makeDownloadMock(vol: InstanceType<typeof Volume>, extraDirs: string[] = []) {
-  return vi.fn(async (targetDir: string, _fsArg: unknown) => {
+  return vi.fn(async (targetDir: string, _version: string) => {
     const fs = makeFsModule(vol);
     await fs.mkdir(`${targetDir}/src`, { recursive: true });
     await fs.mkdir(`${targetDir}/templates`, { recursive: true });
@@ -117,6 +117,7 @@ function makeDefaultDeps(vol: InstanceType<typeof Volume>, extraDirs?: string[])
     projectsDir: "/projects",
     fs: makeFsModule(vol),
     download: makeDownloadMock(vol, extraDirs) as Deps["download"],
+    getLatestVersion: vi.fn(async () => "v0.1.0") as Deps["getLatestVersion"],
     applyLayout: mockApplyLayout as Deps["applyLayout"],
     applyTheme: mockApplyTheme as Deps["applyTheme"],
     applyFont: mockApplyFont as Deps["applyFont"],
