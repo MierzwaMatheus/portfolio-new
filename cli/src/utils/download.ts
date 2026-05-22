@@ -17,9 +17,16 @@ const GITHUB_REPO = "matheusmierzwa/rubrica";
  */
 export async function getLatestVersion(): Promise<string> {
   const url = `https://api.github.com/repos/${GITHUB_REPO}/releases/latest`;
-  const response = await fetch(url, {
-    headers: { "User-Agent": "create-rubrica-cli" },
-  });
+  let response: Response;
+  try {
+    response = await fetch(url, {
+      headers: { "User-Agent": "create-rubrica-cli" },
+    });
+  } catch {
+    throw new Error(
+      "Erro de rede ao consultar o GitHub. Verifique sua conexão e tente novamente."
+    );
+  }
   if (!response.ok) {
     throw new Error(
       `Não foi possível obter a versão mais recente do Rubrica (HTTP ${response.status}). Verifique sua conexão.`

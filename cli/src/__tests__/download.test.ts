@@ -32,4 +32,14 @@ describe("getLatestVersion", () => {
 
     await expect(getLatestVersion()).rejects.toThrow(/404/);
   });
+
+  it("lança erro amigável quando há erro de rede", async () => {
+    server.use(
+      http.get(`${GITHUB_API}/repos/matheusmierzwa/rubrica/releases/latest`, () =>
+        HttpResponse.error()
+      )
+    );
+
+    await expect(getLatestVersion()).rejects.toThrow(/conexão|rede|network/i);
+  });
 });
