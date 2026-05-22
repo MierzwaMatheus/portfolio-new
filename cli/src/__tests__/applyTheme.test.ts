@@ -79,6 +79,27 @@ describe("applyTheme", () => {
     expect(result).toContain("--primary: 0 100% 50%");
   });
 
+  it("preset minimal injeta fundo claro e azul primário no :root", async () => {
+    const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
+    const fs = makeFsModule(vol);
+
+    await applyTheme({ preset: "minimal" }, "/project/src/index.css", fs);
+
+    const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
+    expect(result).toContain("--background: 0 0% 98%");
+    expect(result).toContain("--primary: 220 90% 56%");
+  });
+
+  it("preset minimal injeta fundo escuro no bloco .dark", async () => {
+    const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
+    const fs = makeFsModule(vol);
+
+    await applyTheme({ preset: "minimal" }, "/project/src/index.css", fs);
+
+    const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
+    expect(result).toContain("--background: 220 14% 10%");
+  });
+
   it("preset inexistente lança erro descritivo", async () => {
     const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
     const fs = makeFsModule(vol);
