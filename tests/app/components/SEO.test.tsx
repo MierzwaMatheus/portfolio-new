@@ -47,6 +47,38 @@ beforeEach(() => {
 });
 
 describe("SEO", () => {
+  describe("Ciclo 8 — placeholder neutro sem crash", () => {
+    it("renderiza sem crash quando todos os campos de config são strings vazias", async () => {
+      const emptyConfig = {
+        ...defaultConfig,
+        site_title: "",
+        site_description: "",
+        site_url: "",
+        site_name: "",
+        og_image_url: "",
+        twitter_handle: "",
+        lang: "",
+        isLoading: false,
+      };
+      mockUseSiteConfig.mockReturnValue(emptyConfig);
+      expect(() => renderSEO({ title: "Página" })).not.toThrow();
+    });
+
+    it("renderiza sem crash durante carregamento (isLoading: true)", async () => {
+      mockUseSiteConfig.mockReturnValue({ ...defaultConfig, isLoading: true });
+      expect(() => renderSEO({ title: "Página" })).not.toThrow();
+    });
+
+    it("og:locale com lang vazio não gera erro", async () => {
+      mockUseSiteConfig.mockReturnValue({ ...defaultConfig, lang: "" });
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[property="og:locale"]');
+        expect(meta?.getAttribute("content")).toBe("");
+      });
+    });
+  });
+
   describe("Ciclo 7 — twitter:creator", () => {
     it("usa twitter_handle do useSiteConfig com @ prefixado", async () => {
       renderSEO({ title: "Página" });
