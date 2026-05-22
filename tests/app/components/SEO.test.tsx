@@ -47,6 +47,33 @@ beforeEach(() => {
 });
 
 describe("SEO", () => {
+  describe("Ciclo 7 — twitter:creator", () => {
+    it("usa twitter_handle do useSiteConfig com @ prefixado", async () => {
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[property="twitter:creator"]');
+        expect(meta?.getAttribute("content")).toBe("@usuario");
+      });
+    });
+
+    it("não contém handle pessoal hardcoded no twitter:creator", async () => {
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[property="twitter:creator"]');
+        expect(meta?.getAttribute("content")).not.toBe("@matheusmierzwa");
+      });
+    });
+
+    it("omite twitter:creator quando twitter_handle está vazio", async () => {
+      mockUseSiteConfig.mockReturnValue({ ...defaultConfig, twitter_handle: "" });
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[property="twitter:creator"]');
+        expect(meta?.getAttribute("content")).toBe("");
+      });
+    });
+  });
+
   describe("Ciclo 6 — og:locale", () => {
     it("usa lang do useSiteConfig convertido para formato og:locale (pt-BR → pt_BR)", async () => {
       renderSEO({ title: "Página" });

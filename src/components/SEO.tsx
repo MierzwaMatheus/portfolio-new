@@ -58,7 +58,7 @@ export function SEO({
       <meta property="twitter:title" content={fullTitle} />
       <meta property="twitter:description" content={metaDescription} />
       <meta property="twitter:image" content={metaImage} />
-      <meta property="twitter:creator" content="@matheusmierzwa" />
+      <meta property="twitter:creator" content={config.twitter_handle ? `@${config.twitter_handle}` : ""} />
     </Helmet>
   );
 }
