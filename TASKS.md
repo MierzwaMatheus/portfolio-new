@@ -291,13 +291,13 @@
 
 #### applyFont.ts
 
-- [ ] **[TESTE]** Escrever teste: atualiza `--font-sans` em `src/index.css`
-- [ ] **[TESTE]** Escrever teste: atualiza `--font-mono` em `src/index.css`
-- [ ] **[TESTE]** Escrever teste: atualiza `--radius` em `src/index.css`
-- [ ] **[TESTE]** Escrever teste: substitui `<link>` do Google Fonts em `index.html` pela fonte correta
-- [ ] **[TESTE]** Escrever teste: re-executar com mesma fonte não duplica o `<link>` (idempotência)
-- [ ] Implementar `cli/src/transforms/applyFont.ts`
-- [ ] Verificar 100% de cobertura de branches
+- [x] **[TESTE]** Escrever teste: atualiza `--font-sans` em `src/index.css`
+- [x] **[TESTE]** Escrever teste: atualiza `--font-mono` em `src/index.css`
+- [x] **[TESTE]** Escrever teste: atualiza `--radius` em `src/index.css`
+- [x] **[TESTE]** Escrever teste: substitui `<link>` do Google Fonts em `index.html` pela fonte correta
+- [x] **[TESTE]** Escrever teste: re-executar com mesma fonte não duplica o `<link>` (idempotência)
+- [x] Implementar `cli/src/transforms/applyFont.ts`
+- [x] Verificar 100% de cobertura de branches
 
 #### applyPlugins.ts
 
