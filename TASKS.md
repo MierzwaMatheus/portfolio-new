@@ -492,15 +492,15 @@
 
 ### 3.3 required-env.json — closes #30
 
-- [ ] **[TESTE]** Escrever teste: quando `required-env.json` da nova versão lista var `STRIPE_SECRET_KEY` e `.env` não a contém, a var aparece no output
-- [ ] **[TESTE]** Escrever teste: quando `.env` já contém a var requerida, ela não aparece no output
-- [ ] **[TESTE]** Escrever teste: quando `.env` não existe, todas as vars são listadas como faltantes
-- [ ] **[TESTE]** Escrever teste: quando `required-env.json` está vazio ou ausente, nenhuma mensagem é exibida
-- [ ] Implementar parsing de `required-env.json` após extração do tarball em `update.ts`
-- [ ] Implementar leitura de `.env` e `.env.local` do projeto alvo
-- [ ] Implementar diff: vars em `required-env.json` não presentes em `.env`/`.env.local`
-- [ ] Exibir lista de vars faltantes com nome, descrição e instrução de configuração no Convex Dashboard
-- [ ] Integrar chamada ao check de env vars no final do fluxo de `update.ts`
+- [x] **[TESTE]** Escrever teste: quando `required-env.json` da nova versão lista var `STRIPE_SECRET_KEY` e `.env` não a contém, a var aparece no output
+- [x] **[TESTE]** Escrever teste: quando `.env` já contém a var requerida, ela não aparece no output
+- [x] **[TESTE]** Escrever teste: quando `.env` não existe, todas as vars são listadas como faltantes
+- [x] **[TESTE]** Escrever teste: quando `required-env.json` está vazio ou ausente, nenhuma mensagem é exibida
+- [x] Implementar parsing de `required-env.json` após extração do tarball em `update.ts`
+- [x] Implementar leitura de `.env` e `.env.local` do projeto alvo
+- [x] Implementar diff: vars em `required-env.json` não presentes em `.env`/`.env.local`
+- [x] Exibir lista de vars faltantes com nome, descrição e instrução de configuração no Convex Dashboard
+- [x] Integrar chamada ao check de env vars no final do fluxo de `update.ts`
 
 ---
 

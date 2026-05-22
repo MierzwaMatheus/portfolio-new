@@ -12,6 +12,7 @@ import { applyPlugins as defaultApplyPlugins } from "../transforms/applyPlugins.
 import { applyIndexHtml as defaultApplyIndexHtml } from "../transforms/applyIndexHtml.js";
 import { applyRubricalConfig as defaultApplyRubricalConfig } from "../transforms/applyRubricalConfig.js";
 import type { RubricalConfigInput } from "../transforms/applyRubricalConfig.js";
+import { checkRequiredEnv as defaultCheckRequiredEnv } from "../utils/checkRequiredEnv.js";
 
 // ---- Tipos ------------------------------------------------------------------
 
@@ -37,6 +38,7 @@ export interface RunUpdateDeps {
   applyIndexHtml?: typeof defaultApplyIndexHtml;
   applyRubricalConfig?: typeof defaultApplyRubricalConfig;
   exec?: (command: string, cwd: string) => Promise<void>;
+  checkRequiredEnv?: typeof defaultCheckRequiredEnv;
 }
 
 // ---- Comparação semver ------------------------------------------------------
@@ -67,6 +69,7 @@ export async function runUpdate(deps: RunUpdateDeps = {}): Promise<void> {
   const applyPluginsFn = deps.applyPlugins ?? defaultApplyPlugins;
   const applyIndexHtmlFn = deps.applyIndexHtml ?? defaultApplyIndexHtml;
   const applyRubricalConfigFn = deps.applyRubricalConfig ?? defaultApplyRubricalConfig;
+  const checkRequiredEnvFn = deps.checkRequiredEnv ?? defaultCheckRequiredEnv;
   const execFn = deps.exec ?? (async (cmd: string, cwd: string) => {
     const { execSync } = await import("node:child_process");
     execSync(cmd, { cwd, stdio: "inherit" });
@@ -193,6 +196,18 @@ export async function runUpdate(deps: RunUpdateDeps = {}): Promise<void> {
 
   // Atualizar versão no rubrica.json
   await writeStateFn(projectDir, { version: remoteVersion }, fs as Parameters<typeof defaultWriteState>[2]);
+
+  // Verificar variáveis de ambiente faltantes
+  const missingVars = await checkRequiredEnvFn(projectDir, fs as Parameters<typeof defaultCheckRequiredEnv>[1]);
+  if (missingVars.length > 0) {
+    const varList = missingVars
+      .map((v) => `  • ${v.name} — ${v.description}`)
+      .join("\n");
+    log.warn(
+      `Variáveis de ambiente faltantes no Convex Dashboard:\n${varList}\n` +
+      `Configure-as em: https://dashboard.convex.dev`
+    );
+  }
 
   outro(`Rubrica atualizado para ${remoteVersion} com sucesso!`);
 }

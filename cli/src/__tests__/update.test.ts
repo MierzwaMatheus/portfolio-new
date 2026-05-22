@@ -39,7 +39,7 @@ vi.mock("@clack/prompts", () => ({
   log: { warn: vi.fn(), info: vi.fn() },
 }));
 
-import { confirm, cancel } from "@clack/prompts";
+import { confirm, cancel, log } from "@clack/prompts";
 
 // ---- Ciclo 1: versão local igual à remota → nenhum arquivo modificado ------
 
@@ -295,6 +295,103 @@ describe("runUpdate — atualização major exige confirmação", () => {
       /major/i.test(String((opts as { message: string }).message))
     );
     expect(hasMajorConfirm).toBe(true);
+  });
+});
+
+// ---- Ciclo 5 (integração): checkRequiredEnv integrado no update.ts ---------
+
+describe("runUpdate — exibe vars faltantes via checkRequiredEnv", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(confirm).mockResolvedValue(true);
+  });
+
+  it("exibe OPENROUTER_API_KEY no output quando faltante no .env após update", async () => {
+    const vol = Volume.fromJSON({
+      "/project/rubrica.json": JSON.stringify(BASE_STATE),
+    });
+    const fs = makeFsModule(vol);
+
+    const detectProjectMock = vi.fn().mockResolvedValue("/project/rubrica.json");
+    const readStateMock = vi.fn().mockResolvedValue(BASE_STATE);
+    const getLatestVersionMock = vi.fn().mockResolvedValue("1.1.0");
+    const downloadReleaseMock = vi.fn().mockResolvedValue(undefined);
+    const applyLayoutMock = vi.fn().mockResolvedValue(undefined);
+    const applyThemeMock = vi.fn().mockResolvedValue(undefined);
+    const applyFontMock = vi.fn().mockResolvedValue(undefined);
+    const applyPluginsMock = vi.fn().mockResolvedValue(undefined);
+    const applyIndexHtmlMock = vi.fn().mockResolvedValue(undefined);
+    const applyRubricalConfigMock = vi.fn().mockResolvedValue(undefined);
+    const writeStateMock = vi.fn().mockResolvedValue(undefined);
+    const checkRequiredEnvMock = vi.fn().mockResolvedValue([
+      { name: "OPENROUTER_API_KEY", description: "Chave OpenRouter" },
+    ]);
+
+    await runUpdate({
+      cwd: "/project",
+      fs,
+      detectProject: detectProjectMock,
+      readState: readStateMock,
+      getLatestVersion: getLatestVersionMock,
+      downloadRelease: downloadReleaseMock,
+      applyLayout: applyLayoutMock,
+      applyTheme: applyThemeMock,
+      applyFont: applyFontMock,
+      applyPlugins: applyPluginsMock,
+      applyIndexHtml: applyIndexHtmlMock,
+      applyRubricalConfig: applyRubricalConfigMock,
+      writeState: writeStateMock,
+      checkRequiredEnv: checkRequiredEnvMock,
+    });
+
+    const warnCalls = vi.mocked(log.warn).mock.calls;
+    const hasApiKey = warnCalls.some(([msg]) =>
+      typeof msg === "string" && msg.includes("OPENROUTER_API_KEY")
+    );
+    expect(hasApiKey).toBe(true);
+  });
+
+  it("não exibe aviso de vars faltantes quando required-env.json está vazio", async () => {
+    const vol = Volume.fromJSON({
+      "/project/rubrica.json": JSON.stringify(BASE_STATE),
+    });
+    const fs = makeFsModule(vol);
+
+    const detectProjectMock = vi.fn().mockResolvedValue("/project/rubrica.json");
+    const readStateMock = vi.fn().mockResolvedValue(BASE_STATE);
+    const getLatestVersionMock = vi.fn().mockResolvedValue("1.1.0");
+    const downloadReleaseMock = vi.fn().mockResolvedValue(undefined);
+    const applyLayoutMock = vi.fn().mockResolvedValue(undefined);
+    const applyThemeMock = vi.fn().mockResolvedValue(undefined);
+    const applyFontMock = vi.fn().mockResolvedValue(undefined);
+    const applyPluginsMock = vi.fn().mockResolvedValue(undefined);
+    const applyIndexHtmlMock = vi.fn().mockResolvedValue(undefined);
+    const applyRubricalConfigMock = vi.fn().mockResolvedValue(undefined);
+    const writeStateMock = vi.fn().mockResolvedValue(undefined);
+    const checkRequiredEnvMock = vi.fn().mockResolvedValue([]);
+
+    await runUpdate({
+      cwd: "/project",
+      fs,
+      detectProject: detectProjectMock,
+      readState: readStateMock,
+      getLatestVersion: getLatestVersionMock,
+      downloadRelease: downloadReleaseMock,
+      applyLayout: applyLayoutMock,
+      applyTheme: applyThemeMock,
+      applyFont: applyFontMock,
+      applyPlugins: applyPluginsMock,
+      applyIndexHtml: applyIndexHtmlMock,
+      applyRubricalConfig: applyRubricalConfigMock,
+      writeState: writeStateMock,
+      checkRequiredEnv: checkRequiredEnvMock,
+    });
+
+    const warnCalls = vi.mocked(log.warn).mock.calls;
+    const hasEnvWarning = warnCalls.some(([msg]) =>
+      typeof msg === "string" && msg.toLowerCase().includes("variáveis")
+    );
+    expect(hasEnvWarning).toBe(false);
   });
 });
 
