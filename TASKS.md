@@ -54,12 +54,12 @@
 
 ### 1.4 useSiteConfig() hook — closes #13
 
-- [ ] Criar `src/hooks/useSiteConfig.ts` com hook que usa `useQuery` do Convex apontando para `siteConfig.getPublic`
-- [ ] Implementar merge: valores do Convex sobrescrevem `rubricalConfig` quando disponíveis
-- [ ] Retornar objeto com todas as chaves públicas estritamente tipadas (sem `any`)
-- [ ] Retornar `isLoading: boolean` para que componentes possam mostrar fallback sem flash
-- [ ] Garantir que retorno é `rubricalConfig` integralmente enquanto Convex está carregando
-- [ ] Exportar tipo `SiteConfig` inferido do retorno do hook
+- [x] Criar `src/hooks/useSiteConfig.ts` com hook que usa `useQuery` do Convex apontando para `siteConfig.getPublic`
+- [x] Implementar merge: valores do Convex sobrescrevem `rubricalConfig` quando disponíveis
+- [x] Retornar objeto com todas as chaves públicas estritamente tipadas (sem `any`)
+- [x] Retornar `isLoading: boolean` para que componentes possam mostrar fallback sem flash
+- [x] Garantir que retorno é `rubricalConfig` integralmente enquanto Convex está carregando
+- [x] Exportar tipo `SiteConfig` inferido do retorno do hook
 
 ---
 
@@ -175,6 +175,20 @@
 - [ ] Apontar item para rota `/admin/site-config`
 - [ ] Posicionar item no grupo correto (junto com Plugins e LGPD)
 - [ ] Verificar que item só aparece para roles root/admin
+
+---
+
+### 1.13 Integração: siteConfig ↔ frontend — closes #12, #13, #16, #19
+
+> Ponto de conexão entre o backend Convex e os componentes React. Revisar após 1.2, 1.3, 1.4, 1.5 e 1.10 estarem prontos.
+
+- [ ] **[TESTE]** Escrever teste de integração: `seedSiteConfig` popula banco → `getPublic` retorna todas as chaves inseridas
+- [ ] **[TESTE]** Escrever teste de integração: `set` atualiza `site_title` → `getPublic` retorna novo valor na mesma query
+- [ ] **[TESTE]** Escrever teste de integração: `setBatch` com 5 chaves → `getAll` retorna exatamente 5 registros, sem duplicatas
+- [ ] **[TESTE]** Escrever teste de integração: `useSiteConfig()` retorna valor do Convex quando disponível e fallback de `rubricalConfig` quando `getPublic` retorna `undefined`
+- [ ] **[TESTE]** Escrever teste de integração: `SEO.tsx` renderiza `og:title` com valor do `siteConfig`, não com valor hardcoded
+- [ ] **[TESTE]** Escrever teste de integração: `Home.tsx` renderiza `<title>` com `seo_home_title` do `siteConfig`
+- [ ] Verificar manualmente: alterar `site_title` via admin `/admin/site-config` → título do browser atualiza sem reload
 
 ---
 
@@ -406,6 +420,31 @@
 
 ---
 
+### 2.11 Integração: transforms em cadeia — closes #22, #26
+
+> Ponto de conexão entre todos os transforms. Revisar após 2.2, 2.3, 2.4 e 2.8 estarem prontos.
+
+- [ ] **[TESTE]** Escrever teste de integração: `applyTheme` + `applyFont` aplicados em sequência no mesmo `src/index.css` — resultado final tem variáveis de ambos sem conflito
+- [ ] **[TESTE]** Escrever teste de integração: `applyLayout(topbar)` + `applyIndexHtml` — `Navbar.tsx` copiado e `index.html` com font link correto
+- [ ] **[TESTE]** Escrever teste de integração: `applyPlugins` desativa `blog` → `applyLayout` não inclui link de blog na navbar gerada
+- [ ] **[TESTE]** Escrever teste de integração: `applyRubricalConfig` + `writeState` — ambos os arquivos de estado gravados com os mesmos valores de identidade e aparência
+- [ ] **[TESTE]** Escrever teste de integração: re-executar todos os transforms em sequência com os mesmos inputs produz output idêntico ao da primeira execução (idempotência do pipeline completo)
+
+### 2.12 Integração: CLI → projeto gerado — closes #26, #28
+
+> Ponto de conexão entre o comando `create` e a validade do projeto gerado. Revisar após 2.8 estar pronto.
+
+- [ ] **[TESTE E2E]** Escrever teste: projeto gerado com layout `sidebar` passa em `tsc --noEmit` (sem erros de TypeScript)
+- [ ] **[TESTE E2E]** Escrever teste: projeto gerado com layout `topbar` passa em `tsc --noEmit`
+- [ ] **[TESTE E2E]** Escrever teste: projeto gerado com layout `centered` passa em `tsc --noEmit`
+- [ ] **[TESTE E2E]** Escrever teste: `rubrica.json` gerado é parseável e todos os campos obrigatórios estão presentes
+- [ ] **[TESTE E2E]** Escrever teste: `rubrica.config.ts` gerado é TypeScript sintaticamente válido
+- [ ] **[TESTE E2E]** Escrever teste: `index.html` gerado não contém nenhuma string do conjunto `["Matheus Mierzwa", "matheusmierzwa", "mmlo.com.br", "@matheusmierzwa"]`
+- [ ] **[TESTE E2E]** Escrever teste: `convex/pluginRegistry.ts` gerado tem `defaultEnabled: false` para todos os plugins desmarcados nos prompts
+- [ ] Verificar manualmente: projeto gerado sobe com `pnpm dev` sem erros no console
+
+---
+
 ## Fase 3 — CLI update
 
 ### 3.1 download.ts — closes #11
@@ -456,3 +495,17 @@
 - [ ] Implementar diff: vars em `required-env.json` não presentes em `.env`/`.env.local`
 - [ ] Exibir lista de vars faltantes com nome, descrição e instrução de configuração no Convex Dashboard
 - [ ] Integrar chamada ao check de env vars no final do fluxo de `update.ts`
+
+---
+
+### 3.4 Integração: update → projeto existente — closes #29, #30
+
+> Ponto de conexão entre o comando `update` e a preservação do estado do usuário. Revisar após 3.1, 3.2 e 3.3 estarem prontos.
+
+- [ ] **[TESTE E2E]** Escrever teste: criar projeto com `create`, modificar manualmente `rubrica.config.ts`, rodar `update` → `rubrica.config.ts` preservado com os valores customizados
+- [ ] **[TESTE E2E]** Escrever teste: criar projeto com `create`, rodar `update` com nova versão simulada → `rubrica.json` tem `version` atualizado mas `layout` e `theme` preservados
+- [ ] **[TESTE E2E]** Escrever teste: criar projeto com `create`, adicionar `.env` com variáveis custom, rodar `update` → `.env` não é modificado
+- [ ] **[TESTE E2E]** Escrever teste: `update` de versão major para projeto com `rubrica.json` válido — sem confirmação explícita, nenhum arquivo é alterado
+- [ ] **[TESTE E2E]** Escrever teste: `update` de versão patch → projeto gerado passa em `tsc --noEmit` após atualização
+- [ ] **[TESTE E2E]** Escrever teste: `required-env.json` da nova versão lista `OPENROUTER_API_KEY` → aparece no output final do update quando ausente do `.env`
+- [ ] Verificar manualmente: rodar `update` em projeto real gerado pelo `create` e confirmar que o site sobe sem erros após a atualização
