@@ -263,12 +263,12 @@
 
 > **Nota arquitetural:** `applyRubricalConfig` gera/atualiza `rubrica.config.ts` no projeto alvo (fallback estático de build). Após qualquer mudança neste arquivo, o projeto alvo precisa rodar `pnpm build` para regenerar `/public/data/site-config.json` — sem isso, páginas públicas em produção continuam usando o snapshot anterior do JSON.
 
-- [ ] **[TESTE]** Escrever teste: gera `rubrica.config.ts` com todos os campos do input
-- [ ] **[TESTE]** Escrever teste: campo `twitterHandle` é incluído corretamente (sem `@`)
-- [ ] **[TESTE]** Escrever teste: arquivo gerado é TypeScript válido (verificação de sintaxe básica)
-- [ ] **[TESTE]** Escrever teste: re-executar com mesmos valores produz arquivo idêntico (idempotência)
-- [ ] Implementar `cli/src/transforms/applyRubricalConfig.ts`
-- [ ] Verificar 100% de cobertura de branches
+- [x] **[TESTE]** Escrever teste: gera `rubrica.config.ts` com todos os campos do input
+- [x] **[TESTE]** Escrever teste: campo `twitterHandle` é incluído corretamente (sem `@`)
+- [x] **[TESTE]** Escrever teste: arquivo gerado é TypeScript válido (verificação de sintaxe básica)
+- [x] **[TESTE]** Escrever teste: re-executar com mesmos valores produz arquivo idêntico (idempotência)
+- [x] Implementar `cli/src/transforms/applyRubricalConfig.ts`
+- [x] Verificar 100% de cobertura de branches
 
 #### applyTheme.ts
 
