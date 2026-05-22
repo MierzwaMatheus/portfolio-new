@@ -363,8 +363,8 @@
 
 ### 2.8 Comando create — closes #26
 
-- [ ] Criar `cli/src/commands/create.ts` com estrutura do comando
-- [ ] Implementar prompt de nome do projeto com validação (sem espaços, sem caracteres especiais)
+- [x] Criar `cli/src/commands/create.ts` com estrutura do comando
+- [x] Implementar prompt de nome do projeto com validação (sem espaços, sem caracteres especiais)
 - [ ] Encadear `identityPrompt` para coleta de identidade
 - [ ] Implementar prompt de layout como select (sidebar / topbar / centered)
 - [ ] Implementar prompt de tema como select (cyberpunk / minimal / editorial / forest / personalizado)
