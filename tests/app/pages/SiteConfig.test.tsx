@@ -65,3 +65,31 @@ describe("SiteConfig — Ciclo 1: estrutura básica da página", () => {
     expect(screen.getByText(/SEO/i)).toBeInTheDocument();
   });
 });
+
+describe("SiteConfig — Ciclo 2: cor de destaque", () => {
+  it("renderiza input de cor nativo com valor atual de theme_accent_color", () => {
+    render(<AdminSiteConfig />);
+    const colorInput = screen.getByTestId("color-picker-native");
+    expect(colorInput).toHaveValue("#6366f1");
+  });
+
+  it("renderiza input hex com valor atual de theme_accent_color", () => {
+    render(<AdminSiteConfig />);
+    const hexInput = screen.getByTestId("color-picker-hex");
+    expect(hexInput).toHaveValue("#6366f1");
+  });
+
+  it("exibe preview com cor de destaque atual", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("color-preview")).toBeInTheDocument();
+  });
+
+  it("hex inválido não atualiza a cor (mantém anterior)", async () => {
+    const { container } = render(<AdminSiteConfig />);
+    const hexInput = screen.getByTestId("color-picker-hex");
+    const { fireEvent } = await import("@testing-library/react");
+    fireEvent.change(hexInput, { target: { value: "invalido" } });
+    const colorInput = container.querySelector('[data-testid="color-picker-native"]') as HTMLInputElement;
+    expect(colorInput.value).toBe("#6366f1");
+  });
+});

@@ -148,9 +148,9 @@
 
 ### 1.11 Admin /site-config — closes #20
 
-- [ ] Criar rota `/admin/site-config` no roteador da aplicação
-- [ ] Proteger rota com verificação de roles root/admin (redirecionar se não autorizado)
-- [ ] Criar `src/pages/admin/SiteConfig.tsx` com layout de duas seções: Aparência e SEO & Identidade
+- [x] Criar rota `/admin/site-config` no roteador da aplicação
+- [x] Proteger rota com verificação de roles root/admin (redirecionar se não autorizado)
+- [x] Criar `src/pages/admin/SiteConfig.tsx` com layout de duas seções: Aparência e SEO & Identidade
 - [ ] **Seção Aparência — Cor de destaque:** color picker + input hex com validação de formato
 - [ ] **Seção Aparência — Cor de destaque:** preview em tempo real das cores derivadas (usar `hexToHsl` quando implementado na CLI, ou versão inline)
 - [ ] **Seção Aparência — Fonte principal:** select com opções curadas (Inter, Chakra Petch, Playfair Display, Space Grotesk, DM Sans)
@@ -170,11 +170,11 @@
 
 ### 1.12 Admin sidebar item — closes #21
 
-- [ ] Localizar a sidebar do painel admin no codebase
-- [ ] Adicionar item "Site & Aparência" com ícone adequado
-- [ ] Apontar item para rota `/admin/site-config`
-- [ ] Posicionar item no grupo correto (junto com Plugins e LGPD)
-- [ ] Verificar que item só aparece para roles root/admin
+- [x] Localizar a sidebar do painel admin no codebase
+- [x] Adicionar item "Site & Aparência" com ícone adequado
+- [x] Apontar item para rota `/admin/site-config`
+- [x] Posicionar item no grupo correto (junto com Plugins e LGPD)
+- [x] Verificar que item só aparece para roles root/admin
 
 ---
 
