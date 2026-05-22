@@ -1,4 +1,5 @@
 import { Helmet } from "react-helmet-async";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 interface SEOProps {
   title: string;
@@ -15,15 +16,15 @@ export function SEO({
   url,
   type = "website",
 }: SEOProps) {
-  const siteTitle =
-    "Matheus Mierzwa | Desenvolvedor Front-end Sênior & Tech Lead React";
+  const config = useSiteConfig();
+  const siteTitle = config.site_title;
   const defaultDescription =
     "Desenvolvedor Front-end Sênior e Tech Lead especializado em React, TypeScript e arquitetura de software. Portfolio com projetos, artigos e serviços de desenvolvimento web.";
   const defaultImage =
     "https://i.postimg.cc/65bvTHHJ/og-image-port-math-100.jpg";
   const siteUrl = "https://www.mmlo.com.br";
 
-  const fullTitle = title === siteTitle ? title : `${title} | Matheus Mierzwa`;
+  const fullTitle = title === siteTitle ? title : `${title} | ${siteTitle}`;
   const metaDescription = description || defaultDescription;
   const metaImage = image
     ? image.startsWith("http")

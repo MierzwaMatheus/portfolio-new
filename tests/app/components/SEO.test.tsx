@@ -1,0 +1,66 @@
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, waitFor } from "@testing-library/react";
+import { HelmetProvider } from "react-helmet-async";
+
+vi.mock("@/hooks/useSiteConfig", () => ({
+  useSiteConfig: vi.fn(),
+}));
+
+import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { SEO } from "@/components/SEO";
+
+const mockUseSiteConfig = vi.mocked(useSiteConfig);
+
+const defaultConfig = {
+  site_title: "Site Neutro",
+  site_description: "Descrição padrão do site",
+  site_url: "https://exemplo.com",
+  site_name: "Site Neutro Portfolio",
+  og_image_url: "https://exemplo.com/og.jpg",
+  twitter_handle: "usuario",
+  author_name: "",
+  author_email: "",
+  rss_title: "",
+  rss_description: "",
+  seo_home_title: "",
+  seo_home_description: "",
+  theme_accent_color: "#6366f1",
+  theme_accent_hsl: "",
+  theme_font_sans: "Inter",
+  theme_font_mono: "JetBrains Mono",
+  theme_radius: "0.5rem",
+  keywords: [],
+  lang: "pt-BR",
+  isLoading: false,
+};
+
+function renderSEO(props: Parameters<typeof SEO>[0]) {
+  return render(
+    <HelmetProvider>
+      <SEO {...props} />
+    </HelmetProvider>
+  );
+}
+
+beforeEach(() => {
+  mockUseSiteConfig.mockReturnValue(defaultConfig);
+});
+
+describe("SEO", () => {
+  describe("Ciclo 1 — siteTitle e fullTitle", () => {
+    it("usa site_title do useSiteConfig como sufixo do título", async () => {
+      renderSEO({ title: "Minha Página" });
+      await waitFor(() => expect(document.title).toBe("Minha Página | Site Neutro"));
+    });
+
+    it("não repete o sufixo quando title já é o site_title", async () => {
+      renderSEO({ title: "Site Neutro" });
+      await waitFor(() => expect(document.title).toBe("Site Neutro"));
+    });
+
+    it("não contém nome pessoal hardcoded no título", async () => {
+      renderSEO({ title: "Página" });
+      await waitFor(() => expect(document.title).not.toContain("Matheus Mierzwa"));
+    });
+  });
+});
