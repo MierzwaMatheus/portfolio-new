@@ -158,7 +158,7 @@
 - [x] **Seção Aparência — Border radius:** select com 5 opções (Nenhum / Suave / Médio / Arredondado / Pill)
 - [x] **Seção SEO — Título padrão:** campo de texto ligado à chave `site_title`
 - [x] **Seção SEO — Descrição padrão:** textarea ligado à chave `site_description`
-- [ ] **Seção SEO — OG Image:** upload via Convex Storage, salva `og_image_storage_id` e gera `og_image_url`
+- [x] **Seção SEO — OG Image:** upload via Convex Storage, salva `og_image_storage_id` e gera `og_image_url`
 - [x] **Seção SEO — Twitter handle:** campo sem `@`, ligado a `twitter_handle`
 - [x] **Seção SEO — Keywords:** input multi-valor, ligado a `keywords`
 - [x] **Seção SEO — Home title/description:** campos ligados a `seo_home_title` e `seo_home_description`

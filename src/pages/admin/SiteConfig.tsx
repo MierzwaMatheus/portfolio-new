@@ -80,6 +80,48 @@ export default function AdminSiteConfig() {
   const generateUploadUrl = useMutation(api.images.generateUploadUrl);
   const setOgImageMutation = useMutation(api.siteConfig.setOgImage);
   const setBatch = useMutation(api.siteConfig.setBatch);
+  const [isSavingAparencia, setIsSavingAparencia] = useState(false);
+  const [isSavingSeo, setIsSavingSeo] = useState(false);
+
+  const handleSaveAparencia = async () => {
+    setIsSavingAparencia(true);
+    try {
+      await setBatch({
+        items: [
+          { key: "theme_accent_color", value: accentColor },
+          { key: "theme_font_sans", value: fontSans },
+          { key: "theme_font_mono", value: fontMono },
+          { key: "theme_radius", value: radius },
+        ],
+      });
+      toast.success("Aparência salva com sucesso!");
+    } catch {
+      toast.error("Erro ao salvar aparência.");
+    } finally {
+      setIsSavingAparencia(false);
+    }
+  };
+
+  const handleSaveSeo = async () => {
+    setIsSavingSeo(true);
+    try {
+      await setBatch({
+        items: [
+          { key: "site_title", value: siteTitle },
+          { key: "site_description", value: siteDescription },
+          { key: "twitter_handle", value: twitterHandle },
+          { key: "seo_home_title", value: seoHomeTitle },
+          { key: "seo_home_description", value: seoHomeDescription },
+          { key: "keywords", value: keywords },
+        ],
+      });
+      toast.success("SEO & Identidade salvos com sucesso!");
+    } catch {
+      toast.error("Erro ao salvar SEO & Identidade.");
+    } finally {
+      setIsSavingSeo(false);
+    }
+  };
 
   const handleHexChange = (value: string) => {
     setHexInput(value);
@@ -186,6 +228,15 @@ export default function AdminSiteConfig() {
               </SelectContent>
             </Select>
           </div>
+
+          <Button
+            data-testid="btn-save-aparencia"
+            onClick={handleSaveAparencia}
+            disabled={isSavingAparencia}
+            className="w-full"
+          >
+            {isSavingAparencia ? "Salvando..." : "Salvar Aparência"}
+          </Button>
         </CardContent>
       </Card>
 
@@ -328,6 +379,15 @@ export default function AdminSiteConfig() {
               rows={3}
             />
           </div>
+
+          <Button
+            data-testid="btn-save-seo"
+            onClick={handleSaveSeo}
+            disabled={isSavingSeo}
+            className="w-full"
+          >
+            {isSavingSeo ? "Salvando..." : "Salvar SEO & Identidade"}
+          </Button>
         </CardContent>
       </Card>
     </div>

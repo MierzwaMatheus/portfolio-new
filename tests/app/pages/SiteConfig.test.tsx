@@ -70,6 +70,67 @@ describe("SiteConfig — Ciclo 1: estrutura básica da página", () => {
   });
 });
 
+describe("SiteConfig — Ciclo 6: salvamento via setBatch + toast", () => {
+  it("renderiza botão 'Salvar Aparência'", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("btn-save-aparencia")).toBeInTheDocument();
+  });
+
+  it("renderiza botão 'Salvar SEO'", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("btn-save-seo")).toBeInTheDocument();
+  });
+
+  it("clicar em 'Salvar Aparência' chama setBatch com chaves de aparência", async () => {
+    const { useMutation: mockUseMutation } = await import("convex/react");
+    const mockSetBatch = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(mockUseMutation).mockImplementation((fn: any) => {
+      if (fn === "siteConfig:setBatch") return mockSetBatch;
+      return vi.fn();
+    });
+
+    const { fireEvent } = await import("@testing-library/react");
+    render(<AdminSiteConfig />);
+    fireEvent.click(screen.getByTestId("btn-save-aparencia"));
+
+    await new Promise((r) => setTimeout(r, 0));
+    expect(mockSetBatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        items: expect.arrayContaining([
+          expect.objectContaining({ key: "theme_accent_color" }),
+          expect.objectContaining({ key: "theme_font_sans" }),
+          expect.objectContaining({ key: "theme_font_mono" }),
+          expect.objectContaining({ key: "theme_radius" }),
+        ]),
+      })
+    );
+  });
+
+  it("clicar em 'Salvar SEO' chama setBatch com chaves de identidade", async () => {
+    const { useMutation: mockUseMutation } = await import("convex/react");
+    const mockSetBatch = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(mockUseMutation).mockImplementation((fn: any) => {
+      if (fn === "siteConfig:setBatch") return mockSetBatch;
+      return vi.fn();
+    });
+
+    const { fireEvent } = await import("@testing-library/react");
+    render(<AdminSiteConfig />);
+    fireEvent.click(screen.getByTestId("btn-save-seo"));
+
+    await new Promise((r) => setTimeout(r, 0));
+    expect(mockSetBatch).toHaveBeenCalledWith(
+      expect.objectContaining({
+        items: expect.arrayContaining([
+          expect.objectContaining({ key: "site_title" }),
+          expect.objectContaining({ key: "site_description" }),
+          expect.objectContaining({ key: "twitter_handle" }),
+        ]),
+      })
+    );
+  });
+});
+
 describe("SiteConfig — Ciclo 5: OG Image upload", () => {
   it("renderiza botão de upload de OG image", () => {
     render(<AdminSiteConfig />);
