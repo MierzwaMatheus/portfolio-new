@@ -23,6 +23,7 @@ import {
   Puzzle,
   Star,
   ShieldAlert,
+  Settings2,
 } from "lucide-react";
 import { usePlugins } from "@/contexts/PluginsContext";
 import type { PluginId } from "../../../convex/pluginRegistry";
@@ -155,6 +156,12 @@ function AdminSidebar() {
       icon: Puzzle,
       label: "Plugins",
       path: "/admin/plugins",
+      roles: ["root", "admin"],
+    },
+    {
+      icon: Settings2,
+      label: "Site & Aparência",
+      path: "/admin/site-config",
       roles: ["root", "admin"],
     },
   ];

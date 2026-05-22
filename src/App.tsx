@@ -46,6 +46,7 @@ import { ContactWizardProvider } from "./contexts/ContactWizardContext";
 import { ContactWizardModal } from "./components/ContactWizardModal";
 import AdminContactRequests from "./pages/admin/ContactRequests";
 import AdminPlugins from "./pages/admin/Plugins";
+import AdminSiteConfig from "./pages/admin/SiteConfig";
 import AdminTestimonials from "./pages/admin/Testimonials";
 import AdminLgpdErasure from "./pages/admin/LgpdErasure";
 import TestimonialsPage from "./pages/Testimonials";
@@ -196,6 +197,12 @@ function Router() {
         <Route path="/admin/plugins">
           <ProtectedRoute
             component={AdminPlugins}
+            allowedRoles={["root", "admin"]}
+          />
+        </Route>
+        <Route path="/admin/site-config">
+          <ProtectedRoute
+            component={AdminSiteConfig}
             allowedRoles={["root", "admin"]}
           />
         </Route>
