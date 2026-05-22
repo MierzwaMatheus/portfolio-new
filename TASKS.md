@@ -412,11 +412,11 @@
 
 ### 2.10 Testes e2e + publicação npm — closes #28
 
-- [ ] **[TESTE E2E]** Escrever teste: `create` gera projeto em tmpdir com layout `sidebar` e verifica existência dos arquivos corretos
-- [ ] **[TESTE E2E]** Escrever teste: `create` com layout `topbar` não inclui `Sidebar.tsx` em `src/components/`
-- [ ] **[TESTE E2E]** Escrever teste: `create` com layout `centered` não inclui `Navbar.tsx` em `src/components/`
-- [ ] **[TESTE E2E]** Escrever teste: `create` gera `rubrica.config.ts` com todos os campos dos prompts
-- [ ] **[TESTE E2E]** Escrever teste: `create` gera `rubrica.json` com `version`, `layout`, `theme` e `plugins` corretos
+- [x] **[TESTE E2E]** Escrever teste: `create` gera projeto em tmpdir com layout `sidebar` e verifica existência dos arquivos corretos
+- [x] **[TESTE E2E]** Escrever teste: `create` com layout `topbar` não inclui `Sidebar.tsx` em `src/components/`
+- [x] **[TESTE E2E]** Escrever teste: `create` com layout `centered` não inclui `Navbar.tsx` em `src/components/`
+- [x] **[TESTE E2E]** Escrever teste: `create` gera `rubrica.config.ts` com todos os campos dos prompts
+- [x] **[TESTE E2E]** Escrever teste: `create` gera `rubrica.json` com `version`, `layout`, `theme` e `plugins` corretos
 - [ ] **[TESTE E2E]** Escrever teste: `config` com opção Aparência atualiza `rubrica.json` e não toca em `rubrica.config.ts`
 - [ ] **[TESTE E2E]** Escrever teste: `config` com opção Identidade atualiza `rubrica.config.ts` e não toca no tema
 - [ ] Configurar `.npmignore` excluindo `src/`, testes e arquivos de dev
