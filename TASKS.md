@@ -206,7 +206,7 @@
 - [x] Configurar `tsup.config.ts` para output ESM com shebang no entry point
 - [x] Verificar que `pnpm install` dentro de `cli/` instala sem erros
 - [x] Verificar que `pnpm build` dentro de `cli/` compila sem erros
-- [ ] Verificar que `pnpm test` dentro de `cli/` roda (sem falhas — ainda sem testes)
+- [x] Verificar que `pnpm test` dentro de `cli/` roda (sem falhas — ainda sem testes)
 
 ---
 
