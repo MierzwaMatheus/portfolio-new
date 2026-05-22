@@ -467,25 +467,25 @@
 
 ### 3.2 update.ts — closes #29
 
-- [ ] **[TESTE]** Escrever teste: quando versão local igual à remota, nenhum arquivo é modificado
-- [ ] **[TESTE]** Escrever teste: território do usuário (`rubrica.config.ts`, `rubrica.json`, `.env`) nunca é sobrescrito diretamente
-- [ ] **[TESTE]** Escrever teste: após update, `rubrica.config.ts` é re-aplicado via `applyRubricalConfig`
-- [ ] **[TESTE]** Escrever teste: após update, layout é re-aplicado via `applyLayout`
-- [ ] **[TESTE]** Escrever teste: update de versão major exige confirmação explícita
-- [ ] **[TESTE]** Escrever teste: update de versão major cancelado não altera nenhum arquivo
-- [ ] Criar `cli/src/commands/update.ts`
-- [ ] Chamar `detectProject` para verificar que está em projeto Rubrica
-- [ ] Ler versão atual de `rubrica.json` via `readState`
-- [ ] Chamar `getLatestVersion` para obter versão remota
-- [ ] Comparar versões com semver: encerrar com mensagem se iguais
+- [x] **[TESTE]** Escrever teste: quando versão local igual à remota, nenhum arquivo é modificado
+- [x] **[TESTE]** Escrever teste: território do usuário (`rubrica.config.ts`, `rubrica.json`, `.env`) nunca é sobrescrito diretamente
+- [x] **[TESTE]** Escrever teste: após update, `rubrica.config.ts` é re-aplicado via `applyRubricalConfig`
+- [x] **[TESTE]** Escrever teste: após update, layout é re-aplicado via `applyLayout`
+- [x] **[TESTE]** Escrever teste: update de versão major exige confirmação explícita
+- [x] **[TESTE]** Escrever teste: update de versão major cancelado não altera nenhum arquivo
+- [x] Criar `cli/src/commands/update.ts`
+- [x] Chamar `detectProject` para verificar que está em projeto Rubrica
+- [x] Ler versão atual de `rubrica.json` via `readState`
+- [x] Chamar `getLatestVersion` para obter versão remota
+- [x] Comparar versões com semver: encerrar com mensagem se iguais
 - [ ] Exibir changelog entre as versões (se disponível na release)
-- [ ] Pedir confirmação antes de prosseguir
-- [ ] Para versão major: exibir aviso de mudanças destrutivas e link para guia de migração; exigir confirmação explícita
-- [ ] Baixar nova versão via `downloadRelease`
-- [ ] Sobrescrever território do Rubrica (lista completa do PRD seção 6.5)
-- [ ] Preservar território do usuário (nunca tocar diretamente)
-- [ ] Re-aplicar: `applyLayout` + `applyTheme` + `applyFont` + `applyPlugins` + `applyIndexHtml` + `applyRubricalConfig`
-- [ ] Atualizar `version` em `rubrica.json` via `writeState`
+- [x] Pedir confirmação antes de prosseguir
+- [x] Para versão major: exibir aviso de mudanças destrutivas e link para guia de migração; exigir confirmação explícita
+- [x] Baixar nova versão via `downloadRelease`
+- [x] Sobrescrever território do Rubrica (lista completa do PRD seção 6.5)
+- [x] Preservar território do usuário (nunca tocar diretamente)
+- [x] Re-aplicar: `applyLayout` + `applyTheme` + `applyFont` + `applyPlugins` + `applyIndexHtml` + `applyRubricalConfig`
+- [x] Atualizar `version` em `rubrica.json` via `writeState`
 - [ ] Executar `pnpm install` se `package.json` foi modificado
 
 ---
