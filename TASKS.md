@@ -341,8 +341,8 @@
 
 - [x] Criar `templates/layouts/topbar/Layout.tsx` — `flex-col`, Navbar fixa no topo (`h-16`), `main` com `pt-16`
 - [x] Criar `templates/layouts/topbar/Navbar.tsx` — logo/nome à esquerda, links de nav filtrados por `usePlugins` à direita
-- [ ] Implementar mobile responsivo na Navbar: hamburger Sheet colapsando os links de navegação
-- [ ] Implementar dropdown de perfil (canto direito) com CV download e seletor de idioma
+- [x] Implementar mobile responsivo na Navbar: hamburger Sheet colapsando os links de navegação
+- [x] Implementar dropdown de perfil (canto direito) com CV download e seletor de idioma
 - [ ] Criar `templates/layouts/centered/Layout.tsx` — sem nav persistente, `main` com `max-w-3xl mx-auto`
 - [ ] Criar `templates/layouts/centered/Footer.tsx` — links de navegação filtrados por `usePlugins`
 - [ ] Garantir que ambos os layouts não contêm dados pessoais hardcoded
