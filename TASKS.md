@@ -417,8 +417,8 @@
 - [x] **[TESTE E2E]** Escrever teste: `create` com layout `centered` não inclui `Navbar.tsx` em `src/components/`
 - [x] **[TESTE E2E]** Escrever teste: `create` gera `rubrica.config.ts` com todos os campos dos prompts
 - [x] **[TESTE E2E]** Escrever teste: `create` gera `rubrica.json` com `version`, `layout`, `theme` e `plugins` corretos
-- [ ] **[TESTE E2E]** Escrever teste: `config` com opção Aparência atualiza `rubrica.json` e não toca em `rubrica.config.ts`
-- [ ] **[TESTE E2E]** Escrever teste: `config` com opção Identidade atualiza `rubrica.config.ts` e não toca no tema
+- [x] **[TESTE E2E]** Escrever teste: `config` com opção Aparência atualiza `rubrica.json` e não toca em `rubrica.config.ts`
+- [x] **[TESTE E2E]** Escrever teste: `config` com opção Identidade atualiza `rubrica.config.ts` e não toca no tema
 - [ ] Configurar `.npmignore` excluindo `src/`, testes e arquivos de dev
 - [ ] Escrever `README.md` do pacote CLI com: instalação, `pnpm create rubrica`, `rubrica config`, `rubrica update`
 - [ ] Verificar que `npx create-rubrica test-project` funciona via npx sem instalação prévia

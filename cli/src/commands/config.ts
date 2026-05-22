@@ -165,17 +165,17 @@ export async function runConfig(deps: RunConfigDeps = {}): Promise<void> {
     const htmlPath = path.join(projectDir, "index.html");
 
     await applyThemeFn(
-      { theme, accentColor: null },
+      { preset: theme },
       cssPath,
       fs as Parameters<typeof defaultApplyTheme>[2]
     );
     await applyFontFn(
       { fontSans, fontMono, radius },
-      { cssPath, htmlPath },
+      { css: cssPath, html: htmlPath },
       fs as Parameters<typeof defaultApplyFont>[2]
     );
     await applyIndexHtmlFn(
-      { fontSans, themeColor: "" },
+      { fontFamily: fontSans, themeColor: "", siteName: "", siteUrl: "", twitterHandle: "", authorName: "" },
       htmlPath,
       fs as Parameters<typeof defaultApplyIndexHtml>[2]
     );
@@ -206,7 +206,7 @@ export async function runConfig(deps: RunConfigDeps = {}): Promise<void> {
     if (!isCancel(confirmed) && confirmed === true) {
       await applyLayoutFn(
         newLayout,
-        { templatesDir: path.join(projectDir, "templates"), componentsDir: path.join(projectDir, "src", "components") },
+        { projectDir, templatesDir: path.join(projectDir, "templates") },
         fs as Parameters<typeof defaultApplyLayout>[2]
       );
       stateUpdate.layout = newLayout;
