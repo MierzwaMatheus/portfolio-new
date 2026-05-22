@@ -61,6 +61,8 @@
 - [x] Garantir que retorno é `rubricalConfig` integralmente enquanto Convex está carregando
 - [x] Exportar tipo `SiteConfig` inferido do retorno do hook
 
+> **Nota arquitetural (atualizada):** `useSiteConfig` usa `@tanstack/react-query` + `siteConfigRepository` de `src/repositories/instances.ts` — em produção usa `StaticSiteConfigRepository` (lê `/public/data/site-config.json`), em dev usa `ConvexSiteConfigRepository` (HTTP ao Convex). O hook **nunca** usa `useQuery` do `convex/react` diretamente. Somente páginas admin podem acessar o Convex diretamente via `useQuery(api.siteConfig.getPublic)` do `convex/react`.
+
 ---
 
 ### 1.5 SEO.tsx — closes #16
@@ -259,6 +261,8 @@
 
 #### applyRubricalConfig.ts
 
+> **Nota arquitetural:** `applyRubricalConfig` gera/atualiza `rubrica.config.ts` no projeto alvo (fallback estático de build). Após qualquer mudança neste arquivo, o projeto alvo precisa rodar `pnpm build` para regenerar `/public/data/site-config.json` — sem isso, páginas públicas em produção continuam usando o snapshot anterior do JSON.
+
 - [ ] **[TESTE]** Escrever teste: gera `rubrica.config.ts` com todos os campos do input
 - [ ] **[TESTE]** Escrever teste: campo `twitterHandle` é incluído corretamente (sem `@`)
 - [ ] **[TESTE]** Escrever teste: arquivo gerado é TypeScript válido (verificação de sintaxe básica)
@@ -386,6 +390,8 @@
 - [ ] Executar instalação de dependências (pnpm/npm) quando solicitado
 - [ ] Exibir mensagem de next steps ao final (conforme PRD seção 6.3)
 - [ ] Testar manualmente: `node dist/index.js create test-project` cria projeto válido
+
+> **Nota arquitetural:** O projeto gerado usa três camadas de config. O `next steps` exibido ao usuário deve incluir instruções para: (1) preencher `.env.local` com `VITE_CONVEX_URL`, (2) rodar `pnpm build` antes do primeiro deploy para gerar `/public/data/site-config.json`. Sem o build, páginas públicas em produção usam apenas os fallbacks de `rubrica.config.ts`.
 
 ---
 
