@@ -26,6 +26,23 @@ const baseState: RubricaState = {
 };
 
 describe("writeState", () => {
+  it("merge parcial — atualizar só version preserva layout, theme e plugins", async () => {
+    const vol = Volume.fromJSON({
+      "/project/rubrica.json": JSON.stringify(baseState),
+    });
+    const fs = makeFsModule(vol);
+
+    await writeState("/project", { version: "2.0.0" }, fs);
+
+    const written = vol.readFileSync("/project/rubrica.json", "utf-8") as string;
+    const parsed = JSON.parse(written) as RubricaState;
+
+    expect(parsed.version).toBe("2.0.0");
+    expect(parsed.layout).toBe("sidebar");
+    expect(parsed.theme).toBe("cyberpunk");
+    expect(parsed.plugins).toEqual({ blog: true, portfolio: true });
+  });
+
   it("persiste todas as propriedades em rubrica.json com formatação de 2 espaços", async () => {
     const vol = Volume.fromJSON({ "/project": null });
     const fs = makeFsModule(vol);

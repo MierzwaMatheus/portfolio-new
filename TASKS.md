@@ -249,7 +249,7 @@
 
 #### writeState.ts
 
-- [ ] **[TESTE]** Escrever teste: `writeState` persiste todas as propriedades em `rubrica.json` com formatação JSON de 2 espaços
+- [x] **[TESTE]** Escrever teste: `writeState` persiste todas as propriedades em `rubrica.json` com formatação JSON de 2 espaços
 - [ ] **[TESTE]** Escrever teste: `writeState` merge parcial — atualizar só `version` preserva `layout`, `theme` e `plugins`
 - [ ] **[TESTE]** Escrever teste: `writeState` sobrescreve o arquivo se já existir
 - [ ] Implementar `cli/src/state/writeState.ts`
