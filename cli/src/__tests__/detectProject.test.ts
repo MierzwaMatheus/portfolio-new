@@ -25,4 +25,13 @@ describe("detectProject", () => {
     const result = await detectProject("/project/src/components", fsModule);
     expect(result).toBe("/project/rubrica.json");
   });
+
+  it("lança erro amigável quando rubrica.json não existe em nenhum ancestral", async () => {
+    const vol = Volume.fromJSON({});
+    const fsModule = makeFsModule(vol);
+
+    await expect(detectProject("/some/dir", fsModule)).rejects.toThrow(
+      /detectProject/
+    );
+  });
 });
