@@ -17,4 +17,22 @@ describe("generateJwtKeys", () => {
     const { JWT_PRIVATE_KEY } = await generateJwtKeys();
     expect(JWT_PRIVATE_KEY.trimEnd()).toMatch(/-----END PRIVATE KEY-----\n?$/);
   });
+
+  it("JWKS é JSON válido parseável com JSON.parse", async () => {
+    const { JWKS } = await generateJwtKeys();
+    expect(() => JSON.parse(JWKS)).not.toThrow();
+  });
+
+  it("JWKS parseado contém propriedade keys que é array com pelo menos 1 elemento", async () => {
+    const { JWKS } = await generateJwtKeys();
+    const parsed = JSON.parse(JWKS);
+    expect(Array.isArray(parsed.keys)).toBe(true);
+    expect(parsed.keys.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("primeiro elemento de keys tem use: 'sig' e kty: 'RSA'", async () => {
+    const { JWKS } = await generateJwtKeys();
+    const parsed = JSON.parse(JWKS);
+    expect(parsed.keys[0]).toMatchObject({ use: "sig", kty: "RSA" });
+  });
 });

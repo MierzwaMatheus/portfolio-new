@@ -543,17 +543,17 @@
 
 ### 4.2 CLI: `generateJwtKeys` + dep `jose` — closes #32
 
-- [ ] **[TESTE]** Escrever teste: `generateJwtKeys()` retorna objeto com chaves `JWT_PRIVATE_KEY` e `JWKS`
-- [ ] **[TESTE]** Escrever teste: `JWT_PRIVATE_KEY` retornado começa com `"-----BEGIN PRIVATE KEY-----"`
-- [ ] **[TESTE]** Escrever teste: `JWT_PRIVATE_KEY` retornado termina com `"-----END PRIVATE KEY-----"`
+- [x] **[TESTE]** Escrever teste: `generateJwtKeys()` retorna objeto com chaves `JWT_PRIVATE_KEY` e `JWKS`
+- [x] **[TESTE]** Escrever teste: `JWT_PRIVATE_KEY` retornado começa com `"-----BEGIN PRIVATE KEY-----"`
+- [x] **[TESTE]** Escrever teste: `JWT_PRIVATE_KEY` retornado termina com `"-----END PRIVATE KEY-----"`
 - [ ] **[TESTE]** Escrever teste: `JWKS` retornado é JSON válido parseável com `JSON.parse`
 - [ ] **[TESTE]** Escrever teste: `JWKS` parseado contém propriedade `keys` que é array com pelo menos 1 elemento
 - [ ] **[TESTE]** Escrever teste: primeiro elemento de `keys` tem `use: "sig"` e `kty: "RSA"`
 - [ ] **[TESTE]** Escrever teste: chamar `generateJwtKeys()` duas vezes gera pares distintos (não determinístico)
-- [ ] Adicionar `jose` em `dependencies` de `cli/package.json`
-- [ ] Criar `cli/src/utils/generateJwtKeys.ts` exportando `generateJwtKeys(): Promise<{ JWT_PRIVATE_KEY: string; JWKS: string }>`
-- [ ] Usar `jose.generateKeyPair('RS256')` para gerar o par
-- [ ] Exportar private key via `jose.exportPKCS8` (formato PEM)
+- [x] Adicionar `jose` em `dependencies` de `cli/package.json`
+- [x] Criar `cli/src/utils/generateJwtKeys.ts` exportando `generateJwtKeys(): Promise<{ JWT_PRIVATE_KEY: string; JWKS: string }>`
+- [x] Usar `jose.generateKeyPair('RS256')` para gerar o par
+- [x] Exportar private key via `jose.exportPKCS8` (formato PEM)
 - [ ] Exportar public key via `jose.exportJWK` e montar `{ keys: [{ use: "sig", ...jwk }] }`
 - [ ] Serializar `JWKS` como JSON string com `JSON.stringify`
 - [ ] Criar `cli/src/__tests__/generateJwtKeys.test.ts` com os testes acima
