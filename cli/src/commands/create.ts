@@ -232,6 +232,13 @@ export async function runCreate(
     fs as Parameters<typeof defaultApplyRubricalConfig>[2]
   );
 
+  // Ciclo 9: atualiza name em package.json
+  const pkgPath = `${projectDir}/package.json`;
+  const pkgRaw = await fs.readFile(pkgPath, "utf-8");
+  const pkg = JSON.parse(pkgRaw) as Record<string, unknown>;
+  pkg.name = projectName;
+  await fs.writeFile(pkgPath, JSON.stringify(pkg, null, 2));
+
   // Ciclo 8: writeState → rubrica.json
   await writeStateFn(
     projectDir,
