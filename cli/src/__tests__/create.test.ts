@@ -28,7 +28,7 @@ function makeFsModule(vol: InstanceType<typeof Volume>) {
       try {
         await (vol.promises as unknown as { rmdir: (p: string, o: { recursive: boolean }) => Promise<void> }).rmdir(path, { recursive: true });
       } catch {
-        // ignora se não existir
+        // ignora
       }
     },
   };
@@ -48,16 +48,19 @@ vi.mock("@clack/prompts", () => ({
   spinner: vi.fn(() => ({ start: vi.fn(), stop: vi.fn() })),
 }));
 
-import { select, text } from "@clack/prompts";
+import { select, text, multiselect } from "@clack/prompts";
 
-/** Configura a sequência de respostas dos prompts select */
-function setupSelectSequence(opts: {
+const DEFAULT_PLUGINS = { blog: true, portfolio: true };
+
+/** Configura a sequência de respostas dos prompts */
+function setupPrompts(opts: {
   layout?: string;
   theme?: string;
   accentColor?: string;
   fontSans?: string;
   fontMono?: string;
   radius?: string;
+  plugins?: string[];
 }) {
   vi.mocked(select)
     .mockResolvedValueOnce(opts.layout ?? "sidebar")
@@ -65,12 +68,13 @@ function setupSelectSequence(opts: {
     .mockResolvedValueOnce(opts.fontSans ?? "Inter")
     .mockResolvedValueOnce(opts.fontMono ?? "JetBrains Mono")
     .mockResolvedValueOnce(opts.radius ?? "0.5rem");
+  vi.mocked(multiselect).mockResolvedValueOnce(opts.plugins ?? ["blog", "portfolio"]);
   if (opts.accentColor) {
     vi.mocked(text).mockResolvedValueOnce(opts.accentColor);
   }
 }
 
-/** Cria vol + fs com arquivo de download mínimo, injeta dependências mockadas */
+/** Cria download mock que popula o volume */
 function makeDownloadMock(vol: InstanceType<typeof Volume>, extraDirs: string[] = []) {
   return vi.fn(async (targetDir: string, _fsArg: unknown) => {
     const fs = makeFsModule(vol);
@@ -86,6 +90,12 @@ function makeDownloadMock(vol: InstanceType<typeof Volume>, extraDirs: string[] 
   });
 }
 
+// ---- mocks de transforms (injetados via DI) ---------------------------------
+
+const mockApplyLayout = vi.fn(async () => undefined);
+const mockApplyTheme = vi.fn(async () => undefined);
+const mockApplyFont = vi.fn(async () => undefined);
+const mockApplyPlugins = vi.fn(async () => undefined);
 const mockIdentityPrompt = vi.fn(async () => ({
   siteName: "Test Site",
   siteUrl: "https://test.com",
@@ -96,9 +106,42 @@ const mockIdentityPrompt = vi.fn(async () => ({
   lang: "pt-BR",
 }));
 
-const mockApplyLayout = vi.fn(async () => undefined);
-const mockApplyTheme = vi.fn(async () => undefined);
-const mockApplyFont = vi.fn(async () => undefined);
+type Deps = Parameters<typeof runCreate>[1];
+
+function makeDefaultDeps(vol: InstanceType<typeof Volume>, extraDirs?: string[]): Deps {
+  return {
+    projectsDir: "/projects",
+    fs: makeFsModule(vol),
+    download: makeDownloadMock(vol, extraDirs) as Deps["download"],
+    applyLayout: mockApplyLayout as Deps["applyLayout"],
+    applyTheme: mockApplyTheme as Deps["applyTheme"],
+    applyFont: mockApplyFont as Deps["applyFont"],
+    applyPlugins: mockApplyPlugins as Deps["applyPlugins"],
+    identityPrompt: mockIdentityPrompt as Deps["identityPrompt"],
+  };
+}
+
+/** Helper: limpa mocks e chama runCreate com deps injetáveis */
+async function callRunCreate(opts: {
+  layout?: string;
+  theme?: string;
+  accentColor?: string;
+  fontSans?: string;
+  fontMono?: string;
+  radius?: string;
+  plugins?: string[];
+}) {
+  vi.clearAllMocks();
+  setupPrompts(opts);
+
+  const vol = Volume.fromJSON({});
+  vol.mkdirSync("/projects", { recursive: true });
+  const deps = makeDefaultDeps(vol);
+
+  await runCreate("meu-portfolio", deps);
+
+  return { mockApplyLayout, mockApplyTheme, mockApplyFont, mockApplyPlugins };
+}
 
 // ---- Ciclo 1: validação do nome do projeto ----------------------------------
 
@@ -122,92 +165,41 @@ describe("create — validação do nome do projeto", () => {
 
 describe("create — download e limpeza do projeto extraído", () => {
   it("chama downloadRelease com o diretório do projeto", async () => {
+    vi.clearAllMocks();
+    setupPrompts({});
     const vol = Volume.fromJSON({});
     vol.mkdirSync("/projects", { recursive: true });
-    const fs = makeFsModule(vol);
-    const mockDownload = makeDownloadMock(vol);
-    setupSelectSequence({});
+    const deps = makeDefaultDeps(vol);
 
-    await runCreate("meu-portfolio", {
-      projectsDir: "/projects", fs,
-      download: mockDownload as Parameters<typeof runCreate>[1]["download"],
-      applyLayout: mockApplyLayout as Parameters<typeof runCreate>[1]["applyLayout"],
-      applyTheme: mockApplyTheme as Parameters<typeof runCreate>[1]["applyTheme"],
-      applyFont: mockApplyFont as Parameters<typeof runCreate>[1]["applyFont"],
-      identityPrompt: mockIdentityPrompt as Parameters<typeof runCreate>[1]["identityPrompt"],
-    });
+    await runCreate("meu-portfolio", deps);
 
-    expect(mockDownload).toHaveBeenCalledWith("/projects/meu-portfolio", expect.anything());
+    expect(deps.download).toHaveBeenCalledWith("/projects/meu-portfolio", expect.anything());
   });
 
   it("remove a pasta templates/ do projeto extraído após o uso dos templates", async () => {
+    vi.clearAllMocks();
+    setupPrompts({});
     const vol = Volume.fromJSON({});
     vol.mkdirSync("/projects", { recursive: true });
-    const fs = makeFsModule(vol);
-    const mockDownload = makeDownloadMock(vol, ["templates/layouts/sidebar"]);
-    setupSelectSequence({});
+    const deps = makeDefaultDeps(vol, ["templates/layouts/sidebar"]);
 
-    await runCreate("meu-portfolio", {
-      projectsDir: "/projects", fs,
-      download: mockDownload as Parameters<typeof runCreate>[1]["download"],
-      applyLayout: mockApplyLayout as Parameters<typeof runCreate>[1]["applyLayout"],
-      applyTheme: mockApplyTheme as Parameters<typeof runCreate>[1]["applyTheme"],
-      applyFont: mockApplyFont as Parameters<typeof runCreate>[1]["applyFont"],
-      identityPrompt: mockIdentityPrompt as Parameters<typeof runCreate>[1]["identityPrompt"],
-    });
+    await runCreate("meu-portfolio", deps);
 
-    expect(await fs.exists("/projects/meu-portfolio/templates")).toBe(false);
+    expect(await (deps.fs as ReturnType<typeof makeFsModule>).exists("/projects/meu-portfolio/templates")).toBe(false);
   });
 
   it("remove a pasta cli/ do projeto extraído após download", async () => {
+    vi.clearAllMocks();
+    setupPrompts({});
     const vol = Volume.fromJSON({});
     vol.mkdirSync("/projects", { recursive: true });
-    const fs = makeFsModule(vol);
-    const mockDownload = makeDownloadMock(vol, ["cli", "templates"]);
-    setupSelectSequence({});
+    const deps = makeDefaultDeps(vol, ["cli", "templates"]);
 
-    await runCreate("meu-portfolio", {
-      projectsDir: "/projects", fs,
-      download: mockDownload as Parameters<typeof runCreate>[1]["download"],
-      applyLayout: mockApplyLayout as Parameters<typeof runCreate>[1]["applyLayout"],
-      applyTheme: mockApplyTheme as Parameters<typeof runCreate>[1]["applyTheme"],
-      applyFont: mockApplyFont as Parameters<typeof runCreate>[1]["applyFont"],
-      identityPrompt: mockIdentityPrompt as Parameters<typeof runCreate>[1]["identityPrompt"],
-    });
+    await runCreate("meu-portfolio", deps);
 
-    expect(await fs.exists("/projects/meu-portfolio/cli")).toBe(false);
+    expect(await (deps.fs as ReturnType<typeof makeFsModule>).exists("/projects/meu-portfolio/cli")).toBe(false);
   });
 });
-
-// ---- helper compartilhado --------------------------------------------------
-
-async function callRunCreate(opts: {
-  layout?: string;
-  theme?: string;
-  accentColor?: string;
-  fontSans?: string;
-  fontMono?: string;
-  radius?: string;
-}) {
-  vi.clearAllMocks();
-  setupSelectSequence(opts);
-
-  const vol = Volume.fromJSON({});
-  vol.mkdirSync("/projects", { recursive: true });
-  const fs = makeFsModule(vol);
-  const mockDownload = makeDownloadMock(vol);
-
-  await runCreate("meu-portfolio", {
-    projectsDir: "/projects", fs,
-    download: mockDownload as Parameters<typeof runCreate>[1]["download"],
-    applyLayout: mockApplyLayout as Parameters<typeof runCreate>[1]["applyLayout"],
-    applyTheme: mockApplyTheme as Parameters<typeof runCreate>[1]["applyTheme"],
-    applyFont: mockApplyFont as Parameters<typeof runCreate>[1]["applyFont"],
-    identityPrompt: mockIdentityPrompt as Parameters<typeof runCreate>[1]["identityPrompt"],
-  });
-
-  return { mockApplyLayout, mockApplyTheme, mockApplyFont, mockDownload };
-}
 
 // ---- Ciclo 3: applyLayout --------------------------------------------------
 
@@ -292,5 +284,30 @@ describe("create — applyFont", () => {
       expect.anything(),
       expect.anything()
     );
+  });
+});
+
+// ---- Ciclo 6: applyPlugins -------------------------------------------------
+
+describe("create — applyPlugins", () => {
+  it("chama applyPlugins com plugins selecionados via multi-select", async () => {
+    const { mockApplyPlugins } = await callRunCreate({
+      plugins: ["blog", "portfolio", "resume"],
+    });
+    expect(mockApplyPlugins).toHaveBeenCalledWith(
+      { blog: true, portfolio: true, resume: true },
+      expect.stringContaining("pluginRegistry"),
+      expect.anything()
+    );
+  });
+
+  it("plugins não selecionados são marcados como false", async () => {
+    const { mockApplyPlugins } = await callRunCreate({
+      plugins: ["portfolio"],
+    });
+    const call = vi.mocked(mockApplyPlugins).mock.calls[0];
+    const pluginsArg = call[0] as Record<string, boolean>;
+    expect(pluginsArg["portfolio"]).toBe(true);
+    expect(pluginsArg["blog"]).toBe(false);
   });
 });
