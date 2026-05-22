@@ -96,6 +96,8 @@ const mockApplyLayout = vi.fn(async () => undefined);
 const mockApplyTheme = vi.fn(async () => undefined);
 const mockApplyFont = vi.fn(async () => undefined);
 const mockApplyPlugins = vi.fn(async () => undefined);
+const mockApplyIndexHtml = vi.fn(async () => undefined);
+const mockApplyRubricalConfig = vi.fn(async () => undefined);
 const mockIdentityPrompt = vi.fn(async () => ({
   siteName: "Test Site",
   siteUrl: "https://test.com",
@@ -117,6 +119,8 @@ function makeDefaultDeps(vol: InstanceType<typeof Volume>, extraDirs?: string[])
     applyTheme: mockApplyTheme as Deps["applyTheme"],
     applyFont: mockApplyFont as Deps["applyFont"],
     applyPlugins: mockApplyPlugins as Deps["applyPlugins"],
+    applyIndexHtml: mockApplyIndexHtml as Deps["applyIndexHtml"],
+    applyRubricalConfig: mockApplyRubricalConfig as Deps["applyRubricalConfig"],
     identityPrompt: mockIdentityPrompt as Deps["identityPrompt"],
   };
 }
@@ -140,7 +144,7 @@ async function callRunCreate(opts: {
 
   await runCreate("meu-portfolio", deps);
 
-  return { mockApplyLayout, mockApplyTheme, mockApplyFont, mockApplyPlugins };
+  return { mockApplyLayout, mockApplyTheme, mockApplyFont, mockApplyPlugins, mockApplyIndexHtml, mockApplyRubricalConfig };
 }
 
 // ---- Ciclo 1: validação do nome do projeto ----------------------------------
@@ -309,5 +313,39 @@ describe("create — applyPlugins", () => {
     const pluginsArg = call[0] as Record<string, boolean>;
     expect(pluginsArg["portfolio"]).toBe(true);
     expect(pluginsArg["blog"]).toBe(false);
+  });
+});
+
+// ---- Ciclo 7: applyIndexHtml e applyRubricalConfig -------------------------
+
+describe("create — applyIndexHtml", () => {
+  it("chama applyIndexHtml com fontFamily, siteName e siteUrl do identityPrompt", async () => {
+    const { mockApplyIndexHtml } = await callRunCreate({ fontSans: "Inter", theme: "cyberpunk" });
+    expect(mockApplyIndexHtml).toHaveBeenCalledWith(
+      expect.objectContaining({
+        fontFamily: "Inter",
+        siteName: "Test Site",
+        siteUrl: "https://test.com",
+      }),
+      expect.stringContaining("index.html"),
+      expect.anything()
+    );
+  });
+});
+
+describe("create — applyRubricalConfig", () => {
+  it("chama applyRubricalConfig com dados de identidade e aparência", async () => {
+    const { mockApplyRubricalConfig } = await callRunCreate({ fontSans: "Inter", fontMono: "JetBrains Mono" });
+    expect(mockApplyRubricalConfig).toHaveBeenCalledWith(
+      expect.objectContaining({
+        siteName: "Test Site",
+        siteUrl: "https://test.com",
+        authorName: "Test Author",
+        fontSans: "Inter",
+        fontMono: "JetBrains Mono",
+      }),
+      expect.stringContaining("meu-portfolio"),
+      expect.anything()
+    );
   });
 });
