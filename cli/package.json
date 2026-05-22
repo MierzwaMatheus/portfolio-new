@@ -1,0 +1,22 @@
+{
+  "name": "create-rubrica",
+  "version": "0.1.0",
+  "type": "module",
+  "bin": { "rubrica": "./dist/index.js" },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "dev": "tsup --watch"
+  },
+  "dependencies": {
+    "@clack/prompts": "^0.9.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "memfs": "^4.17.0",
+    "msw": "^2.8.0",
+    "tsup": "^8.3.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  }
+}
