@@ -564,26 +564,26 @@
 
 ### 4.3 CLI: `setup.ts` core — detect, `.env.local`, JWT, SITE_URL — closes #33
 
-- [ ] **[TESTE]** Escrever teste: `runSetup` lê `VITE_CONVEX_URL` corretamente de `.env.local` existente (mock com `memfs`)
-- [ ] **[TESTE]** Escrever teste: `runSetup` lança erro amigável `"rode npx convex dev primeiro"` quando `.env.local` não existe
-- [ ] **[TESTE]** Escrever teste: `runSetup` lança erro amigável quando `VITE_CONVEX_URL` está ausente no `.env.local`
-- [ ] **[TESTE]** Escrever teste: `runSetup` lança erro amigável quando `VITE_CONVEX_SITE_URL` está ausente no `.env.local`
-- [ ] **[TESTE]** Escrever teste: `runSetup` chama `detectProject()` e propaga erro se não estiver em projeto Rubrica
-- [ ] **[TESTE]** Escrever teste: `runSetup` chama `npx convex env set JWT_PRIVATE_KEY` com valor não vazio
-- [ ] **[TESTE]** Escrever teste: `runSetup` chama `npx convex env set JWKS` com JSON válido
-- [ ] **[TESTE]** Escrever teste: `runSetup` chama `npx convex env set SITE_URL` com o valor confirmado no prompt
-- [ ] **[TESTE]** Escrever teste: prompt de `SITE_URL` exibe `VITE_CONVEX_SITE_URL` como valor default
-- [ ] Criar `cli/src/commands/setup.ts` com função `runSetup()`
-- [ ] Chamar `detectProject()` no início — propagar erro como mensagem amigável via `@clack/prompts`
-- [ ] Implementar leitura de `.env.local` via `node:fs/promises` com parsing linha a linha (`KEY=VALUE`)
-- [ ] Validar presença de `VITE_CONVEX_URL` e `VITE_CONVEX_SITE_URL` com erros distintos
+- [x] **[TESTE]** Escrever teste: `runSetup` lê `VITE_CONVEX_URL` corretamente de `.env.local` existente (mock com `memfs`)
+- [x] **[TESTE]** Escrever teste: `runSetup` lança erro amigável `"rode npx convex dev primeiro"` quando `.env.local` não existe
+- [x] **[TESTE]** Escrever teste: `runSetup` lança erro amigável quando `VITE_CONVEX_URL` está ausente no `.env.local`
+- [x] **[TESTE]** Escrever teste: `runSetup` lança erro amigável quando `VITE_CONVEX_SITE_URL` está ausente no `.env.local`
+- [x] **[TESTE]** Escrever teste: `runSetup` chama `detectProject()` e propaga erro se não estiver em projeto Rubrica
+- [x] **[TESTE]** Escrever teste: `runSetup` chama `npx convex env set JWT_PRIVATE_KEY` com valor não vazio
+- [x] **[TESTE]** Escrever teste: `runSetup` chama `npx convex env set JWKS` com JSON válido
+- [x] **[TESTE]** Escrever teste: `runSetup` chama `npx convex env set SITE_URL` com o valor confirmado no prompt
+- [x] **[TESTE]** Escrever teste: prompt de `SITE_URL` exibe `VITE_CONVEX_SITE_URL` como valor default
+- [x] Criar `cli/src/commands/setup.ts` com função `runSetup()`
+- [x] Chamar `detectProject()` no início — propagar erro como mensagem amigável via `@clack/prompts`
+- [x] Implementar leitura de `.env.local` via `node:fs/promises` com parsing linha a linha (`KEY=VALUE`)
+- [x] Validar presença de `VITE_CONVEX_URL` e `VITE_CONVEX_SITE_URL` com erros distintos
 - [ ] Verificar conectividade com Convex via `fetch(VITE_CONVEX_URL)` — erro claro se inacessível
-- [ ] Chamar `generateJwtKeys()` e exibir spinner durante geração
-- [ ] Executar `execSync('npx convex env set JWT_PRIVATE_KEY ...')` e `execSync('npx convex env set JWKS ...')`
-- [ ] Prompt `@clack/prompts` para `SITE_URL` com `initialValue = VITE_CONVEX_SITE_URL`
-- [ ] Executar `execSync('npx convex env set SITE_URL ...')` com valor confirmado
-- [ ] Criar `cli/src/__tests__/setup.test.ts` com os testes acima (ciclos 1–3)
-- [ ] Verificar que `pnpm test` passa
+- [x] Chamar `generateJwtKeys()` e exibir spinner durante geração
+- [x] Executar `execSync('npx convex env set JWT_PRIVATE_KEY ...')` e `execSync('npx convex env set JWKS ...')`
+- [x] Prompt `@clack/prompts` para `SITE_URL` com `initialValue = VITE_CONVEX_SITE_URL`
+- [x] Executar `execSync('npx convex env set SITE_URL ...')` com valor confirmado
+- [x] Criar `cli/src/__tests__/setup.test.ts` com os testes acima (ciclos 1–3)
+- [x] Verificar que `pnpm test` passa
 
 ---
 
