@@ -325,7 +325,7 @@
 ### 2.5 identityPrompt.ts — closes #25
 
 - [ ] Implementar `cli/src/prompts/identityPrompt.ts` usando `@clack/prompts`
-- [ ] Adicionar prompt de `siteName` (texto livre)
+- [x] Adicionar prompt de `siteName` (texto livre)
 - [ ] Adicionar prompt de `siteUrl` com validação: deve começar com `http://` ou `https://`
 - [ ] Adicionar prompt de `siteDescription` (texto livre)
 - [ ] Adicionar prompt de `authorName` (texto livre)
