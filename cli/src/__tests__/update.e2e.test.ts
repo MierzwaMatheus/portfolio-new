@@ -344,3 +344,84 @@ describe("update e2e — versão major cancelada não altera arquivos", () => {
     expect(state.version).toBe("1.0.0");
   });
 });
+
+// ---- Ciclo 5: rubrica.config.ts gerado é TypeScript sintaticamente válido ---
+
+describe("update e2e — rubrica.config.ts gerado após patch é TypeScript válido", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("rubrica.config.ts contém export const rubricalConfig com campos obrigatórios", async () => {
+    const vol = makeProjectVolume();
+    vi.mocked(confirm).mockResolvedValueOnce(true);
+
+    await runUpdate(makeUpdateDeps(vol, "1.0.1"));
+
+    const fs = makeFsModule(vol);
+    const content = await fs.readFile("/project/rubrica.config.ts", "utf-8");
+
+    expect(content).toContain("export const rubricalConfig");
+    expect(content).toContain("fontSans:");
+    expect(content).toContain("fontMono:");
+    expect(content).toContain("radius:");
+    expect(content).toContain("accentColor:");
+    expect(content).toMatch(/^export const rubricalConfig = \{/m);
+  });
+
+  it("rubrica.json gerado após update é JSON parseável com campos obrigatórios", async () => {
+    const vol = makeProjectVolume();
+    vi.mocked(confirm).mockResolvedValueOnce(true);
+
+    await runUpdate(makeUpdateDeps(vol, "1.0.1"));
+
+    const fs = makeFsModule(vol);
+    const raw = await fs.readFile("/project/rubrica.json", "utf-8");
+
+    let state: Record<string, unknown>;
+    expect(() => { state = JSON.parse(raw); }).not.toThrow();
+
+    state = JSON.parse(raw) as Record<string, unknown>;
+    expect(state.version).toBeTruthy();
+    expect(state.layout).toBeTruthy();
+    expect(state.theme).toBeTruthy();
+    expect(state.plugins).toBeTruthy();
+  });
+});
+
+// ---- Ciclo 6: required-env.json com vars faltantes aparece no output --------
+
+describe("update e2e — required-env.json lista vars faltantes no output", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("OPENROUTER_API_KEY aparece no warning quando ausente do .env", async () => {
+    const requiredEnvJson = JSON.stringify([
+      { name: "OPENROUTER_API_KEY", description: "Chave da API do OpenRouter para geração de CV com IA" },
+    ]);
+    const vol = makeProjectVolume();
+    vi.mocked(confirm).mockResolvedValueOnce(true);
+
+    const downloadMock = makeDownloadMock(vol, requiredEnvJson);
+
+    await runUpdate(makeUpdateDeps(vol, "1.0.1", { downloadRelease: downloadMock }));
+
+    expect(vi.mocked(log.warn)).toHaveBeenCalledWith(
+      expect.stringContaining("OPENROUTER_API_KEY")
+    );
+  });
+
+  it("OPENROUTER_API_KEY não aparece no warning quando já está no .env", async () => {
+    const requiredEnvJson = JSON.stringify([
+      { name: "OPENROUTER_API_KEY", description: "Chave da API do OpenRouter" },
+    ]);
+    const vol = makeProjectVolume(BASE_STATE, {
+      "/project/.env": "OPENROUTER_API_KEY=sk-or-v1-abc123\n",
+    });
+    vi.mocked(confirm).mockResolvedValueOnce(true);
+
+    const downloadMock = makeDownloadMock(vol, requiredEnvJson);
+
+    await runUpdate(makeUpdateDeps(vol, "1.0.1", { downloadRelease: downloadMock }));
+
+    const warnCalls = vi.mocked(log.warn).mock.calls.flat().join(" ");
+    expect(warnCalls).not.toContain("OPENROUTER_API_KEY");
+  });
+});
