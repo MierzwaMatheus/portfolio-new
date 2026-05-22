@@ -6,6 +6,8 @@ import { applyLayout as defaultApplyLayout } from "../transforms/applyLayout.js"
 import { applyTheme as defaultApplyTheme } from "../transforms/applyTheme.js";
 import { applyFont as defaultApplyFont } from "../transforms/applyFont.js";
 import { applyPlugins as defaultApplyPlugins } from "../transforms/applyPlugins.js";
+import { applyIndexHtml as defaultApplyIndexHtml } from "../transforms/applyIndexHtml.js";
+import { applyRubricalConfig as defaultApplyRubricalConfig } from "../transforms/applyRubricalConfig.js";
 
 // ---- Tipos -----------------------------------------------------------------
 
@@ -29,6 +31,8 @@ export interface RunCreateDeps {
   applyTheme?: typeof defaultApplyTheme;
   applyFont?: typeof defaultApplyFont;
   applyPlugins?: typeof defaultApplyPlugins;
+  applyIndexHtml?: typeof defaultApplyIndexHtml;
+  applyRubricalConfig?: typeof defaultApplyRubricalConfig;
   identityPrompt?: typeof defaultIdentityPrompt;
 }
 
@@ -69,6 +73,8 @@ export async function runCreate(
   const applyThemeFn = deps.applyTheme ?? defaultApplyTheme;
   const applyFontFn = deps.applyFont ?? defaultApplyFont;
   const applyPluginsFn = deps.applyPlugins ?? defaultApplyPlugins;
+  const applyIndexHtmlFn = deps.applyIndexHtml ?? defaultApplyIndexHtml;
+  const applyRubricalConfigFn = deps.applyRubricalConfig ?? defaultApplyRubricalConfig;
   const doIdentityPrompt = deps.identityPrompt ?? defaultIdentityPrompt;
 
   const projectDir = `${deps.projectsDir}/${projectName}`;
@@ -183,6 +189,44 @@ export async function runCreate(
     pluginsRecord,
     `${projectDir}/convex/pluginRegistry.ts`,
     fs as Parameters<typeof defaultApplyPlugins>[2]
+  );
+
+  // Ciclo 7: identityPrompt + applyIndexHtml + applyRubricalConfig
+  const identity = await doIdentityPrompt();
+
+  await applyIndexHtmlFn(
+    {
+      fontFamily: fontSans,
+      themeColor: accentColor ?? "#6d28d9",
+      siteName: identity.siteName,
+      siteUrl: identity.siteUrl,
+      twitterHandle: identity.twitterHandle,
+      authorName: identity.authorName,
+    },
+    `${projectDir}/index.html`,
+    fs as Parameters<typeof defaultApplyIndexHtml>[2]
+  );
+
+  await applyRubricalConfigFn(
+    {
+      siteName: identity.siteName,
+      siteUrl: identity.siteUrl,
+      siteDescription: identity.siteDescription,
+      authorName: identity.authorName,
+      authorEmail: identity.authorEmail,
+      twitterHandle: identity.twitterHandle,
+      lang: identity.lang,
+      seoHomeTitle: identity.siteName,
+      seoHomeDescription: identity.siteDescription,
+      rssTitle: identity.siteName,
+      rssDescription: identity.siteDescription,
+      ogImageUrl: `${identity.siteUrl}/og.png`,
+      accentColor: accentColor ?? "#6d28d9",
+      fontSans,
+      fontMono,
+    },
+    projectDir,
+    fs as Parameters<typeof defaultApplyRubricalConfig>[2]
   );
 
   // Ciclo 2: limpeza após uso dos templates
