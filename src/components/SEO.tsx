@@ -50,7 +50,7 @@ export function SEO({
       <meta property="og:description" content={metaDescription} />
       <meta property="og:image" content={metaImage} />
       <meta property="og:site_name" content={config.site_name} />
-      <meta property="og:locale" content="pt_BR" />
+      <meta property="og:locale" content={config.lang.replace("-", "_")} />
 
       {/* Twitter */}
       <meta property="twitter:card" content="summary_large_image" />

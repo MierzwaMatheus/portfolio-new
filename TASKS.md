@@ -70,7 +70,7 @@
 - [x] Substituir `defaultDescription` por `useSiteConfig().site_description`
 - [x] Substituir URL da OG image por `useSiteConfig().og_image_url`
 - [x] Substituir `siteUrl` por `useSiteConfig().site_url`
-- [ ] Substituir `og:site_name` por `useSiteConfig().site_name`
+- [x] Substituir `og:site_name` por `useSiteConfig().site_name`
 - [ ] Substituir `og:locale` por `useSiteConfig().lang`
 - [ ] Substituir `twitter:creator` por `useSiteConfig().twitter_handle` (com `@` prefixado se necessário)
 - [x] Reescrever lógica de `fullTitle` sem nome pessoal embutido — usar `site_title` como sufixo

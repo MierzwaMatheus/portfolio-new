@@ -47,6 +47,34 @@ beforeEach(() => {
 });
 
 describe("SEO", () => {
+  describe("Ciclo 6 — og:locale", () => {
+    it("usa lang do useSiteConfig convertido para formato og:locale (pt-BR → pt_BR)", async () => {
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[property="og:locale"]');
+        expect(meta?.getAttribute("content")).toBe("pt_BR");
+      });
+    });
+
+    it("converte en-US para en_US no og:locale", async () => {
+      mockUseSiteConfig.mockReturnValue({ ...defaultConfig, lang: "en-US" });
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[property="og:locale"]');
+        expect(meta?.getAttribute("content")).toBe("en_US");
+      });
+    });
+
+    it("não contém pt_BR hardcoded — usa valor dinâmico", async () => {
+      mockUseSiteConfig.mockReturnValue({ ...defaultConfig, lang: "en-US" });
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[property="og:locale"]');
+        expect(meta?.getAttribute("content")).not.toBe("pt_BR");
+      });
+    });
+  });
+
   describe("Ciclo 5 — og:site_name", () => {
     it("usa site_name do useSiteConfig no og:site_name", async () => {
       renderSEO({ title: "Página" });
