@@ -508,10 +508,10 @@
 
 > Ponto de conexão entre o comando `update` e a preservação do estado do usuário. Revisar após 3.1, 3.2 e 3.3 estarem prontos.
 
-- [ ] **[TESTE E2E]** Escrever teste: criar projeto com `create`, modificar manualmente `rubrica.config.ts`, rodar `update` → `rubrica.config.ts` preservado com os valores customizados
-- [ ] **[TESTE E2E]** Escrever teste: criar projeto com `create`, rodar `update` com nova versão simulada → `rubrica.json` tem `version` atualizado mas `layout` e `theme` preservados
-- [ ] **[TESTE E2E]** Escrever teste: criar projeto com `create`, adicionar `.env` com variáveis custom, rodar `update` → `.env` não é modificado
-- [ ] **[TESTE E2E]** Escrever teste: `update` de versão major para projeto com `rubrica.json` válido — sem confirmação explícita, nenhum arquivo é alterado
-- [ ] **[TESTE E2E]** Escrever teste: `update` de versão patch → projeto gerado passa em `tsc --noEmit` após atualização
-- [ ] **[TESTE E2E]** Escrever teste: `required-env.json` da nova versão lista `OPENROUTER_API_KEY` → aparece no output final do update quando ausente do `.env`
+- [x] **[TESTE E2E]** Escrever teste: criar projeto com `create`, modificar manualmente `rubrica.config.ts`, rodar `update` → `rubrica.config.ts` preservado com os valores customizados
+- [x] **[TESTE E2E]** Escrever teste: criar projeto com `create`, rodar `update` com nova versão simulada → `rubrica.json` tem `version` atualizado mas `layout` e `theme` preservados
+- [x] **[TESTE E2E]** Escrever teste: criar projeto com `create`, adicionar `.env` com variáveis custom, rodar `update` → `.env` não é modificado
+- [x] **[TESTE E2E]** Escrever teste: `update` de versão major para projeto com `rubrica.json` válido — sem confirmação explícita, nenhum arquivo é alterado
+- [x] **[TESTE E2E]** Escrever teste: `update` de versão patch → projeto gerado passa em `tsc --noEmit` após atualização
+- [x] **[TESTE E2E]** Escrever teste: `required-env.json` da nova versão lista `OPENROUTER_API_KEY` → aparece no output final do update quando ausente do `.env`
 - [ ] Verificar manualmente: rodar `update` em projeto real gerado pelo `create` e confirmar que o site sobe sem erros após a atualização
