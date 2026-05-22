@@ -105,6 +105,16 @@ describe("convex/seed · setupAdmin", () => {
     );
   });
 
+  it("retorna { userId } em caso de sucesso", async () => {
+    ctx.runQuery.mockResolvedValue(true);
+    createAccount.mockResolvedValue({ user: { _id: "user_1" } });
+    ctx.runMutation.mockResolvedValue(undefined);
+
+    const result = await handler(setupAdmin)(ctx, { email: "test@test.com", password: "senha123456789" });
+
+    expect(result).toEqual({ userId: "user_1" });
+  });
+
   it("insere em userRoles com role root via assignRoleInternal", async () => {
     ctx.runQuery.mockResolvedValue(true);
     createAccount.mockResolvedValue({ user: { _id: "user_1" } });

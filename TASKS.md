@@ -528,14 +528,14 @@
 
 ### 4.1 Template: `setupAdmin` internalAction — closes #31
 
-- [ ] **[TESTE]** Escrever teste: `setupAdmin` com banco vazio cria conta com email e senha fornecidos
-- [ ] **[TESTE]** Escrever teste: `setupAdmin` com root já existente lança erro `"Root user already exists"`
-- [ ] **[TESTE]** Escrever teste: `setupAdmin` insere entrada em `userRoles` com `role: "root"` e `createdAt` numérico
-- [ ] **[TESTE]** Escrever teste: `setupAdmin` retorna `{ userId }` em caso de sucesso
+- [x] **[TESTE]** Escrever teste: `setupAdmin` com banco vazio cria conta com email e senha fornecidos
+- [x] **[TESTE]** Escrever teste: `setupAdmin` com root já existente lança erro `"Root user already exists"`
+- [x] **[TESTE]** Escrever teste: `setupAdmin` insere entrada em `userRoles` com `role: "root"` e `createdAt` numérico
+- [x] **[TESTE]** Escrever teste: `setupAdmin` retorna `{ userId }` em caso de sucesso
 - [x] Adicionar `setupAdmin` como `internalAction` em `convex/seed.ts`
 - [x] Definir `args: { email: v.string(), password: v.string() }`
 - [x] Verificar ausência de root chamando query `isSetupRequired` de `convex/users.ts`
-- [ ] Chamar `createAccount` de `@convex-dev/auth/server` com `provider: "password"`, `account: { id: email, secret: password }`, `profile: { email }`
+- [x] Chamar `createAccount` de `@convex-dev/auth/server` com `provider: "password"`, `account: { id: email, secret: password }`, `profile: { email }`
 - [x] Chamar `internalMutation` para inserir em `userRoles` com `role: "root"` e `createdAt: Date.now()`
 - [ ] Verificar que `npx convex run seed:setupAdmin --data '{"email":"test@test.com","password":"senha123456789"}'` executa sem erro com `convex dev` ativo
 
