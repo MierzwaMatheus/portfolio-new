@@ -3,6 +3,9 @@ import { rubricalConfig } from "../rubrica.config";
 
 export const seedSiteConfig = internalMutation({
   handler: async (ctx) => {
+    const existing = await ctx.db.query("siteConfig").collect();
+    if (existing.length > 0) return;
+
     const items = [
       { key: "site_title", value: rubricalConfig.siteName },
       { key: "site_name", value: rubricalConfig.siteName },

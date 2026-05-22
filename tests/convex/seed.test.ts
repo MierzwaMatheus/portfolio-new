@@ -39,4 +39,14 @@ describe("convex/seed · seedSiteConfig", () => {
     const docs = ctx.db._all("siteConfig");
     expect(docs.length).toBe(17);
   });
+
+  it("não insere nem sobrescreve quando banco já está populado (idempotente)", async () => {
+    ctx.db._seed("siteConfig", [
+      { key: "site_title", value: "Existente", createdAt: 1 },
+    ]);
+    await handler(seedSiteConfig)(ctx, {});
+    const docs = ctx.db._all("siteConfig");
+    expect(docs.length).toBe(1);
+    expect(docs[0].value).toBe("Existente");
+  });
 });
