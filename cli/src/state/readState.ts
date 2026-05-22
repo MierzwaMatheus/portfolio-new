@@ -4,6 +4,7 @@ import * as path from "node:path";
 export interface FsModule {
   readFile: (path: string, encoding: string) => Promise<string>;
   writeFile: (path: string, data: string) => Promise<void>;
+  mkdir: (path: string, options: { recursive: boolean }) => Promise<void>;
 }
 
 export type RubricaState = {
@@ -40,6 +41,7 @@ export async function readState(
     raw = await fsModule.readFile(filePath, "utf-8");
   } catch {
     const state = { ...DEFAULT_STATE };
+    await fsModule.mkdir(projectDir, { recursive: true });
     await fsModule.writeFile(filePath, JSON.stringify(state, null, 2));
     return state;
   }
