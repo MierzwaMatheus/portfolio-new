@@ -162,9 +162,9 @@
 - [x] **Seção SEO — Twitter handle:** campo sem `@`, ligado a `twitter_handle`
 - [x] **Seção SEO — Keywords:** input multi-valor, ligado a `keywords`
 - [x] **Seção SEO — Home title/description:** campos ligados a `seo_home_title` e `seo_home_description`
-- [ ] Implementar salvamento via `siteConfig.setBatch` ao submeter cada seção
-- [ ] Exibir toast de sucesso/erro após salvar
-- [ ] Garantir que alterações refletem no site sem rebuild (Convex real-time)
+- [x] Implementar salvamento via `siteConfig.setBatch` ao submeter cada seção
+- [x] Exibir toast de sucesso/erro após salvar
+- [x] Garantir que alterações refletem no site sem rebuild (Convex real-time)
 
 ---
 
