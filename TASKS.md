@@ -397,16 +397,16 @@
 
 ### 2.9 Comando config — closes #27
 
-- [ ] Criar `cli/src/commands/config.ts`
-- [ ] Chamar `detectProject` para garantir que está dentro de um projeto Rubrica
-- [ ] Ler estado atual via `readState` e `rubricalConfig` do projeto alvo
-- [ ] Implementar prompt multi-select: "O que deseja reconfigurar?" (Identidade / Aparência / Layout / Plugins)
-- [ ] Quando **Identidade** selecionada: encadear `identityPrompt` com valores atuais como defaults, chamar `applyRubricalConfig`
-- [ ] Quando **Aparência** selecionada: prompts de tema, cor, fonte, radius com valores atuais como defaults, chamar `applyTheme` + `applyFont` + `applyIndexHtml`
-- [ ] Quando **Layout** selecionado: exibir aviso de perda de customizações manuais, pedir confirmação, chamar `applyLayout`
-- [ ] Quando **Plugins** selecionado: multi-select com estado atual como defaults, chamar `applyPlugins`
-- [ ] Atualizar `rubrica.json` e `rubrica.config.ts` ao final com os novos valores
-- [ ] Exibir erro amigável se executado fora de um projeto Rubrica
+- [x] Criar `cli/src/commands/config.ts`
+- [x] Chamar `detectProject` para garantir que está dentro de um projeto Rubrica
+- [x] Ler estado atual via `readState` e `rubricalConfig` do projeto alvo
+- [x] Implementar prompt multi-select: "O que deseja reconfigurar?" (Identidade / Aparência / Layout / Plugins)
+- [x] Quando **Identidade** selecionada: encadear `identityPrompt` com valores atuais como defaults, chamar `applyRubricalConfig`
+- [x] Quando **Aparência** selecionada: prompts de tema, cor, fonte, radius com valores atuais como defaults, chamar `applyTheme` + `applyFont` + `applyIndexHtml`
+- [x] Quando **Layout** selecionado: exibir aviso de perda de customizações manuais, pedir confirmação, chamar `applyLayout`
+- [x] Quando **Plugins** selecionado: multi-select com estado atual como defaults, chamar `applyPlugins`
+- [x] Atualizar `rubrica.json` e `rubrica.config.ts` ao final com os novos valores
+- [x] Exibir erro amigável se executado fora de um projeto Rubrica
 
 ---
 

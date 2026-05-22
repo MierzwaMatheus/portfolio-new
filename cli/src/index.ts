@@ -1,5 +1,6 @@
 import { intro } from "@clack/prompts";
 import { runCreate } from "./commands/create.js";
+import { runConfig } from "./commands/config.js";
 
 const [,, command, projectName] = process.argv;
 
@@ -11,6 +12,8 @@ if (command === "create") {
     process.exit(1);
   }
   await runCreate(projectName, { projectsDir: process.cwd() });
+} else if (command === "config") {
+  await runConfig({ cwd: process.cwd() });
 } else {
-  console.log("Comandos disponíveis: create <nome-do-projeto>");
+  console.log("Comandos disponíveis: create <nome-do-projeto> | config");
 }
