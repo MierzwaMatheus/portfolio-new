@@ -282,12 +282,12 @@
 
 #### applyLayout.ts
 
-- [ ] **[TESTE]** Escrever teste: layout `sidebar` copia `Layout.tsx` e `Sidebar.tsx` para `src/components/`
-- [ ] **[TESTE]** Escrever teste: layout `topbar` copia `Layout.tsx` e `Navbar.tsx`, não copia `Sidebar.tsx`
-- [ ] **[TESTE]** Escrever teste: layout `centered` copia `Layout.tsx` e `Footer.tsx`, não copia `Sidebar.tsx` nem `Navbar.tsx`
-- [ ] **[TESTE]** Escrever teste: layout inexistente lança erro descritivo
-- [ ] Implementar `cli/src/transforms/applyLayout.ts`
-- [ ] Verificar 100% de cobertura de branches
+- [x] **[TESTE]** Escrever teste: layout `sidebar` copia `Layout.tsx` e `Sidebar.tsx` para `src/components/`
+- [x] **[TESTE]** Escrever teste: layout `topbar` copia `Layout.tsx` e `Navbar.tsx`, não copia `Sidebar.tsx`
+- [x] **[TESTE]** Escrever teste: layout `centered` copia `Layout.tsx` e `Footer.tsx`, não copia `Sidebar.tsx` nem `Navbar.tsx`
+- [x] **[TESTE]** Escrever teste: layout inexistente lança erro descritivo
+- [x] Implementar `cli/src/transforms/applyLayout.ts`
+- [x] Verificar 100% de cobertura de branches
 
 #### applyFont.ts
 
