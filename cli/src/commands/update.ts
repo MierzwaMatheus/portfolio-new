@@ -179,10 +179,10 @@ export async function runUpdate(deps: RunUpdateDeps = {}): Promise<void> {
     {
       fontFamily: identity.fontSans,
       themeColor: identity.accentColor,
-      ogTitle: identity.siteName,
-      ogUrl: identity.siteUrl,
-      twitterCreator: identity.twitterHandle,
-      author: identity.authorName,
+      siteName: identity.siteName,
+      siteUrl: identity.siteUrl,
+      twitterHandle: identity.twitterHandle,
+      authorName: identity.authorName,
     },
     htmlPath,
     fs as Parameters<typeof defaultApplyIndexHtml>[2]
