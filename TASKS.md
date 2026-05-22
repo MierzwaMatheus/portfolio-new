@@ -68,7 +68,7 @@
 - [x] Identificar todos os valores hardcoded em `src/components/SEO.tsx` (siteTitle, defaultDescription, defaultImage, siteUrl, og:site_name, og:locale, twitter:creator, lógica de fullTitle)
 - [x] Substituir `siteTitle` por `useSiteConfig().site_title`
 - [x] Substituir `defaultDescription` por `useSiteConfig().site_description`
-- [ ] Substituir URL da OG image por `useSiteConfig().og_image_url`
+- [x] Substituir URL da OG image por `useSiteConfig().og_image_url`
 - [ ] Substituir `siteUrl` por `useSiteConfig().site_url`
 - [ ] Substituir `og:site_name` por `useSiteConfig().site_name`
 - [ ] Substituir `og:locale` por `useSiteConfig().lang`

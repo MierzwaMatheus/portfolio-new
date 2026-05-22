@@ -47,6 +47,32 @@ beforeEach(() => {
 });
 
 describe("SEO", () => {
+  describe("Ciclo 4 — siteUrl", () => {
+    it("usa site_url do useSiteConfig no link canonical quando url prop não fornecida", async () => {
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const link = document.querySelector('link[rel="canonical"]');
+        expect(link?.getAttribute("href")).toBe("https://exemplo.com");
+      });
+    });
+
+    it("usa site_url do useSiteConfig no og:url quando url prop não fornecida", async () => {
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[property="og:url"]');
+        expect(meta?.getAttribute("content")).toBe("https://exemplo.com");
+      });
+    });
+
+    it("não contém domínio pessoal hardcoded no canonical", async () => {
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const link = document.querySelector('link[rel="canonical"]');
+        expect(link?.getAttribute("href")).not.toContain("mmlo.com.br");
+      });
+    });
+  });
+
   describe("Ciclo 3 — OG image URL", () => {
     it("usa og_image_url do useSiteConfig como imagem padrão quando image prop não é fornecida", async () => {
       renderSEO({ title: "Página" });

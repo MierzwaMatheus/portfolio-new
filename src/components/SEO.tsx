@@ -20,7 +20,7 @@ export function SEO({
   const siteTitle = config.site_title;
   const defaultDescription = config.site_description;
   const defaultImage = config.og_image_url;
-  const siteUrl = "https://www.mmlo.com.br";
+  const siteUrl = config.site_url;
 
   const fullTitle = title === siteTitle ? title : `${title} | ${siteTitle}`;
   const metaDescription = description || defaultDescription;
