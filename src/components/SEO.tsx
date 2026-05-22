@@ -19,8 +19,7 @@ export function SEO({
   const config = useSiteConfig();
   const siteTitle = config.site_title;
   const defaultDescription = config.site_description;
-  const defaultImage =
-    "https://i.postimg.cc/65bvTHHJ/og-image-port-math-100.jpg";
+  const defaultImage = config.og_image_url;
   const siteUrl = "https://www.mmlo.com.br";
 
   const fullTitle = title === siteTitle ? title : `${title} | ${siteTitle}`;

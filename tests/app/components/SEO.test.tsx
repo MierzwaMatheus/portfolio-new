@@ -47,6 +47,32 @@ beforeEach(() => {
 });
 
 describe("SEO", () => {
+  describe("Ciclo 3 — OG image URL", () => {
+    it("usa og_image_url do useSiteConfig como imagem padrão quando image prop não é fornecida", async () => {
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[property="og:image"]');
+        expect(meta?.getAttribute("content")).toBe("https://exemplo.com/og.jpg");
+      });
+    });
+
+    it("não contém URL de imagem pessoal hardcoded no og:image", async () => {
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[property="og:image"]');
+        expect(meta?.getAttribute("content")).not.toContain("postimg.cc");
+      });
+    });
+
+    it("usa image prop quando fornecida, ignorando o default", async () => {
+      renderSEO({ title: "Página", image: "https://outro.com/img.jpg" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[property="og:image"]');
+        expect(meta?.getAttribute("content")).toBe("https://outro.com/img.jpg");
+      });
+    });
+  });
+
   describe("Ciclo 2 — defaultDescription", () => {
     it("usa site_description do useSiteConfig como meta description padrão", async () => {
       renderSEO({ title: "Página" });
