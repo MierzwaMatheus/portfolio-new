@@ -352,12 +352,12 @@
 
 ### 2.7 Temas CSS — closes #10
 
-- [ ] Ler `src/index.css` (ou tema cyberpunk existente) para identificar todas as variáveis CSS necessárias
-- [ ] Criar `templates/themes/minimal.css` — paleta neutra, azul, fundo branco/cinza claro no light e cinza escuro no dark
-- [ ] Criar `templates/themes/editorial.css` — creme, âmbar, tipografia serifada, tons quentes
-- [ ] Criar `templates/themes/forest.css` — verde musgo, off-white, tons terrosos
-- [ ] Garantir que cada arquivo define blocos `:root` (light) e `.dark` com todas as variáveis do tema cyberpunk
-- [ ] Verificar: aplicar cada tema manualmente substituindo o bloco em `src/index.css` e conferir visual no browser
+- [x] Ler `src/index.css` (ou tema cyberpunk existente) para identificar todas as variáveis CSS necessárias
+- [x] Criar `templates/themes/minimal.css` — paleta neutra, azul, fundo branco/cinza claro no light e cinza escuro no dark
+- [x] Criar `templates/themes/editorial.css` — creme, âmbar, tipografia serifada, tons quentes
+- [x] Criar `templates/themes/forest.css` — verde musgo, off-white, tons terrosos
+- [x] Garantir que cada arquivo define blocos `:root` (light) e `.dark` com todas as variáveis do tema cyberpunk
+- [x] Verificar: aplicar cada tema manualmente substituindo o bloco em `src/index.css` e conferir visual no browser
 
 ---
 
