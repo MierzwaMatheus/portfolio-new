@@ -48,7 +48,7 @@ vi.mock("@clack/prompts", () => ({
   spinner: vi.fn(() => ({ start: vi.fn(), stop: vi.fn() })),
 }));
 
-import { select, text, multiselect } from "@clack/prompts";
+import { select, text, multiselect, confirm } from "@clack/prompts";
 
 const DEFAULT_PLUGINS = { blog: true, portfolio: true };
 
@@ -61,13 +61,15 @@ function setupPrompts(opts: {
   fontMono?: string;
   radius?: string;
   plugins?: string[];
+  packageManager?: string;
 }) {
   vi.mocked(select)
     .mockResolvedValueOnce(opts.layout ?? "sidebar")
     .mockResolvedValueOnce(opts.theme ?? "cyberpunk")
     .mockResolvedValueOnce(opts.fontSans ?? "Inter")
     .mockResolvedValueOnce(opts.fontMono ?? "JetBrains Mono")
-    .mockResolvedValueOnce(opts.radius ?? "0.5rem");
+    .mockResolvedValueOnce(opts.radius ?? "0.5rem")
+    .mockResolvedValueOnce(opts.packageManager ?? "none");
   vi.mocked(multiselect).mockResolvedValueOnce(opts.plugins ?? ["blog", "portfolio"]);
   if (opts.accentColor) {
     vi.mocked(text).mockResolvedValueOnce(opts.accentColor);
@@ -409,5 +411,54 @@ describe("create — package.json name", () => {
     );
     const pkg = JSON.parse(pkgRaw) as { name: string };
     expect(pkg.name).toBe("meu-portfolio");
+  });
+});
+
+// ---- Ciclo 10: git init e instalação de dependências ----------------------
+
+describe("create — git init e package install", () => {
+  async function callRunCreateWithExec(opts: {
+    confirmGit?: boolean;
+    packageManager?: string;
+  }) {
+    vi.clearAllMocks();
+    setupPrompts({ packageManager: opts.packageManager ?? "pnpm" });
+    vi.mocked(confirm).mockResolvedValueOnce(opts.confirmGit ?? true);
+
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+
+    const mockExec = vi.fn(async () => undefined);
+    const deps = {
+      ...makeDefaultDeps(vol),
+      exec: mockExec as Deps["exec"],
+    };
+
+    await runCreate("meu-portfolio", deps);
+    return { mockExec };
+  }
+
+  it("executa git init quando usuário confirma", async () => {
+    const { mockExec } = await callRunCreateWithExec({ confirmGit: true });
+    expect(mockExec).toHaveBeenCalledWith(
+      expect.stringContaining("git init"),
+      expect.stringContaining("meu-portfolio")
+    );
+  });
+
+  it("não executa git init quando usuário recusa", async () => {
+    const { mockExec } = await callRunCreateWithExec({ confirmGit: false });
+    const gitCalls = vi.mocked(mockExec).mock.calls.filter(
+      (c) => String(c[0]).includes("git init")
+    );
+    expect(gitCalls).toHaveLength(0);
+  });
+
+  it("executa pnpm install quando selecionado", async () => {
+    const { mockExec } = await callRunCreateWithExec({ confirmGit: false, packageManager: "pnpm" });
+    expect(mockExec).toHaveBeenCalledWith(
+      expect.stringContaining("pnpm install"),
+      expect.stringContaining("meu-portfolio")
+    );
   });
 });
