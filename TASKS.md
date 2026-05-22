@@ -138,11 +138,11 @@
 
 ### 1.10 Home.tsx — closes #19
 
-- [ ] Localizar valores de SEO hardcoded em `src/pages/Home.tsx` (title e description)
-- [ ] Substituir SEO `title` por `useSiteConfig().seo_home_title` com fallback para `rubricalConfig.seoHomeTitle`
-- [ ] Substituir SEO `description` por `useSiteConfig().seo_home_description` com fallback para `rubricalConfig.seoHomeDescription`
-- [ ] Garantir que `Home.tsx` não crasha com config vazio
-- [ ] Verificar que `tsc --noEmit` passa sem erros
+- [x] Localizar valores de SEO hardcoded em `src/pages/Home.tsx` (title e description)
+- [x] Substituir SEO `title` por `useSiteConfig().seo_home_title` com fallback para `rubricalConfig.seoHomeTitle`
+- [x] Substituir SEO `description` por `useSiteConfig().seo_home_description` com fallback para `rubricalConfig.seoHomeDescription`
+- [x] Garantir que `Home.tsx` não crasha com config vazio
+- [x] Verificar que `tsc --noEmit` passa sem erros
 
 ---
 
