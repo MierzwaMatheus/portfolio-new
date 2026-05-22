@@ -13,4 +13,8 @@ describe("hexToHsl", () => {
   it('converte "#ffffff" para branco HSL', () => {
     expect(hexToHsl("#ffffff")).toEqual({ h: 0, s: 0, l: 100 });
   });
+
+  it('converte "#0065fe" para valores HSL corretos', () => {
+    expect(hexToHsl("#0065fe")).toEqual({ h: 216, s: 100, l: 50 });
+  });
 });
