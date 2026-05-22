@@ -65,15 +65,15 @@
 
 ### 1.5 SEO.tsx — closes #16
 
-- [ ] Identificar todos os valores hardcoded em `src/components/SEO.tsx` (siteTitle, defaultDescription, defaultImage, siteUrl, og:site_name, og:locale, twitter:creator, lógica de fullTitle)
-- [ ] Substituir `siteTitle` por `useSiteConfig().site_title`
+- [x] Identificar todos os valores hardcoded em `src/components/SEO.tsx` (siteTitle, defaultDescription, defaultImage, siteUrl, og:site_name, og:locale, twitter:creator, lógica de fullTitle)
+- [x] Substituir `siteTitle` por `useSiteConfig().site_title`
 - [ ] Substituir `defaultDescription` por `useSiteConfig().site_description`
 - [ ] Substituir URL da OG image por `useSiteConfig().og_image_url`
 - [ ] Substituir `siteUrl` por `useSiteConfig().site_url`
 - [ ] Substituir `og:site_name` por `useSiteConfig().site_name`
 - [ ] Substituir `og:locale` por `useSiteConfig().lang`
 - [ ] Substituir `twitter:creator` por `useSiteConfig().twitter_handle` (com `@` prefixado se necessário)
-- [ ] Reescrever lógica de `fullTitle` sem nome pessoal embutido — usar `site_title` como sufixo
+- [x] Reescrever lógica de `fullTitle` sem nome pessoal embutido — usar `site_title` como sufixo
 - [ ] Garantir que projeto sem `rubrica.config.ts` preenchido renderiza placeholders neutros sem crash
 - [ ] Verificar que `tsc --noEmit` passa sem erros
 

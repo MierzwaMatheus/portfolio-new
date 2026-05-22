@@ -18,8 +18,7 @@ export function SEO({
 }: SEOProps) {
   const config = useSiteConfig();
   const siteTitle = config.site_title;
-  const defaultDescription =
-    "Desenvolvedor Front-end Sênior e Tech Lead especializado em React, TypeScript e arquitetura de software. Portfolio com projetos, artigos e serviços de desenvolvimento web.";
+  const defaultDescription = config.site_description;
   const defaultImage =
     "https://i.postimg.cc/65bvTHHJ/og-image-port-math-100.jpg";
   const siteUrl = "https://www.mmlo.com.br";

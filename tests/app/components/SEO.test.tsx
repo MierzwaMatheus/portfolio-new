@@ -47,6 +47,32 @@ beforeEach(() => {
 });
 
 describe("SEO", () => {
+  describe("Ciclo 2 — defaultDescription", () => {
+    it("usa site_description do useSiteConfig como meta description padrão", async () => {
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[name="description"]');
+        expect(meta?.getAttribute("content")).toBe("Descrição padrão do site");
+      });
+    });
+
+    it("não contém descrição pessoal hardcoded", async () => {
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[name="description"]');
+        expect(meta?.getAttribute("content")).not.toContain("Matheus Mierzwa");
+      });
+    });
+
+    it("usa description prop quando fornecida, ignorando o default", async () => {
+      renderSEO({ title: "Página", description: "Descrição customizada" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[name="description"]');
+        expect(meta?.getAttribute("content")).toBe("Descrição customizada");
+      });
+    });
+  });
+
   describe("Ciclo 1 — siteTitle e fullTitle", () => {
     it("usa site_title do useSiteConfig como sufixo do título", async () => {
       renderSEO({ title: "Minha Página" });
