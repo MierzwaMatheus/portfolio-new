@@ -5,8 +5,11 @@ import { downloadRelease as defaultDownloadRelease } from "../utils/download.js"
 import { applyLayout as defaultApplyLayout } from "../transforms/applyLayout.js";
 import { applyTheme as defaultApplyTheme } from "../transforms/applyTheme.js";
 import { applyFont as defaultApplyFont } from "../transforms/applyFont.js";
+import { applyPlugins as defaultApplyPlugins } from "../transforms/applyPlugins.js";
 
 // ---- Tipos -----------------------------------------------------------------
+
+const ALL_PLUGINS = ["blog", "portfolio", "resume"] as const;
 
 export interface FsModule {
   readFile: (path: string, encoding: string) => Promise<string>;
@@ -25,6 +28,7 @@ export interface RunCreateDeps {
   applyLayout?: typeof defaultApplyLayout;
   applyTheme?: typeof defaultApplyTheme;
   applyFont?: typeof defaultApplyFont;
+  applyPlugins?: typeof defaultApplyPlugins;
   identityPrompt?: typeof defaultIdentityPrompt;
 }
 
@@ -64,6 +68,7 @@ export async function runCreate(
   const applyLayoutFn = deps.applyLayout ?? defaultApplyLayout;
   const applyThemeFn = deps.applyTheme ?? defaultApplyTheme;
   const applyFontFn = deps.applyFont ?? defaultApplyFont;
+  const applyPluginsFn = deps.applyPlugins ?? defaultApplyPlugins;
   const doIdentityPrompt = deps.identityPrompt ?? defaultIdentityPrompt;
 
   const projectDir = `${deps.projectsDir}/${projectName}`;
@@ -157,6 +162,27 @@ export async function runCreate(
     { fontSans, fontMono, radius },
     { css: `${projectDir}/src/index.css`, html: `${projectDir}/index.html` },
     fs as Parameters<typeof defaultApplyFont>[2]
+  );
+
+  // Ciclo 6: plugins multi-select + applyPlugins
+  const selectedPlugins = await multiselect({
+    message: "Plugins",
+    options: [
+      { value: "blog", label: "Blog — listagem e leitura de posts" },
+      { value: "portfolio", label: "Portfolio — galeria de projetos" },
+      { value: "resume", label: "Resume — currículo interativo" },
+    ],
+    required: false,
+  }) as string[];
+
+  const pluginsRecord = Object.fromEntries(
+    ALL_PLUGINS.map((id) => [id, selectedPlugins.includes(id)])
+  );
+
+  await applyPluginsFn(
+    pluginsRecord,
+    `${projectDir}/convex/pluginRegistry.ts`,
+    fs as Parameters<typeof defaultApplyPlugins>[2]
   );
 
   // Ciclo 2: limpeza após uso dos templates
