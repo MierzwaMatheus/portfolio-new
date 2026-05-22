@@ -389,3 +389,25 @@ describe("create — writeState", () => {
     );
   });
 });
+
+// ---- Ciclo 9: atualiza name em package.json --------------------------------
+
+describe("create — package.json name", () => {
+  it("atualiza name em package.json com o nome do projeto", async () => {
+    vi.clearAllMocks();
+    setupPrompts({});
+
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+    const deps = makeDefaultDeps(vol);
+
+    await runCreate("meu-portfolio", deps);
+
+    const pkgRaw = await (deps.fs as ReturnType<typeof makeFsModule>).readFile(
+      "/projects/meu-portfolio/package.json",
+      "utf-8"
+    );
+    const pkg = JSON.parse(pkgRaw) as { name: string };
+    expect(pkg.name).toBe("meu-portfolio");
+  });
+});
