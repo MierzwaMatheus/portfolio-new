@@ -39,15 +39,15 @@
 
 ### 1.3 seed.ts — closes #12
 
-- [ ] **[TESTE]** Escrever teste: `seedSiteConfig` com banco vazio insere todas as chaves de `rubricalConfig`
-- [ ] **[TESTE]** Escrever teste: `seedSiteConfig` com banco já populado não duplica nem sobrescreve registros (idempotente)
-- [ ] **[TESTE]** Escrever teste: chave `site_title` recebe valor de `rubricalConfig.siteName`
-- [ ] **[TESTE]** Escrever teste: chave `rss_title` recebe valor de `rubricalConfig.rssTitle`
-- [ ] **[TESTE]** Escrever teste: chave `theme_accent_color` recebe valor de `rubricalConfig.accentColor`
-- [ ] Criar `convex/seed.ts` com `seedSiteConfig` como `internalMutation`
-- [ ] Implementar leitura de todos os campos de `rubricalConfig` e mapeamento para chaves do `siteConfig`
-- [ ] Implementar verificação de banco vazio antes de inserir (guard idempotente)
-- [ ] Usar `setBatch` internamente para inserção em lote
+- [x] **[TESTE]** Escrever teste: `seedSiteConfig` com banco vazio insere todas as chaves de `rubricalConfig`
+- [x] **[TESTE]** Escrever teste: `seedSiteConfig` com banco já populado não duplica nem sobrescreve registros (idempotente)
+- [x] **[TESTE]** Escrever teste: chave `site_title` recebe valor de `rubricalConfig.siteName`
+- [x] **[TESTE]** Escrever teste: chave `rss_title` recebe valor de `rubricalConfig.rssTitle`
+- [x] **[TESTE]** Escrever teste: chave `theme_accent_color` recebe valor de `rubricalConfig.accentColor`
+- [x] Criar `convex/seed.ts` com `seedSiteConfig` como `internalMutation`
+- [x] Implementar leitura de todos os campos de `rubricalConfig` e mapeamento para chaves do `siteConfig`
+- [x] Implementar verificação de banco vazio antes de inserir (guard idempotente)
+- [x] Usar `setBatch` internamente para inserção em lote
 - [ ] Registrar chamada ao seed via mecanismo de inicialização do Convex (cron ou init function)
 
 ---
