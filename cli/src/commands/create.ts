@@ -35,6 +35,7 @@ export interface RunCreateDeps {
   applyIndexHtml?: typeof defaultApplyIndexHtml;
   applyRubricalConfig?: typeof defaultApplyRubricalConfig;
   writeState?: typeof defaultWriteState;
+  exec?: (command: string, cwd: string) => Promise<void>;
   identityPrompt?: typeof defaultIdentityPrompt;
 }
 
@@ -78,6 +79,10 @@ export async function runCreate(
   const applyIndexHtmlFn = deps.applyIndexHtml ?? defaultApplyIndexHtml;
   const applyRubricalConfigFn = deps.applyRubricalConfig ?? defaultApplyRubricalConfig;
   const writeStateFn = deps.writeState ?? defaultWriteState;
+  const execFn = deps.exec ?? (async (cmd: string, cwd: string) => {
+    const { execSync } = await import("node:child_process");
+    execSync(cmd, { cwd, stdio: "inherit" });
+  });
   const doIdentityPrompt = deps.identityPrompt ?? defaultIdentityPrompt;
 
   const projectDir = `${deps.projectsDir}/${projectName}`;
@@ -254,6 +259,25 @@ export async function runCreate(
     },
     fs as Parameters<typeof defaultWriteState>[2]
   );
+
+  // Ciclo 10: git init + package install
+  const doGitInit = await confirm({ message: "Inicializar repositório git?" }) as boolean;
+  const packageManager = await select({
+    message: "Gerenciador de pacotes",
+    options: [
+      { value: "pnpm", label: "pnpm (recomendado)" },
+      { value: "npm", label: "npm" },
+      { value: "none", label: "Não agora" },
+    ],
+  }) as string;
+
+  if (doGitInit) {
+    await execFn("git init", projectDir);
+  }
+
+  if (packageManager !== "none") {
+    await execFn(`${packageManager} install`, projectDir);
+  }
 
   // Ciclo 2: limpeza após uso dos templates
   await removeDir(`${projectDir}/templates`, fs);
