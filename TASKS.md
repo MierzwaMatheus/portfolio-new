@@ -153,9 +153,9 @@
 - [x] Criar `src/pages/admin/SiteConfig.tsx` com layout de duas seções: Aparência e SEO & Identidade
 - [x] **Seção Aparência — Cor de destaque:** color picker + input hex com validação de formato
 - [x] **Seção Aparência — Cor de destaque:** preview em tempo real das cores derivadas (usar `hexToHsl` quando implementado na CLI, ou versão inline)
-- [ ] **Seção Aparência — Fonte principal:** select com opções curadas (Inter, Chakra Petch, Playfair Display, Space Grotesk, DM Sans)
-- [ ] **Seção Aparência — Fonte mono:** select (JetBrains Mono, Fira Code, Space Mono, IBM Plex Mono)
-- [ ] **Seção Aparência — Border radius:** select com 5 opções (Nenhum / Suave / Médio / Arredondado / Pill)
+- [x] **Seção Aparência — Fonte principal:** select com opções curadas (Inter, Chakra Petch, Playfair Display, Space Grotesk, DM Sans)
+- [x] **Seção Aparência — Fonte mono:** select (JetBrains Mono, Fira Code, Space Mono, IBM Plex Mono)
+- [x] **Seção Aparência — Border radius:** select com 5 opções (Nenhum / Suave / Médio / Arredondado / Pill)
 - [ ] **Seção SEO — Título padrão:** campo de texto ligado à chave `site_title`
 - [ ] **Seção SEO — Descrição padrão:** textarea ligado à chave `site_description`
 - [ ] **Seção SEO — OG Image:** upload via Convex Storage, salva `og_image_storage_id` e gera `og_image_url`

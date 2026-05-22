@@ -3,6 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
 import { useState } from "react";
 
 const FONT_SANS_OPTIONS = [
@@ -60,6 +63,13 @@ export default function AdminSiteConfig() {
   const [fontSans, setFontSans] = useState(config.theme_font_sans || "Inter");
   const [fontMono, setFontMono] = useState(config.theme_font_mono || "JetBrains Mono");
   const [radius, setRadius] = useState(config.theme_radius || "0.5rem");
+  const [siteTitle, setSiteTitle] = useState(config.site_title || "");
+  const [siteDescription, setSiteDescription] = useState(config.site_description || "");
+  const [twitterHandle, setTwitterHandle] = useState(config.twitter_handle || "");
+  const [seoHomeTitle, setSeoHomeTitle] = useState(config.seo_home_title || "");
+  const [seoHomeDescription, setSeoHomeDescription] = useState(config.seo_home_description || "");
+  const [keywords, setKeywords] = useState<string[]>(config.keywords || []);
+  const [keywordInput, setKeywordInput] = useState("");
 
   const handleHexChange = (value: string) => {
     setHexInput(value);
@@ -173,8 +183,93 @@ export default function AdminSiteConfig() {
         <CardHeader>
           <CardTitle className="text-white">SEO & Identidade</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-white/60 text-sm">Em breve: título, descrição, OG image e mais.</p>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label className="text-white">Título padrão do site</Label>
+            <Input
+              data-testid="input-site-title"
+              value={siteTitle}
+              onChange={(e) => setSiteTitle(e.target.value)}
+              className="bg-white/5 border-white/10 text-white"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-white">Descrição padrão</Label>
+            <Textarea
+              data-testid="textarea-site-description"
+              value={siteDescription}
+              onChange={(e) => setSiteDescription(e.target.value)}
+              className="bg-white/5 border-white/10 text-white"
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-white">Twitter/X handle (sem @)</Label>
+            <Input
+              data-testid="input-twitter-handle"
+              value={twitterHandle}
+              onChange={(e) => setTwitterHandle(e.target.value)}
+              placeholder="usuario"
+              className="bg-white/5 border-white/10 text-white"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-white">Keywords</Label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {keywords.map((kw) => (
+                <Badge key={kw} variant="secondary" className="flex items-center gap-1">
+                  {kw}
+                  <button
+                    type="button"
+                    onClick={() => setKeywords(keywords.filter((k) => k !== kw))}
+                    className="ml-1 hover:text-red-400"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+            <Input
+              data-testid="keywords-input"
+              value={keywordInput}
+              onChange={(e) => setKeywordInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && keywordInput.trim()) {
+                  e.preventDefault();
+                  if (!keywords.includes(keywordInput.trim())) {
+                    setKeywords([...keywords, keywordInput.trim()]);
+                  }
+                  setKeywordInput("");
+                }
+              }}
+              placeholder="Digite e pressione Enter"
+              className="bg-white/5 border-white/10 text-white"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-white">Título da página Home (SEO)</Label>
+            <Input
+              data-testid="input-seo-home-title"
+              value={seoHomeTitle}
+              onChange={(e) => setSeoHomeTitle(e.target.value)}
+              className="bg-white/5 border-white/10 text-white"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-white">Descrição da página Home (SEO)</Label>
+            <Textarea
+              data-testid="textarea-seo-home-description"
+              value={seoHomeDescription}
+              onChange={(e) => setSeoHomeDescription(e.target.value)}
+              className="bg-white/5 border-white/10 text-white"
+              rows={3}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>

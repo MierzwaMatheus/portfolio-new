@@ -62,7 +62,43 @@ describe("SiteConfig — Ciclo 1: estrutura básica da página", () => {
 
   it("renderiza o heading da seção SEO & Identidade", () => {
     render(<AdminSiteConfig />);
-    expect(screen.getByText(/SEO/i)).toBeInTheDocument();
+    expect(screen.getByText("SEO & Identidade")).toBeInTheDocument();
+  });
+});
+
+describe("SiteConfig — Ciclo 4: seção SEO campos de texto e keywords", () => {
+  it("renderiza input para site_title com valor atual", () => {
+    render(<AdminSiteConfig />);
+    const input = screen.getByTestId("input-site-title");
+    expect(input).toHaveValue("Meu Site");
+  });
+
+  it("renderiza textarea para site_description com valor atual", () => {
+    render(<AdminSiteConfig />);
+    const textarea = screen.getByTestId("textarea-site-description");
+    expect(textarea).toHaveValue("Descrição do site");
+  });
+
+  it("renderiza input para twitter_handle sem @", () => {
+    render(<AdminSiteConfig />);
+    const input = screen.getByTestId("input-twitter-handle");
+    expect(input).toHaveValue("usuario");
+    expect(input).not.toHaveValue("@usuario");
+  });
+
+  it("renderiza input para seo_home_title", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("input-seo-home-title")).toBeInTheDocument();
+  });
+
+  it("renderiza textarea para seo_home_description", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("textarea-seo-home-description")).toBeInTheDocument();
+  });
+
+  it("renderiza área de keywords", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("keywords-input")).toBeInTheDocument();
   });
 });
 
