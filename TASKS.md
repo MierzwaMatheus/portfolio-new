@@ -229,9 +229,9 @@
 - [x] **[TESTE]** Escrever teste: `detectProject` encontra `rubrica.json` no diretório atual (mock com `memfs`)
 - [x] **[TESTE]** Escrever teste: `detectProject` encontra `rubrica.json` dois níveis acima (mock com `memfs`)
 - [x] **[TESTE]** Escrever teste: `detectProject` lança erro amigável quando não encontra `rubrica.json` em nenhum ancestral
-- [ ] **[TESTE]** Escrever teste: `detectProject` retorna o caminho absoluto para `rubrica.json`
-- [ ] Implementar `cli/src/utils/detectProject.ts`
-- [ ] Verificar 100% de cobertura de branches
+- [x] **[TESTE]** Escrever teste: `detectProject` retorna o caminho absoluto para `rubrica.json`
+- [x] Implementar `cli/src/utils/detectProject.ts`
+- [x] Verificar 100% de cobertura de branches
 
 ---
 

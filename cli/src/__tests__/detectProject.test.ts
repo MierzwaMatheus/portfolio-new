@@ -34,4 +34,13 @@ describe("detectProject", () => {
       /detectProject/
     );
   });
+
+  it("retorna o caminho absoluto para rubrica.json", async () => {
+    const vol = Volume.fromJSON({ "/workspace/my-portfolio/rubrica.json": "{}" });
+    const fsModule = makeFsModule(vol);
+
+    const result = await detectProject("/workspace/my-portfolio/src", fsModule);
+    expect(result).toBe("/workspace/my-portfolio/rubrica.json");
+    expect(result.startsWith("/")).toBe(true);
+  });
 });
