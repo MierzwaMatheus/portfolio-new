@@ -121,6 +121,27 @@ describe("applyTheme", () => {
     expect(result).toContain("--background: 25 20% 8%");
   });
 
+  it("preset forest injeta fundo off-white e verde musgo primário no :root", async () => {
+    const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
+    const fs = makeFsModule(vol);
+
+    await applyTheme({ preset: "forest" }, "/project/src/index.css", fs);
+
+    const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
+    expect(result).toContain("--background: 60 20% 97%");
+    expect(result).toContain("--primary: 150 40% 35%");
+  });
+
+  it("preset forest injeta fundo terra escuro no bloco .dark", async () => {
+    const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
+    const fs = makeFsModule(vol);
+
+    await applyTheme({ preset: "forest" }, "/project/src/index.css", fs);
+
+    const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
+    expect(result).toContain("--background: 30 15% 8%");
+  });
+
   it("preset inexistente lança erro descritivo", async () => {
     const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
     const fs = makeFsModule(vol);
