@@ -100,6 +100,27 @@ describe("applyTheme", () => {
     expect(result).toContain("--background: 220 14% 10%");
   });
 
+  it("preset editorial injeta fundo creme e âmbar primário no :root", async () => {
+    const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
+    const fs = makeFsModule(vol);
+
+    await applyTheme({ preset: "editorial" }, "/project/src/index.css", fs);
+
+    const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
+    expect(result).toContain("--background: 38 30% 96%");
+    expect(result).toContain("--primary: 35 90% 50%");
+  });
+
+  it("preset editorial injeta fundo quente escuro no bloco .dark", async () => {
+    const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
+    const fs = makeFsModule(vol);
+
+    await applyTheme({ preset: "editorial" }, "/project/src/index.css", fs);
+
+    const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
+    expect(result).toContain("--background: 25 20% 8%");
+  });
+
   it("preset inexistente lança erro descritivo", async () => {
     const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
     const fs = makeFsModule(vol);
