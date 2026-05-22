@@ -440,13 +440,13 @@
 
 > Ponto de conexão entre o comando `create` e a validade do projeto gerado. Revisar após 2.8 estar pronto.
 
-- [ ] **[TESTE E2E]** Escrever teste: projeto gerado com layout `sidebar` passa em `tsc --noEmit` (sem erros de TypeScript)
-- [ ] **[TESTE E2E]** Escrever teste: projeto gerado com layout `topbar` passa em `tsc --noEmit`
-- [ ] **[TESTE E2E]** Escrever teste: projeto gerado com layout `centered` passa em `tsc --noEmit`
-- [ ] **[TESTE E2E]** Escrever teste: `rubrica.json` gerado é parseável e todos os campos obrigatórios estão presentes
-- [ ] **[TESTE E2E]** Escrever teste: `rubrica.config.ts` gerado é TypeScript sintaticamente válido
-- [ ] **[TESTE E2E]** Escrever teste: `index.html` gerado não contém nenhuma string do conjunto `["Matheus Mierzwa", "matheusmierzwa", "mmlo.com.br", "@matheusmierzwa"]`
-- [ ] **[TESTE E2E]** Escrever teste: `convex/pluginRegistry.ts` gerado tem `defaultEnabled: false` para todos os plugins desmarcados nos prompts
+- [x] **[TESTE E2E]** Escrever teste: projeto gerado com layout `sidebar` passa em `tsc --noEmit` (sem erros de TypeScript)
+- [x] **[TESTE E2E]** Escrever teste: projeto gerado com layout `topbar` passa em `tsc --noEmit`
+- [x] **[TESTE E2E]** Escrever teste: projeto gerado com layout `centered` passa em `tsc --noEmit`
+- [x] **[TESTE E2E]** Escrever teste: `rubrica.json` gerado é parseável e todos os campos obrigatórios estão presentes
+- [x] **[TESTE E2E]** Escrever teste: `rubrica.config.ts` gerado é TypeScript sintaticamente válido
+- [x] **[TESTE E2E]** Escrever teste: `index.html` gerado não contém nenhuma string do conjunto `["Matheus Mierzwa", "matheusmierzwa", "mmlo.com.br", "@matheusmierzwa"]`
+- [x] **[TESTE E2E]** Escrever teste: `convex/pluginRegistry.ts` gerado tem `defaultEnabled: false` para todos os plugins desmarcados nos prompts
 - [ ] Verificar manualmente: projeto gerado sobe com `pnpm dev` sem erros no console
 
 ---
