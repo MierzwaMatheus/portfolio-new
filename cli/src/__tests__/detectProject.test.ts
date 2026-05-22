@@ -1,0 +1,20 @@
+import { describe, it, expect } from "vitest";
+import { Volume } from "memfs";
+import { detectProject } from "../utils/detectProject.js";
+
+function makeFsModule(vol: InstanceType<typeof Volume>) {
+  return {
+    access: (path: string) =>
+      vol.promises.access(path).then(() => undefined),
+  };
+}
+
+describe("detectProject", () => {
+  it("encontra rubrica.json no diretório atual", async () => {
+    const vol = Volume.fromJSON({ "/project/rubrica.json": "{}" });
+    const fsModule = makeFsModule(vol);
+
+    const result = await detectProject("/project", fsModule);
+    expect(result).toBe("/project/rubrica.json");
+  });
+});
