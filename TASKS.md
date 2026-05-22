@@ -48,7 +48,7 @@
 - [x] Implementar leitura de todos os campos de `rubricalConfig` e mapeamento para chaves do `siteConfig`
 - [x] Implementar verificação de banco vazio antes de inserir (guard idempotente)
 - [x] Usar `setBatch` internamente para inserção em lote
-- [ ] Registrar chamada ao seed via mecanismo de inicialização do Convex (cron ou init function)
+- [x] Registrar chamada ao seed via mecanismo de inicialização do Convex (cron ou init function)
 
 ---
 
