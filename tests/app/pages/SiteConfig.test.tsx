@@ -66,6 +66,28 @@ describe("SiteConfig — Ciclo 1: estrutura básica da página", () => {
   });
 });
 
+describe("SiteConfig — Ciclo 3: fontes e border radius", () => {
+  it("renderiza select de fonte principal com as 5 opções curadas", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("select-font-sans")).toBeInTheDocument();
+  });
+
+  it("renderiza select de fonte mono com as 4 opções", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("select-font-mono")).toBeInTheDocument();
+  });
+
+  it("renderiza select de border radius com as 5 opções", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("select-radius")).toBeInTheDocument();
+  });
+
+  it("select de fonte principal mostra valor atual do config", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByText("Inter")).toBeInTheDocument();
+  });
+});
+
 describe("SiteConfig — Ciclo 2: cor de destaque", () => {
   it("renderiza input de cor nativo com valor atual de theme_accent_color", () => {
     render(<AdminSiteConfig />);

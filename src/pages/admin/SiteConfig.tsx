@@ -2,7 +2,31 @@ import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState } from "react";
+
+const FONT_SANS_OPTIONS = [
+  { value: "Inter", label: "Inter" },
+  { value: "Chakra Petch", label: "Chakra Petch" },
+  { value: "Playfair Display", label: "Playfair Display" },
+  { value: "Space Grotesk", label: "Space Grotesk" },
+  { value: "DM Sans", label: "DM Sans" },
+];
+
+const FONT_MONO_OPTIONS = [
+  { value: "JetBrains Mono", label: "JetBrains Mono" },
+  { value: "Fira Code", label: "Fira Code" },
+  { value: "Space Mono", label: "Space Mono" },
+  { value: "IBM Plex Mono", label: "IBM Plex Mono" },
+];
+
+const RADIUS_OPTIONS = [
+  { value: "0rem", label: "Nenhum" },
+  { value: "0.375rem", label: "Suave" },
+  { value: "0.5rem", label: "Médio" },
+  { value: "0.75rem", label: "Arredondado" },
+  { value: "1rem", label: "Pill" },
+];
 
 function hexToHsl(hex: string): { h: number; s: number; l: number } | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -33,6 +57,9 @@ export default function AdminSiteConfig() {
   const config = useSiteConfig();
   const [accentColor, setAccentColor] = useState(config.theme_accent_color || "#6366f1");
   const [hexInput, setHexInput] = useState(config.theme_accent_color || "#6366f1");
+  const [fontSans, setFontSans] = useState(config.theme_font_sans || "Inter");
+  const [fontMono, setFontMono] = useState(config.theme_font_mono || "JetBrains Mono");
+  const [radius, setRadius] = useState(config.theme_radius || "0.5rem");
 
   const handleHexChange = (value: string) => {
     setHexInput(value);
@@ -96,6 +123,48 @@ export default function AdminSiteConfig() {
                 </div>
               </div>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-white">Fonte principal</Label>
+            <Select value={fontSans} onValueChange={setFontSans}>
+              <SelectTrigger data-testid="select-font-sans" className="bg-white/5 border-white/10 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {FONT_SANS_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-white">Fonte mono</Label>
+            <Select value={fontMono} onValueChange={setFontMono}>
+              <SelectTrigger data-testid="select-font-mono" className="bg-white/5 border-white/10 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {FONT_MONO_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-white">Border radius</Label>
+            <Select value={radius} onValueChange={setRadius}>
+              <SelectTrigger data-testid="select-radius" className="bg-white/5 border-white/10 text-white">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RADIUS_OPTIONS.map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
