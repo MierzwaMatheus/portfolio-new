@@ -79,6 +79,15 @@ describe("convex/seed · setupAdmin", () => {
     createAccount.mockReset();
   });
 
+  it("com root já existente lança erro Root user already exists", async () => {
+    ctx.runQuery.mockResolvedValue(false); // isSetupRequired = false → root já existe
+
+    await expect(
+      handler(setupAdmin)(ctx, { email: "test@test.com", password: "senha123456789" }),
+    ).rejects.toThrow("Root user already exists");
+    expect(createAccount).not.toHaveBeenCalled();
+  });
+
   it("com banco vazio cria conta com email e senha fornecidos", async () => {
     ctx.runQuery.mockResolvedValue(true); // isSetupRequired = true
     createAccount.mockResolvedValue({ user: { _id: "user_1" } });

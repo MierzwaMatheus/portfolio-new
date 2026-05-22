@@ -534,7 +534,7 @@
 - [ ] **[TESTE]** Escrever teste: `setupAdmin` retorna `{ userId }` em caso de sucesso
 - [x] Adicionar `setupAdmin` como `internalAction` em `convex/seed.ts`
 - [x] Definir `args: { email: v.string(), password: v.string() }`
-- [ ] Verificar ausência de root chamando query `isSetupRequired` de `convex/users.ts`
+- [x] Verificar ausência de root chamando query `isSetupRequired` de `convex/users.ts`
 - [ ] Chamar `createAccount` de `@convex-dev/auth/server` com `provider: "password"`, `account: { id: email, secret: password }`, `profile: { email }`
 - [ ] Chamar `internalMutation` para inserir em `userRoles` com `role: "root"` e `createdAt: Date.now()`
 - [ ] Verificar que `npx convex run seed:setupAdmin --data '{"email":"test@test.com","password":"senha123456789"}'` executa sem erro com `convex dev` ativo
