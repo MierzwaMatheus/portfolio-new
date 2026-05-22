@@ -182,9 +182,9 @@
 
 > Ponto de conexão entre o backend Convex e os componentes React. Revisar após 1.2, 1.3, 1.4, 1.5 e 1.10 estarem prontos.
 
-- [ ] **[TESTE]** Escrever teste de integração: `seedSiteConfig` popula banco → `getPublic` retorna todas as chaves inseridas
-- [ ] **[TESTE]** Escrever teste de integração: `set` atualiza `site_title` → `getPublic` retorna novo valor na mesma query
-- [ ] **[TESTE]** Escrever teste de integração: `setBatch` com 5 chaves → `getAll` retorna exatamente 5 registros, sem duplicatas
+- [x] **[TESTE]** Escrever teste de integração: `seedSiteConfig` popula banco → `getPublic` retorna todas as chaves inseridas
+- [x] **[TESTE]** Escrever teste de integração: `set` atualiza `site_title` → `getPublic` retorna novo valor na mesma query
+- [x] **[TESTE]** Escrever teste de integração: `setBatch` com 5 chaves → `getAll` retorna exatamente 5 registros, sem duplicatas
 - [ ] **[TESTE]** Escrever teste de integração: `useSiteConfig()` retorna valor do Convex quando disponível e fallback de `rubricalConfig` quando `getPublic` retorna `undefined`
 - [ ] **[TESTE]** Escrever teste de integração: `SEO.tsx` renderiza `og:title` com valor do `siteConfig`, não com valor hardcoded
 - [ ] **[TESTE]** Escrever teste de integração: `Home.tsx` renderiza `<title>` com `seo_home_title` do `siteConfig`
