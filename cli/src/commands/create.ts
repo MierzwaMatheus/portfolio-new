@@ -2,6 +2,7 @@ import { intro, outro, text, select, multiselect, confirm, isCancel, cancel } fr
 import * as nodeFsPromises from "node:fs/promises";
 import { identityPrompt } from "../prompts/identityPrompt.js";
 import { downloadRelease } from "../utils/download.js";
+import { applyLayout } from "../transforms/applyLayout.js";
 
 // ---- Tipos -----------------------------------------------------------------
 
@@ -54,8 +55,26 @@ export async function runCreate(
   const fs = deps.fs ?? (nodeFsPromises as unknown as FsModule);
   const projectDir = `${deps.projectsDir}/${projectName}`;
 
-  // Ciclo 2: download e limpeza
+  // Ciclo 2: download
   await downloadRelease(projectDir, fs as Parameters<typeof downloadRelease>[1]);
+
+  // Ciclo 3: prompt e apply de layout (antes de remover templates/)
+  const layout = await select({
+    message: "Layout",
+    options: [
+      { value: "sidebar", label: "Sidebar — navegação lateral com perfil completo" },
+      { value: "topbar", label: "Topbar — navbar horizontal fixa no topo" },
+      { value: "centered", label: "Centered — sem nav persistente, foco no conteúdo" },
+    ],
+  }) as "sidebar" | "topbar" | "centered";
+
+  await applyLayout(
+    layout,
+    { projectDir, templatesDir: `${projectDir}/templates` },
+    fs as Parameters<typeof applyLayout>[2]
+  );
+
+  // Ciclo 2: limpeza após uso dos templates
   await removeDir(`${projectDir}/templates`, fs);
   await removeDir(`${projectDir}/cli`, fs);
 }
