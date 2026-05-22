@@ -2,25 +2,21 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { rubricalConfig } from "../../../rubrica.config";
 
-vi.mock("convex/react", () => ({
+vi.mock("@tanstack/react-query", () => ({
   useQuery: vi.fn(),
 }));
 
-vi.mock("../../../convex/_generated/api", () => ({
-  api: {
-    siteConfig: {
-      getPublic: "siteConfig:getPublic",
-    },
-  },
+vi.mock("@/repositories/instances", () => ({
+  siteConfigRepository: { getPublic: vi.fn() },
 }));
 
-import { useQuery } from "convex/react";
+import { useQuery } from "@tanstack/react-query";
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 const mockUseQuery = vi.mocked(useQuery);
 
 beforeEach(() => {
-  mockUseQuery.mockReturnValue(undefined as any);
+  mockUseQuery.mockReturnValue({ data: undefined, isLoading: true } as any);
 });
 
 describe("useSiteConfig", () => {
@@ -48,32 +44,37 @@ describe("useSiteConfig", () => {
 
   describe("quando Convex retorna dados", () => {
     it("retorna isLoading: false", () => {
-      mockUseQuery.mockReturnValue([] as any);
+      mockUseQuery.mockReturnValue({ data: [], isLoading: false } as any);
       const { result } = renderHook(() => useSiteConfig());
       expect(result.current.isLoading).toBe(false);
     });
 
     it("sobrescreve site_title com valor do Convex", () => {
-      mockUseQuery.mockReturnValue([
-        { key: "site_title", value: "Override Title", createdAt: 1 },
-      ] as any);
+      mockUseQuery.mockReturnValue({
+        data: [{ key: "site_title", value: "Override Title" }],
+        isLoading: false,
+      } as any);
       const { result } = renderHook(() => useSiteConfig());
       expect(result.current.site_title).toBe("Override Title");
     });
 
     it("preserva fallback quando Convex não tem a chave", () => {
-      mockUseQuery.mockReturnValue([
-        { key: "site_title", value: "Override Title", createdAt: 1 },
-      ] as any);
+      mockUseQuery.mockReturnValue({
+        data: [{ key: "site_title", value: "Override Title" }],
+        isLoading: false,
+      } as any);
       const { result } = renderHook(() => useSiteConfig());
       expect(result.current.lang).toBe(rubricalConfig.lang);
     });
 
     it("sobrescreve múltiplas chaves do Convex", () => {
-      mockUseQuery.mockReturnValue([
-        { key: "site_title", value: "Novo Título", createdAt: 1 },
-        { key: "twitter_handle", value: "novousuario", createdAt: 1 },
-      ] as any);
+      mockUseQuery.mockReturnValue({
+        data: [
+          { key: "site_title", value: "Novo Título" },
+          { key: "twitter_handle", value: "novousuario" },
+        ],
+        isLoading: false,
+      } as any);
       const { result } = renderHook(() => useSiteConfig());
       expect(result.current.site_title).toBe("Novo Título");
       expect(result.current.twitter_handle).toBe("novousuario");
@@ -82,7 +83,7 @@ describe("useSiteConfig", () => {
 
   describe("todas as chaves estão presentes", () => {
     it("retorna todas as 19 chaves públicas", () => {
-      mockUseQuery.mockReturnValue([] as any);
+      mockUseQuery.mockReturnValue({ data: [], isLoading: false } as any);
       const { result } = renderHook(() => useSiteConfig());
       const expectedKeys = [
         "site_title", "site_description", "site_url", "site_name",
@@ -97,13 +98,13 @@ describe("useSiteConfig", () => {
     });
 
     it("keywords tem fallback de array vazio", () => {
-      mockUseQuery.mockReturnValue([] as any);
+      mockUseQuery.mockReturnValue({ data: [], isLoading: false } as any);
       const { result } = renderHook(() => useSiteConfig());
       expect(result.current.keywords).toEqual([]);
     });
 
     it("theme_accent_hsl tem fallback de string vazia", () => {
-      mockUseQuery.mockReturnValue([] as any);
+      mockUseQuery.mockReturnValue({ data: [], isLoading: false } as any);
       const { result } = renderHook(() => useSiteConfig());
       expect(result.current.theme_accent_hsl).toBe("");
     });

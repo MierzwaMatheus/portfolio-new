@@ -1,4 +1,3 @@
-import { useSiteConfig } from "@/hooks/useSiteConfig";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X, Upload } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { toast } from "sonner";
 import { AdminLayout } from "./Dashboard";
@@ -62,7 +61,8 @@ function isValidHex(hex: string): boolean {
 }
 
 export default function AdminSiteConfig() {
-  const config = useSiteConfig();
+  // Admin sempre lê do Convex diretamente — dados ao vivo independente de ambiente
+  const rawConfig = useQuery(api.siteConfig.getPublic);
   const [accentColor, setAccentColor] = useState("#6366f1");
   const [hexInput, setHexInput] = useState("#6366f1");
   const [fontSans, setFontSans] = useState("Inter");
@@ -79,22 +79,23 @@ export default function AdminSiteConfig() {
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    if (!config.isLoading && !initialized) {
-      setAccentColor(config.theme_accent_color || "#6366f1");
-      setHexInput(config.theme_accent_color || "#6366f1");
-      setFontSans(config.theme_font_sans || "Inter");
-      setFontMono(config.theme_font_mono || "JetBrains Mono");
-      setRadius(config.theme_radius || "0.5rem");
-      setSiteTitle(config.site_title || "");
-      setSiteDescription(config.site_description || "");
-      setTwitterHandle(config.twitter_handle || "");
-      setSeoHomeTitle(config.seo_home_title || "");
-      setSeoHomeDescription(config.seo_home_description || "");
-      setKeywords(Array.isArray(config.keywords) ? config.keywords : []);
-      setOgImageUrl(config.og_image_url || "");
+    if (rawConfig !== undefined && !initialized) {
+      const cfg = Object.fromEntries(rawConfig.map((d) => [d.key, d.value]));
+      setAccentColor((cfg.theme_accent_color as string) || "#6366f1");
+      setHexInput((cfg.theme_accent_color as string) || "#6366f1");
+      setFontSans((cfg.theme_font_sans as string) || "Inter");
+      setFontMono((cfg.theme_font_mono as string) || "JetBrains Mono");
+      setRadius((cfg.theme_radius as string) || "0.5rem");
+      setSiteTitle((cfg.site_title as string) || "");
+      setSiteDescription((cfg.site_description as string) || "");
+      setTwitterHandle((cfg.twitter_handle as string) || "");
+      setSeoHomeTitle((cfg.seo_home_title as string) || "");
+      setSeoHomeDescription((cfg.seo_home_description as string) || "");
+      setKeywords(Array.isArray(cfg.keywords) ? (cfg.keywords as string[]) : []);
+      setOgImageUrl((cfg.og_image_url as string) || "");
       setInitialized(true);
     }
-  }, [config.isLoading, initialized]);
+  }, [rawConfig, initialized]);
   const [isUploadingOg, setIsUploadingOg] = useState(false);
   const ogFileInputRef = useRef<HTMLInputElement>(null);
   const generateUploadUrl = useMutation(api.images.generateUploadUrl);
@@ -157,7 +158,7 @@ export default function AdminSiteConfig() {
 
   const hsl = hexToHsl(accentColor);
 
-  if (config.isLoading) {
+  if (rawConfig === undefined) {
     return (
       <AdminLayout>
         <div className="p-6 text-white/60">Carregando configurações...</div>

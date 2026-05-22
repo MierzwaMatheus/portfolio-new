@@ -1,6 +1,6 @@
-import { useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { useQuery } from "@tanstack/react-query";
 import { rubricalConfig } from "../../rubrica.config";
+import { siteConfigRepository } from "@/repositories/instances";
 
 export type SiteConfig = {
   site_title: string;
@@ -49,10 +49,15 @@ function buildFallback(): SiteConfig {
 }
 
 export function useSiteConfig(): SiteConfig & { isLoading: boolean } {
-  const data = useQuery(api.siteConfig.getPublic);
+  const { data, isLoading } = useQuery({
+    queryKey: ["siteConfig"],
+    queryFn: () => siteConfigRepository.getPublic(),
+    staleTime: Infinity,
+  });
+
   const fallback = buildFallback();
 
-  if (data === undefined) {
+  if (isLoading || !data) {
     return { ...fallback, isLoading: true };
   }
 

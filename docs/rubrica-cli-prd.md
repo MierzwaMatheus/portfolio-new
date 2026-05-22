@@ -126,9 +126,9 @@ Este PRD especifica o trabalho necessário para transformar o Rubrica num templa
 
 ---
 
-## 4. Arquitetura de Configuração — Duas Camadas
+## 4. Arquitetura de Configuração — Três Camadas
 
-A decisão central deste PRD é separar configuração em duas camadas com responsabilidades distintas:
+A configuração do Rubrica é separada em três camadas com responsabilidades distintas. **Ignorar essa separação é um erro de arquitetura** — toda nova funcionalidade que lida com configuração deve respeitar as três camadas.
 
 ### 4.1 `rubrica.config.ts` — Build-time e fallback estático
 
@@ -167,9 +167,12 @@ export const rubricalConfig = {
 
 > **Regra:** `rubrica.config.ts` é território do usuário. O `update` nunca o sobrescreve. O `config` o atualiza quando o usuário reconfigura via CLI.
 
-### 4.2 `siteConfig` no Convex — Runtime e admin
+### 4.2 `siteConfig` no Convex — Fonte de verdade para o admin e para o build
 
-Fonte de verdade em runtime, editável pelo admin. Tem prioridade sobre `rubrica.config.ts` quando o Convex está disponível. Permite ao usuário ajustar descrições, keywords e cores sem rodar a CLI.
+Fonte de verdade editável pelo admin via `/admin/site-config`. **Não é consultado diretamente pelo frontend público em runtime** — serve de fonte para dois consumidores:
+
+1. O painel admin (`/admin/site-config`): consulta `getPublic` do Convex via WebSocket em tempo real
+2. O script de build (`scripts/fetch-static-data.ts`): consulta `getPublic` via HTTP no momento do deploy e grava `/public/data/site-config.json`
 
 **A CLI não chama o Convex durante o `create`.** O seeding do `siteConfig` acontece na primeira vez que o usuário roda `npx convex dev` — via uma função de seed que lê `rubrica.config.ts` e popula o banco se as chaves ainda não existirem.
 
@@ -185,7 +188,21 @@ export const seedSiteConfig = internalMutation({
 
 Isso resolve o problema de timing: a CLI termina sem precisar de Convex, e o Convex se auto-popula na primeira vez que sobe.
 
-### 4.3 Schema da tabela `siteConfig`
+### 4.3 `/public/data/site-config.json` — Build-time para páginas públicas
+
+Gerado pelo script `scripts/fetch-static-data.ts` durante o build de produção (`pnpm build`). Contém o snapshot de `siteConfig.getPublic` do Convex no momento do deploy.
+
+**Em produção**, páginas públicas (`SEO.tsx`, `Home.tsx`, `Sidebar.tsx`) leem este arquivo via `StaticSiteConfigRepository` e `fetch("/data/site-config.json")`. **Nunca batem no Convex em runtime.**
+
+**Em dev**, `ConvexSiteConfigRepository` é usado — dados ao vivo via `ConvexHttpClient`.
+
+O hook `useSiteConfig()` abstrai essa decisão via `siteConfigRepository` de `src/repositories/instances.ts` (mesmo padrão de todos os outros repositórios do projeto).
+
+> **Regra:** toda mudança feita pelo admin reflete no site público apenas após o próximo deploy (que regenera o JSON estático). Mudanças em tempo real só aparecem para o próprio admin enquanto logado.
+
+> **Regra de ouro:** qualquer hook ou componente que precise de dados de configuração do site **deve usar `useSiteConfig()`** — nunca `useQuery(api.siteConfig.getPublic)` diretamente em páginas públicas. A exceção é o próprio painel admin, que usa Convex diretamente para edição em tempo real.
+
+### 4.4 Schema da tabela `siteConfig`
 
 ```typescript
 // convex/schema.ts — nova tabela

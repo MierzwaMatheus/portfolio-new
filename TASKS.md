@@ -239,8 +239,8 @@
 
 #### readState.ts
 
-- [ ] **[TESTE]** Escrever teste: `readState` lê `rubrica.json` existente e retorna objeto tipado (mock com `memfs`)
-- [ ] **[TESTE]** Escrever teste: `readState` cria `rubrica.json` com defaults quando arquivo não existe
+- [x] **[TESTE]** Escrever teste: `readState` lê `rubrica.json` existente e retorna objeto tipado (mock com `memfs`)
+- [x] **[TESTE]** Escrever teste: `readState` cria `rubrica.json` com defaults quando arquivo não existe
 - [ ] **[TESTE]** Escrever teste: `readState` lança erro descritivo quando campo obrigatório `version` está ausente
 - [ ] **[TESTE]** Escrever teste: `readState` lança erro descritivo quando campo obrigatório `layout` está ausente
 - [ ] **[TESTE]** Escrever teste: `readState` preserva campos desconhecidos no objeto retornado (forward-compat)

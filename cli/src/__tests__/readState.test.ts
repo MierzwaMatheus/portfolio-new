@@ -41,6 +41,15 @@ describe("readState", () => {
     expect(JSON.parse(written).version).toBe("0.0.0");
   });
 
+  it("lança erro descritivo quando campo obrigatório version está ausente", async () => {
+    const vol = Volume.fromJSON({
+      "/project/rubrica.json": JSON.stringify({ layout: "sidebar" }),
+    });
+    const fs = makeFsModule(vol);
+
+    await expect(readState("/project", fs)).rejects.toThrow(/version/);
+  });
+
   it("lê rubrica.json existente e retorna objeto tipado", async () => {
     const vol = Volume.fromJSON({
       "/project/rubrica.json": JSON.stringify(validState),

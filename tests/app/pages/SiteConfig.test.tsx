@@ -1,10 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 
-vi.mock("@/hooks/useSiteConfig", () => ({
-  useSiteConfig: vi.fn(),
-}));
-
 vi.mock("convex/react", () => ({
   useMutation: vi.fn(() => vi.fn()),
   useQuery: vi.fn(() => undefined),
@@ -30,36 +26,32 @@ vi.mock("@/pages/admin/Dashboard", () => ({
   AdminLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-import { useSiteConfig } from "@/hooks/useSiteConfig";
+import { useQuery } from "convex/react";
 import AdminSiteConfig from "@/pages/admin/SiteConfig";
 
-const mockUseSiteConfig = vi.mocked(useSiteConfig);
+const mockUseQuery = vi.mocked(useQuery);
 
-const defaultConfig = {
-  site_title: "Meu Site",
-  site_description: "Descrição do site",
-  site_url: "https://exemplo.com",
-  site_name: "Meu Site Portfolio",
-  og_image_url: "",
-  twitter_handle: "usuario",
-  author_name: "Autor",
-  author_email: "autor@exemplo.com",
-  rss_title: "",
-  rss_description: "",
-  seo_home_title: "Título Home",
-  seo_home_description: "Descrição Home",
-  theme_accent_color: "#6366f1",
-  theme_accent_hsl: "239 84% 67%",
-  theme_font_sans: "Inter",
-  theme_font_mono: "JetBrains Mono",
-  theme_radius: "0.5rem",
-  keywords: [],
-  lang: "pt-BR",
-  isLoading: false,
-};
+const defaultRawConfig = [
+  { key: "site_title", value: "Meu Site" },
+  { key: "site_description", value: "Descrição do site" },
+  { key: "site_url", value: "https://exemplo.com" },
+  { key: "site_name", value: "Meu Site Portfolio" },
+  { key: "og_image_url", value: "" },
+  { key: "twitter_handle", value: "usuario" },
+  { key: "author_name", value: "Autor" },
+  { key: "author_email", value: "autor@exemplo.com" },
+  { key: "seo_home_title", value: "Título Home" },
+  { key: "seo_home_description", value: "Descrição Home" },
+  { key: "theme_accent_color", value: "#6366f1" },
+  { key: "theme_font_sans", value: "Inter" },
+  { key: "theme_font_mono", value: "JetBrains Mono" },
+  { key: "theme_radius", value: "0.5rem" },
+  { key: "keywords", value: [] },
+  { key: "lang", value: "pt-BR" },
+];
 
 beforeEach(() => {
-  mockUseSiteConfig.mockReturnValue(defaultConfig);
+  mockUseQuery.mockReturnValue(defaultRawConfig as any);
 });
 
 describe("SiteConfig — Ciclo 1: estrutura básica da página", () => {
