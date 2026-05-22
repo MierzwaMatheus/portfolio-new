@@ -70,6 +70,36 @@ describe("getLatestVersion", () => {
 });
 
 describe("downloadRelease", () => {
+  it("lança erro amigável quando há erro de rede ao baixar", async () => {
+    const targetDir = mkdtempSync(join(tmpdir(), "rubrica-target-"));
+    try {
+      server.use(
+        http.get(`${GITHUB_API}/repos/matheusmierzwa/rubrica/tarball/v1.2.3`, () =>
+          HttpResponse.error()
+        )
+      );
+
+      await expect(downloadRelease(targetDir, "v1.2.3")).rejects.toThrow(/rede|conexão/i);
+    } finally {
+      rmSync(targetDir, { recursive: true, force: true });
+    }
+  });
+
+  it("lança erro descritivo quando a URL retorna resposta não-ok", async () => {
+    const targetDir = mkdtempSync(join(tmpdir(), "rubrica-target-"));
+    try {
+      server.use(
+        http.get(`${GITHUB_API}/repos/matheusmierzwa/rubrica/tarball/v1.2.3`, () =>
+          HttpResponse.json({ message: "Not Found" }, { status: 404 })
+        )
+      );
+
+      await expect(downloadRelease(targetDir, "v1.2.3")).rejects.toThrow(/404/);
+    } finally {
+      rmSync(targetDir, { recursive: true, force: true });
+    }
+  });
+
   it("baixa e extrai tarball para o diretório alvo", async () => {
     const tarball = createMinimalTarball();
     const targetDir = mkdtempSync(join(tmpdir(), "rubrica-target-"));
