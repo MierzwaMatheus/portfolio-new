@@ -485,4 +485,19 @@ describe("create — next steps message", () => {
       expect.stringMatching(/cd meu-portfolio/i)
     );
   });
+
+  it("menciona rubrica setup após npx convex dev nas instruções", async () => {
+    const { outro } = await import("@clack/prompts");
+    vi.clearAllMocks();
+    setupPrompts({});
+
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+
+    await runCreate("meu-portfolio", makeDefaultDeps(vol));
+
+    const outroArg = vi.mocked(outro).mock.calls[0][0] as string;
+    expect(outroArg).toMatch(/npx convex dev/i);
+    expect(outroArg).toMatch(/rubrica setup/i);
+  });
 });

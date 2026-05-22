@@ -318,7 +318,12 @@ export async function runCreate(
   await removeDir(`${projectDir}/cli`, fs);
 
   // Ciclo 11: next steps
+  const installStep = packageManager === "none" ? "pnpm install\n  " : "";
   outro(
-    `Projeto criado com sucesso!\n\n  cd ${projectName}\n  ${packageManager !== "none" ? "" : "pnpm install\n  "}pnpm dev\n\nBoa sorte! 🚀`
+    `Projeto criado com sucesso!\n\n  cd ${projectName}\n\n` +
+    `Próximos passos:\n\n` +
+    `  1. Suba o backend:\n     npx convex dev\n     (deixe rodando em um terminal)\n\n` +
+    `  2. Configure o ambiente (em outro terminal, com Convex ativo):\n     rubrica setup\n\n` +
+    `  3. Inicie o frontend:\n     ${installStep}pnpm dev\n\nBoa sorte! 🚀`
   );
 }
