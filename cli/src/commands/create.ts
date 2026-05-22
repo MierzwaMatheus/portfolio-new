@@ -282,4 +282,9 @@ export async function runCreate(
   // Ciclo 2: limpeza após uso dos templates
   await removeDir(`${projectDir}/templates`, fs);
   await removeDir(`${projectDir}/cli`, fs);
+
+  // Ciclo 11: next steps
+  outro(
+    `Projeto criado com sucesso!\n\n  cd ${projectName}\n  ${packageManager !== "none" ? "" : "pnpm install\n  "}pnpm dev\n\nBoa sorte! 🚀`
+  );
 }
