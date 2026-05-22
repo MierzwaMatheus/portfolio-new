@@ -423,3 +423,72 @@ describe("runSetup — Ciclo 5: AI, Playground e Payments vars", () => {
     expect(calls.some((c) => c.includes("ASAAS_WEBHOOK_TOKEN"))).toBe(false);
   });
 });
+
+// ---- Ciclo 6: Vercel vars always-present -----------------------------------
+
+describe("runSetup — Ciclo 6: Vercel vars always-present", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  function makeMinimalSetup() {
+    const state = { ...BASE_STATE, plugins: {} };
+    const vol = Volume.fromJSON({
+      "/project/rubrica.json": JSON.stringify(state),
+      "/project/.env.local": VALID_ENV,
+    });
+    return {
+      cwd: "/project",
+      fs: makeFsModule(vol),
+      detectProject: vi.fn().mockResolvedValue("/project/rubrica.json"),
+      generateJwtKeys: vi.fn().mockResolvedValue({
+        JWT_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
+        JWKS: JSON.stringify({ keys: [{ use: "sig", kty: "RSA" }] }),
+      }),
+      readState: vi.fn().mockResolvedValue(state),
+      randomBytes: vi.fn().mockReturnValue(Buffer.alloc(32, 0)),
+      execSync: vi.fn().mockReturnValue(Buffer.from("")),
+    };
+  }
+
+  it("VERCEL_DEPLOY_HOOK_URL é sempre promovido independente de plugins", async () => {
+    const { text } = await import("@clack/prompts");
+    vi.mocked(text)
+      .mockResolvedValueOnce("https://meusite.com")          // SITE_URL
+      .mockResolvedValueOnce("https://api.vercel.com/hook")  // VERCEL_DEPLOY_HOOK_URL
+      .mockResolvedValueOnce("");                             // VERCEL_WEBHOOK_SECRET (skip)
+
+    const deps = makeMinimalSetup();
+    await runSetup(deps);
+
+    const calls = vi.mocked(deps.execSync).mock.calls.map((c) => c[0] as string);
+    expect(calls.some((c) => c.includes("VERCEL_DEPLOY_HOOK_URL"))).toBe(true);
+  });
+
+  it("VERCEL_WEBHOOK_SECRET é sempre promovido independente de plugins", async () => {
+    const { text } = await import("@clack/prompts");
+    vi.mocked(text)
+      .mockResolvedValueOnce("https://meusite.com") // SITE_URL
+      .mockResolvedValueOnce("")                     // VERCEL_DEPLOY_HOOK_URL (skip)
+      .mockResolvedValueOnce("secret123");           // VERCEL_WEBHOOK_SECRET
+
+    const deps = makeMinimalSetup();
+    await runSetup(deps);
+
+    const calls = vi.mocked(deps.execSync).mock.calls.map((c) => c[0] as string);
+    expect(calls.some((c) => c.includes("VERCEL_WEBHOOK_SECRET"))).toBe(true);
+  });
+
+  it("Vercel vars puladas (vazias) não geram chamada execSync", async () => {
+    const { text } = await import("@clack/prompts");
+    vi.mocked(text)
+      .mockResolvedValueOnce("https://meusite.com") // SITE_URL
+      .mockResolvedValueOnce("")                     // VERCEL_DEPLOY_HOOK_URL (skip)
+      .mockResolvedValueOnce("");                    // VERCEL_WEBHOOK_SECRET (skip)
+
+    const deps = makeMinimalSetup();
+    await runSetup(deps);
+
+    const calls = vi.mocked(deps.execSync).mock.calls.map((c) => c[0] as string);
+    expect(calls.some((c) => c.includes("VERCEL_DEPLOY_HOOK_URL"))).toBe(false);
+    expect(calls.some((c) => c.includes("VERCEL_WEBHOOK_SECRET"))).toBe(false);
+  });
+});

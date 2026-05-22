@@ -207,6 +207,29 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
     }
   }
 
+  // 12. Vercel — sempre presentes (opcionais)
+  const vercelHookUrl = await text({
+    message: "VERCEL_DEPLOY_HOOK_URL (Enter para pular):",
+    initialValue: "",
+  });
+  if (!isCancel(vercelHookUrl) && (vercelHookUrl as string).trim()) {
+    execSync(
+      `npx convex env set VERCEL_DEPLOY_HOOK_URL "${vercelHookUrl as string}"`,
+      { stdio: "pipe" }
+    );
+  }
+
+  const vercelWebhookSecret = await text({
+    message: "VERCEL_WEBHOOK_SECRET (Enter para pular):",
+    initialValue: "",
+  });
+  if (!isCancel(vercelWebhookSecret) && (vercelWebhookSecret as string).trim()) {
+    execSync(
+      `npx convex env set VERCEL_WEBHOOK_SECRET "${vercelWebhookSecret as string}"`,
+      { stdio: "pipe" }
+    );
+  }
+
   outro(
     `Setup concluído!\n\n  SITE_URL, JWT_PRIVATE_KEY e JWKS configurados no Convex.\n\n  Próximo passo: pnpm dev`
   );
