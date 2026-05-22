@@ -47,6 +47,24 @@ beforeEach(() => {
 });
 
 describe("SEO", () => {
+  describe("Ciclo 5 — og:site_name", () => {
+    it("usa site_name do useSiteConfig no og:site_name", async () => {
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[property="og:site_name"]');
+        expect(meta?.getAttribute("content")).toBe("Site Neutro Portfolio");
+      });
+    });
+
+    it("não contém nome pessoal hardcoded no og:site_name", async () => {
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[property="og:site_name"]');
+        expect(meta?.getAttribute("content")).not.toContain("Matheus Mierzwa");
+      });
+    });
+  });
+
   describe("Ciclo 4 — siteUrl", () => {
     it("usa site_url do useSiteConfig no link canonical quando url prop não fornecida", async () => {
       renderSEO({ title: "Página" });

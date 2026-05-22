@@ -49,7 +49,7 @@ export function SEO({
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={metaDescription} />
       <meta property="og:image" content={metaImage} />
-      <meta property="og:site_name" content="Matheus Mierzwa Portfolio" />
+      <meta property="og:site_name" content={config.site_name} />
       <meta property="og:locale" content="pt_BR" />
 
       {/* Twitter */}

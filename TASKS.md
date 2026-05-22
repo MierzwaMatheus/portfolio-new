@@ -69,7 +69,7 @@
 - [x] Substituir `siteTitle` por `useSiteConfig().site_title`
 - [x] Substituir `defaultDescription` por `useSiteConfig().site_description`
 - [x] Substituir URL da OG image por `useSiteConfig().og_image_url`
-- [ ] Substituir `siteUrl` por `useSiteConfig().site_url`
+- [x] Substituir `siteUrl` por `useSiteConfig().site_url`
 - [ ] Substituir `og:site_name` por `useSiteConfig().site_name`
 - [ ] Substituir `og:locale` por `useSiteConfig().lang`
 - [ ] Substituir `twitter:creator` por `useSiteConfig().twitter_handle` (com `@` prefixado se necessário)
