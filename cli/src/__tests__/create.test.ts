@@ -1,5 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { Volume } from "memfs";
+import { runCreate, validateProjectName } from "../commands/create.js";
 
 // ---- helpers ----------------------------------------------------------------
 
@@ -33,53 +34,7 @@ function makeFsModule(vol: InstanceType<typeof Volume>) {
   };
 }
 
-/** Helper: configura download mock mínimo com diretórios extras opcionais */
-async function setupDownloadMock(extraDirs: string[] = []) {
-  const { downloadRelease } = await import("../utils/download.js");
-  vi.mocked(downloadRelease).mockImplementationOnce(async (targetDir, fsArg) => {
-    const f = fsArg as ReturnType<typeof makeFsModule>;
-    await f.mkdir(`${targetDir}/src`, { recursive: true });
-    await f.mkdir(`${targetDir}/templates`, { recursive: true });
-    await f.writeFile(`${targetDir}/src/index.css`, ":root{}\n.dark{}");
-    await f.writeFile(`${targetDir}/index.html`, "<!DOCTYPE html><html></html>");
-    await f.writeFile(`${targetDir}/package.json`, JSON.stringify({ name: "rubrica-template" }));
-    for (const dir of extraDirs) {
-      await f.mkdir(`${targetDir}/${dir}`, { recursive: true });
-      await f.writeFile(`${targetDir}/${dir}/.keep`, "");
-    }
-  });
-  return downloadRelease;
-}
-
-/** Helper: cria vol + fs e chama runCreate com mocks padrão de layout+tema */
-async function runCreateWith(opts: {
-  layout?: string;
-  theme?: string;
-  accentColor?: string;
-  extraDirs?: string[];
-}) {
-  const { select, text } = await import("@clack/prompts");
-  vi.mocked(select)
-    .mockResolvedValueOnce(opts.layout ?? "sidebar")
-    .mockResolvedValueOnce(opts.theme ?? "cyberpunk");
-
-  if (opts.accentColor) {
-    vi.mocked(text).mockResolvedValueOnce(opts.accentColor);
-  }
-
-  await setupDownloadMock(opts.extraDirs ?? []);
-
-  const vol = Volume.fromJSON({});
-  vol.mkdirSync("/projects", { recursive: true });
-  const fs = makeFsModule(vol);
-
-  const { runCreate } = await import("../commands/create.js");
-  await runCreate("meu-portfolio", { projectsDir: "/projects", fs });
-
-  return { vol, fs };
-}
-
-// ---- mocks globais ----------------------------------------------------------
+// ---- mocks de @clack/prompts ------------------------------------------------
 
 vi.mock("@clack/prompts", () => ({
   intro: vi.fn(),
@@ -93,45 +48,70 @@ vi.mock("@clack/prompts", () => ({
   spinner: vi.fn(() => ({ start: vi.fn(), stop: vi.fn() })),
 }));
 
-vi.mock("../utils/download.js", () => ({
-  downloadRelease: vi.fn(),
+import { select, text } from "@clack/prompts";
+
+/** Configura a sequência de respostas dos prompts select */
+function setupSelectSequence(opts: {
+  layout?: string;
+  theme?: string;
+  accentColor?: string;
+  fontSans?: string;
+  fontMono?: string;
+  radius?: string;
+}) {
+  vi.mocked(select)
+    .mockResolvedValueOnce(opts.layout ?? "sidebar")
+    .mockResolvedValueOnce(opts.theme ?? "cyberpunk")
+    .mockResolvedValueOnce(opts.fontSans ?? "Inter")
+    .mockResolvedValueOnce(opts.fontMono ?? "JetBrains Mono")
+    .mockResolvedValueOnce(opts.radius ?? "0.5rem");
+  if (opts.accentColor) {
+    vi.mocked(text).mockResolvedValueOnce(opts.accentColor);
+  }
+}
+
+/** Cria vol + fs com arquivo de download mínimo, injeta dependências mockadas */
+function makeDownloadMock(vol: InstanceType<typeof Volume>, extraDirs: string[] = []) {
+  return vi.fn(async (targetDir: string, _fsArg: unknown) => {
+    const fs = makeFsModule(vol);
+    await fs.mkdir(`${targetDir}/src`, { recursive: true });
+    await fs.mkdir(`${targetDir}/templates`, { recursive: true });
+    await fs.writeFile(`${targetDir}/src/index.css`, ":root{}\n.dark{}");
+    await fs.writeFile(`${targetDir}/index.html`, "<!DOCTYPE html><html></html>");
+    await fs.writeFile(`${targetDir}/package.json`, JSON.stringify({ name: "rubrica-template" }));
+    for (const dir of extraDirs) {
+      await fs.mkdir(`${targetDir}/${dir}`, { recursive: true });
+      await fs.writeFile(`${targetDir}/${dir}/.keep`, "");
+    }
+  });
+}
+
+const mockIdentityPrompt = vi.fn(async () => ({
+  siteName: "Test Site",
+  siteUrl: "https://test.com",
+  siteDescription: "A test site",
+  authorName: "Test Author",
+  authorEmail: "test@test.com",
+  twitterHandle: "testhandle",
+  lang: "pt-BR",
 }));
 
-vi.mock("../transforms/applyTheme.js", () => ({
-  applyTheme: vi.fn(),
-}));
-
-vi.mock("../transforms/applyLayout.js", () => ({
-  applyLayout: vi.fn(),
-}));
-
-vi.mock("../prompts/identityPrompt.js", () => ({
-  identityPrompt: vi.fn(async () => ({
-    siteName: "Test Site",
-    siteUrl: "https://test.com",
-    siteDescription: "A test site",
-    authorName: "Test Author",
-    authorEmail: "test@test.com",
-    twitterHandle: "testhandle",
-    lang: "pt-BR",
-  })),
-}));
+const mockApplyLayout = vi.fn(async () => undefined);
+const mockApplyTheme = vi.fn(async () => undefined);
+const mockApplyFont = vi.fn(async () => undefined);
 
 // ---- Ciclo 1: validação do nome do projeto ----------------------------------
 
 describe("create — validação do nome do projeto", () => {
-  it("nome com espaços lança erro descritivo", async () => {
-    const { validateProjectName } = await import("../commands/create.js");
+  it("nome com espaços lança erro descritivo", () => {
     expect(() => validateProjectName("meu portfolio")).toThrow(/espaços/);
   });
 
-  it("nome com caracteres especiais lança erro descritivo", async () => {
-    const { validateProjectName } = await import("../commands/create.js");
+  it("nome com caracteres especiais lança erro descritivo", () => {
     expect(() => validateProjectName("meu@portfolio!")).toThrow(/caracteres especiais/);
   });
 
-  it("nome válido é aceito sem lançar erro", async () => {
-    const { validateProjectName } = await import("../commands/create.js");
+  it("nome válido é aceito sem lançar erro", () => {
     expect(() => validateProjectName("meu-portfolio")).not.toThrow();
     expect(() => validateProjectName("portfolio_v2")).not.toThrow();
     expect(() => validateProjectName("meuPortfolio")).not.toThrow();
@@ -141,72 +121,100 @@ describe("create — validação do nome do projeto", () => {
 // ---- Ciclo 2: download e remoção de templates/ e cli/ ----------------------
 
 describe("create — download e limpeza do projeto extraído", () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
   it("chama downloadRelease com o diretório do projeto", async () => {
-    await setupDownloadMock();
-    const { select } = await import("@clack/prompts");
-    vi.mocked(select)
-      .mockResolvedValueOnce("sidebar")
-      .mockResolvedValueOnce("cyberpunk");
-
     const vol = Volume.fromJSON({});
     vol.mkdirSync("/projects", { recursive: true });
     const fs = makeFsModule(vol);
-    const { runCreate } = await import("../commands/create.js");
-    await runCreate("meu-portfolio", { projectsDir: "/projects", fs });
+    const mockDownload = makeDownloadMock(vol);
+    setupSelectSequence({});
 
-    const { downloadRelease } = await import("../utils/download.js");
-    expect(vi.mocked(downloadRelease)).toHaveBeenCalledWith("/projects/meu-portfolio", expect.anything());
+    await runCreate("meu-portfolio", {
+      projectsDir: "/projects", fs,
+      download: mockDownload as Parameters<typeof runCreate>[1]["download"],
+      applyLayout: mockApplyLayout as Parameters<typeof runCreate>[1]["applyLayout"],
+      applyTheme: mockApplyTheme as Parameters<typeof runCreate>[1]["applyTheme"],
+      applyFont: mockApplyFont as Parameters<typeof runCreate>[1]["applyFont"],
+      identityPrompt: mockIdentityPrompt as Parameters<typeof runCreate>[1]["identityPrompt"],
+    });
+
+    expect(mockDownload).toHaveBeenCalledWith("/projects/meu-portfolio", expect.anything());
   });
 
   it("remove a pasta templates/ do projeto extraído após o uso dos templates", async () => {
-    await setupDownloadMock(["templates/layouts/sidebar"]);
-    const { select } = await import("@clack/prompts");
-    vi.mocked(select)
-      .mockResolvedValueOnce("sidebar")
-      .mockResolvedValueOnce("cyberpunk");
-
     const vol = Volume.fromJSON({});
     vol.mkdirSync("/projects", { recursive: true });
     const fs = makeFsModule(vol);
-    const { runCreate } = await import("../commands/create.js");
-    await runCreate("meu-portfolio", { projectsDir: "/projects", fs });
+    const mockDownload = makeDownloadMock(vol, ["templates/layouts/sidebar"]);
+    setupSelectSequence({});
+
+    await runCreate("meu-portfolio", {
+      projectsDir: "/projects", fs,
+      download: mockDownload as Parameters<typeof runCreate>[1]["download"],
+      applyLayout: mockApplyLayout as Parameters<typeof runCreate>[1]["applyLayout"],
+      applyTheme: mockApplyTheme as Parameters<typeof runCreate>[1]["applyTheme"],
+      applyFont: mockApplyFont as Parameters<typeof runCreate>[1]["applyFont"],
+      identityPrompt: mockIdentityPrompt as Parameters<typeof runCreate>[1]["identityPrompt"],
+    });
 
     expect(await fs.exists("/projects/meu-portfolio/templates")).toBe(false);
   });
 
   it("remove a pasta cli/ do projeto extraído após download", async () => {
-    await setupDownloadMock(["cli", "templates"]);
-    const { select } = await import("@clack/prompts");
-    vi.mocked(select)
-      .mockResolvedValueOnce("sidebar")
-      .mockResolvedValueOnce("cyberpunk");
-
     const vol = Volume.fromJSON({});
     vol.mkdirSync("/projects", { recursive: true });
     const fs = makeFsModule(vol);
-    const { runCreate } = await import("../commands/create.js");
-    await runCreate("meu-portfolio", { projectsDir: "/projects", fs });
+    const mockDownload = makeDownloadMock(vol, ["cli", "templates"]);
+    setupSelectSequence({});
+
+    await runCreate("meu-portfolio", {
+      projectsDir: "/projects", fs,
+      download: mockDownload as Parameters<typeof runCreate>[1]["download"],
+      applyLayout: mockApplyLayout as Parameters<typeof runCreate>[1]["applyLayout"],
+      applyTheme: mockApplyTheme as Parameters<typeof runCreate>[1]["applyTheme"],
+      applyFont: mockApplyFont as Parameters<typeof runCreate>[1]["applyFont"],
+      identityPrompt: mockIdentityPrompt as Parameters<typeof runCreate>[1]["identityPrompt"],
+    });
 
     expect(await fs.exists("/projects/meu-portfolio/cli")).toBe(false);
   });
 });
 
+// ---- helper compartilhado --------------------------------------------------
+
+async function callRunCreate(opts: {
+  layout?: string;
+  theme?: string;
+  accentColor?: string;
+  fontSans?: string;
+  fontMono?: string;
+  radius?: string;
+}) {
+  vi.clearAllMocks();
+  setupSelectSequence(opts);
+
+  const vol = Volume.fromJSON({});
+  vol.mkdirSync("/projects", { recursive: true });
+  const fs = makeFsModule(vol);
+  const mockDownload = makeDownloadMock(vol);
+
+  await runCreate("meu-portfolio", {
+    projectsDir: "/projects", fs,
+    download: mockDownload as Parameters<typeof runCreate>[1]["download"],
+    applyLayout: mockApplyLayout as Parameters<typeof runCreate>[1]["applyLayout"],
+    applyTheme: mockApplyTheme as Parameters<typeof runCreate>[1]["applyTheme"],
+    applyFont: mockApplyFont as Parameters<typeof runCreate>[1]["applyFont"],
+    identityPrompt: mockIdentityPrompt as Parameters<typeof runCreate>[1]["identityPrompt"],
+  });
+
+  return { mockApplyLayout, mockApplyTheme, mockApplyFont, mockDownload };
+}
+
 // ---- Ciclo 3: applyLayout --------------------------------------------------
 
 describe("create — applyLayout", () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
   it("chama applyLayout com layout sidebar quando selecionado nos prompts", async () => {
-    await runCreateWith({ layout: "sidebar" });
-
-    const { applyLayout } = await import("../transforms/applyLayout.js");
-    expect(vi.mocked(applyLayout)).toHaveBeenCalledWith(
+    const { mockApplyLayout } = await callRunCreate({ layout: "sidebar" });
+    expect(mockApplyLayout).toHaveBeenCalledWith(
       "sidebar",
       expect.objectContaining({ projectDir: "/projects/meu-portfolio" }),
       expect.anything()
@@ -214,10 +222,8 @@ describe("create — applyLayout", () => {
   });
 
   it("chama applyLayout com topbar quando selecionado nos prompts", async () => {
-    await runCreateWith({ layout: "topbar" });
-
-    const { applyLayout } = await import("../transforms/applyLayout.js");
-    expect(vi.mocked(applyLayout)).toHaveBeenCalledWith(
+    const { mockApplyLayout } = await callRunCreate({ layout: "topbar" });
+    expect(mockApplyLayout).toHaveBeenCalledWith(
       "topbar",
       expect.objectContaining({ projectDir: "/projects/meu-portfolio" }),
       expect.anything()
@@ -228,15 +234,9 @@ describe("create — applyLayout", () => {
 // ---- Ciclo 4: applyTheme ---------------------------------------------------
 
 describe("create — applyTheme", () => {
-  beforeEach(() => {
-    vi.resetModules();
-  });
-
   it("chama applyTheme com preset cyberpunk quando selecionado", async () => {
-    await runCreateWith({ theme: "cyberpunk" });
-
-    const { applyTheme } = await import("../transforms/applyTheme.js");
-    expect(vi.mocked(applyTheme)).toHaveBeenCalledWith(
+    const { mockApplyTheme } = await callRunCreate({ theme: "cyberpunk" });
+    expect(mockApplyTheme).toHaveBeenCalledWith(
       { preset: "cyberpunk" },
       "/projects/meu-portfolio/src/index.css",
       expect.anything()
@@ -244,10 +244,8 @@ describe("create — applyTheme", () => {
   });
 
   it("chama applyTheme com preset minimal quando selecionado", async () => {
-    await runCreateWith({ theme: "minimal" });
-
-    const { applyTheme } = await import("../transforms/applyTheme.js");
-    expect(vi.mocked(applyTheme)).toHaveBeenCalledWith(
+    const { mockApplyTheme } = await callRunCreate({ theme: "minimal" });
+    expect(mockApplyTheme).toHaveBeenCalledWith(
       { preset: "minimal" },
       "/projects/meu-portfolio/src/index.css",
       expect.anything()
@@ -255,12 +253,43 @@ describe("create — applyTheme", () => {
   });
 
   it("chama applyTheme com accentColor quando tema personalizado selecionado", async () => {
-    await runCreateWith({ theme: "custom", accentColor: "#0065fe" });
-
-    const { applyTheme } = await import("../transforms/applyTheme.js");
-    expect(vi.mocked(applyTheme)).toHaveBeenCalledWith(
+    const { mockApplyTheme } = await callRunCreate({ theme: "custom", accentColor: "#0065fe" });
+    expect(mockApplyTheme).toHaveBeenCalledWith(
       { accentColor: "#0065fe" },
       "/projects/meu-portfolio/src/index.css",
+      expect.anything()
+    );
+  });
+});
+
+// ---- Ciclo 5: applyFont ----------------------------------------------------
+
+describe("create — applyFont", () => {
+  it("chama applyFont com fontSans, fontMono e radius selecionados nos prompts", async () => {
+    const { mockApplyFont } = await callRunCreate({
+      fontSans: "Inter",
+      fontMono: "JetBrains Mono",
+      radius: "0.5rem",
+    });
+    expect(mockApplyFont).toHaveBeenCalledWith(
+      { fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem" },
+      expect.objectContaining({
+        css: "/projects/meu-portfolio/src/index.css",
+        html: "/projects/meu-portfolio/index.html",
+      }),
+      expect.anything()
+    );
+  });
+
+  it("chama applyFont com outra fonte quando selecionada", async () => {
+    const { mockApplyFont } = await callRunCreate({
+      fontSans: "Playfair Display",
+      fontMono: "Fira Code",
+      radius: "0rem",
+    });
+    expect(mockApplyFont).toHaveBeenCalledWith(
+      { fontSans: "Playfair Display", fontMono: "Fira Code", radius: "0rem" },
+      expect.anything(),
       expect.anything()
     );
   });

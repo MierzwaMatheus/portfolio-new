@@ -1,9 +1,10 @@
 import { intro, outro, text, select, multiselect, confirm, isCancel, cancel } from "@clack/prompts";
 import * as nodeFsPromises from "node:fs/promises";
-import { identityPrompt } from "../prompts/identityPrompt.js";
-import { downloadRelease } from "../utils/download.js";
-import { applyLayout } from "../transforms/applyLayout.js";
-import { applyTheme } from "../transforms/applyTheme.js";
+import { identityPrompt as defaultIdentityPrompt } from "../prompts/identityPrompt.js";
+import { downloadRelease as defaultDownloadRelease } from "../utils/download.js";
+import { applyLayout as defaultApplyLayout } from "../transforms/applyLayout.js";
+import { applyTheme as defaultApplyTheme } from "../transforms/applyTheme.js";
+import { applyFont as defaultApplyFont } from "../transforms/applyFont.js";
 
 // ---- Tipos -----------------------------------------------------------------
 
@@ -20,6 +21,11 @@ export interface FsModule {
 export interface RunCreateDeps {
   projectsDir: string;
   fs?: FsModule;
+  download?: typeof defaultDownloadRelease;
+  applyLayout?: typeof defaultApplyLayout;
+  applyTheme?: typeof defaultApplyTheme;
+  applyFont?: typeof defaultApplyFont;
+  identityPrompt?: typeof defaultIdentityPrompt;
 }
 
 // ---- Validação do nome do projeto ------------------------------------------
@@ -54,10 +60,16 @@ export async function runCreate(
   validateProjectName(projectName);
 
   const fs = deps.fs ?? (nodeFsPromises as unknown as FsModule);
+  const download = deps.download ?? defaultDownloadRelease;
+  const applyLayoutFn = deps.applyLayout ?? defaultApplyLayout;
+  const applyThemeFn = deps.applyTheme ?? defaultApplyTheme;
+  const applyFontFn = deps.applyFont ?? defaultApplyFont;
+  const doIdentityPrompt = deps.identityPrompt ?? defaultIdentityPrompt;
+
   const projectDir = `${deps.projectsDir}/${projectName}`;
 
   // Ciclo 2: download
-  await downloadRelease(projectDir, fs as Parameters<typeof downloadRelease>[1]);
+  await download(projectDir, fs as Parameters<typeof defaultDownloadRelease>[1]);
 
   // Ciclo 3: prompt e apply de layout (antes de remover templates/)
   const layout = await select({
@@ -69,10 +81,10 @@ export async function runCreate(
     ],
   }) as "sidebar" | "topbar" | "centered";
 
-  await applyLayout(
+  await applyLayoutFn(
     layout,
     { projectDir, templatesDir: `${projectDir}/templates` },
-    fs as Parameters<typeof applyLayout>[2]
+    fs as Parameters<typeof defaultApplyLayout>[2]
   );
 
   // Ciclo 4: prompt e apply de tema
@@ -102,10 +114,49 @@ export async function runCreate(
     ? { accentColor }
     : { preset: themeChoice };
 
-  await applyTheme(
+  await applyThemeFn(
     themeOptions,
     `${projectDir}/src/index.css`,
-    fs as Parameters<typeof applyTheme>[2]
+    fs as Parameters<typeof defaultApplyTheme>[2]
+  );
+
+  // Ciclo 5: prompts de fonte e radius
+  const fontSans = await select({
+    message: "Fonte principal",
+    options: [
+      { value: "Inter", label: "Inter — neutra, legível, padrão de produtos digitais" },
+      { value: "Chakra Petch", label: "Chakra Petch — geométrica, tech, futurista" },
+      { value: "Playfair Display", label: "Playfair Display — elegante, editorial" },
+      { value: "Space Grotesk", label: "Space Grotesk — moderna, startup" },
+      { value: "DM Sans", label: "DM Sans — limpa, amigável, versátil" },
+    ],
+  }) as string;
+
+  const fontMono = await select({
+    message: "Fonte mono",
+    options: [
+      { value: "JetBrains Mono", label: "JetBrains Mono — dev-friendly, clara" },
+      { value: "Fira Code", label: "Fira Code — clássico, com ligatures" },
+      { value: "Space Mono", label: "Space Mono — retro digital" },
+      { value: "IBM Plex Mono", label: "IBM Plex Mono — corporativo-tech" },
+    ],
+  }) as string;
+
+  const radius = await select({
+    message: "Border radius",
+    options: [
+      { value: "0rem", label: "Nenhum — bordas retas, minimalismo severo" },
+      { value: "0.375rem", label: "Suave — sutil arredondamento" },
+      { value: "0.5rem", label: "Médio — padrão shadcn/ui" },
+      { value: "0.75rem", label: "Arredondado — amigável, moderno" },
+      { value: "1rem", label: "Pill — muito arredondado, jovial" },
+    ],
+  }) as string;
+
+  await applyFontFn(
+    { fontSans, fontMono, radius },
+    { css: `${projectDir}/src/index.css`, html: `${projectDir}/index.html` },
+    fs as Parameters<typeof defaultApplyFont>[2]
   );
 
   // Ciclo 2: limpeza após uso dos templates
