@@ -57,7 +57,12 @@ function normalizeVersion(version: string): string {
 
 export async function runUpdate(deps: RunUpdateDeps = {}): Promise<void> {
   const cwd = deps.cwd ?? process.cwd();
-  const fs = deps.fs ?? (nodeFsPromises as unknown as FsModule);
+  const fs = deps.fs ?? {
+    ...nodeFsPromises,
+    exists: async (p: string) => {
+      try { await nodeFsPromises.access(p); return true; } catch { return false; }
+    },
+  } as unknown as FsModule;
   const detectProjectFn = deps.detectProject ?? defaultDetectProject;
   const readStateFn = deps.readState ?? defaultReadState;
   const writeStateFn = deps.writeState ?? defaultWriteState;

@@ -86,7 +86,12 @@ export async function runCreate(
 ): Promise<void> {
   validateProjectName(projectName);
 
-  const fs = deps.fs ?? (nodeFsPromises as unknown as FsModule);
+  const fs = deps.fs ?? {
+    ...nodeFsPromises,
+    exists: async (p: string) => {
+      try { await nodeFsPromises.access(p); return true; } catch { return false; }
+    },
+  } as unknown as FsModule;
   const download = deps.download ?? defaultDownloadRelease;
   const getVersion = deps.getLatestVersion ?? defaultGetLatestVersion;
   const applyLayoutFn = deps.applyLayout ?? defaultApplyLayout;
