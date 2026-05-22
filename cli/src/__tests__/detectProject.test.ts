@@ -17,4 +17,12 @@ describe("detectProject", () => {
     const result = await detectProject("/project", fsModule);
     expect(result).toBe("/project/rubrica.json");
   });
+
+  it("encontra rubrica.json dois níveis acima", async () => {
+    const vol = Volume.fromJSON({ "/project/rubrica.json": "{}" });
+    const fsModule = makeFsModule(vol);
+
+    const result = await detectProject("/project/src/components", fsModule);
+    expect(result).toBe("/project/rubrica.json");
+  });
 });
