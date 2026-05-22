@@ -74,8 +74,8 @@
 - [x] Substituir `og:locale` por `useSiteConfig().lang`
 - [x] Substituir `twitter:creator` por `useSiteConfig().twitter_handle` (com `@` prefixado se necessário)
 - [x] Reescrever lógica de `fullTitle` sem nome pessoal embutido — usar `site_title` como sufixo
-- [ ] Garantir que projeto sem `rubrica.config.ts` preenchido renderiza placeholders neutros sem crash
-- [ ] Verificar que `tsc --noEmit` passa sem erros
+- [x] Garantir que projeto sem `rubrica.config.ts` preenchido renderiza placeholders neutros sem crash
+- [x] Verificar que `tsc --noEmit` passa sem erros
 
 ---
 
