@@ -324,16 +324,16 @@
 
 ### 2.5 identityPrompt.ts — closes #25
 
-- [ ] Implementar `cli/src/prompts/identityPrompt.ts` usando `@clack/prompts`
+- [x] Implementar `cli/src/prompts/identityPrompt.ts` usando `@clack/prompts`
 - [x] Adicionar prompt de `siteName` (texto livre)
-- [ ] Adicionar prompt de `siteUrl` com validação: deve começar com `http://` ou `https://`
-- [ ] Adicionar prompt de `siteDescription` (texto livre)
-- [ ] Adicionar prompt de `authorName` (texto livre)
-- [ ] Adicionar prompt de `authorEmail` com validação de formato básico (contém `@` e `.`)
-- [ ] Adicionar prompt de `twitterHandle` (opcional — Enter para pular)
-- [ ] Adicionar prompt de `lang` como select: `pt-BR` / `en-US`
-- [ ] Suportar valores default opcionais em todos os campos (usado pelo `config`)
-- [ ] Retornar objeto tipado com todos os campos coletados
+- [x] Adicionar prompt de `siteUrl` com validação: deve começar com `http://` ou `https://`
+- [x] Adicionar prompt de `siteDescription` (texto livre)
+- [x] Adicionar prompt de `authorName` (texto livre)
+- [x] Adicionar prompt de `authorEmail` com validação de formato básico (contém `@` e `.`)
+- [x] Adicionar prompt de `twitterHandle` (opcional — Enter para pular)
+- [x] Adicionar prompt de `lang` como select: `pt-BR` / `en-US`
+- [x] Suportar valores default opcionais em todos os campos (usado pelo `config`)
+- [x] Retornar objeto tipado com todos os campos coletados
 
 ---
 
