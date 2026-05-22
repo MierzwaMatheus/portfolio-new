@@ -11,7 +11,8 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
-    "@clack/prompts": "^0.9.1"
+    "@clack/prompts": "^0.9.1",
+    "jose": "^6.0.10"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
