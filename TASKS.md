@@ -365,31 +365,31 @@
 
 - [x] Criar `cli/src/commands/create.ts` com estrutura do comando
 - [x] Implementar prompt de nome do projeto com validação (sem espaços, sem caracteres especiais)
-- [ ] Encadear `identityPrompt` para coleta de identidade
-- [ ] Implementar prompt de layout como select (sidebar / topbar / centered)
-- [ ] Implementar prompt de tema como select (cyberpunk / minimal / editorial / forest / personalizado)
-- [ ] Implementar prompt de cor custom quando "personalizado" selecionado (com validação hex)
-- [ ] Implementar prompt de fonte principal como select com lista curada + opção "Outra..."
-- [ ] Implementar prompt de fonte mono como select
-- [ ] Implementar prompt de border radius como select (Nenhum / Suave / Médio / Arredondado / Pill)
-- [ ] Implementar prompt de plugins como multi-select com defaults conforme PRD
-- [ ] Implementar prompt de git init (Sim/Não)
-- [ ] Implementar prompt de gerenciador de pacotes (pnpm / npm / Não agora)
-- [ ] Chamar `download.ts` para baixar tarball da última release
-- [ ] Extrair tarball em `<nome-do-projeto>/`
-- [ ] Remover diretórios `templates/` e `cli/` do projeto extraído
-- [ ] Chamar `applyLayout` com o layout escolhido
-- [ ] Chamar `applyTheme` com o tema/cor escolhido
-- [ ] Chamar `applyFont` com as fontes e radius escolhidos
-- [ ] Chamar `applyPlugins` com os plugins selecionados
-- [ ] Chamar `applyIndexHtml` com os dados de identidade e aparência
-- [ ] Chamar `applyRubricalConfig` para gerar `rubrica.config.ts`
-- [ ] Chamar `writeState` para criar `rubrica.json`
-- [ ] Atualizar `name` em `package.json` do projeto gerado
-- [ ] Executar `git init` + commit inicial quando solicitado
-- [ ] Executar instalação de dependências (pnpm/npm) quando solicitado
-- [ ] Exibir mensagem de next steps ao final (conforme PRD seção 6.3)
-- [ ] Testar manualmente: `node dist/index.js create test-project` cria projeto válido
+- [x] Encadear `identityPrompt` para coleta de identidade
+- [x] Implementar prompt de layout como select (sidebar / topbar / centered)
+- [x] Implementar prompt de tema como select (cyberpunk / minimal / editorial / forest / personalizado)
+- [x] Implementar prompt de cor custom quando "personalizado" selecionado (com validação hex)
+- [x] Implementar prompt de fonte principal como select com lista curada + opção "Outra..."
+- [x] Implementar prompt de fonte mono como select
+- [x] Implementar prompt de border radius como select (Nenhum / Suave / Médio / Arredondado / Pill)
+- [x] Implementar prompt de plugins como multi-select com defaults conforme PRD
+- [x] Implementar prompt de git init (Sim/Não)
+- [x] Implementar prompt de gerenciador de pacotes (pnpm / npm / Não agora)
+- [x] Chamar `download.ts` para baixar tarball da última release
+- [x] Extrair tarball em `<nome-do-projeto>/`
+- [x] Remover diretórios `templates/` e `cli/` do projeto extraído
+- [x] Chamar `applyLayout` com o layout escolhido
+- [x] Chamar `applyTheme` com o tema/cor escolhido
+- [x] Chamar `applyFont` com as fontes e radius escolhidos
+- [x] Chamar `applyPlugins` com os plugins selecionados
+- [x] Chamar `applyIndexHtml` com os dados de identidade e aparência
+- [x] Chamar `applyRubricalConfig` para gerar `rubrica.config.ts`
+- [x] Chamar `writeState` para criar `rubrica.json`
+- [x] Atualizar `name` em `package.json` do projeto gerado
+- [x] Executar `git init` + commit inicial quando solicitado
+- [x] Executar instalação de dependências (pnpm/npm) quando solicitado
+- [x] Exibir mensagem de next steps ao final (conforme PRD seção 6.3)
+- [x] Testar manualmente: `node dist/index.js create test-project` cria projeto válido
 
 > **Nota arquitetural:** O projeto gerado usa três camadas de config. O `next steps` exibido ao usuário deve incluir instruções para: (1) preencher `.env.local` com `VITE_CONVEX_URL`, (2) rodar `pnpm build` antes do primeiro deploy para gerar `/public/data/site-config.json`. Sem o build, páginas públicas em produção usam apenas os fallbacks de `rubrica.config.ts`.
 
