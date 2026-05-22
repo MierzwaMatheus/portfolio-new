@@ -1,3 +1,4 @@
+import { Helmet } from "react-helmet-async";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "wouter";
@@ -236,9 +237,10 @@ function AdminSidebar() {
 }
 
 // Admin Layout Wrapper
-export function AdminLayout({ children }: { children: React.ReactNode }) {
+export function AdminLayout({ children, title = "Admin" }: { children: React.ReactNode; title?: string }) {
   return (
     <div className="min-h-screen bg-background text-white">
+      <Helmet><title>{title} — Admin</title></Helmet>
       <AdminSidebar />
       <main className="md:ml-64 p-8 pt-20 md:pt-8">{children}</main>
     </div>

@@ -26,6 +26,10 @@ vi.mock("sonner", () => ({
   toast: { success: vi.fn(), error: vi.fn(), loading: vi.fn(), dismiss: vi.fn() },
 }));
 
+vi.mock("@/pages/admin/Dashboard", () => ({
+  AdminLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import AdminSiteConfig from "@/pages/admin/SiteConfig";
 

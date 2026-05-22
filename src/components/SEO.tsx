@@ -22,7 +22,7 @@ export function SEO({
   const defaultImage = config.og_image_url;
   const siteUrl = config.site_url;
 
-  const fullTitle = title === siteTitle ? title : `${title} | ${siteTitle}`;
+  const fullTitle = !title || title === siteTitle ? siteTitle : `${title} | ${siteTitle}`;
   const metaDescription = description || defaultDescription;
   const metaImage = image
     ? image.startsWith("http")

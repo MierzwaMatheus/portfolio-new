@@ -7,10 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { X, Upload } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { toast } from "sonner";
+import { AdminLayout } from "./Dashboard";
 
 const FONT_SANS_OPTIONS = [
   { value: "Inter", label: "Inter" },
@@ -62,19 +63,38 @@ function isValidHex(hex: string): boolean {
 
 export default function AdminSiteConfig() {
   const config = useSiteConfig();
-  const [accentColor, setAccentColor] = useState(config.theme_accent_color || "#6366f1");
-  const [hexInput, setHexInput] = useState(config.theme_accent_color || "#6366f1");
-  const [fontSans, setFontSans] = useState(config.theme_font_sans || "Inter");
-  const [fontMono, setFontMono] = useState(config.theme_font_mono || "JetBrains Mono");
-  const [radius, setRadius] = useState(config.theme_radius || "0.5rem");
-  const [siteTitle, setSiteTitle] = useState(config.site_title || "");
-  const [siteDescription, setSiteDescription] = useState(config.site_description || "");
-  const [twitterHandle, setTwitterHandle] = useState(config.twitter_handle || "");
-  const [seoHomeTitle, setSeoHomeTitle] = useState(config.seo_home_title || "");
-  const [seoHomeDescription, setSeoHomeDescription] = useState(config.seo_home_description || "");
-  const [keywords, setKeywords] = useState<string[]>(config.keywords || []);
+  const [accentColor, setAccentColor] = useState("#6366f1");
+  const [hexInput, setHexInput] = useState("#6366f1");
+  const [fontSans, setFontSans] = useState("Inter");
+  const [fontMono, setFontMono] = useState("JetBrains Mono");
+  const [radius, setRadius] = useState("0.5rem");
+  const [siteTitle, setSiteTitle] = useState("");
+  const [siteDescription, setSiteDescription] = useState("");
+  const [twitterHandle, setTwitterHandle] = useState("");
+  const [seoHomeTitle, setSeoHomeTitle] = useState("");
+  const [seoHomeDescription, setSeoHomeDescription] = useState("");
+  const [keywords, setKeywords] = useState<string[]>([]);
   const [keywordInput, setKeywordInput] = useState("");
-  const [ogImageUrl, setOgImageUrl] = useState(config.og_image_url || "");
+  const [ogImageUrl, setOgImageUrl] = useState("");
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    if (!config.isLoading && !initialized) {
+      setAccentColor(config.theme_accent_color || "#6366f1");
+      setHexInput(config.theme_accent_color || "#6366f1");
+      setFontSans(config.theme_font_sans || "Inter");
+      setFontMono(config.theme_font_mono || "JetBrains Mono");
+      setRadius(config.theme_radius || "0.5rem");
+      setSiteTitle(config.site_title || "");
+      setSiteDescription(config.site_description || "");
+      setTwitterHandle(config.twitter_handle || "");
+      setSeoHomeTitle(config.seo_home_title || "");
+      setSeoHomeDescription(config.seo_home_description || "");
+      setKeywords(Array.isArray(config.keywords) ? config.keywords : []);
+      setOgImageUrl(config.og_image_url || "");
+      setInitialized(true);
+    }
+  }, [config.isLoading, initialized]);
   const [isUploadingOg, setIsUploadingOg] = useState(false);
   const ogFileInputRef = useRef<HTMLInputElement>(null);
   const generateUploadUrl = useMutation(api.images.generateUploadUrl);
@@ -138,10 +158,15 @@ export default function AdminSiteConfig() {
   const hsl = hexToHsl(accentColor);
 
   if (config.isLoading) {
-    return <div className="p-6 text-white/60">Carregando configurações...</div>;
+    return (
+      <AdminLayout>
+        <div className="p-6 text-white/60">Carregando configurações...</div>
+      </AdminLayout>
+    );
   }
 
   return (
+    <AdminLayout>
     <div className="p-6 space-y-8 max-w-3xl mx-auto">
       <h1 className="text-2xl font-bold text-white">Site & Aparência</h1>
 
@@ -391,5 +416,6 @@ export default function AdminSiteConfig() {
         </CardContent>
       </Card>
     </div>
+    </AdminLayout>
   );
 }
