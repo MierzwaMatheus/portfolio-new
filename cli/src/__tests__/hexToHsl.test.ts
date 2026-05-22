@@ -25,4 +25,20 @@ describe("hexToHsl", () => {
   it('lança erro descritivo para "#gggggg"', () => {
     expect(() => hexToHsl("#gggggg")).toThrow(/hexToHsl/);
   });
+
+  it('aceita hex sem # inicial', () => {
+    expect(hexToHsl("ff0000")).toEqual({ h: 0, s: 100, l: 50 });
+  });
+
+  it('converte "#00ff00" (verde dominante)', () => {
+    expect(hexToHsl("#00ff00")).toEqual({ h: 120, s: 100, l: 50 });
+  });
+
+  it('converte "#0000ff" (azul dominante)', () => {
+    expect(hexToHsl("#0000ff")).toEqual({ h: 240, s: 100, l: 50 });
+  });
+
+  it('converte "#ff00ff" (magenta — h negativo antes da correção)', () => {
+    expect(hexToHsl("#ff00ff")).toEqual({ h: 300, s: 100, l: 50 });
+  });
 });
