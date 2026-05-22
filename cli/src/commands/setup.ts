@@ -160,6 +160,53 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
     }
   }
 
+  // 9. Playground — gerar PLAYGROUND_KEY_PEPPER silenciosamente
+  if (plugins["playground"]) {
+    const pepper = randomBytes(32).toString("hex");
+    execSync(`npx convex env set PLAYGROUND_KEY_PEPPER "${pepper}"`, {
+      stdio: "pipe",
+    });
+  }
+
+  // 10. AI (ai-resumes, i18n ou playground)
+  if (plugins["ai-resumes"] || plugins["i18n"] || plugins["playground"]) {
+    const openrouterKey = await text({
+      message: "OPENROUTER_API_KEY (Enter para pular):",
+      initialValue: "",
+    });
+    if (!isCancel(openrouterKey) && (openrouterKey as string).trim()) {
+      execSync(
+        `npx convex env set OPENROUTER_API_KEY "${openrouterKey as string}"`,
+        { stdio: "pipe" }
+      );
+    }
+  }
+
+  // 11. Payments
+  if (plugins["payments"]) {
+    const stripeSecret = await text({
+      message: "STRIPE_WEBHOOK_SECRET (Enter para pular):",
+      initialValue: "",
+    });
+    if (!isCancel(stripeSecret) && (stripeSecret as string).trim()) {
+      execSync(
+        `npx convex env set STRIPE_WEBHOOK_SECRET "${stripeSecret as string}"`,
+        { stdio: "pipe" }
+      );
+    }
+
+    const asaasToken = await text({
+      message: "ASAAS_WEBHOOK_TOKEN (Enter para pular):",
+      initialValue: "",
+    });
+    if (!isCancel(asaasToken) && (asaasToken as string).trim()) {
+      execSync(
+        `npx convex env set ASAAS_WEBHOOK_TOKEN "${asaasToken as string}"`,
+        { stdio: "pipe" }
+      );
+    }
+  }
+
   outro(
     `Setup concluído!\n\n  SITE_URL, JWT_PRIVATE_KEY e JWKS configurados no Convex.\n\n  Próximo passo: pnpm dev`
   );
