@@ -589,24 +589,26 @@
 
 ### 4.4 CLI: `setup.ts` — vars condicionais por plugin — closes #34
 
-- [ ] **[TESTE]** Escrever teste: com `contact-wizard: true` em `rubrica.json`, `TELEGRAM_BOT_TOKEN` é setado quando fornecido
-- [ ] **[TESTE]** Escrever teste: sem plugin telegram, nenhum prompt de `TELEGRAM_BOT_TOKEN` ou `TELEGRAM_ADMIN_CHAT_ID` é exibido
-- [ ] **[TESTE]** Escrever teste: `TELEGRAM_BOT_TOKEN` pulado (Enter vazio) não chama `convex env set` para essa var
-- [ ] **[TESTE]** Escrever teste: com `playground: true` em `rubrica.json`, `PLAYGROUND_KEY_PEPPER` é gerado automaticamente com 64 chars hex
-- [ ] **[TESTE]** Escrever teste: com `playground: true`, `PLAYGROUND_KEY_PEPPER` é setado sem prompt ao usuário
-- [ ] **[TESTE]** Escrever teste: com `ai-resumes: true` ou `i18n: true`, prompt de `OPENROUTER_API_KEY` aparece
-- [ ] **[TESTE]** Escrever teste: com `payments: true`, prompts de `STRIPE_WEBHOOK_SECRET` e `ASAAS_WEBHOOK_TOKEN` aparecem (skipáveis)
-- [ ] **[TESTE]** Escrever teste: `VERCEL_DEPLOY_HOOK_URL` e `VERCEL_WEBHOOK_SECRET` são sempre promovidos como opcionais independente de plugins
-- [ ] **[TESTE]** Escrever teste: vars opcionais puladas não geram chamada `execSync` para `convex env set`
-- [ ] Expandir `runSetup()` com leitura de `rubrica.json` via `readState()`
-- [ ] Implementar bloco condicional Telegram: se `plugins.contact-wizard || plugins['testimonials-intake']` → prompt `TELEGRAM_BOT_TOKEN` e `TELEGRAM_ADMIN_CHAT_ID` (skipáveis)
-- [ ] Implementar bloco condicional AI: se `plugins['ai-resumes'] || plugins.i18n || plugins.playground` → prompt `OPENROUTER_API_KEY` (skipável)
-- [ ] Implementar bloco playground: se `plugins.playground` → gerar `PLAYGROUND_KEY_PEPPER` com `crypto.randomBytes(32).toString('hex')` e setar silenciosamente
-- [ ] Implementar bloco condicional payments: se `plugins.payments` → prompt `STRIPE_WEBHOOK_SECRET` e `ASAAS_WEBHOOK_TOKEN` (skipáveis)
-- [ ] Implementar prompts sempre-presentes: `VERCEL_DEPLOY_HOOK_URL` e `VERCEL_WEBHOOK_SECRET` (skipáveis)
-- [ ] Coletar todas as vars não vazias e executar `execSync('npx convex env set ...')` para cada uma em sequência
-- [ ] Expandir `cli/src/__tests__/setup.test.ts` com testes acima (ciclos 4–6)
-- [ ] Verificar que `pnpm test` passa
+- [x] **[TESTE]** Escrever teste: com `contact-wizard: true` em `rubrica.json`, `TELEGRAM_BOT_TOKEN` é setado quando fornecido
+- [x] **[TESTE]** Escrever teste: sem plugin telegram, nenhum prompt de `TELEGRAM_BOT_TOKEN` ou `TELEGRAM_ADMIN_CHAT_ID` é exibido
+- [x] **[TESTE]** Escrever teste: `TELEGRAM_BOT_TOKEN` pulado (Enter vazio) não chama `convex env set` para essa var
+- [x] **[TESTE]** Escrever teste: com `playground: true` em `rubrica.json`, `PLAYGROUND_KEY_PEPPER` é gerado automaticamente com 64 chars hex
+- [x] **[TESTE]** Escrever teste: com `playground: true`, `PLAYGROUND_KEY_PEPPER` é setado sem prompt ao usuário
+- [x] **[TESTE]** Escrever teste: com `ai-resumes: true` ou `i18n: true`, prompt de `OPENROUTER_API_KEY` aparece
+- [x] **[TESTE]** Escrever teste: com `payments: true`, prompts de `STRIPE_WEBHOOK_SECRET` e `ASAAS_WEBHOOK_TOKEN` aparecem (skipáveis)
+- [x] **[TESTE]** Escrever teste: `VERCEL_DEPLOY_HOOK_URL` e `VERCEL_WEBHOOK_SECRET` são sempre promovidos como opcionais independente de plugins
+- [x] **[TESTE]** Escrever teste: vars opcionais puladas não geram chamada `execSync` para `convex env set`
+- [x] Expandir `runSetup()` com leitura de `rubrica.json` via `readState()`
+- [x] Implementar bloco condicional Telegram: se `plugins.contact-wizard || plugins['testimonials-intake']` → prompt `TELEGRAM_BOT_TOKEN` e `TELEGRAM_ADMIN_CHAT_ID` (skipáveis)
+- [x] Implementar bloco condicional AI: se `plugins['ai-resumes'] || plugins.i18n || plugins.playground` → prompt `OPENROUTER_API_KEY` (skipável)
+- [x] Implementar bloco playground: se `plugins.playground` → gerar `PLAYGROUND_KEY_PEPPER` com `crypto.randomBytes(32).toString('hex')` e setar silenciosamente
+- [x] Implementar bloco condicional payments: se `plugins.payments` → prompt `STRIPE_WEBHOOK_SECRET` e `ASAAS_WEBHOOK_TOKEN` (skipáveis)
+- [x] Implementar prompts sempre-presentes: `VERCEL_DEPLOY_HOOK_URL` e `VERCEL_WEBHOOK_SECRET` (skipáveis)
+- [x] Coletar todas as vars não vazias e executar `execSync('npx convex env set ...')` para cada uma em sequência
+- [x] Expandir `cli/src/__tests__/setup.test.ts` com testes acima (ciclos 4–6)
+- [x] Verificar que `pnpm test` passa
+
+---
 
 ---
 
