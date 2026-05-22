@@ -12,7 +12,22 @@ import { writeState as defaultWriteState } from "../state/writeState.js";
 
 // ---- Tipos -----------------------------------------------------------------
 
-const ALL_PLUGINS = ["blog", "portfolio", "resume"] as const;
+const ALL_PLUGINS = [
+  "contact-wizard",
+  "proposals",
+  "payments",
+  "blog",
+  "portfolio",
+  "resume",
+  "about",
+  "ai-resumes",
+  "audit-log",
+  "media-manager",
+  "i18n",
+  "playground",
+  "testimonials",
+  "testimonials-intake",
+] as const;
 
 export interface FsModule {
   readFile: (path: string, encoding: string) => Promise<string>;
@@ -180,11 +195,22 @@ export async function runCreate(
 
   // Ciclo 6: plugins multi-select + applyPlugins
   const selectedPlugins = await multiselect({
-    message: "Plugins",
+    message: "Plugins ativos",
     options: [
-      { value: "blog", label: "Blog — listagem e leitura de posts" },
-      { value: "portfolio", label: "Portfolio — galeria de projetos" },
-      { value: "resume", label: "Resume — currículo interativo" },
+      { value: "contact-wizard", label: "Contact Wizard — formulário de contato multi-etapas", hint: "recomendado" },
+      { value: "proposals", label: "Propostas — propostas comerciais com assinatura eletrônica", hint: "recomendado" },
+      { value: "payments", label: "Pagamentos — integração com Stripe/Asaas" },
+      { value: "blog", label: "Blog — listagem e leitura de posts", hint: "recomendado" },
+      { value: "portfolio", label: "Portfolio — galeria de projetos", hint: "recomendado" },
+      { value: "resume", label: "Currículo — currículo interativo com download de PDF", hint: "recomendado" },
+      { value: "about", label: "Sobre — página sobre mim", hint: "recomendado" },
+      { value: "ai-resumes", label: "CV com IA — geração de currículo customizado por IA" },
+      { value: "audit-log", label: "Audit Log — log de auditoria do painel admin", hint: "recomendado" },
+      { value: "media-manager", label: "Media Manager — gerenciador de arquivos e imagens" },
+      { value: "i18n", label: "Tradução IA — internacionalização automática de conteúdo" },
+      { value: "playground", label: "Playground — ambiente de testes interativo" },
+      { value: "testimonials", label: "Depoimentos — seção de testimoniais de clientes", hint: "recomendado" },
+      { value: "testimonials-intake", label: "Coleta de Depoimentos — formulário público para coleta", hint: "recomendado" },
     ],
     required: false,
   }) as string[];
