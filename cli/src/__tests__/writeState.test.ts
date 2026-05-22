@@ -26,6 +26,49 @@ const baseState: RubricaState = {
 };
 
 describe("writeState", () => {
+  it("sobrescreve rubrica.json corrompido (sem version) usando o partial fornecido", async () => {
+    const vol = Volume.fromJSON({
+      "/project/rubrica.json": JSON.stringify({ layout: "sidebar" }),
+    });
+    const fs = makeFsModule(vol);
+
+    await writeState("/project", baseState, fs);
+
+    const written = vol.readFileSync("/project/rubrica.json", "utf-8") as string;
+    const parsed = JSON.parse(written) as RubricaState;
+    expect(parsed.version).toBe("1.0.0");
+  });
+
+  it("cria rubrica.json quando não existe nenhum arquivo prévio", async () => {
+    const vol = Volume.fromJSON({});
+    const fs = makeFsModule(vol);
+
+    await writeState("/project", baseState, fs);
+
+    const written = vol.readFileSync("/project/rubrica.json", "utf-8") as string;
+    const parsed = JSON.parse(written) as RubricaState;
+
+    expect(parsed.version).toBe("1.0.0");
+    expect(parsed.layout).toBe("sidebar");
+  });
+
+  it("sobrescreve o arquivo se já existir sem duplicação", async () => {
+    const vol = Volume.fromJSON({
+      "/project/rubrica.json": JSON.stringify(baseState),
+    });
+    const fs = makeFsModule(vol);
+
+    await writeState("/project", { version: "1.1.0", theme: "minimal" }, fs);
+    await writeState("/project", { version: "1.2.0", theme: "forest" }, fs);
+
+    const written = vol.readFileSync("/project/rubrica.json", "utf-8") as string;
+    const parsed = JSON.parse(written) as RubricaState;
+
+    expect(parsed.version).toBe("1.2.0");
+    expect(parsed.theme).toBe("forest");
+    expect(written.split("rubrica").length).toBe(1);
+  });
+
   it("merge parcial — atualizar só version preserva layout, theme e plugins", async () => {
     const vol = Volume.fromJSON({
       "/project/rubrica.json": JSON.stringify(baseState),

@@ -245,15 +245,15 @@
 - [x] **[TESTE]** Escrever teste: `readState` lança erro descritivo quando campo obrigatório `layout` está ausente
 - [x] **[TESTE]** Escrever teste: `readState` preserva campos desconhecidos no objeto retornado (forward-compat)
 - [x] Implementar `cli/src/state/readState.ts`
-- [ ] Verificar 100% de cobertura de branches
+- [x] Verificar 100% de cobertura de branches
 
 #### writeState.ts
 
 - [x] **[TESTE]** Escrever teste: `writeState` persiste todas as propriedades em `rubrica.json` com formatação JSON de 2 espaços
-- [ ] **[TESTE]** Escrever teste: `writeState` merge parcial — atualizar só `version` preserva `layout`, `theme` e `plugins`
-- [ ] **[TESTE]** Escrever teste: `writeState` sobrescreve o arquivo se já existir
-- [ ] Implementar `cli/src/state/writeState.ts`
-- [ ] Verificar 100% de cobertura de branches
+- [x] **[TESTE]** Escrever teste: `writeState` merge parcial — atualizar só `version` preserva `layout`, `theme` e `plugins`
+- [x] **[TESTE]** Escrever teste: `writeState` sobrescreve o arquivo se já existir
+- [x] Implementar `cli/src/state/writeState.ts`
+- [x] Verificar 100% de cobertura de branches
 
 ---
 
