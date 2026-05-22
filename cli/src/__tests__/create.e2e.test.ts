@@ -54,9 +54,20 @@ const MINIMAL_HTML = `<!DOCTYPE html>
 </html>`;
 
 const MINIMAL_REGISTRY = `export const pluginRegistry = [
+  { id: 'contact-wizard', label: 'Contact Wizard', defaultEnabled: true },
+  { id: 'proposals', label: 'Propostas', defaultEnabled: true },
+  { id: 'payments', label: 'Pagamentos', defaultEnabled: false },
   { id: 'blog', label: 'Blog', defaultEnabled: true },
   { id: 'portfolio', label: 'Portfolio', defaultEnabled: true },
   { id: 'resume', label: 'Resume', defaultEnabled: true },
+  { id: 'about', label: 'Sobre', defaultEnabled: true },
+  { id: 'ai-resumes', label: 'CV com IA', defaultEnabled: false },
+  { id: 'audit-log', label: 'Audit Log', defaultEnabled: true },
+  { id: 'media-manager', label: 'Media', defaultEnabled: false },
+  { id: 'i18n', label: 'Tradução IA', defaultEnabled: false },
+  { id: 'playground', label: 'Playground', defaultEnabled: false },
+  { id: 'testimonials', label: 'Depoimentos', defaultEnabled: true },
+  { id: 'testimonials-intake', label: 'Depoimentos Intake', defaultEnabled: true },
 ];`;
 
 // ---- helpers ----------------------------------------------------------------

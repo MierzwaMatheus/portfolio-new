@@ -300,11 +300,14 @@ describe("create — applyPlugins", () => {
     const { mockApplyPlugins } = await callRunCreate({
       plugins: ["blog", "portfolio", "resume"],
     });
-    expect(mockApplyPlugins).toHaveBeenCalledWith(
-      { blog: true, portfolio: true, resume: true },
-      expect.stringContaining("pluginRegistry"),
-      expect.anything()
-    );
+    const call = vi.mocked(mockApplyPlugins).mock.calls[0];
+    const pluginsArg = call[0] as Record<string, boolean>;
+    expect(pluginsArg["blog"]).toBe(true);
+    expect(pluginsArg["portfolio"]).toBe(true);
+    expect(pluginsArg["resume"]).toBe(true);
+    expect(pluginsArg["payments"]).toBe(false);
+    expect(pluginsArg["i18n"]).toBe(false);
+    expect(call[1]).toContain("pluginRegistry");
   });
 
   it("plugins não selecionados são marcados como false", async () => {
