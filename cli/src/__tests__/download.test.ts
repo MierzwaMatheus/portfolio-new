@@ -22,4 +22,14 @@ describe("getLatestVersion", () => {
     const version = await getLatestVersion();
     expect(version).toBe("v1.2.3");
   });
+
+  it("lança erro amigável quando GitHub API retorna 404", async () => {
+    server.use(
+      http.get(`${GITHUB_API}/repos/matheusmierzwa/rubrica/releases/latest`, () =>
+        HttpResponse.json({ message: "Not Found" }, { status: 404 })
+      )
+    );
+
+    await expect(getLatestVersion()).rejects.toThrow(/404/);
+  });
 });
