@@ -129,10 +129,10 @@
 - [x] Substituir `RSS_CONFIG.authorEmail` por `rubricalConfig.authorEmail`
 - [x] Substituir `RSS_CONFIG.copyright` por copyright derivado de `rubricalConfig.authorName`
 - [x] Substituir fallback de `SITE_URL` hardcoded por `rubricalConfig.siteUrl`
-- [ ] Importar `rubricalConfig` em `scripts/generate-sitemap.ts`
-- [ ] Substituir fallback de `SITE_URL` em sitemap por `rubricalConfig.siteUrl`
-- [ ] Executar `pnpm generate-rss` (ou equivalente) e verificar que `public/rss.xml` gerado usa valores do config
-- [ ] Executar `pnpm generate-sitemap` e verificar que `public/sitemap.xml` não contém domínio pessoal
+- [x] Importar `rubricalConfig` em `scripts/generate-sitemap.ts`
+- [x] Substituir fallback de `SITE_URL` em sitemap por `rubricalConfig.siteUrl`
+- [x] Executar `pnpm generate-rss` (ou equivalente) e verificar que `public/rss.xml` gerado usa valores do config
+- [x] Executar `pnpm generate-sitemap` e verificar que `public/sitemap.xml` não contém domínio pessoal
 
 ---
 
