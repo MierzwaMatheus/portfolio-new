@@ -201,6 +201,21 @@ describe("runSetup — Ciclo 2: JWT keys e convex env set", () => {
     expect(jwtCall).not.toMatch(/JWT_PRIVATE_KEY\s*"?\s*"?$/);
   });
 
+  it("JWT_PRIVATE_KEY passado ao execSync tem newlines escapados (sem quebras de linha literais)", async () => {
+    const deps = makeValidSetup();
+
+    await runSetup(deps);
+
+    const calls = (deps.execSync as ReturnType<typeof vi.fn>).mock.calls.map(
+      (c) => c[0] as string
+    );
+    const jwtCall = calls.find((c) => c.includes("JWT_PRIVATE_KEY"));
+    expect(jwtCall).toBeDefined();
+    // não deve conter quebra de linha literal — deve usar \n escapado
+    expect(jwtCall).not.toContain("\n");
+    expect(jwtCall).toContain("\\n");
+  });
+
   it("chama execSync com npx convex env set JWKS com JSON válido", async () => {
     const deps = makeValidSetup();
 

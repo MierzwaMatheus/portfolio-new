@@ -107,7 +107,8 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
   s.stop("Chaves JWT geradas.");
 
   // 5. Setar JWT_PRIVATE_KEY e JWKS no Convex
-  execSync(`npx convex env set JWT_PRIVATE_KEY "${JWT_PRIVATE_KEY}"`, {
+  const escapedKey = JWT_PRIVATE_KEY.replace(/\n/g, "\\n");
+  execSync(`npx convex env set JWT_PRIVATE_KEY "${escapedKey}"`, {
     stdio: "pipe",
   });
   execSync(`npx convex env set JWKS "${JWKS}"`, { stdio: "pipe" });
