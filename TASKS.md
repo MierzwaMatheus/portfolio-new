@@ -215,7 +215,7 @@
 #### hexToHsl.ts
 
 - [x] **[TESTE]** Escrever teste: `hexToHsl("#ff0000")` retorna `{h: 0, s: 100, l: 50}`
-- [ ] **[TESTE]** Escrever teste: `hexToHsl("#000000")` retorna `{h: 0, s: 0, l: 0}`
+- [x] **[TESTE]** Escrever teste: `hexToHsl("#000000")` retorna `{h: 0, s: 0, l: 0}`
 - [ ] **[TESTE]** Escrever teste: `hexToHsl("#ffffff")` retorna `{h: 0, s: 0, l: 100}`
 - [ ] **[TESTE]** Escrever teste: `hexToHsl("#0065fe")` retorna valores HSL corretos
 - [ ] **[TESTE]** Escrever teste: `hexToHsl("invalid")` lança erro com mensagem descritiva
