@@ -246,3 +246,73 @@ describe("runSetup — Ciclo 2: JWT keys e convex env set", () => {
     );
   });
 });
+
+// ---- Ciclo 4: vars condicionais Telegram ------------------------------------
+
+describe("runSetup — Ciclo 4: Telegram plugin vars", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  function makeSetupWithPlugins(plugins: Record<string, boolean>) {
+    const state = { ...BASE_STATE, plugins };
+    const vol = Volume.fromJSON({
+      "/project/rubrica.json": JSON.stringify(state),
+      "/project/.env.local": VALID_ENV,
+    });
+    return {
+      cwd: "/project",
+      fs: makeFsModule(vol),
+      detectProject: vi.fn().mockResolvedValue("/project/rubrica.json"),
+      generateJwtKeys: vi.fn().mockResolvedValue({
+        JWT_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
+        JWKS: JSON.stringify({ keys: [{ use: "sig", kty: "RSA" }] }),
+      }),
+      readState: vi.fn().mockResolvedValue(state),
+      randomBytes: vi.fn().mockReturnValue(Buffer.from("a".repeat(32))),
+      execSync: vi.fn().mockReturnValue(Buffer.from("")),
+    };
+  }
+
+  it("com contact-wizard:true, execSync é chamado com TELEGRAM_BOT_TOKEN quando valor fornecido", async () => {
+    const { text } = await import("@clack/prompts");
+    vi.mocked(text)
+      .mockResolvedValueOnce("https://meusite.com") // SITE_URL
+      .mockResolvedValueOnce("bot123:token")          // TELEGRAM_BOT_TOKEN
+      .mockResolvedValueOnce("987654321")             // TELEGRAM_ADMIN_CHAT_ID
+      .mockResolvedValue("");                          // demais (Vercel)
+
+    const deps = makeSetupWithPlugins({ "contact-wizard": true });
+    await runSetup(deps);
+
+    const calls = vi.mocked(deps.execSync).mock.calls.map((c) => c[0] as string);
+    expect(calls.some((c) => c.includes("TELEGRAM_BOT_TOKEN"))).toBe(true);
+  });
+
+  it("sem plugin Telegram, nenhum prompt de TELEGRAM_BOT_TOKEN é exibido", async () => {
+    const { text } = await import("@clack/prompts");
+    vi.mocked(text)
+      .mockResolvedValueOnce("https://meusite.com") // SITE_URL
+      .mockResolvedValue("");                         // demais
+
+    const deps = makeSetupWithPlugins({ blog: true });
+    await runSetup(deps);
+
+    const calls = vi.mocked(deps.execSync).mock.calls.map((c) => c[0] as string);
+    expect(calls.some((c) => c.includes("TELEGRAM_BOT_TOKEN"))).toBe(false);
+    expect(calls.some((c) => c.includes("TELEGRAM_ADMIN_CHAT_ID"))).toBe(false);
+  });
+
+  it("TELEGRAM_BOT_TOKEN pulado (vazio) não chama execSync para essa var", async () => {
+    const { text } = await import("@clack/prompts");
+    vi.mocked(text)
+      .mockResolvedValueOnce("https://meusite.com") // SITE_URL
+      .mockResolvedValueOnce("")                     // TELEGRAM_BOT_TOKEN (pulado)
+      .mockResolvedValueOnce("")                     // TELEGRAM_ADMIN_CHAT_ID (pulado)
+      .mockResolvedValue("");                         // demais
+
+    const deps = makeSetupWithPlugins({ "contact-wizard": true });
+    await runSetup(deps);
+
+    const calls = vi.mocked(deps.execSync).mock.calls.map((c) => c[0] as string);
+    expect(calls.some((c) => c.includes("TELEGRAM_BOT_TOKEN"))).toBe(false);
+  });
+});

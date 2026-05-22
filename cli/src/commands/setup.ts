@@ -1,9 +1,11 @@
 import { outro, text, spinner, isCancel, cancel } from "@clack/prompts";
 import * as nodeFsPromises from "node:fs/promises";
 import * as path from "node:path";
+import * as nodeCrypto from "node:crypto";
 import { execSync as defaultExecSync } from "node:child_process";
 import { detectProject as defaultDetectProject } from "../utils/detectProject.js";
 import { generateJwtKeys as defaultGenerateJwtKeys } from "../utils/generateJwtKeys.js";
+import { readState as defaultReadState } from "../state/readState.js";
 
 // ---- Tipos ------------------------------------------------------------------
 
@@ -19,6 +21,8 @@ export interface RunSetupDeps {
   fs?: FsModule;
   detectProject?: typeof defaultDetectProject;
   generateJwtKeys?: typeof defaultGenerateJwtKeys;
+  readState?: typeof defaultReadState;
+  randomBytes?: (size: number) => Buffer;
   execSync?: (cmd: string, opts?: object) => Buffer;
 }
 
@@ -53,6 +57,8 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
   };
   const detectProject = deps.detectProject ?? defaultDetectProject;
   const generateJwtKeys = deps.generateJwtKeys ?? defaultGenerateJwtKeys;
+  const readState = deps.readState ?? defaultReadState;
+  const randomBytes = deps.randomBytes ?? ((size: number) => nodeCrypto.randomBytes(size));
   const execSync = deps.execSync ?? ((cmd: string, opts?: object) =>
     defaultExecSync(cmd, opts as Parameters<typeof defaultExecSync>[1]) as Buffer
   );
@@ -124,6 +130,35 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
   execSync(`npx convex env set SITE_URL "${siteUrl as string}"`, {
     stdio: "pipe",
   });
+
+  // 7. Ler rubrica.json para vars condicionais por plugin
+  const state = await readState(cwd, fs);
+  const plugins = state.plugins;
+
+  // 8. Telegram (contact-wizard ou testimonials-intake)
+  if (plugins["contact-wizard"] || plugins["testimonials-intake"]) {
+    const telegramToken = await text({
+      message: "TELEGRAM_BOT_TOKEN (Enter para pular):",
+      initialValue: "",
+    });
+    if (!isCancel(telegramToken) && (telegramToken as string).trim()) {
+      execSync(
+        `npx convex env set TELEGRAM_BOT_TOKEN "${telegramToken as string}"`,
+        { stdio: "pipe" }
+      );
+    }
+
+    const telegramChatId = await text({
+      message: "TELEGRAM_ADMIN_CHAT_ID (Enter para pular):",
+      initialValue: "",
+    });
+    if (!isCancel(telegramChatId) && (telegramChatId as string).trim()) {
+      execSync(
+        `npx convex env set TELEGRAM_ADMIN_CHAT_ID "${telegramChatId as string}"`,
+        { stdio: "pipe" }
+      );
+    }
+  }
 
   outro(
     `Setup concluído!\n\n  SITE_URL, JWT_PRIVATE_KEY e JWKS configurados no Convex.\n\n  Próximo passo: pnpm dev`
