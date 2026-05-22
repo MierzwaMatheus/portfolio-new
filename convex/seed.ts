@@ -1,5 +1,29 @@
-import { internalMutation } from "./_generated/server";
+import { internalMutation, internalAction } from "./_generated/server";
+import { internal, api } from "./_generated/api";
+import { v } from "convex/values";
+import { createAccount } from "@convex-dev/auth/server";
 import { rubricalConfig } from "../rubrica.config";
+
+export const setupAdmin = internalAction({
+  args: { email: v.string(), password: v.string() },
+  handler: async (ctx, { email, password }) => {
+    const setupRequired = await ctx.runQuery(api.users.isSetupRequired);
+    if (!setupRequired) throw new Error("Root user already exists");
+
+    const result = await createAccount(ctx, {
+      provider: "password",
+      account: { id: email, secret: password },
+      profile: { email },
+    });
+
+    await ctx.runMutation(internal.users.assignRoleInternal, {
+      userId: result.user._id,
+      role: "root",
+    });
+
+    return { userId: result.user._id };
+  },
+});
 
 export const seedSiteConfig = internalMutation({
   handler: async (ctx) => {

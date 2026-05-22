@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 
-const { getAuthUserId } = vi.hoisted(() => ({
+const { getAuthUserId, createAccount } = vi.hoisted(() => ({
   getAuthUserId: vi.fn(),
+  createAccount: vi.fn(),
 }));
 
 vi.mock("@convex-dev/auth/server", () => ({
@@ -13,7 +14,7 @@ vi.mock("@convex-dev/auth/server", () => ({
     isAuthenticated: vi.fn(),
   }),
   getAuthUserId,
-  createAccount: vi.fn(),
+  createAccount,
   modifyAccountCredentials: vi.fn(),
 }));
 
@@ -21,7 +22,7 @@ vi.mock("@convex-dev/auth/providers/Password", () => ({
   Password: () => ({}),
 }));
 
-import { seedSiteConfig } from "../../convex/seed";
+import { seedSiteConfig, setupAdmin } from "../../convex/seed";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
 const handler = (fn: any) => fn._handler ?? fn;
@@ -66,5 +67,32 @@ describe("convex/seed · seedSiteConfig", () => {
     const docs = ctx.db._all("siteConfig");
     expect(docs.length).toBe(1);
     expect(docs[0].value).toBe("Existente");
+  });
+});
+
+describe("convex/seed · setupAdmin", () => {
+  let ctx: MockCtx;
+
+  beforeEach(() => {
+    ctx = createMockCtx();
+    getAuthUserId.mockResolvedValue(null);
+    createAccount.mockReset();
+  });
+
+  it("com banco vazio cria conta com email e senha fornecidos", async () => {
+    ctx.runQuery.mockResolvedValue(true); // isSetupRequired = true
+    createAccount.mockResolvedValue({ user: { _id: "user_1" } });
+    ctx.runMutation.mockResolvedValue(undefined);
+
+    await handler(setupAdmin)(ctx, { email: "test@test.com", password: "senha123456789" });
+
+    expect(createAccount).toHaveBeenCalledWith(
+      ctx,
+      expect.objectContaining({
+        provider: "password",
+        account: { id: "test@test.com", secret: "senha123456789" },
+        profile: { email: "test@test.com" },
+      }),
+    );
   });
 });

@@ -515,3 +515,141 @@
 - [x] **[TESTE E2E]** Escrever teste: `update` de versão patch → projeto gerado passa em `tsc --noEmit` após atualização
 - [x] **[TESTE E2E]** Escrever teste: `required-env.json` da nova versão lista `OPENROUTER_API_KEY` → aparece no output final do update quando ausente do `.env`
 - [ ] Verificar manualmente: rodar `update` em projeto real gerado pelo `create` e confirmar que o site sobe sem erros após a atualização
+
+---
+
+## Fase 4 — CLI setup
+
+> Novo comando `rubrica setup` que automatiza todo o bootstrap pós-`npx convex dev`: geração de JWT keys, configuração de env vars condicionais por plugin e criação do primeiro admin via `internalAction`.
+>
+> **Decisões arquiteturais:** sem `BOOTSTRAP_ALLOWED`; seed via `internalAction` + `npx convex run`; JWT keys geradas pela CLI com `jose`; vars de plugins lidas de `rubrica.json`.
+
+---
+
+### 4.1 Template: `setupAdmin` internalAction — closes #31
+
+- [ ] **[TESTE]** Escrever teste: `setupAdmin` com banco vazio cria conta com email e senha fornecidos
+- [ ] **[TESTE]** Escrever teste: `setupAdmin` com root já existente lança erro `"Root user already exists"`
+- [ ] **[TESTE]** Escrever teste: `setupAdmin` insere entrada em `userRoles` com `role: "root"` e `createdAt` numérico
+- [ ] **[TESTE]** Escrever teste: `setupAdmin` retorna `{ userId }` em caso de sucesso
+- [x] Adicionar `setupAdmin` como `internalAction` em `convex/seed.ts`
+- [x] Definir `args: { email: v.string(), password: v.string() }`
+- [ ] Verificar ausência de root chamando query `isSetupRequired` de `convex/users.ts`
+- [ ] Chamar `createAccount` de `@convex-dev/auth/server` com `provider: "password"`, `account: { id: email, secret: password }`, `profile: { email }`
+- [ ] Chamar `internalMutation` para inserir em `userRoles` com `role: "root"` e `createdAt: Date.now()`
+- [ ] Verificar que `npx convex run seed:setupAdmin --data '{"email":"test@test.com","password":"senha123456789"}'` executa sem erro com `convex dev` ativo
+
+---
+
+### 4.2 CLI: `generateJwtKeys` + dep `jose` — closes #32
+
+- [ ] **[TESTE]** Escrever teste: `generateJwtKeys()` retorna objeto com chaves `JWT_PRIVATE_KEY` e `JWKS`
+- [ ] **[TESTE]** Escrever teste: `JWT_PRIVATE_KEY` retornado começa com `"-----BEGIN PRIVATE KEY-----"`
+- [ ] **[TESTE]** Escrever teste: `JWT_PRIVATE_KEY` retornado termina com `"-----END PRIVATE KEY-----"`
+- [ ] **[TESTE]** Escrever teste: `JWKS` retornado é JSON válido parseável com `JSON.parse`
+- [ ] **[TESTE]** Escrever teste: `JWKS` parseado contém propriedade `keys` que é array com pelo menos 1 elemento
+- [ ] **[TESTE]** Escrever teste: primeiro elemento de `keys` tem `use: "sig"` e `kty: "RSA"`
+- [ ] **[TESTE]** Escrever teste: chamar `generateJwtKeys()` duas vezes gera pares distintos (não determinístico)
+- [ ] Adicionar `jose` em `dependencies` de `cli/package.json`
+- [ ] Criar `cli/src/utils/generateJwtKeys.ts` exportando `generateJwtKeys(): Promise<{ JWT_PRIVATE_KEY: string; JWKS: string }>`
+- [ ] Usar `jose.generateKeyPair('RS256')` para gerar o par
+- [ ] Exportar private key via `jose.exportPKCS8` (formato PEM)
+- [ ] Exportar public key via `jose.exportJWK` e montar `{ keys: [{ use: "sig", ...jwk }] }`
+- [ ] Serializar `JWKS` como JSON string com `JSON.stringify`
+- [ ] Criar `cli/src/__tests__/generateJwtKeys.test.ts` com os testes acima
+- [ ] Verificar que `pnpm test` passa em `cli/`
+- [ ] Verificar que `pnpm build` compila sem erros em `cli/`
+
+---
+
+### 4.3 CLI: `setup.ts` core — detect, `.env.local`, JWT, SITE_URL — closes #33
+
+- [ ] **[TESTE]** Escrever teste: `runSetup` lê `VITE_CONVEX_URL` corretamente de `.env.local` existente (mock com `memfs`)
+- [ ] **[TESTE]** Escrever teste: `runSetup` lança erro amigável `"rode npx convex dev primeiro"` quando `.env.local` não existe
+- [ ] **[TESTE]** Escrever teste: `runSetup` lança erro amigável quando `VITE_CONVEX_URL` está ausente no `.env.local`
+- [ ] **[TESTE]** Escrever teste: `runSetup` lança erro amigável quando `VITE_CONVEX_SITE_URL` está ausente no `.env.local`
+- [ ] **[TESTE]** Escrever teste: `runSetup` chama `detectProject()` e propaga erro se não estiver em projeto Rubrica
+- [ ] **[TESTE]** Escrever teste: `runSetup` chama `npx convex env set JWT_PRIVATE_KEY` com valor não vazio
+- [ ] **[TESTE]** Escrever teste: `runSetup` chama `npx convex env set JWKS` com JSON válido
+- [ ] **[TESTE]** Escrever teste: `runSetup` chama `npx convex env set SITE_URL` com o valor confirmado no prompt
+- [ ] **[TESTE]** Escrever teste: prompt de `SITE_URL` exibe `VITE_CONVEX_SITE_URL` como valor default
+- [ ] Criar `cli/src/commands/setup.ts` com função `runSetup()`
+- [ ] Chamar `detectProject()` no início — propagar erro como mensagem amigável via `@clack/prompts`
+- [ ] Implementar leitura de `.env.local` via `node:fs/promises` com parsing linha a linha (`KEY=VALUE`)
+- [ ] Validar presença de `VITE_CONVEX_URL` e `VITE_CONVEX_SITE_URL` com erros distintos
+- [ ] Verificar conectividade com Convex via `fetch(VITE_CONVEX_URL)` — erro claro se inacessível
+- [ ] Chamar `generateJwtKeys()` e exibir spinner durante geração
+- [ ] Executar `execSync('npx convex env set JWT_PRIVATE_KEY ...')` e `execSync('npx convex env set JWKS ...')`
+- [ ] Prompt `@clack/prompts` para `SITE_URL` com `initialValue = VITE_CONVEX_SITE_URL`
+- [ ] Executar `execSync('npx convex env set SITE_URL ...')` com valor confirmado
+- [ ] Criar `cli/src/__tests__/setup.test.ts` com os testes acima (ciclos 1–3)
+- [ ] Verificar que `pnpm test` passa
+
+---
+
+### 4.4 CLI: `setup.ts` — vars condicionais por plugin — closes #34
+
+- [ ] **[TESTE]** Escrever teste: com `contact-wizard: true` em `rubrica.json`, `TELEGRAM_BOT_TOKEN` é setado quando fornecido
+- [ ] **[TESTE]** Escrever teste: sem plugin telegram, nenhum prompt de `TELEGRAM_BOT_TOKEN` ou `TELEGRAM_ADMIN_CHAT_ID` é exibido
+- [ ] **[TESTE]** Escrever teste: `TELEGRAM_BOT_TOKEN` pulado (Enter vazio) não chama `convex env set` para essa var
+- [ ] **[TESTE]** Escrever teste: com `playground: true` em `rubrica.json`, `PLAYGROUND_KEY_PEPPER` é gerado automaticamente com 64 chars hex
+- [ ] **[TESTE]** Escrever teste: com `playground: true`, `PLAYGROUND_KEY_PEPPER` é setado sem prompt ao usuário
+- [ ] **[TESTE]** Escrever teste: com `ai-resumes: true` ou `i18n: true`, prompt de `OPENROUTER_API_KEY` aparece
+- [ ] **[TESTE]** Escrever teste: com `payments: true`, prompts de `STRIPE_WEBHOOK_SECRET` e `ASAAS_WEBHOOK_TOKEN` aparecem (skipáveis)
+- [ ] **[TESTE]** Escrever teste: `VERCEL_DEPLOY_HOOK_URL` e `VERCEL_WEBHOOK_SECRET` são sempre promovidos como opcionais independente de plugins
+- [ ] **[TESTE]** Escrever teste: vars opcionais puladas não geram chamada `execSync` para `convex env set`
+- [ ] Expandir `runSetup()` com leitura de `rubrica.json` via `readState()`
+- [ ] Implementar bloco condicional Telegram: se `plugins.contact-wizard || plugins['testimonials-intake']` → prompt `TELEGRAM_BOT_TOKEN` e `TELEGRAM_ADMIN_CHAT_ID` (skipáveis)
+- [ ] Implementar bloco condicional AI: se `plugins['ai-resumes'] || plugins.i18n || plugins.playground` → prompt `OPENROUTER_API_KEY` (skipável)
+- [ ] Implementar bloco playground: se `plugins.playground` → gerar `PLAYGROUND_KEY_PEPPER` com `crypto.randomBytes(32).toString('hex')` e setar silenciosamente
+- [ ] Implementar bloco condicional payments: se `plugins.payments` → prompt `STRIPE_WEBHOOK_SECRET` e `ASAAS_WEBHOOK_TOKEN` (skipáveis)
+- [ ] Implementar prompts sempre-presentes: `VERCEL_DEPLOY_HOOK_URL` e `VERCEL_WEBHOOK_SECRET` (skipáveis)
+- [ ] Coletar todas as vars não vazias e executar `execSync('npx convex env set ...')` para cada uma em sequência
+- [ ] Expandir `cli/src/__tests__/setup.test.ts` com testes acima (ciclos 4–6)
+- [ ] Verificar que `pnpm test` passa
+
+---
+
+### 4.5 CLI: `setup.ts` — seed do admin — closes #35
+
+- [ ] **[TESTE]** Escrever teste: prompt de email rejeita string sem `@` e repete o prompt
+- [ ] **[TESTE]** Escrever teste: prompt de senha rejeita string com menos de 12 caracteres
+- [ ] **[TESTE]** Escrever teste: senha e confirmação diferentes exibem erro e repetem ambos os prompts
+- [ ] **[TESTE]** Escrever teste: `execSync` é chamado com `npx convex run seed:setupAdmin --data` contendo email e senha corretos
+- [ ] **[TESTE]** Escrever teste: quando `execSync` lança erro contendo `"Root user already exists"`, exibe mensagem amigável sem stack trace
+- [ ] **[TESTE]** Escrever teste: quando `execSync` lança erro genérico, exibe mensagem original ao usuário
+- [ ] **[TESTE]** Escrever teste: em caso de sucesso, `outro()` é chamado com mensagem contendo o email usado
+- [ ] Expandir `runSetup()` com prompt de email usando `@clack/prompts` — validação: contém `@` e pelo menos um `.`
+- [ ] Adicionar prompt de senha com campo mascarado (`password: true`) — validação: mínimo 12 caracteres
+- [ ] Adicionar prompt de confirmação de senha — validação: igual ao valor anterior
+- [ ] Executar `execSync(`npx convex run seed:setupAdmin --data '${JSON.stringify({ email, password })}'`)` com `{ stdio: 'pipe' }`
+- [ ] Capturar `error.stdout` / `error.stderr` para detectar `"Root user already exists"` e exibir mensagem amigável
+- [ ] Exibir `outro()` com: URL de login (`/login`), email configurado, instrução para `pnpm dev`
+- [ ] Expandir `cli/src/__tests__/setup.test.ts` com testes acima (ciclos 7–8)
+- [ ] Verificar que `pnpm test` passa
+- [ ] Verificar que `pnpm build` compila sem erros
+
+---
+
+### 4.6 CLI: registrar `setup` + atualizar `create.ts` outro — closes #36
+
+- [ ] Adicionar `import { runSetup } from './commands/setup.js'` em `cli/src/index.ts`
+- [ ] Adicionar `case 'setup': await runSetup(); break;` no switch de comandos de `cli/src/index.ts`
+- [ ] Atualizar `outro()` em `cli/src/commands/create.ts` para incluir `rubrica setup` após `npx convex dev` nas instruções
+- [ ] Garantir que `outro()` explica que `rubrica setup` deve ser rodado após o Convex estar rodando
+- [ ] Verificar que `rubrica setup` (ou `node dist/index.js setup`) inicia o fluxo sem erros de import
+- [ ] Verificar que comando inexistente ainda exibe mensagem de ajuda adequada
+- [ ] Verificar que `pnpm build` compila sem erros
+
+---
+
+### 4.7 Integração: setup end-to-end — closes #31, #32, #33, #34, #35, #36
+
+> Ponto de conexão entre o comando `setup` e o sistema Convex. Revisar após 4.1–4.6 estarem prontos.
+
+- [ ] **[TESTE E2E]** Escrever teste: rodar `setup` com `.env.local` válido e plugin `contact-wizard` ativo → `convex env set` chamado para `TELEGRAM_BOT_TOKEN` quando valor fornecido
+- [ ] **[TESTE E2E]** Escrever teste: rodar `setup` com plugin `playground` ativo → `convex env set PLAYGROUND_KEY_PEPPER` chamado com string de 64 chars hex
+- [ ] **[TESTE E2E]** Escrever teste: rodar `setup` sem `.env.local` → processo encerra com mensagem clara antes de qualquer `convex env set`
+- [ ] Verificar manualmente: criar projeto com `create`, rodar `npx convex dev`, rodar `rubrica setup` → JWT_PRIVATE_KEY + JWKS + SITE_URL presentes no Convex Dashboard
+- [ ] Verificar manualmente: após `rubrica setup`, acessar `/login` com email e senha configurados → redireciona para `/admin` com acesso root
+- [ ] Verificar manualmente: rodar `rubrica setup` pela segunda vez num projeto já configurado → exibe mensagem "Admin já configurado" sem sobrescrever keys JWT
