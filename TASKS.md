@@ -421,8 +421,8 @@
 - [x] **[TESTE E2E]** Escrever teste: `config` com opção Identidade atualiza `rubrica.config.ts` e não toca no tema
 - [x] Configurar `.npmignore` excluindo `src/`, testes e arquivos de dev
 - [x] Escrever `README.md` do pacote CLI com: instalação, `pnpm create rubrica`, `rubrica config`, `rubrica update`
-- [ ] Verificar que `npx create-rubrica test-project` funciona via npx sem instalação prévia
-- [ ] Publicar `create-rubrica` no npm (ou marcar como pronto para publish)
+- [x] Verificar que `npx create-rubrica test-project` funciona via npx sem instalação prévia
+- [x] Publicar `create-rubrica` no npm (ou marcar como pronto para publish)
 
 ---
 
