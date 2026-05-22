@@ -637,8 +637,8 @@
 
 - [ ] Adicionar `import { runSetup } from './commands/setup.js'` em `cli/src/index.ts`
 - [ ] Adicionar `case 'setup': await runSetup(); break;` no switch de comandos de `cli/src/index.ts`
-- [ ] Atualizar `outro()` em `cli/src/commands/create.ts` para incluir `rubrica setup` após `npx convex dev` nas instruções
-- [ ] Garantir que `outro()` explica que `rubrica setup` deve ser rodado após o Convex estar rodando
+- [x] Atualizar `outro()` em `cli/src/commands/create.ts` para incluir `rubrica setup` após `npx convex dev` nas instruções
+- [x] Garantir que `outro()` explica que `rubrica setup` deve ser rodado após o Convex estar rodando
 - [ ] Verificar que `rubrica setup` (ou `node dist/index.js setup`) inicia o fluxo sem erros de import
 - [ ] Verificar que comando inexistente ainda exibe mensagem de ajuda adequada
 - [ ] Verificar que `pnpm build` compila sem erros
