@@ -198,14 +198,14 @@
 
 ### 2.1 Setup do pacote CLI — closes #8
 
-- [ ] Criar diretório `cli/` na raiz do projeto
-- [ ] Criar `cli/package.json` com nome `create-rubrica`, bin `rubrica`, scripts `build` e `test`
-- [ ] Criar `cli/tsconfig.json` configurado para ESM, target ES2022, Node
-- [ ] Adicionar dependências: `@clack/prompts`, `tsup` (dev), `vitest` (dev), `memfs` (dev), `msw` (dev)
-- [ ] Criar estrutura de diretórios: `src/commands/`, `src/prompts/`, `src/transforms/`, `src/state/`, `src/utils/`, `src/__tests__/`
-- [ ] Configurar `tsup.config.ts` para output ESM com shebang no entry point
-- [ ] Verificar que `pnpm install` dentro de `cli/` instala sem erros
-- [ ] Verificar que `pnpm build` dentro de `cli/` compila sem erros
+- [x] Criar diretório `cli/` na raiz do projeto
+- [x] Criar `cli/package.json` com nome `create-rubrica`, bin `rubrica`, scripts `build` e `test`
+- [x] Criar `cli/tsconfig.json` configurado para ESM, target ES2022, Node
+- [x] Adicionar dependências: `@clack/prompts`, `tsup` (dev), `vitest` (dev), `memfs` (dev), `msw` (dev)
+- [x] Criar estrutura de diretórios: `src/commands/`, `src/prompts/`, `src/transforms/`, `src/state/`, `src/utils/`, `src/__tests__/`
+- [x] Configurar `tsup.config.ts` para output ESM com shebang no entry point
+- [x] Verificar que `pnpm install` dentro de `cli/` instala sem erros
+- [x] Verificar que `pnpm build` dentro de `cli/` compila sem erros
 - [ ] Verificar que `pnpm test` dentro de `cli/` roda (sem falhas — ainda sem testes)
 
 ---
