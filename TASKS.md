@@ -103,20 +103,20 @@
 
 ### 1.8 index.html — closes #14
 
-- [ ] Substituir `<title>` pessoal por `"Rubrica Portfolio"`
-- [ ] Substituir `<meta name="description">` por descrição genérica de template
-- [ ] Remover ou esvaziar `<link rel="canonical">` (será injetado pela CLI)
-- [ ] Substituir `og:title` pelo título genérico
-- [ ] Substituir `og:url` — remover domínio pessoal
-- [ ] Substituir `og:image` — remover URL de imagem pessoal
-- [ ] Substituir `og:site_name` por `"Rubrica Portfolio"`
-- [ ] Substituir `twitter:creator` — remover handle pessoal (`@matheusmierzwa`)
-- [ ] Substituir `twitter:url`, `twitter:title`, `twitter:image` por valores neutros
-- [ ] Substituir `<meta name="theme-color">` por cor neutra (ex: `#6366f1`)
-- [ ] Substituir `<meta name="author">` por `"Portfolio Author"` ou esvaziar
-- [ ] Substituir `<meta name="keywords">` por keywords genéricas de template
-- [ ] Substituir título do `<link rel="alternate" rss>` por `"Portfolio RSS Feed"`
-- [ ] Verificar que build (`pnpm build`) conclui sem erros após as alterações
+- [x] Substituir `<title>` pessoal por `"Rubrica Portfolio"`
+- [x] Substituir `<meta name="description">` por descrição genérica de template
+- [x] Remover ou esvaziar `<link rel="canonical">` (será injetado pela CLI)
+- [x] Substituir `og:title` pelo título genérico
+- [x] Substituir `og:url` — remover domínio pessoal
+- [x] Substituir `og:image` — remover URL de imagem pessoal
+- [x] Substituir `og:site_name` por `"Rubrica Portfolio"`
+- [x] Substituir `twitter:creator` — remover handle pessoal (`@matheusmierzwa`)
+- [x] Substituir `twitter:url`, `twitter:title`, `twitter:image` por valores neutros
+- [x] Substituir `<meta name="theme-color">` por cor neutra (ex: `#6366f1`)
+- [x] Substituir `<meta name="author">` por `"Portfolio Author"` ou esvaziar
+- [x] Substituir `<meta name="keywords">` por keywords genéricas de template
+- [x] Substituir título do `<link rel="alternate" rss>` por `"Portfolio RSS Feed"`
+- [x] Verificar que build (`pnpm build`) conclui sem erros após as alterações
 
 ---
 
