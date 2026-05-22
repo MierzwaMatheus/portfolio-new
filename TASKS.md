@@ -94,10 +94,10 @@
 
 ### 1.7 cvPDF.ts — closes #18
 
-- [ ] Localizar o fallback `"MATHEUS MIERZWA"` em `src/utils/cvPDF.ts`
-- [ ] Substituir fallback por `(contactInfo.name || "").toUpperCase()`
-- [ ] Garantir que PDF gerado com `contactInfo.name` vazio não exibe nome pessoal
-- [ ] Verificar que geração de PDF funciona normalmente quando `contactInfo.name` tem valor
+- [x] Localizar o fallback `"MATHEUS MIERZWA"` em `src/utils/cvPDF.ts`
+- [x] Substituir fallback por `(contactInfo.name || "").toUpperCase()`
+- [x] Garantir que PDF gerado com `contactInfo.name` vazio não exibe nome pessoal
+- [x] Verificar que geração de PDF funciona normalmente quando `contactInfo.name` tem valor
 
 ---
 
