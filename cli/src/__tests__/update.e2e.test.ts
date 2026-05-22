@@ -271,3 +271,76 @@ describe("update e2e — rubrica.json version atualizado, configs preservados", 
     expect(state.radius).toBe("0.75rem");
   });
 });
+
+// ---- Ciclo 3: .env não modificado durante update ----------------------------
+
+describe("update e2e — .env não é modificado", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it(".env preservado integralmente após update", async () => {
+    const envContent = "VITE_CONVEX_URL=https://minha-convex-url.convex.cloud\nCUSTOM_VAR=valor_custom\n";
+    const vol = makeProjectVolume(BASE_STATE, {
+      "/project/.env": envContent,
+    });
+    vi.mocked(confirm).mockResolvedValueOnce(true);
+
+    await runUpdate(makeUpdateDeps(vol));
+
+    const fs = makeFsModule(vol);
+    const after = await fs.readFile("/project/.env", "utf-8");
+
+    expect(after).toBe(envContent);
+  });
+
+  it(".env.local preservado integralmente após update", async () => {
+    const envLocalContent = "VITE_CONVEX_URL=https://local-convex.convex.cloud\nDEBUG=true\n";
+    const vol = makeProjectVolume(BASE_STATE, {
+      "/project/.env.local": envLocalContent,
+    });
+    vi.mocked(confirm).mockResolvedValueOnce(true);
+
+    await runUpdate(makeUpdateDeps(vol));
+
+    const fs = makeFsModule(vol);
+    const after = await fs.readFile("/project/.env.local", "utf-8");
+
+    expect(after).toBe(envLocalContent);
+  });
+});
+
+// ---- Ciclo 4: update de versão major sem confirmação = sem alterações --------
+
+describe("update e2e — versão major cancelada não altera arquivos", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("downloadRelease não é chamado quando major version é cancelada", async () => {
+    const vol = makeProjectVolume();
+    vi.mocked(confirm).mockResolvedValueOnce(false);
+
+    const downloadMock = makeDownloadMock(vol);
+    const applyLayoutMock = vi.fn();
+
+    await runUpdate(
+      makeUpdateDeps(vol, "2.0.0", {
+        downloadRelease: downloadMock,
+        applyLayout: applyLayoutMock,
+      })
+    );
+
+    expect(downloadMock).not.toHaveBeenCalled();
+    expect(applyLayoutMock).not.toHaveBeenCalled();
+  });
+
+  it("rubrica.json mantém version=1.0.0 quando major update é cancelado", async () => {
+    const vol = makeProjectVolume();
+    vi.mocked(confirm).mockResolvedValueOnce(false);
+
+    await runUpdate(makeUpdateDeps(vol, "2.0.0"));
+
+    const fs = makeFsModule(vol);
+    const raw = await fs.readFile("/project/rubrica.json", "utf-8");
+    const state = JSON.parse(raw) as Record<string, unknown>;
+
+    expect(state.version).toBe("1.0.0");
+  });
+});
