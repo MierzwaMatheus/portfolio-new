@@ -24,7 +24,6 @@ function makeFsModule(vol: InstanceType<typeof Volume>) {
       }
     },
     rm: async (path: string, _opts?: { recursive?: boolean; force?: boolean }) => {
-      // memfs não tem rm, simula removendo o arquivo/dir via rmdir recursivo
       try {
         await (vol.promises as unknown as { rmdir: (p: string, o: { recursive: boolean }) => Promise<void> }).rmdir(path, { recursive: true });
       } catch {
@@ -34,15 +33,61 @@ function makeFsModule(vol: InstanceType<typeof Volume>) {
   };
 }
 
+/** Helper: configura download mock mínimo com diretórios extras opcionais */
+async function setupDownloadMock(extraDirs: string[] = []) {
+  const { downloadRelease } = await import("../utils/download.js");
+  vi.mocked(downloadRelease).mockImplementationOnce(async (targetDir, fsArg) => {
+    const f = fsArg as ReturnType<typeof makeFsModule>;
+    await f.mkdir(`${targetDir}/src`, { recursive: true });
+    await f.mkdir(`${targetDir}/templates`, { recursive: true });
+    await f.writeFile(`${targetDir}/src/index.css`, ":root{}\n.dark{}");
+    await f.writeFile(`${targetDir}/index.html`, "<!DOCTYPE html><html></html>");
+    await f.writeFile(`${targetDir}/package.json`, JSON.stringify({ name: "rubrica-template" }));
+    for (const dir of extraDirs) {
+      await f.mkdir(`${targetDir}/${dir}`, { recursive: true });
+      await f.writeFile(`${targetDir}/${dir}/.keep`, "");
+    }
+  });
+  return downloadRelease;
+}
+
+/** Helper: cria vol + fs e chama runCreate com mocks padrão de layout+tema */
+async function runCreateWith(opts: {
+  layout?: string;
+  theme?: string;
+  accentColor?: string;
+  extraDirs?: string[];
+}) {
+  const { select, text } = await import("@clack/prompts");
+  vi.mocked(select)
+    .mockResolvedValueOnce(opts.layout ?? "sidebar")
+    .mockResolvedValueOnce(opts.theme ?? "cyberpunk");
+
+  if (opts.accentColor) {
+    vi.mocked(text).mockResolvedValueOnce(opts.accentColor);
+  }
+
+  await setupDownloadMock(opts.extraDirs ?? []);
+
+  const vol = Volume.fromJSON({});
+  vol.mkdirSync("/projects", { recursive: true });
+  const fs = makeFsModule(vol);
+
+  const { runCreate } = await import("../commands/create.js");
+  await runCreate("meu-portfolio", { projectsDir: "/projects", fs });
+
+  return { vol, fs };
+}
+
 // ---- mocks globais ----------------------------------------------------------
 
 vi.mock("@clack/prompts", () => ({
   intro: vi.fn(),
   outro: vi.fn(),
-  text: vi.fn(),
-  select: vi.fn(),
-  multiselect: vi.fn(),
-  confirm: vi.fn(),
+  text: vi.fn().mockResolvedValue(""),
+  select: vi.fn().mockResolvedValue("sidebar"),
+  multiselect: vi.fn().mockResolvedValue([]),
+  confirm: vi.fn().mockResolvedValue(false),
   isCancel: vi.fn(() => false),
   cancel: vi.fn(),
   spinner: vi.fn(() => ({ start: vi.fn(), stop: vi.fn() })),
@@ -50,6 +95,14 @@ vi.mock("@clack/prompts", () => ({
 
 vi.mock("../utils/download.js", () => ({
   downloadRelease: vi.fn(),
+}));
+
+vi.mock("../transforms/applyTheme.js", () => ({
+  applyTheme: vi.fn(),
+}));
+
+vi.mock("../transforms/applyLayout.js", () => ({
+  applyLayout: vi.fn(),
 }));
 
 vi.mock("../prompts/identityPrompt.js", () => ({
@@ -93,94 +146,52 @@ describe("create — download e limpeza do projeto extraído", () => {
   });
 
   it("chama downloadRelease com o diretório do projeto", async () => {
+    await setupDownloadMock();
     const { select } = await import("@clack/prompts");
-    vi.mocked(select).mockResolvedValueOnce("sidebar");
-
-    const { downloadRelease } = await import("../utils/download.js");
-    const mockDownload = vi.mocked(downloadRelease);
-
-    mockDownload.mockImplementationOnce(async (targetDir, fsArg) => {
-      const f = fsArg as ReturnType<typeof makeFsModule>;
-      await f.mkdir(`${targetDir}/src/components`, { recursive: true });
-      await f.mkdir(`${targetDir}/templates/layouts/sidebar`, { recursive: true });
-      await f.writeFile(`${targetDir}/templates/layouts/sidebar/Layout.tsx`, "// L");
-      await f.writeFile(`${targetDir}/templates/layouts/sidebar/Sidebar.tsx`, "// S");
-      await f.writeFile(`${targetDir}/src/index.css`, ":root{}\n.dark{}");
-      await f.writeFile(`${targetDir}/index.html`, "<!DOCTYPE html><html></html>");
-      await f.writeFile(`${targetDir}/package.json`, JSON.stringify({ name: "rubrica-template" }));
-    });
+    vi.mocked(select)
+      .mockResolvedValueOnce("sidebar")
+      .mockResolvedValueOnce("cyberpunk");
 
     const vol = Volume.fromJSON({});
     vol.mkdirSync("/projects", { recursive: true });
     const fs = makeFsModule(vol);
-
     const { runCreate } = await import("../commands/create.js");
     await runCreate("meu-portfolio", { projectsDir: "/projects", fs });
 
-    expect(mockDownload).toHaveBeenCalledWith(
-      "/projects/meu-portfolio",
-      expect.anything()
-    );
+    const { downloadRelease } = await import("../utils/download.js");
+    expect(vi.mocked(downloadRelease)).toHaveBeenCalledWith("/projects/meu-portfolio", expect.anything());
   });
 
-  it("remove a pasta templates/ do projeto extraído após download", async () => {
+  it("remove a pasta templates/ do projeto extraído após o uso dos templates", async () => {
+    await setupDownloadMock(["templates/layouts/sidebar"]);
     const { select } = await import("@clack/prompts");
-    vi.mocked(select).mockResolvedValueOnce("sidebar");
-
-    const { downloadRelease } = await import("../utils/download.js");
-    const mockDownload = vi.mocked(downloadRelease);
-
-    mockDownload.mockImplementationOnce(async (targetDir, fsArg) => {
-      const f = fsArg as ReturnType<typeof makeFsModule>;
-      await f.mkdir(`${targetDir}/templates/layouts/sidebar`, { recursive: true });
-      await f.writeFile(`${targetDir}/templates/layouts/sidebar/Layout.tsx`, "// L");
-      await f.writeFile(`${targetDir}/templates/layouts/sidebar/Sidebar.tsx`, "// S");
-      await f.mkdir(`${targetDir}/src/components`, { recursive: true });
-      await f.writeFile(`${targetDir}/src/index.css`, ":root{}\n.dark{}");
-      await f.writeFile(`${targetDir}/index.html`, "<!DOCTYPE html><html></html>");
-      await f.writeFile(`${targetDir}/package.json`, JSON.stringify({ name: "rubrica-template" }));
-    });
+    vi.mocked(select)
+      .mockResolvedValueOnce("sidebar")
+      .mockResolvedValueOnce("cyberpunk");
 
     const vol = Volume.fromJSON({});
     vol.mkdirSync("/projects", { recursive: true });
     const fs = makeFsModule(vol);
-
     const { runCreate } = await import("../commands/create.js");
     await runCreate("meu-portfolio", { projectsDir: "/projects", fs });
 
-    const templatesExists = await fs.exists("/projects/meu-portfolio/templates");
-    expect(templatesExists).toBe(false);
+    expect(await fs.exists("/projects/meu-portfolio/templates")).toBe(false);
   });
 
   it("remove a pasta cli/ do projeto extraído após download", async () => {
+    await setupDownloadMock(["cli", "templates"]);
     const { select } = await import("@clack/prompts");
-    vi.mocked(select).mockResolvedValueOnce("sidebar");
-
-    const { downloadRelease } = await import("../utils/download.js");
-    const mockDownload = vi.mocked(downloadRelease);
-
-    mockDownload.mockImplementationOnce(async (targetDir, fsArg) => {
-      const f = fsArg as ReturnType<typeof makeFsModule>;
-      await f.mkdir(`${targetDir}/cli`, { recursive: true });
-      await f.writeFile(`${targetDir}/cli/dummy.ts`, "// dummy");
-      await f.mkdir(`${targetDir}/templates/layouts/sidebar`, { recursive: true });
-      await f.writeFile(`${targetDir}/templates/layouts/sidebar/Layout.tsx`, "// L");
-      await f.writeFile(`${targetDir}/templates/layouts/sidebar/Sidebar.tsx`, "// S");
-      await f.mkdir(`${targetDir}/src/components`, { recursive: true });
-      await f.writeFile(`${targetDir}/src/index.css`, ":root{}\n.dark{}");
-      await f.writeFile(`${targetDir}/index.html`, "<!DOCTYPE html><html></html>");
-      await f.writeFile(`${targetDir}/package.json`, JSON.stringify({ name: "rubrica-template" }));
-    });
+    vi.mocked(select)
+      .mockResolvedValueOnce("sidebar")
+      .mockResolvedValueOnce("cyberpunk");
 
     const vol = Volume.fromJSON({});
     vol.mkdirSync("/projects", { recursive: true });
     const fs = makeFsModule(vol);
-
     const { runCreate } = await import("../commands/create.js");
     await runCreate("meu-portfolio", { projectsDir: "/projects", fs });
 
-    const cliExists = await fs.exists("/projects/meu-portfolio/cli");
-    expect(cliExists).toBe(false);
+    expect(await fs.exists("/projects/meu-portfolio/cli")).toBe(false);
   });
 });
 
@@ -191,76 +202,66 @@ describe("create — applyLayout", () => {
     vi.resetModules();
   });
 
-  it("chama applyLayout com o layout sidebar escolhido nos prompts", async () => {
-    const { select } = await import("@clack/prompts");
-    vi.mocked(select).mockResolvedValueOnce("sidebar"); // layout
+  it("chama applyLayout com layout sidebar quando selecionado nos prompts", async () => {
+    await runCreateWith({ layout: "sidebar" });
 
-    const { downloadRelease } = await import("../utils/download.js");
-    const mockDownload = vi.mocked(downloadRelease);
-    mockDownload.mockImplementationOnce(async (targetDir, fsArg) => {
-      const f = fsArg as ReturnType<typeof makeFsModule>;
-      await f.mkdir(`${targetDir}/src/components`, { recursive: true });
-      await f.mkdir(`${targetDir}/templates/layouts/sidebar`, { recursive: true });
-      await f.mkdir(`${targetDir}/templates/layouts/topbar`, { recursive: true });
-      await f.mkdir(`${targetDir}/templates/layouts/centered`, { recursive: true });
-      await f.writeFile(`${targetDir}/templates/layouts/sidebar/Layout.tsx`, "// sidebar Layout");
-      await f.writeFile(`${targetDir}/templates/layouts/sidebar/Sidebar.tsx`, "// Sidebar");
-      await f.writeFile(`${targetDir}/templates/layouts/topbar/Layout.tsx`, "// topbar Layout");
-      await f.writeFile(`${targetDir}/templates/layouts/topbar/Navbar.tsx`, "// Navbar");
-      await f.writeFile(`${targetDir}/templates/layouts/centered/Layout.tsx`, "// centered Layout");
-      await f.writeFile(`${targetDir}/templates/layouts/centered/Footer.tsx`, "// Footer");
-      await f.writeFile(`${targetDir}/src/index.css`, ":root{}\n.dark{}");
-      await f.writeFile(`${targetDir}/index.html`, "<!DOCTYPE html><html></html>");
-      await f.writeFile(`${targetDir}/package.json`, JSON.stringify({ name: "rubrica-template" }));
-    });
-
-    const vol = Volume.fromJSON({});
-    vol.mkdirSync("/projects", { recursive: true });
-    const fs = makeFsModule(vol);
-
-    const { runCreate } = await import("../commands/create.js");
-    await runCreate("meu-portfolio", { projectsDir: "/projects", fs });
-
-    const layout = vol.readFileSync("/projects/meu-portfolio/src/components/Layout.tsx", "utf-8") as string;
-    const sidebar = vol.readFileSync("/projects/meu-portfolio/src/components/Sidebar.tsx", "utf-8") as string;
-    expect(layout).toContain("sidebar Layout");
-    expect(sidebar).toContain("Sidebar");
+    const { applyLayout } = await import("../transforms/applyLayout.js");
+    expect(vi.mocked(applyLayout)).toHaveBeenCalledWith(
+      "sidebar",
+      expect.objectContaining({ projectDir: "/projects/meu-portfolio" }),
+      expect.anything()
+    );
   });
 
   it("chama applyLayout com topbar quando selecionado nos prompts", async () => {
-    const { select } = await import("@clack/prompts");
-    vi.mocked(select).mockResolvedValueOnce("topbar"); // layout
+    await runCreateWith({ layout: "topbar" });
 
-    const { downloadRelease } = await import("../utils/download.js");
-    const mockDownload = vi.mocked(downloadRelease);
-    mockDownload.mockImplementationOnce(async (targetDir, fsArg) => {
-      const f = fsArg as ReturnType<typeof makeFsModule>;
-      await f.mkdir(`${targetDir}/src/components`, { recursive: true });
-      await f.mkdir(`${targetDir}/templates/layouts/sidebar`, { recursive: true });
-      await f.mkdir(`${targetDir}/templates/layouts/topbar`, { recursive: true });
-      await f.mkdir(`${targetDir}/templates/layouts/centered`, { recursive: true });
-      await f.writeFile(`${targetDir}/templates/layouts/sidebar/Layout.tsx`, "// sidebar Layout");
-      await f.writeFile(`${targetDir}/templates/layouts/sidebar/Sidebar.tsx`, "// Sidebar");
-      await f.writeFile(`${targetDir}/templates/layouts/topbar/Layout.tsx`, "// topbar Layout");
-      await f.writeFile(`${targetDir}/templates/layouts/topbar/Navbar.tsx`, "// Navbar");
-      await f.writeFile(`${targetDir}/templates/layouts/centered/Layout.tsx`, "// centered Layout");
-      await f.writeFile(`${targetDir}/templates/layouts/centered/Footer.tsx`, "// Footer");
-      await f.writeFile(`${targetDir}/src/index.css`, ":root{}\n.dark{}");
-      await f.writeFile(`${targetDir}/index.html`, "<!DOCTYPE html><html></html>");
-      await f.writeFile(`${targetDir}/package.json`, JSON.stringify({ name: "rubrica-template" }));
-    });
+    const { applyLayout } = await import("../transforms/applyLayout.js");
+    expect(vi.mocked(applyLayout)).toHaveBeenCalledWith(
+      "topbar",
+      expect.objectContaining({ projectDir: "/projects/meu-portfolio" }),
+      expect.anything()
+    );
+  });
+});
 
-    const vol = Volume.fromJSON({});
-    vol.mkdirSync("/projects", { recursive: true });
-    const fs = makeFsModule(vol);
+// ---- Ciclo 4: applyTheme ---------------------------------------------------
 
-    const { runCreate } = await import("../commands/create.js");
-    await runCreate("meu-portfolio", { projectsDir: "/projects", fs });
+describe("create — applyTheme", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
 
-    const layout = vol.readFileSync("/projects/meu-portfolio/src/components/Layout.tsx", "utf-8") as string;
-    const navbar = vol.readFileSync("/projects/meu-portfolio/src/components/Navbar.tsx", "utf-8") as string;
-    expect(layout).toContain("topbar Layout");
-    expect(navbar).toContain("Navbar");
-    expect(await fs.exists("/projects/meu-portfolio/src/components/Sidebar.tsx")).toBe(false);
+  it("chama applyTheme com preset cyberpunk quando selecionado", async () => {
+    await runCreateWith({ theme: "cyberpunk" });
+
+    const { applyTheme } = await import("../transforms/applyTheme.js");
+    expect(vi.mocked(applyTheme)).toHaveBeenCalledWith(
+      { preset: "cyberpunk" },
+      "/projects/meu-portfolio/src/index.css",
+      expect.anything()
+    );
+  });
+
+  it("chama applyTheme com preset minimal quando selecionado", async () => {
+    await runCreateWith({ theme: "minimal" });
+
+    const { applyTheme } = await import("../transforms/applyTheme.js");
+    expect(vi.mocked(applyTheme)).toHaveBeenCalledWith(
+      { preset: "minimal" },
+      "/projects/meu-portfolio/src/index.css",
+      expect.anything()
+    );
+  });
+
+  it("chama applyTheme com accentColor quando tema personalizado selecionado", async () => {
+    await runCreateWith({ theme: "custom", accentColor: "#0065fe" });
+
+    const { applyTheme } = await import("../transforms/applyTheme.js");
+    expect(vi.mocked(applyTheme)).toHaveBeenCalledWith(
+      { accentColor: "#0065fe" },
+      "/projects/meu-portfolio/src/index.css",
+      expect.anything()
+    );
   });
 });
