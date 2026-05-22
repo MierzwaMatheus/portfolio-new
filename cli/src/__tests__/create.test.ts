@@ -349,3 +349,43 @@ describe("create — applyRubricalConfig", () => {
     );
   });
 });
+
+// ---- Ciclo 8: writeState (rubrica.json) ------------------------------------
+
+describe("create — writeState", () => {
+  it("cria rubrica.json com version, layout, theme e plugins", async () => {
+    vi.clearAllMocks();
+    setupPrompts({ layout: "topbar", theme: "minimal", plugins: ["blog"] });
+
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+
+    const mockWriteState = vi.fn(async () => ({
+      version: "0.1.0",
+      layout: "topbar",
+      theme: "minimal",
+      accentColor: null,
+      fontSans: "Inter",
+      fontMono: "JetBrains Mono",
+      radius: "0.5rem",
+      plugins: { blog: true, portfolio: false, resume: false },
+    }));
+
+    const deps = {
+      ...makeDefaultDeps(vol),
+      writeState: mockWriteState as Deps["writeState"],
+    };
+
+    await runCreate("meu-portfolio", deps);
+
+    expect(mockWriteState).toHaveBeenCalledWith(
+      "/projects/meu-portfolio",
+      expect.objectContaining({
+        layout: "topbar",
+        theme: "minimal",
+        plugins: expect.objectContaining({ blog: true }),
+      }),
+      expect.anything()
+    );
+  });
+});
