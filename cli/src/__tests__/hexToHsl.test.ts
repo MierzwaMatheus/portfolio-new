@@ -21,4 +21,8 @@ describe("hexToHsl", () => {
   it('lança erro descritivo para "invalid"', () => {
     expect(() => hexToHsl("invalid")).toThrow(/hexToHsl/);
   });
+
+  it('lança erro descritivo para "#gggggg"', () => {
+    expect(() => hexToHsl("#gggggg")).toThrow(/hexToHsl/);
+  });
 });
