@@ -8,6 +8,7 @@ import { applyFont as defaultApplyFont } from "../transforms/applyFont.js";
 import { applyPlugins as defaultApplyPlugins } from "../transforms/applyPlugins.js";
 import { applyIndexHtml as defaultApplyIndexHtml } from "../transforms/applyIndexHtml.js";
 import { applyRubricalConfig as defaultApplyRubricalConfig } from "../transforms/applyRubricalConfig.js";
+import { writeState as defaultWriteState } from "../state/writeState.js";
 
 // ---- Tipos -----------------------------------------------------------------
 
@@ -33,6 +34,7 @@ export interface RunCreateDeps {
   applyPlugins?: typeof defaultApplyPlugins;
   applyIndexHtml?: typeof defaultApplyIndexHtml;
   applyRubricalConfig?: typeof defaultApplyRubricalConfig;
+  writeState?: typeof defaultWriteState;
   identityPrompt?: typeof defaultIdentityPrompt;
 }
 
@@ -75,6 +77,7 @@ export async function runCreate(
   const applyPluginsFn = deps.applyPlugins ?? defaultApplyPlugins;
   const applyIndexHtmlFn = deps.applyIndexHtml ?? defaultApplyIndexHtml;
   const applyRubricalConfigFn = deps.applyRubricalConfig ?? defaultApplyRubricalConfig;
+  const writeStateFn = deps.writeState ?? defaultWriteState;
   const doIdentityPrompt = deps.identityPrompt ?? defaultIdentityPrompt;
 
   const projectDir = `${deps.projectsDir}/${projectName}`;
@@ -227,6 +230,22 @@ export async function runCreate(
     },
     projectDir,
     fs as Parameters<typeof defaultApplyRubricalConfig>[2]
+  );
+
+  // Ciclo 8: writeState → rubrica.json
+  await writeStateFn(
+    projectDir,
+    {
+      version: "0.1.0",
+      layout,
+      theme: themeChoice === "custom" ? "custom" : themeChoice,
+      accentColor: accentColor ?? null,
+      fontSans,
+      fontMono,
+      radius,
+      plugins: pluginsRecord,
+    },
+    fs as Parameters<typeof defaultWriteState>[2]
   );
 
   // Ciclo 2: limpeza após uso dos templates
