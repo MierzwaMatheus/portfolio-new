@@ -3,6 +3,7 @@ import * as nodeFsPromises from "node:fs/promises";
 import { identityPrompt } from "../prompts/identityPrompt.js";
 import { downloadRelease } from "../utils/download.js";
 import { applyLayout } from "../transforms/applyLayout.js";
+import { applyTheme } from "../transforms/applyTheme.js";
 
 // ---- Tipos -----------------------------------------------------------------
 
@@ -72,6 +73,39 @@ export async function runCreate(
     layout,
     { projectDir, templatesDir: `${projectDir}/templates` },
     fs as Parameters<typeof applyLayout>[2]
+  );
+
+  // Ciclo 4: prompt e apply de tema
+  const themeChoice = await select({
+    message: "Tema visual",
+    options: [
+      { value: "cyberpunk", label: "Cyberpunk — neon purple + lime, atmosfera dark" },
+      { value: "minimal", label: "Minimal — clean, azul neutro, máxima legibilidade" },
+      { value: "editorial", label: "Editorial — creme, âmbar, tipografia serifada" },
+      { value: "forest", label: "Forest — verde musgo, off-white, orgânico" },
+      { value: "custom", label: "Personalizado..." },
+    ],
+  }) as string;
+
+  let accentColor: string | undefined;
+  if (themeChoice === "custom") {
+    const hexInput = await text({
+      message: "Cor de destaque (hex, ex: #0065fe)",
+      validate: (v) => {
+        if (!/^#[0-9a-fA-F]{6}$/.test(v)) return "Informe um hex válido (ex: #0065fe)";
+      },
+    }) as string;
+    accentColor = hexInput;
+  }
+
+  const themeOptions = themeChoice === "custom"
+    ? { accentColor }
+    : { preset: themeChoice };
+
+  await applyTheme(
+    themeOptions,
+    `${projectDir}/src/index.css`,
+    fs as Parameters<typeof applyTheme>[2]
   );
 
   // Ciclo 2: limpeza após uso dos templates
