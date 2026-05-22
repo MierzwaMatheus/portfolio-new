@@ -89,7 +89,7 @@ describe("convex/seed · setupAdmin", () => {
   });
 
   it("com banco vazio cria conta com email e senha fornecidos", async () => {
-    ctx.runQuery.mockResolvedValue(true); // isSetupRequired = true
+    ctx.runQuery.mockResolvedValue(true);
     createAccount.mockResolvedValue({ user: { _id: "user_1" } });
     ctx.runMutation.mockResolvedValue(undefined);
 
@@ -102,6 +102,19 @@ describe("convex/seed · setupAdmin", () => {
         account: { id: "test@test.com", secret: "senha123456789" },
         profile: { email: "test@test.com" },
       }),
+    );
+  });
+
+  it("insere em userRoles com role root via assignRoleInternal", async () => {
+    ctx.runQuery.mockResolvedValue(true);
+    createAccount.mockResolvedValue({ user: { _id: "user_1" } });
+    ctx.runMutation.mockResolvedValue(undefined);
+
+    await handler(setupAdmin)(ctx, { email: "test@test.com", password: "senha123456789" });
+
+    expect(ctx.runMutation).toHaveBeenCalledWith(
+      expect.anything(), // internal.users.assignRoleInternal
+      expect.objectContaining({ userId: "user_1", role: "root" }),
     );
   });
 });
