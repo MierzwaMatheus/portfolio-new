@@ -81,14 +81,14 @@
 
 ### 1.6 Sidebar.tsx — closes #17
 
-- [ ] Localizar as 2 ocorrências do fallback `"Matheus Mierzwa"` em `src/components/Sidebar.tsx`
-- [ ] Substituir fallback de nome no `img alt` por `contactInfo.name || ""`
-- [ ] Substituir fallback de nome no `h1` por `contactInfo.name || ""`
-- [ ] Substituir fallback de role `"Front-End Developer"` por `contactInfo.role || ""`
-- [ ] Substituir fallback de avatar URL pessoal por `""` — renderizar placeholder com inicial do nome
-- [ ] Implementar componente de avatar placeholder: quando sem imagem, exibir inicial de `contactInfo.name` ou ícone genérico
-- [ ] Garantir que Sidebar funciona normalmente quando `contactInfo` tem dados completos
-- [ ] Garantir que Sidebar não crasha com `contactInfo` vazio ou `undefined`
+- [x] Localizar as 2 ocorrências do fallback `"Matheus Mierzwa"` em `src/components/Sidebar.tsx`
+- [x] Substituir fallback de nome no `img alt` por `contactInfo.name || ""`
+- [x] Substituir fallback de nome no `h1` por `contactInfo.name || ""`
+- [x] Substituir fallback de role `"Front-End Developer"` por `contactInfo.role || ""`
+- [x] Substituir fallback de avatar URL pessoal por `""` — renderizar placeholder com inicial do nome
+- [x] Implementar componente de avatar placeholder: quando sem imagem, exibir inicial de `contactInfo.name` ou ícone genérico
+- [x] Garantir que Sidebar funciona normalmente quando `contactInfo` tem dados completos
+- [x] Garantir que Sidebar não crasha com `contactInfo` vazio ou `undefined`
 
 ---
 
