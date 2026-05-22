@@ -9,4 +9,8 @@ describe("hexToHsl", () => {
   it('converte "#000000" para preto HSL', () => {
     expect(hexToHsl("#000000")).toEqual({ h: 0, s: 0, l: 0 });
   });
+
+  it('converte "#ffffff" para branco HSL', () => {
+    expect(hexToHsl("#ffffff")).toEqual({ h: 0, s: 0, l: 100 });
+  });
 });
