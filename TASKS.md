@@ -614,22 +614,22 @@
 
 ### 4.5 CLI: `setup.ts` — seed do admin — closes #35
 
-- [ ] **[TESTE]** Escrever teste: prompt de email rejeita string sem `@` e repete o prompt
-- [ ] **[TESTE]** Escrever teste: prompt de senha rejeita string com menos de 12 caracteres
-- [ ] **[TESTE]** Escrever teste: senha e confirmação diferentes exibem erro e repetem ambos os prompts
-- [ ] **[TESTE]** Escrever teste: `execSync` é chamado com `npx convex run seed:setupAdmin --data` contendo email e senha corretos
-- [ ] **[TESTE]** Escrever teste: quando `execSync` lança erro contendo `"Root user already exists"`, exibe mensagem amigável sem stack trace
-- [ ] **[TESTE]** Escrever teste: quando `execSync` lança erro genérico, exibe mensagem original ao usuário
-- [ ] **[TESTE]** Escrever teste: em caso de sucesso, `outro()` é chamado com mensagem contendo o email usado
-- [ ] Expandir `runSetup()` com prompt de email usando `@clack/prompts` — validação: contém `@` e pelo menos um `.`
-- [ ] Adicionar prompt de senha com campo mascarado (`password: true`) — validação: mínimo 12 caracteres
-- [ ] Adicionar prompt de confirmação de senha — validação: igual ao valor anterior
-- [ ] Executar `execSync(`npx convex run seed:setupAdmin --data '${JSON.stringify({ email, password })}'`)` com `{ stdio: 'pipe' }`
-- [ ] Capturar `error.stdout` / `error.stderr` para detectar `"Root user already exists"` e exibir mensagem amigável
-- [ ] Exibir `outro()` com: URL de login (`/login`), email configurado, instrução para `pnpm dev`
-- [ ] Expandir `cli/src/__tests__/setup.test.ts` com testes acima (ciclos 7–8)
-- [ ] Verificar que `pnpm test` passa
-- [ ] Verificar que `pnpm build` compila sem erros
+- [x] **[TESTE]** Escrever teste: prompt de email rejeita string sem `@` e repete o prompt
+- [x] **[TESTE]** Escrever teste: prompt de senha rejeita string com menos de 12 caracteres
+- [x] **[TESTE]** Escrever teste: senha e confirmação diferentes exibem erro e repetem ambos os prompts
+- [x] **[TESTE]** Escrever teste: `execSync` é chamado com `npx convex run seed:setupAdmin --data` contendo email e senha corretos
+- [x] **[TESTE]** Escrever teste: quando `execSync` lança erro contendo `"Root user already exists"`, exibe mensagem amigável sem stack trace
+- [x] **[TESTE]** Escrever teste: quando `execSync` lança erro genérico, exibe mensagem original ao usuário
+- [x] **[TESTE]** Escrever teste: em caso de sucesso, `outro()` é chamado com mensagem contendo o email usado
+- [x] Expandir `runSetup()` com prompt de email usando `@clack/prompts` — validação: contém `@` e pelo menos um `.`
+- [x] Adicionar prompt de senha com campo mascarado (`password: true`) — validação: mínimo 12 caracteres
+- [x] Adicionar prompt de confirmação de senha — validação: igual ao valor anterior
+- [x] Executar `execSync(`npx convex run seed:setupAdmin --data '${JSON.stringify({ email, password })}'`)` com `{ stdio: 'pipe' }`
+- [x] Capturar `error.stdout` / `error.stderr` para detectar `"Root user already exists"` e exibir mensagem amigável
+- [x] Exibir `outro()` com: URL de login (`/login`), email configurado, instrução para `pnpm dev`
+- [x] Expandir `cli/src/__tests__/setup.test.ts` com testes acima (ciclos 7–8)
+- [x] Verificar que `pnpm test` passa
+- [x] Verificar que `pnpm build` compila sem erros
 
 ---
 

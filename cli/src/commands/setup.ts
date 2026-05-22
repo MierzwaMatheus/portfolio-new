@@ -1,4 +1,4 @@
-import { outro, text, spinner, isCancel, cancel } from "@clack/prompts";
+import { outro, text, password, spinner, isCancel, cancel } from "@clack/prompts";
 import * as nodeFsPromises from "node:fs/promises";
 import * as path from "node:path";
 import * as nodeCrypto from "node:crypto";
@@ -207,7 +207,58 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
     }
   }
 
-  // 12. Vercel — sempre presentes (opcionais)
+  // 12. Prompts de admin (email + senha)
+  const adminEmail = await text({
+    message: "Email do usuário root:",
+    validate: (v) => {
+      if (!v.includes("@") || !v.includes("."))
+        return "Email inválido — deve conter @ e pelo menos um ponto";
+    },
+  });
+  if (isCancel(adminEmail)) {
+    cancel("Setup cancelado.");
+    return;
+  }
+
+  const adminPassword = await password({
+    message: "Senha do usuário root (mínimo 12 caracteres):",
+    validate: (v) => {
+      if (v.length < 12) return "Senha deve ter pelo menos 12 caracteres";
+    },
+  });
+  if (isCancel(adminPassword)) {
+    cancel("Setup cancelado.");
+    return;
+  }
+
+  const adminPasswordConfirm = await password({
+    message: "Confirme a senha:",
+    validate: (v) => {
+      if (v !== adminPassword) return "As senhas não coincidem";
+    },
+  });
+  if (isCancel(adminPasswordConfirm)) {
+    cancel("Setup cancelado.");
+    return;
+  }
+
+  try {
+    execSync(
+      `npx convex run seed:setupAdmin --data '${JSON.stringify({ email: adminEmail as string, password: adminPassword as string })}'`,
+      { stdio: "pipe" }
+    );
+  } catch (err: unknown) {
+    const e = err as { stdout?: Buffer; stderr?: Buffer; message?: string };
+    const output = e.stdout?.toString() ?? e.stderr?.toString() ?? e.message ?? "";
+    if (output.includes("Root user already exists")) {
+      cancel("Admin já configurado. Para redefinir, acesse o Convex Dashboard.");
+    } else {
+      cancel(`Erro ao criar usuário root: ${output || String(err)}`);
+    }
+    return;
+  }
+
+  // 13. Vercel — sempre presentes (opcionais)
   const vercelHookUrl = await text({
     message: "VERCEL_DEPLOY_HOOK_URL (Enter para pular):",
     initialValue: "",
@@ -231,6 +282,6 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
   }
 
   outro(
-    `Setup concluído!\n\n  SITE_URL, JWT_PRIVATE_KEY e JWKS configurados no Convex.\n\n  Próximo passo: pnpm dev`
+    `Setup concluído!\n\n  Admin criado: ${adminEmail as string}\n  Acesse: /login\n\n  Próximo passo: pnpm dev`
   );
 }
