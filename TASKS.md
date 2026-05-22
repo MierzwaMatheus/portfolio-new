@@ -649,9 +649,9 @@
 
 > Ponto de conexão entre o comando `setup` e o sistema Convex. Revisar após 4.1–4.6 estarem prontos.
 
-- [ ] **[TESTE E2E]** Escrever teste: rodar `setup` com `.env.local` válido e plugin `contact-wizard` ativo → `convex env set` chamado para `TELEGRAM_BOT_TOKEN` quando valor fornecido
-- [ ] **[TESTE E2E]** Escrever teste: rodar `setup` com plugin `playground` ativo → `convex env set PLAYGROUND_KEY_PEPPER` chamado com string de 64 chars hex
-- [ ] **[TESTE E2E]** Escrever teste: rodar `setup` sem `.env.local` → processo encerra com mensagem clara antes de qualquer `convex env set`
+- [x] **[TESTE E2E]** Escrever teste: rodar `setup` com `.env.local` válido e plugin `contact-wizard` ativo → `convex env set` chamado para `TELEGRAM_BOT_TOKEN` quando valor fornecido
+- [x] **[TESTE E2E]** Escrever teste: rodar `setup` com plugin `playground` ativo → `convex env set PLAYGROUND_KEY_PEPPER` chamado com string de 64 chars hex
+- [x] **[TESTE E2E]** Escrever teste: rodar `setup` sem `.env.local` → processo encerra com mensagem clara antes de qualquer `convex env set`
 - [ ] Verificar manualmente: criar projeto com `create`, rodar `npx convex dev`, rodar `rubrica setup` → JWT_PRIVATE_KEY + JWKS + SITE_URL presentes no Convex Dashboard
 - [ ] Verificar manualmente: após `rubrica setup`, acessar `/login` com email e senha configurados → redireciona para `/admin` com acesso root
 - [ ] Verificar manualmente: rodar `rubrica setup` pela segunda vez num projeto já configurado → exibe mensagem "Admin já configurado" sem sobrescrever keys JWT
