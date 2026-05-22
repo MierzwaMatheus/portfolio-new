@@ -122,13 +122,13 @@
 
 ### 1.9 Scripts rss + sitemap — closes #15
 
-- [ ] Importar `rubricalConfig` de `rubrica.config.ts` em `scripts/generate-rss-feed.ts`
-- [ ] Substituir `RSS_CONFIG.siteTitle` hardcoded por `rubricalConfig.rssTitle`
-- [ ] Substituir `RSS_CONFIG.siteDescription` por `rubricalConfig.rssDescription`
-- [ ] Substituir `RSS_CONFIG.authorName` por `rubricalConfig.authorName`
-- [ ] Substituir `RSS_CONFIG.authorEmail` por `rubricalConfig.authorEmail`
-- [ ] Substituir `RSS_CONFIG.copyright` por copyright derivado de `rubricalConfig.authorName`
-- [ ] Substituir fallback de `SITE_URL` hardcoded por `rubricalConfig.siteUrl`
+- [x] Importar `rubricalConfig` de `rubrica.config.ts` em `scripts/generate-rss-feed.ts`
+- [x] Substituir `RSS_CONFIG.siteTitle` hardcoded por `rubricalConfig.rssTitle`
+- [x] Substituir `RSS_CONFIG.siteDescription` por `rubricalConfig.rssDescription`
+- [x] Substituir `RSS_CONFIG.authorName` por `rubricalConfig.authorName`
+- [x] Substituir `RSS_CONFIG.authorEmail` por `rubricalConfig.authorEmail`
+- [x] Substituir `RSS_CONFIG.copyright` por copyright derivado de `rubricalConfig.authorName`
+- [x] Substituir fallback de `SITE_URL` hardcoded por `rubricalConfig.siteUrl`
 - [ ] Importar `rubricalConfig` em `scripts/generate-sitemap.ts`
 - [ ] Substituir fallback de `SITE_URL` em sitemap por `rubricalConfig.siteUrl`
 - [ ] Executar `pnpm generate-rss` (ou equivalente) e verificar que `public/rss.xml` gerado usa valores do config
