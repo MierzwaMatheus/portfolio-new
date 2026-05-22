@@ -230,6 +230,34 @@ describe("SEO", () => {
     });
   });
 
+  describe("Ciclo 1.13 — og:title renderizado a partir do siteConfig", () => {
+    it("renderiza og:title com o título composto (prop | site_title)", async () => {
+      renderSEO({ title: "Página Específica" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[property="og:title"]');
+        expect(meta?.getAttribute("content")).toContain("Site Neutro");
+        expect(meta?.getAttribute("content")).toContain("Página Específica");
+      });
+    });
+
+    it("og:title não contém nome pessoal hardcoded", async () => {
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[property="og:title"]');
+        expect(meta?.getAttribute("content")).not.toContain("Matheus Mierzwa");
+      });
+    });
+
+    it("og:title usa site_title do siteConfig, não valor hardcoded", async () => {
+      mockUseSiteConfig.mockReturnValue({ ...defaultConfig, site_title: "Portfolio Neutro" });
+      renderSEO({ title: "Página" });
+      await waitFor(() => {
+        const meta = document.querySelector('meta[property="og:title"]');
+        expect(meta?.getAttribute("content")).toContain("Portfolio Neutro");
+      });
+    });
+  });
+
   describe("Ciclo 1 — siteTitle e fullTitle", () => {
     it("usa site_title do useSiteConfig como sufixo do título", async () => {
       renderSEO({ title: "Minha Página" });
