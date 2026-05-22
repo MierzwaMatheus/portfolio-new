@@ -22,6 +22,7 @@ import { AvailabilityBadge } from "@/components/AvailabilityBadge";
 import { TestimonialWizard } from "@/components/TestimonialWizard";
 import { usePlugin } from "@/contexts/PluginsContext";
 import { Link } from "wouter";
+import { useSiteConfig } from "@/hooks/useSiteConfig";
 
 export default function Home() {
   const { t, tValue } = useTranslation();
@@ -29,6 +30,7 @@ export default function Home() {
   const { contactRole, aboutText, services, testimonials, availability, isLoading } =
     useHome(homeRepository);
   const [wizardOpen, setWizardOpen] = useState(false);
+  const siteConfig = useSiteConfig();
   const testimonialsEnabled = usePlugin("testimonials");
   const testimonialsIntakeEnabled = usePlugin("testimonials-intake");
 
@@ -69,8 +71,8 @@ export default function Home() {
   return (
     <>
       <SEO
-        title="Desenvolvedor Front-end Sênior &amp; Tech Lead React"
-        description="Transformo desafios complexos em ecossistemas digitais robustos. Especialista em React, TypeScript e arquitetura de sistemas. Confira meus projetos e artigos."
+        title={siteConfig.seo_home_title}
+        description={siteConfig.seo_home_description}
         url="/"
       />
       <motion.div
