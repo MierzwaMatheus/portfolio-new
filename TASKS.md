@@ -430,11 +430,11 @@
 
 > Ponto de conexão entre todos os transforms. Revisar após 2.2, 2.3, 2.4 e 2.8 estarem prontos.
 
-- [ ] **[TESTE]** Escrever teste de integração: `applyTheme` + `applyFont` aplicados em sequência no mesmo `src/index.css` — resultado final tem variáveis de ambos sem conflito
-- [ ] **[TESTE]** Escrever teste de integração: `applyLayout(topbar)` + `applyIndexHtml` — `Navbar.tsx` copiado e `index.html` com font link correto
-- [ ] **[TESTE]** Escrever teste de integração: `applyPlugins` desativa `blog` → `applyLayout` não inclui link de blog na navbar gerada
-- [ ] **[TESTE]** Escrever teste de integração: `applyRubricalConfig` + `writeState` — ambos os arquivos de estado gravados com os mesmos valores de identidade e aparência
-- [ ] **[TESTE]** Escrever teste de integração: re-executar todos os transforms em sequência com os mesmos inputs produz output idêntico ao da primeira execução (idempotência do pipeline completo)
+- [x] **[TESTE]** Escrever teste de integração: `applyTheme` + `applyFont` aplicados em sequência no mesmo `src/index.css` — resultado final tem variáveis de ambos sem conflito
+- [x] **[TESTE]** Escrever teste de integração: `applyLayout(topbar)` + `applyIndexHtml` — `Navbar.tsx` copiado e `index.html` com font link correto
+- [x] **[TESTE]** Escrever teste de integração: `applyPlugins` desativa `blog` → `applyLayout` não inclui link de blog na navbar gerada
+- [x] **[TESTE]** Escrever teste de integração: `applyRubricalConfig` + `writeState` — ambos os arquivos de estado gravados com os mesmos valores de identidade e aparência
+- [x] **[TESTE]** Escrever teste de integração: re-executar todos os transforms em sequência com os mesmos inputs produz output idêntico ao da primeira execução (idempotência do pipeline completo)
 
 ### 2.12 Integração: CLI → projeto gerado — closes #26, #28
 
