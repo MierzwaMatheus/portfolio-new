@@ -462,3 +462,23 @@ describe("create — git init e package install", () => {
     );
   });
 });
+
+// ---- Ciclo 11: next steps message ------------------------------------------
+
+describe("create — next steps message", () => {
+  it("exibe mensagem de next steps ao concluir", async () => {
+    const { outro } = await import("@clack/prompts");
+    const { mockResolvedValue: _v, ..._ } = {};
+    vi.clearAllMocks();
+    setupPrompts({});
+
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+
+    await runCreate("meu-portfolio", makeDefaultDeps(vol));
+
+    expect(vi.mocked(outro)).toHaveBeenCalledWith(
+      expect.stringMatching(/cd meu-portfolio/i)
+    );
+  });
+});
