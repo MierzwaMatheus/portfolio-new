@@ -17,4 +17,8 @@ describe("hexToHsl", () => {
   it('converte "#0065fe" para valores HSL corretos', () => {
     expect(hexToHsl("#0065fe")).toEqual({ h: 216, s: 100, l: 50 });
   });
+
+  it('lança erro descritivo para "invalid"', () => {
+    expect(() => hexToHsl("invalid")).toThrow(/hexToHsl/);
+  });
 });

@@ -218,7 +218,7 @@
 - [x] **[TESTE]** Escrever teste: `hexToHsl("#000000")` retorna `{h: 0, s: 0, l: 0}`
 - [x] **[TESTE]** Escrever teste: `hexToHsl("#ffffff")` retorna `{h: 0, s: 0, l: 100}`
 - [x] **[TESTE]** Escrever teste: `hexToHsl("#0065fe")` retorna valores HSL corretos
-- [ ] **[TESTE]** Escrever teste: `hexToHsl("invalid")` lança erro com mensagem descritiva
+- [x] **[TESTE]** Escrever teste: `hexToHsl("invalid")` lança erro com mensagem descritiva
 - [ ] **[TESTE]** Escrever teste: `hexToHsl("#gggggg")` lança erro com mensagem descritiva
 - [ ] **[TESTE]** Escrever teste: `hexToHsl` aceita hex com e sem `#` inicial
 - [ ] Implementar `cli/src/utils/hexToHsl.ts`
