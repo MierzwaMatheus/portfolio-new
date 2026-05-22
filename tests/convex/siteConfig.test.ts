@@ -21,7 +21,7 @@ vi.mock("@convex-dev/auth/providers/Password", () => ({
   Password: () => ({}),
 }));
 
-import { getPublic, getByKey, set, setBatch, getAll } from "../../convex/siteConfig";
+import { getPublic, getByKey, set, setBatch, getAll, setOgImage } from "../../convex/siteConfig";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
 const handler = (fn: any) => fn._handler ?? fn;
@@ -201,5 +201,36 @@ describe("convex/siteConfig · getAll", () => {
     ]);
     const result = await handler(getAll)(ctx, {});
     expect(result).toHaveLength(1);
+  });
+});
+
+describe("convex/siteConfig · setOgImage", () => {
+  let ctx: MockCtx;
+  beforeEach(() => {
+    ctx = createMockCtx();
+    getAuthUserId.mockResolvedValue(null);
+    (ctx.storage as any).getUrl = vi.fn().mockResolvedValue("https://exemplo.com/og.jpg");
+  });
+
+  it("lança Unauthorized sem autenticação", async () => {
+    getAuthUserId.mockResolvedValue(null);
+    await expect(handler(setOgImage)(ctx, { storageId: "store1" }))
+      .rejects.toThrow(/[Uu]nauthorized/);
+  });
+
+  it("salva og_image_storage_id com role root", async () => {
+    asRole(ctx, "root");
+    await handler(setOgImage)(ctx, { storageId: "store1" });
+    const docs = ctx.db._all("siteConfig");
+    const storageDoc = docs.find((d) => d.key === "og_image_storage_id");
+    expect(storageDoc?.value).toBe("store1");
+  });
+
+  it("salva og_image_url derivada do storage com role admin", async () => {
+    asRole(ctx, "admin");
+    await handler(setOgImage)(ctx, { storageId: "store1" });
+    const docs = ctx.db._all("siteConfig");
+    const urlDoc = docs.find((d) => d.key === "og_image_url");
+    expect(urlDoc?.value).toBe("https://exemplo.com/og.jpg");
   });
 });

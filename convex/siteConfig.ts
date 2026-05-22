@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { requireRole } from "./auth";
 import { logAudit } from "./audit";
+import type { Id } from "./_generated/dataModel";
 
 export const PUBLIC_KEYS = [
   "site_title",
@@ -102,5 +103,27 @@ export const set = mutation({
       metadata: { key },
       success: true,
     });
+  },
+});
+
+async function upsertKey(ctx: any, key: string, value: any) {
+  const existing = await ctx.db
+    .query("siteConfig")
+    .withIndex("by_key", (q: any) => q.eq("key", key))
+    .unique();
+  if (existing) {
+    await ctx.db.patch(existing._id, { value, updatedAt: Date.now() });
+  } else {
+    await ctx.db.insert("siteConfig", { key, value, createdAt: Date.now() });
+  }
+}
+
+export const setOgImage = mutation({
+  args: { storageId: v.string() },
+  handler: async (ctx, { storageId }) => {
+    await requireRole(ctx, ["root", "admin"]);
+    const url = await ctx.storage.getUrl(storageId as Id<"_storage">);
+    await upsertKey(ctx, "og_image_storage_id", storageId);
+    await upsertKey(ctx, "og_image_url", url ?? "");
   },
 });

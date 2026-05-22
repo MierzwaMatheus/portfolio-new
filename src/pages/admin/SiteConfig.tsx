@@ -5,8 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { X, Upload } from "lucide-react";
+import { useState, useRef } from "react";
+import { useMutation } from "convex/react";
+import { api } from "../../../convex/_generated/api";
+import { toast } from "sonner";
 
 const FONT_SANS_OPTIONS = [
   { value: "Inter", label: "Inter" },
@@ -70,6 +74,12 @@ export default function AdminSiteConfig() {
   const [seoHomeDescription, setSeoHomeDescription] = useState(config.seo_home_description || "");
   const [keywords, setKeywords] = useState<string[]>(config.keywords || []);
   const [keywordInput, setKeywordInput] = useState("");
+  const [ogImageUrl, setOgImageUrl] = useState(config.og_image_url || "");
+  const [isUploadingOg, setIsUploadingOg] = useState(false);
+  const ogFileInputRef = useRef<HTMLInputElement>(null);
+  const generateUploadUrl = useMutation(api.images.generateUploadUrl);
+  const setOgImageMutation = useMutation(api.siteConfig.setOgImage);
+  const setBatch = useMutation(api.siteConfig.setBatch);
 
   const handleHexChange = (value: string) => {
     setHexInput(value);
@@ -184,6 +194,54 @@ export default function AdminSiteConfig() {
           <CardTitle className="text-white">SEO & Identidade</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label className="text-white">Imagem Open Graph</Label>
+            {ogImageUrl && (
+              <img src={ogImageUrl} alt="OG Image preview" className="w-40 h-24 object-cover rounded border border-white/10" />
+            )}
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                data-testid="og-image-upload-button"
+                variant="outline"
+                size="sm"
+                disabled={isUploadingOg}
+                onClick={() => ogFileInputRef.current?.click()}
+                className="border-white/20 text-white/80"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {isUploadingOg ? "Enviando..." : "Fazer upload"}
+              </Button>
+              <input
+                ref={ogFileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  setIsUploadingOg(true);
+                  try {
+                    const uploadUrl = await generateUploadUrl({});
+                    const result = await fetch(uploadUrl, {
+                      method: "POST",
+                      headers: { "Content-Type": file.type },
+                      body: file,
+                    });
+                    const { storageId } = await result.json();
+                    await setOgImageMutation({ storageId });
+                    toast.success("OG Image atualizada com sucesso!");
+                  } catch {
+                    toast.error("Erro ao fazer upload da OG image.");
+                  } finally {
+                    setIsUploadingOg(false);
+                    if (ogFileInputRef.current) ogFileInputRef.current.value = "";
+                  }
+                }}
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
             <Label className="text-white">Título padrão do site</Label>
             <Input

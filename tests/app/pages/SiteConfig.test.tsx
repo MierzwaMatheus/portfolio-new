@@ -22,6 +22,10 @@ vi.mock("../../../convex/_generated/api", () => ({
   },
 }));
 
+vi.mock("sonner", () => ({
+  toast: { success: vi.fn(), error: vi.fn(), loading: vi.fn(), dismiss: vi.fn() },
+}));
+
 import { useSiteConfig } from "@/hooks/useSiteConfig";
 import AdminSiteConfig from "@/pages/admin/SiteConfig";
 
@@ -63,6 +67,13 @@ describe("SiteConfig — Ciclo 1: estrutura básica da página", () => {
   it("renderiza o heading da seção SEO & Identidade", () => {
     render(<AdminSiteConfig />);
     expect(screen.getByText("SEO & Identidade")).toBeInTheDocument();
+  });
+});
+
+describe("SiteConfig — Ciclo 5: OG Image upload", () => {
+  it("renderiza botão de upload de OG image", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("og-image-upload-button")).toBeInTheDocument();
   });
 });
 

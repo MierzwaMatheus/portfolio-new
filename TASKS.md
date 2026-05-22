@@ -156,12 +156,12 @@
 - [x] **Seção Aparência — Fonte principal:** select com opções curadas (Inter, Chakra Petch, Playfair Display, Space Grotesk, DM Sans)
 - [x] **Seção Aparência — Fonte mono:** select (JetBrains Mono, Fira Code, Space Mono, IBM Plex Mono)
 - [x] **Seção Aparência — Border radius:** select com 5 opções (Nenhum / Suave / Médio / Arredondado / Pill)
-- [ ] **Seção SEO — Título padrão:** campo de texto ligado à chave `site_title`
-- [ ] **Seção SEO — Descrição padrão:** textarea ligado à chave `site_description`
+- [x] **Seção SEO — Título padrão:** campo de texto ligado à chave `site_title`
+- [x] **Seção SEO — Descrição padrão:** textarea ligado à chave `site_description`
 - [ ] **Seção SEO — OG Image:** upload via Convex Storage, salva `og_image_storage_id` e gera `og_image_url`
-- [ ] **Seção SEO — Twitter handle:** campo sem `@`, ligado a `twitter_handle`
-- [ ] **Seção SEO — Keywords:** input multi-valor, ligado a `keywords`
-- [ ] **Seção SEO — Home title/description:** campos ligados a `seo_home_title` e `seo_home_description`
+- [x] **Seção SEO — Twitter handle:** campo sem `@`, ligado a `twitter_handle`
+- [x] **Seção SEO — Keywords:** input multi-valor, ligado a `keywords`
+- [x] **Seção SEO — Home title/description:** campos ligados a `seo_home_title` e `seo_home_description`
 - [ ] Implementar salvamento via `siteConfig.setBatch` ao submeter cada seção
 - [ ] Exibir toast de sucesso/erro após salvar
 - [ ] Garantir que alterações refletem no site sem rebuild (Convex real-time)
