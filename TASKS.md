@@ -272,13 +272,13 @@
 
 #### applyTheme.ts
 
-- [ ] **[TESTE]** Escrever teste: injeta bloco `:root` com variáveis do tema preset em `src/index.css`
-- [ ] **[TESTE]** Escrever teste: injeta bloco `.dark` com variáveis do tema preset
-- [ ] **[TESTE]** Escrever teste: substitui bloco existente sem duplicar (idempotência)
-- [ ] **[TESTE]** Escrever teste: tema custom com `accentColor` gera `--primary` correto
-- [ ] **[TESTE]** Escrever teste: preset inexistente lança erro descritivo
-- [ ] Implementar `cli/src/transforms/applyTheme.ts`
-- [ ] Verificar 100% de cobertura de branches
+- [x] **[TESTE]** Escrever teste: injeta bloco `:root` com variáveis do tema preset em `src/index.css`
+- [x] **[TESTE]** Escrever teste: injeta bloco `.dark` com variáveis do tema preset
+- [x] **[TESTE]** Escrever teste: substitui bloco existente sem duplicar (idempotência)
+- [x] **[TESTE]** Escrever teste: tema custom com `accentColor` gera `--primary` correto
+- [x] **[TESTE]** Escrever teste: preset inexistente lança erro descritivo
+- [x] Implementar `cli/src/transforms/applyTheme.ts`
+- [x] Verificar 100% de cobertura de branches
 
 #### applyLayout.ts
 
