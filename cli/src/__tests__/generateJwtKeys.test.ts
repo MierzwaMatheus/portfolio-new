@@ -35,4 +35,10 @@ describe("generateJwtKeys", () => {
     const parsed = JSON.parse(JWKS);
     expect(parsed.keys[0]).toMatchObject({ use: "sig", kty: "RSA" });
   });
+
+  it("chamar duas vezes gera pares distintos (não determinístico)", async () => {
+    const [a, b] = await Promise.all([generateJwtKeys(), generateJwtKeys()]);
+    expect(a.JWT_PRIVATE_KEY).not.toBe(b.JWT_PRIVATE_KEY);
+    expect(a.JWKS).not.toBe(b.JWKS);
+  });
 });
