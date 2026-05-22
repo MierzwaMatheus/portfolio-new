@@ -310,15 +310,15 @@
 
 #### applyIndexHtml.ts
 
-- [ ] **[TESTE]** Escrever teste: substitui `<link>` do Google Fonts pelo link da fonte escolhida
-- [ ] **[TESTE]** Escrever teste: atualiza `<meta name="theme-color">` com a cor do tema
-- [ ] **[TESTE]** Escrever teste: substitui `og:title` pelo `siteName` fornecido
-- [ ] **[TESTE]** Escrever teste: substitui `og:url` pelo `siteUrl` fornecido
-- [ ] **[TESTE]** Escrever teste: substitui `twitter:creator` pelo `twitterHandle` fornecido
-- [ ] **[TESTE]** Escrever teste: substitui `<meta name="author">` pelo `authorName` fornecido
-- [ ] **[TESTE]** Escrever teste: re-executar com mesmos valores produz output idêntico (idempotência)
-- [ ] Implementar `cli/src/transforms/applyIndexHtml.ts`
-- [ ] Verificar 100% de cobertura de branches
+- [x] **[TESTE]** Escrever teste: substitui `<link>` do Google Fonts pelo link da fonte escolhida
+- [x] **[TESTE]** Escrever teste: atualiza `<meta name="theme-color">` com a cor do tema
+- [x] **[TESTE]** Escrever teste: substitui `og:title` pelo `siteName` fornecido
+- [x] **[TESTE]** Escrever teste: substitui `og:url` pelo `siteUrl` fornecido
+- [x] **[TESTE]** Escrever teste: substitui `twitter:creator` pelo `twitterHandle` fornecido
+- [x] **[TESTE]** Escrever teste: substitui `<meta name="author">` pelo `authorName` fornecido
+- [x] **[TESTE]** Escrever teste: re-executar com mesmos valores produz output idêntico (idempotência)
+- [x] Implementar `cli/src/transforms/applyIndexHtml.ts`
+- [x] Verificar 100% de cobertura de branches
 
 ---
 
