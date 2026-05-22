@@ -301,12 +301,12 @@
 
 #### applyPlugins.ts
 
-- [ ] **[TESTE]** Escrever teste: plugins marcados como `true` têm `defaultEnabled: true` em `convex/pluginRegistry.ts`
-- [ ] **[TESTE]** Escrever teste: plugins marcados como `false` têm `defaultEnabled: false`
-- [ ] **[TESTE]** Escrever teste: plugin com id inexistente lança erro descritivo com o id
-- [ ] **[TESTE]** Escrever teste: re-executar com mesmos valores não altera o arquivo (idempotência)
-- [ ] Implementar `cli/src/transforms/applyPlugins.ts`
-- [ ] Verificar 100% de cobertura de branches
+- [x] **[TESTE]** Escrever teste: plugins marcados como `true` têm `defaultEnabled: true` em `convex/pluginRegistry.ts`
+- [x] **[TESTE]** Escrever teste: plugins marcados como `false` têm `defaultEnabled: false`
+- [x] **[TESTE]** Escrever teste: plugin com id inexistente lança erro descritivo com o id
+- [x] **[TESTE]** Escrever teste: re-executar com mesmos valores não altera o arquivo (idempotência)
+- [x] Implementar `cli/src/transforms/applyPlugins.ts`
+- [x] Verificar 100% de cobertura de branches
 
 #### applyIndexHtml.ts
 
