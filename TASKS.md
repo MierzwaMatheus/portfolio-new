@@ -455,13 +455,13 @@
 
 ### 3.1 download.ts — closes #11
 
-- [ ] **[TESTE]** Escrever teste: `getLatestVersion` retorna string semver a partir de mock da GitHub API (com `msw`)
-- [ ] **[TESTE]** Escrever teste: `getLatestVersion` lança erro amigável quando GitHub API retorna 404
-- [ ] **[TESTE]** Escrever teste: `getLatestVersion` lança erro amigável quando há erro de rede
-- [ ] **[TESTE]** Escrever teste: `downloadRelease` baixa e extrai tarball para diretório alvo (mock com `msw` + tmpdir)
-- [ ] **[TESTE]** Escrever teste: `downloadRelease` lança erro descritivo quando release não tem tarball
-- [ ] Implementar `cli/src/utils/download.ts` com funções `getLatestVersion()` e `downloadRelease(targetDir)`
-- [ ] Verificar 100% de cobertura de branches
+- [x] **[TESTE]** Escrever teste: `getLatestVersion` retorna string semver a partir de mock da GitHub API (com `msw`)
+- [x] **[TESTE]** Escrever teste: `getLatestVersion` lança erro amigável quando GitHub API retorna 404
+- [x] **[TESTE]** Escrever teste: `getLatestVersion` lança erro amigável quando há erro de rede
+- [x] **[TESTE]** Escrever teste: `downloadRelease` baixa e extrai tarball para diretório alvo (mock com `msw` + tmpdir)
+- [x] **[TESTE]** Escrever teste: `downloadRelease` lança erro descritivo quando release não tem tarball
+- [x] Implementar `cli/src/utils/download.ts` com funções `getLatestVersion()` e `downloadRelease(targetDir)`
+- [x] Verificar 100% de cobertura de branches
 
 ---
 
