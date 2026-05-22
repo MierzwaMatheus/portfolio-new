@@ -41,6 +41,19 @@ describe("readState", () => {
     expect(JSON.parse(written).version).toBe("0.0.0");
   });
 
+  it("preserva campos desconhecidos no objeto retornado (forward-compat)", async () => {
+    const stateWithExtra = { ...validState, unknownField: "foo", extraNested: { a: 1 } };
+    const vol = Volume.fromJSON({
+      "/project/rubrica.json": JSON.stringify(stateWithExtra),
+    });
+    const fs = makeFsModule(vol);
+
+    const result = await readState("/project", fs);
+
+    expect((result as Record<string, unknown>).unknownField).toBe("foo");
+    expect((result as Record<string, unknown>).extraNested).toEqual({ a: 1 });
+  });
+
   it("lança erro descritivo quando campo obrigatório layout está ausente", async () => {
     const vol = Volume.fromJSON({
       "/project/rubrica.json": JSON.stringify({ version: "1.0.0" }),
