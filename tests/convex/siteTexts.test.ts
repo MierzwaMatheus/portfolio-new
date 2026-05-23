@@ -38,4 +38,16 @@ describe("convex/siteTexts · getAll", () => {
     const result = await handler(getAll)(ctx, {});
     expect(result).toEqual([]);
   });
+
+  it("retorna todos os registros presentes na tabela", async () => {
+    ctx.db._seed("siteTexts", [
+      { _id: "s1", key: "home.greeting", page: "home", ptBR: "Olá", enUS: "Hello" },
+      { _id: "s2", key: "about.title", page: "about", ptBR: "Sobre", enUS: "About" },
+    ]);
+    const result = await handler(getAll)(ctx, {});
+    expect(result).toHaveLength(2);
+    expect(result.map((r: any) => r.key)).toEqual(
+      expect.arrayContaining(["home.greeting", "about.title"])
+    );
+  });
 });
