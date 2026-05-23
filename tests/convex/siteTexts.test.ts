@@ -21,7 +21,7 @@ vi.mock("@convex-dev/auth/providers/Password", () => ({
   Password: () => ({}),
 }));
 
-import { getAll } from "../../convex/siteTexts";
+import { getAll, getByPage } from "../../convex/siteTexts";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
 const handler = (fn: any) => fn._handler ?? fn;
@@ -49,5 +49,30 @@ describe("convex/siteTexts · getAll", () => {
     expect(result.map((r: any) => r.key)).toEqual(
       expect.arrayContaining(["home.greeting", "about.title"])
     );
+  });
+});
+
+describe("convex/siteTexts · getByPage", () => {
+  let ctx: MockCtx;
+
+  beforeEach(() => {
+    ctx = createMockCtx();
+    getAuthUserId.mockResolvedValue(null);
+    ctx.db._seed("siteTexts", [
+      { _id: "s1", key: "home.greeting", page: "home", ptBR: "Olá", enUS: "Hello" },
+      { _id: "s2", key: "home.title", page: "home", ptBR: "Título", enUS: "Title" },
+      { _id: "s3", key: "about.title", page: "about", ptBR: "Sobre", enUS: "About" },
+    ]);
+  });
+
+  it("retorna apenas os registros da página solicitada", async () => {
+    const result = await handler(getByPage)(ctx, { page: "home" });
+    expect(result).toHaveLength(2);
+    expect(result.every((r: any) => r.page === "home")).toBe(true);
+  });
+
+  it("retorna array vazio para página sem registros", async () => {
+    const result = await handler(getByPage)(ctx, { page: "blog" });
+    expect(result).toEqual([]);
   });
 });
