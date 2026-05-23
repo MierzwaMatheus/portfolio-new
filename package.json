@@ -5,6 +5,8 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite --host & npx convex dev",
+    "build:i18n": "tsx scripts/export-i18n.ts",
+    "prebuild": "npm run build:i18n",
     "build": "npx convex deploy && tsx scripts/fetch-static-data.ts && tsx scripts/generate-rss-feed.ts && tsx scripts/generate-sitemap.ts && vite build",
     "preview": "vite preview --host",
     "check": "tsc --noEmit",

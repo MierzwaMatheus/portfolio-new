@@ -41,3 +41,37 @@ export function unflattenTranslations(
   }
   return result;
 }
+
+// main() só executa quando rodado diretamente via tsx (não durante testes)
+if (!process.env.VITEST) {
+  const { config } = await import("dotenv");
+  config({ path: ".env.local" });
+
+  const { ConvexHttpClient } = await import("convex/browser");
+  const { api } = await import("../convex/_generated/api");
+  const { writeFileSync } = await import("fs");
+  const { join } = await import("path");
+
+  const convexUrl = validateEnv(process.env as Record<string, string | undefined>);
+  const client = new ConvexHttpClient(convexUrl);
+
+  console.log("Fetching siteTexts from Convex...");
+  const rows = await client.query(api.siteTexts.getAll, {}) as Array<{
+    key: string;
+    ptBR: string;
+    enUS?: string;
+  }>;
+
+  const ptBRObj = unflattenTranslations(rows.map((r) => ({ key: r.key, value: r.ptBR })));
+  const enUSObj = unflattenTranslations(
+    rows.filter((r) => r.enUS).map((r) => ({ key: r.key, value: r.enUS! }))
+  );
+
+  const translationsDir = join(process.cwd(), "src/i18n/translations");
+  writeFileSync(join(translationsDir, "pt-BR.ts"), serializeTranslations(ptBRObj, "ptBR"), "utf-8");
+  writeFileSync(join(translationsDir, "en-US.ts"), serializeTranslations(enUSObj, "enUS"), "utf-8");
+
+  console.log(`✓ pt-BR.ts (${rows.length} keys)`);
+  console.log(`✓ en-US.ts (${rows.filter((r) => r.enUS).length} keys)`);
+  console.log("Done!");
+}
