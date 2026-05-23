@@ -318,6 +318,8 @@ export default defineSchema({
     linkedinUrl: v.optional(v.string()),
     githubUrl: v.optional(v.string()),
     behanceUrl: v.optional(v.string()),
+    proposalIntro: v.optional(v.string()),
+    proposalAiContext: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   }),

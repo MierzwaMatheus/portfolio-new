@@ -35,13 +35,7 @@ export const enUS = {
       title: "What they say about me",
     },
     hero: {
-      description: "I transform complex challenges into robust digital ecosystems, leading architecture, innovation and technical excellence.",
-      technologies: [
-        { name: "React", color: "bg-neon-lime" },
-        { name: "TypeScript", color: "bg-neon-lime" },
-        { name: "Systems Architecture", color: "bg-neon-purple" },
-        { name: "DevOps & Infrastructure", color: "bg-neon-purple" }
-      ],
+      description: "Transforming complex challenges into robust digital ecosystems, with a focus on architecture, innovation and technical excellence.",
     },
     skills: {
       title: "What I do",
@@ -116,6 +110,7 @@ export const enUS = {
     loadMore: "Load more",
   },
   about: {
+    seoDescription: "Get to know the journey, daily routine and frequently asked questions about this professional portfolio.",
     title: "About Me",
     subtitle: "Get to know a little more about who I am",
     aboutMe: {

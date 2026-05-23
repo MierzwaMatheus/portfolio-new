@@ -262,6 +262,65 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
     execFileSync("npx", ["convex", "env", "set", "--", "VERCEL_WEBHOOK_SECRET", vercelWebhookSecret as string], { stdio: "pipe" });
   }
 
+  // 14. Personalização do portfolio
+  const profession = await text({
+    message: "Qual é a sua profissão ou área de atuação? (Enter para usar padrão tech)",
+    placeholder: "Ex: Designer UX, Fotógrafa, Advogada, Engenheira Civil...",
+    initialValue: "",
+  });
+
+  const specialties = await text({
+    message: "Quais são suas principais especialidades? (separadas por vírgula, Enter para pular)",
+    placeholder: "Ex: Branding, Motion Design, Fotografia de Produto",
+    initialValue: "",
+  });
+
+  const professionStr = isCancel(profession) ? "" : ((profession as string) || "").trim();
+  const specialtiesStr = isCancel(specialties) ? "" : ((specialties as string) || "").trim();
+
+  if (professionStr || specialtiesStr) {
+    const tags: Array<{ label: string; color: string }> = specialtiesStr
+      ? specialtiesStr
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .slice(0, 4)
+          .map((label, i) => ({ label, color: i % 2 === 0 ? "primary" : "secondary" }))
+      : [
+          { label: "React", color: "primary" },
+          { label: "TypeScript", color: "primary" },
+          { label: "Arquitetura de Sistemas", color: "secondary" },
+          { label: "DevOps & Infraestrutura", color: "secondary" },
+        ];
+
+    try {
+      execFileSync(
+        "npx",
+        ["convex", "run", "homeContent:set", JSON.stringify({ key: "hero_tags", value: tags })],
+        { stdio: "pipe" }
+      );
+    } catch {
+      // não crítico
+    }
+
+    if (professionStr) {
+      const name = (adminEmail as string).split("@")[0];
+      const aiContext = specialtiesStr
+        ? `${name} é ${professionStr} com especialidade em ${specialtiesStr}. Entrega projetos com qualidade e comprometimento.`
+        : `${name} é ${professionStr}. Entrega projetos com qualidade e comprometimento.`;
+
+      try {
+        execFileSync(
+          "npx",
+          ["convex", "run", "contactInfo:update", JSON.stringify({ proposalAiContext: aiContext })],
+          { stdio: "pipe" }
+        );
+      } catch {
+        // não crítico
+      }
+    }
+  }
+
   outro(
     `Setup concluído!\n\n  Admin criado: ${adminEmail as string}\n  Acesse: /login\n\n  Próximo passo: pnpm dev`
   );

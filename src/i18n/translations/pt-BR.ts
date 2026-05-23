@@ -35,13 +35,7 @@ export const ptBR = {
       title: "O que falam sobre mim",
     },
     hero: {
-      description: "Transformo desafios complexos em ecossistemas digitais robustos, liderando arquitetura, inovação e excelência técnica.",
-      technologies: [
-        { name: "React", color: "bg-neon-lime" },
-        { name: "TypeScript", color: "bg-neon-lime" },
-        { name: "Arquitetura de Sistemas", color: "bg-neon-purple" },
-        { name: "DevOps & Infraestrutura", color: "bg-neon-purple" }
-      ],
+      description: "Transformando desafios complexos em ecossistemas digitais robustos, com foco em arquitetura, inovação e excelência técnica.",
     },
     skills: {
       title: "O que eu faço",
@@ -116,6 +110,7 @@ export const ptBR = {
     loadMore: "Carregar mais",
   },
   about: {
+    seoDescription: "Conheça a trajetória, rotina e perguntas frequentes sobre este portfolio profissional.",
     title: "Sobre Mim",
     subtitle: "Conheça um pouco mais sobre quem eu sou",
     aboutMe: {

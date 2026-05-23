@@ -16,7 +16,10 @@ import {
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { useI18n } from "@/i18n/context/I18nContext";
 import { useHome } from "@/hooks/useHome";
-import { homeRepository } from "@/repositories/instances";
+import { homeRepository, sidebarRepository } from "@/repositories/instances";
+import { useSidebar } from "@/hooks/useSidebar";
+import { useQuery } from "convex/react";
+import { api } from "../../convex/_generated/api";
 import { useMatrixText } from "@/hooks/useMatrixText";
 import { AvailabilityBadge } from "@/components/AvailabilityBadge";
 import { TestimonialWizard } from "@/components/TestimonialWizard";
@@ -29,6 +32,11 @@ export default function Home() {
   const { isLoading: i18nLoading } = useI18n();
   const { contactRole, aboutText, services, testimonials, availability, isLoading } =
     useHome(homeRepository);
+  const { contactInfo: sidebarContact } = useSidebar(sidebarRepository);
+  const ownerFirstName = sidebarContact?.name?.split(" ")[0] || "";
+  const heroTagsEntry = useQuery(api.homeContent.getByKey, { key: "hero_tags" });
+  const heroTags: Array<{ label: string; color: string }> =
+    Array.isArray(heroTagsEntry?.value) ? heroTagsEntry.value : [];
   const [wizardOpen, setWizardOpen] = useState(false);
   const siteConfig = useSiteConfig();
   const testimonialsEnabled = usePlugin("testimonials");
@@ -99,7 +107,7 @@ export default function Home() {
             <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-white leading-tight tracking-tight mb-4">
               <span className="text-neon-purple">{t("home.title")}</span> <br />
               <span className="relative inline-block">
-                Matheus
+                {ownerFirstName}
                 <span className="absolute -bottom-2 left-0 w-full h-1.5 bg-neon-lime rounded-full"></span>
               </span>
             </h1>
@@ -121,23 +129,26 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-4 mt-10">
-            {(tValue("home.hero.technologies") || []).map(
-              (tech: { name: string; color: string }) => (
-                <div
-                  key={tech.name}
-                  className="flex items-center px-5 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-colors group cursor-default"
-                >
-                  <span
-                    className={`inline-block w-2 h-2 rounded-full ${tech.color} mr-3 shadow-[0_0_8px_rgba(255,255,255,0.3)] group-hover:scale-125 transition-transform`}
-                  ></span>
-                  <span className="text-sm font-medium text-gray-200">
-                    {tech.name}
-                  </span>
-                </div>
-              )
-            )}
-          </div>
+          {heroTags.length > 0 && (
+            <div className="flex flex-wrap gap-4 mt-10">
+              {heroTags.map((tag) => {
+                const colorClass = tag.color === "secondary" ? "bg-neon-purple" : "bg-neon-lime";
+                return (
+                  <div
+                    key={tag.label}
+                    className="flex items-center px-5 py-2.5 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 transition-colors group cursor-default"
+                  >
+                    <span
+                      className={`inline-block w-2 h-2 rounded-full ${colorClass} mr-3 shadow-[0_0_8px_rgba(255,255,255,0.3)] group-hover:scale-125 transition-transform`}
+                    ></span>
+                    <span className="text-sm font-medium text-gray-200">
+                      {tag.label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </motion.section>
 
         {/* About Section */}

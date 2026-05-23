@@ -34,6 +34,14 @@ vi.mock("@/components/AvailabilityBadge", () => ({
   AvailabilityBadge: () => null,
 }));
 
+vi.mock("@/hooks/useSidebar", () => ({
+  useSidebar: vi.fn(() => ({ contactInfo: null })),
+}));
+
+vi.mock("convex/react", () => ({
+  useQuery: vi.fn(() => undefined),
+}));
+
 vi.mock("@/components/PageSkeleton", () => ({
   PageSkeleton: () => <div data-testid="page-skeleton" />,
 }));

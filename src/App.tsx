@@ -41,7 +41,9 @@ import { ConvexClientProvider, convex } from "./providers/ConvexClientProvider";
 import { ConvexTranslationService } from "./i18n/implementations/ConvexTranslationService";
 import { Terminal } from "./components/Terminal";
 import { AnimatePresence } from "framer-motion";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { sidebarRepository } from "@/repositories/instances";
 import { ContactWizardProvider } from "./contexts/ContactWizardContext";
 import { ContactWizardModal } from "./components/ContactWizardModal";
 import AdminContactRequests from "./pages/admin/ContactRequests";
@@ -318,6 +320,28 @@ function AppContent() {
   const isAdminRoute = location.startsWith("/admin");
   const [terminalOpen, setTerminalOpen] = useState(false);
 
+  const { data: sidebarContact } = useQuery({
+    queryKey: ["sidebar", "contact"],
+    queryFn: () => sidebarRepository.getContactInfo(),
+    staleTime: Infinity,
+  });
+
+  const ownerInfo = useMemo(() => {
+    if (!sidebarContact) return undefined;
+    const slug = (sidebarContact.name ?? "portfolio")
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9-]/g, "");
+    return {
+      name: sidebarContact.name ?? "",
+      slug: slug || "portfolio",
+      role: sidebarContact.role ?? "professional",
+      email: sidebarContact.email,
+      githubUrl: sidebarContact.github_url,
+      linkedinUrl: sidebarContact.linkedin_url,
+    };
+  }, [sidebarContact]);
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (isAdminRoute) return;
@@ -337,7 +361,7 @@ function AppContent() {
       <Router />
       <AnimatePresence>
         {terminalOpen && !isAdminRoute && (
-          <Terminal onClose={() => setTerminalOpen(false)} />
+          <Terminal onClose={() => setTerminalOpen(false)} ownerInfo={ownerInfo} />
         )}
       </AnimatePresence>
       <Analytics />
