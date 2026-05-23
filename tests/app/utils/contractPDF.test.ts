@@ -100,6 +100,12 @@ describe("contractPDF · generateContractHTML", () => {
     expect(html).toContain("abc123hash");
   });
 
+  it("converts numbered list items (1. item) to <ol><li>...</li></ol>", () => {
+    const html = generateContractHTML(baseProposal, baseAcceptance, "");
+    // Cláusulas 6–9 do template contêm itens "1. **texto**" que devem virar <ol><li>
+    expect(html).toMatch(/<ol>[^]*<li>[^]*Transferência de Titularidade[^]*<\/li>[^]*<\/ol>/);
+  });
+
   it("uses contractId='—' fallback when slug missing", () => {
     const { slug: _slug, ...noSlug } = baseProposal as any;
     void _slug;

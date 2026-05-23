@@ -20,8 +20,12 @@ function formatClauseContent(text: string): string {
   return text
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/^#{1,6}\s+(.+)$/gm, "<strong>$1</strong>")
+    .replace(/^\d+\. (.+)$/gm, "<oli>$1</oli>")
     .replace(/^- (.+)$/gm, "<li>$1</li>")
     .replace(/(<li>[^]*?<\/li>\n?)+/gm, (match) => `<ul>${match}</ul>`)
+    .replace(/(<oli>[^]*?<\/oli>\n?)+/gm, (match) =>
+      `<ol>${match.replace(/<oli>/g, "<li>").replace(/<\/oli>/g, "</li>")}</ol>`,
+    )
     .replace(/---/g, "")
     .replace(/\n\n/g, "</p><p>")
     .replace(/\n/g, "<br/>")
@@ -29,7 +33,9 @@ function formatClauseContent(text: string): string {
     .replace(/$/, "</p>")
     .replace(/<p><\/p>/g, "")
     .replace(/<p>(<ul>)/g, "$1")
-    .replace(/(<\/ul>)<\/p>/g, "$1");
+    .replace(/(<\/ul>)<\/p>/g, "$1")
+    .replace(/<p>(<ol>)/g, "$1")
+    .replace(/(<\/ol>)<\/p>/g, "$1");
 }
 
 function extractClauseTitle(clause: string): { title: string; body: string } {
