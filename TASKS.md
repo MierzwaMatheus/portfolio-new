@@ -705,39 +705,39 @@
 
 ### 5.3 applyProposalToTemplate + refatoração da geração de PDF — closes #39
 
-- [ ] **[TESTE]** Escrever teste: `applyProposalToTemplate(template, proposal, acceptance)` substitui `{{client_name}}` com `proposal.clientName`
-- [ ] **[TESTE]** Escrever teste: `{{scope}}` é substituído pelo output de `formatArrayAsList(proposal.scope)`
-- [ ] **[TESTE]** Escrever teste: `{{timeline}}` é substituído por texto formatado dos passos do timeline
-- [ ] **[TESTE]** Escrever teste: `{{investment_value}}` é substituído por valor formatado em R$ pt-BR (ex: `"R$ 1.500,00"`)
-- [ ] **[TESTE]** Escrever teste: `{{accepted_at}}` é substituído por data formatada em pt-BR (ex: `"15/06/2024"`)
-- [ ] **[TESTE]** Escrever teste: `{{client_document}}` com CPF de 11 dígitos recebe máscara `###.###.###-##`
-- [ ] **[TESTE]** Escrever teste: `{{client_document}}` com CNPJ de 14 dígitos recebe máscara `##.###.###/####-##`
-- [ ] **[TESTE]** Escrever teste: variável `{{conditions}}` é substituída por `formatArrayAsList(proposal.conditions)`
-- [ ] Renomear/refatorar `generateContractContent()` em `contractGenerator.ts` para `applyProposalToTemplate(templateContent: string, proposal: ProposalData, acceptance: AcceptanceData): string`
-- [ ] Remover a linha com `MATHEUS MIERZWA LEME DE OLIVEIRA` e `57.900.589/0001-00` de `contractGenerator.ts` (linha 91)
-- [ ] Remover todas as cláusulas hardcoded de `contractGenerator.ts` — a função passa a apenas montar o mapa de variáveis e chamar `interpolateTemplate`
-- [ ] Refatorar `generateContractHTML()` em `contractPDF.ts` para receber `templateContent: string` (já interpolado) em vez de chamar `generateContractContent()` internamente
-- [ ] Remover fallback `"MATHEUS MIERZWA"` da linha 64 de `contractPDF.ts`
-- [ ] Remover fallback `"Barueri/SP"` da linha 66 de `contractPDF.ts`
-- [ ] Remover CNPJ `57.900.589/0001-00` hardcoded da linha 306 de `contractPDF.ts`
-- [ ] Atualizar `DownloadContractButton` em `src/pages/admin/Proposals.tsx`: chamar `api.contractTemplates.getDefault` antes de acionar a impressão
-- [ ] Passar `templateContent` retornado pelo `getDefault` para `applyProposalToTemplate` e em seguida para `generateContractHTML`
-- [ ] Executar `grep -r "MATHEUS\|57.900.589\|matheusmierzwa" src/` e verificar que retorna vazio
+- [x] **[TESTE]** Escrever teste: `applyProposalToTemplate(template, proposal, acceptance)` substitui `{{client_name}}` com `proposal.clientName`
+- [x] **[TESTE]** Escrever teste: `{{scope}}` é substituído pelo output de `formatArrayAsList(proposal.scope)`
+- [x] **[TESTE]** Escrever teste: `{{timeline}}` é substituído por texto formatado dos passos do timeline
+- [x] **[TESTE]** Escrever teste: `{{investment_value}}` é substituído por valor formatado em R$ pt-BR (ex: `"R$ 1.500,00"`)
+- [x] **[TESTE]** Escrever teste: `{{accepted_at}}` é substituído por data formatada em pt-BR (ex: `"15/06/2024"`)
+- [x] **[TESTE]** Escrever teste: `{{client_document}}` com CPF de 11 dígitos recebe máscara `###.###.###-##`
+- [x] **[TESTE]** Escrever teste: `{{client_document}}` com CNPJ de 14 dígitos recebe máscara `##.###.###/####-##`
+- [x] **[TESTE]** Escrever teste: variável `{{conditions}}` é substituída por `formatArrayAsList(proposal.conditions)`
+- [x] Renomear/refatorar `generateContractContent()` em `contractGenerator.ts` para `applyProposalToTemplate(templateContent: string, proposal: ProposalData, acceptance: AcceptanceData): string`
+- [x] Remover a linha com `MATHEUS MIERZWA LEME DE OLIVEIRA` e `57.900.589/0001-00` de `contractGenerator.ts` (linha 91)
+- [x] Remover todas as cláusulas hardcoded de `contractGenerator.ts` — a função passa a apenas montar o mapa de variáveis e chamar `interpolateTemplate`
+- [x] Refatorar `generateContractHTML()` em `contractPDF.ts` para receber `templateContent: string` (já interpolado) em vez de chamar `generateContractContent()` internamente
+- [x] Remover fallback `"MATHEUS MIERZWA"` da linha 64 de `contractPDF.ts`
+- [x] Remover fallback `"Barueri/SP"` da linha 66 de `contractPDF.ts`
+- [x] Remover CNPJ `57.900.589/0001-00` hardcoded da linha 306 de `contractPDF.ts`
+- [x] Atualizar `DownloadContractButton` em `src/pages/admin/Proposals.tsx`: chamar `api.contractTemplates.getDefault` antes de acionar a impressão
+- [x] Passar `templateContent` retornado pelo `getDefault` para `applyProposalToTemplate` e em seguida para `generateContractHTML`
+- [x] Executar `grep -r "MATHEUS\|57.900.589\|matheusmierzwa" src/` e verificar que retorna vazio
 
 ---
 
 ### 5.4 Corrigir testes existentes após refatoração — closes #40
 
-- [ ] Remover de `tests/app/utils/contractGenerator.test.ts` todos os testes que verificam cláusulas hardcoded (ex: os que usam `generateContractContent` para verificar texto de cláusulas)
-- [ ] Adicionar em `tests/app/utils/contractGenerator.test.ts` testes de `applyProposalToTemplate`: dado um template com `{{client_name}}`, retorna string com o nome substituído
-- [ ] Adicionar teste: `applyProposalToTemplate` com template vazio retorna string vazia
-- [ ] Atualizar fixture `baseProposal` / `baseAcceptance` em `tests/app/utils/contractPDF.test.ts` para que nenhum assertion dependa de `"MATHEUS MIERZWA"` ou `"57.900.589"`
-- [ ] Atualizar o teste de `contractPDF.test.ts` que verifica `"includes the contractor's default name"` — agora deve verificar que o nome vem do contactInfo e não do fallback hardcoded
+- [x] Remover de `tests/app/utils/contractGenerator.test.ts` todos os testes que verificam cláusulas hardcoded (ex: os que usam `generateContractContent` para verificar texto de cláusulas)
+- [x] Adicionar em `tests/app/utils/contractGenerator.test.ts` testes de `applyProposalToTemplate`: dado um template com `{{client_name}}`, retorna string com o nome substituído
+- [x] Adicionar teste: `applyProposalToTemplate` com template vazio retorna string vazia
+- [x] Atualizar fixture `baseProposal` / `baseAcceptance` em `tests/app/utils/contractPDF.test.ts` para que nenhum assertion dependa de `"MATHEUS MIERZWA"` ou `"57.900.589"`
+- [x] Atualizar o teste de `contractPDF.test.ts` que verifica `"includes the contractor's default name"` — agora deve verificar que o nome vem do contactInfo e não do fallback hardcoded
 - [ ] Atualizar snapshots de `cli/src/__tests__/create.validity.e2e.test.ts` rodando `pnpm test -- --update-snapshots` e confirmando que nenhum snapshot contém dados pessoais
-- [ ] Verificar que `pnpm test tests/app/utils/contractGenerator.test.ts` passa
-- [ ] Verificar que `pnpm test tests/app/utils/contractPDF.test.ts` passa
+- [x] Verificar que `pnpm test tests/app/utils/contractGenerator.test.ts` passa
+- [x] Verificar que `pnpm test tests/app/utils/contractPDF.test.ts` passa
 - [ ] Verificar que `pnpm test cli/src/__tests__/create.validity.e2e.test.ts` passa
-- [ ] Executar `grep -r "MATHEUS\|57.900.589\|matheusmierzwa" src/ tests/` e verificar que retorna vazio
+- [x] Executar `grep -r "MATHEUS\|57.900.589\|matheusmierzwa" src/ tests/` e verificar que retorna vazio
 
 ---
 
