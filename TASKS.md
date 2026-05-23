@@ -682,24 +682,24 @@
 
 ### 5.2 Convex: schema + contractTemplates functions — closes #38
 
-- [ ] **[TESTE]** Escrever teste: `list` retorna array vazio quando plugin `contract-templates` está desativado
-- [ ] **[TESTE]** Escrever teste: `getDefault` retorna `null` quando nenhum template tem `isDefault: true`
-- [ ] **[TESTE]** Escrever teste: `getDefault` retorna o template com `isDefault: true` quando existe
-- [ ] **[TESTE]** Escrever teste: `create` lança erro de autorização quando plugin desativado (`requirePlugin` bloqueando)
-- [ ] **[TESTE]** Escrever teste: `setDefault` marca o template alvo como `isDefault: true` e desmarca todos os outros
-- [ ] **[TESTE]** Escrever teste: `remove` exclui o registro pelo id
-- [ ] Adicionar tabela `contractTemplates` em `convex/schema.ts` com campos: `name: v.string()`, `description: v.optional(v.string())`, `content: v.string()`, `isDefault: v.boolean()`, `createdAt: v.number()`, `updatedAt: v.number()`
-- [ ] Adicionar índice `by_is_default` em `contractTemplates` para query eficiente do `getDefault`
-- [ ] Criar `convex/contractTemplates.ts` com query `list` — retorna todos os templates; gate: `isPluginEnabled(ctx, 'contract-templates')`
-- [ ] Adicionar query `get(id)` — busca template por id; gate: `isPluginEnabled`
-- [ ] Adicionar query `getDefault` — busca template com `isDefault: true`; gate: `isPluginEnabled`
-- [ ] Adicionar mutation `create({ name, description, content, isDefault })` — gate: `requirePlugin`
-- [ ] Adicionar mutation `update({ id, name, description, content })` — gate: `requirePlugin`
-- [ ] Adicionar mutation `remove(id)` — gate: `requirePlugin`
-- [ ] Adicionar mutation `setDefault(id)` — desmarca todos, marca o alvo; gate: `requirePlugin`
-- [ ] Registrar plugin `contract-templates` em `convex/pluginRegistry.ts` (PLUGIN_REGISTRY) com label, descrição e `defaultEnabled: false`
-- [ ] Escrever função de seed/migration em `convex/contractTemplates.ts` que insere template padrão com cláusulas atuais (sem dados pessoais) quando a tabela está vazia
-- [ ] Verificar que `npx convex dev` não apresenta erros de schema após as alterações
+- [x] **[TESTE]** Escrever teste: `list` retorna array vazio quando plugin `contract-templates` está desativado
+- [x] **[TESTE]** Escrever teste: `getDefault` retorna `null` quando nenhum template tem `isDefault: true`
+- [x] **[TESTE]** Escrever teste: `getDefault` retorna o template com `isDefault: true` quando existe
+- [x] **[TESTE]** Escrever teste: `create` lança erro de autorização quando plugin desativado (`requirePlugin` bloqueando)
+- [x] **[TESTE]** Escrever teste: `setDefault` marca o template alvo como `isDefault: true` e desmarca todos os outros
+- [x] **[TESTE]** Escrever teste: `remove` exclui o registro pelo id
+- [x] Adicionar tabela `contractTemplates` em `convex/schema.ts` com campos: `name: v.string()`, `description: v.optional(v.string())`, `content: v.string()`, `isDefault: v.boolean()`, `createdAt: v.number()`, `updatedAt: v.number()`
+- [x] Adicionar índice `by_is_default` em `contractTemplates` para query eficiente do `getDefault`
+- [x] Criar `convex/contractTemplates.ts` com query `list` — retorna todos os templates; gate: `isPluginEnabled(ctx, 'contract-templates')`
+- [x] Adicionar query `get(id)` — busca template por id; gate: `isPluginEnabled`
+- [x] Adicionar query `getDefault` — busca template com `isDefault: true`; gate: `isPluginEnabled`
+- [x] Adicionar mutation `create({ name, description, content, isDefault })` — gate: `requirePlugin`
+- [x] Adicionar mutation `update({ id, name, description, content })` — gate: `requirePlugin`
+- [x] Adicionar mutation `remove(id)` — gate: `requirePlugin`
+- [x] Adicionar mutation `setDefault(id)` — desmarca todos, marca o alvo; gate: `requirePlugin`
+- [x] Registrar plugin `contract-templates` em `convex/pluginRegistry.ts` (PLUGIN_REGISTRY) com label, descrição e `defaultEnabled: false`
+- [x] Escrever função de seed/migration em `convex/contractTemplates.ts` que insere template padrão com cláusulas atuais (sem dados pessoais) quando a tabela está vazia
+- [x] Verificar que `npx convex dev` não apresenta erros de schema após as alterações
 
 ---
 
