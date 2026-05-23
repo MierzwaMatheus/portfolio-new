@@ -43,6 +43,9 @@ export const ptBR = {
     availability: {
       label: "disponível para novos projetos",
     },
+    catRole: "cat role.txt",
+    loading: "Carregando informações do perfil...\n\nSincronizando dados do banco de dados, processando traduções e preparando experiência personalizada. Por favor, aguarde enquanto o sistema carrega todas as informações.",
+    loadingTestimonial: "\"Carregando depoimento...\"",
   },
   testimonials: {
     title: "Depoimentos",

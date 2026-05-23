@@ -43,6 +43,9 @@ export const enUS = {
     availability: {
       label: "available for new projects",
     },
+    catRole: "cat role.txt",
+    loading: "Loading profile information...\n\nSyncing database data, processing translations and preparing personalized experience. Please wait while the system loads all information.",
+    loadingTestimonial: "\"Loading testimonial...\"",
   },
   testimonials: {
     title: "Testimonials",

@@ -43,13 +43,13 @@ export default function Home() {
   const testimonialsIntakeEnabled = usePlugin("testimonials-intake");
 
   const matrixAboutText = useMatrixText({
-    text: "Carregando informações do perfil...\n\nSincronizando dados do banco de dados, processando traduções e preparando experiência personalizada. Por favor, aguarde enquanto o sistema carrega todas as informações.",
+    text: t("home.loading"),
     speed: 30,
     chars: "!@#$%^&*()_+-=[]{}|;:,.<>?~ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
   });
 
   const matrixTestimonialText = useMatrixText({
-    text: '"Carregando depoimento..."',
+    text: t("home.loadingTestimonial"),
     speed: 30,
     chars: "!@#$%^&*()_+-=[]{}|;:,.<>?~ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
   });
@@ -116,7 +116,7 @@ export default function Home() {
               <Terminal className="w-3 h-3 text-neon-purple mr-2" />
               <p className="text-sm font-medium text-neon-purple font-mono">
                 <span className="text-white mr-2">$</span>
-                cat role.txt
+                {t("home.catRole")}
               </p>
             </div>
 
@@ -275,7 +275,7 @@ export default function Home() {
                 href="/depoimentos"
                 className="text-sm text-gray-500 hover:text-gray-300 transition-colors underline underline-offset-4"
               >
-                Ver todos os depoimentos →
+                {t("testimonials.viewAll")}
               </Link>
               {testimonialsIntakeEnabled && (
                 <button
@@ -283,7 +283,7 @@ export default function Home() {
                   className="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-neon-purple/40 bg-neon-purple/5 text-neon-purple hover:bg-neon-purple/10 hover:border-neon-purple transition-all text-sm font-medium"
                 >
                   <Star className="w-4 h-4" />
-                  Deixar meu depoimento
+                  {t("testimonials.leaveTestimonial")}
                 </button>
               )}
             </div>
