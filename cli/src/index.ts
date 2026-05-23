@@ -5,13 +5,7 @@ import { runUpdate } from "./commands/update.js";
 import { runSetup } from "./commands/setup.js";
 
 export async function runCli(argv: string[], cwd: string): Promise<void> {
-  let [,, command, projectName] = argv;
-
-  // pnpm create rubrica <nome> → argv[2] é o nome, não o subcomando
-  if (command && command !== "create" && command !== "config" && command !== "update" && command !== "setup") {
-    projectName = command;
-    command = "create";
-  }
+  const [,, command, projectName] = argv;
 
   intro("Rubrica CLI");
 
