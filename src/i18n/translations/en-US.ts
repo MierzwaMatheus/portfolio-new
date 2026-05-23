@@ -44,6 +44,13 @@ export const enUS = {
       label: "available for new projects",
     },
   },
+  testimonials: {
+    title: "Testimonials",
+    subtitle: "Experiences from clients and collaborators I've worked with.",
+    empty: "No testimonials published yet.",
+    leaveTestimonial: "Leave my testimonial",
+    viewAll: "View all testimonials →",
+  },
   portfolio: {
     title: "Portfolio",
     subtitle: "A selection of my recent works",

@@ -44,6 +44,13 @@ export const ptBR = {
       label: "disponível para novos projetos",
     },
   },
+  testimonials: {
+    title: "Depoimentos",
+    subtitle: "Experiências de clientes e colaboradores que trabalharam comigo.",
+    empty: "Nenhum depoimento publicado ainda.",
+    leaveTestimonial: "Deixar meu depoimento",
+    viewAll: "Ver todos os depoimentos →",
+  },
   portfolio: {
     title: "Portfólio",
     subtitle: "Uma seleção dos meus trabalhos recentes",
