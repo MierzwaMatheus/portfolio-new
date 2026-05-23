@@ -23,7 +23,7 @@ interface ProposalDialogProps {
 export function ProposalDialog({ open, onOpenChange, proposal, onSave }: ProposalDialogProps) {
     const proposalsData = useQuery(api.proposals.listAdmin, { filter: "all" });
     const proposals = proposalsData ?? [];
-    const templates = useQuery(api.contractTemplates.list) ?? [];
+    const templates: any[] = useQuery(api.contractTemplates.list) ?? [];
 
     const createProposal = useMutation(api.proposals.create);
     const updateProposal = useMutation(api.proposals.update);
@@ -67,6 +67,7 @@ export function ProposalDialog({ open, onOpenChange, proposal, onSave }: Proposa
                 setInvestmentValue(proposal.investmentValue?.toString().replace('.', ',') || "");
                 setScopeItems(Array.isArray(proposal.scope) ? proposal.scope : []);
                 setTimelineItems(Array.isArray(proposal.timeline) ? proposal.timeline : []);
+                setTemplateId(proposal.templateId ?? undefined);
 
                 const savedConditions: string[] = proposal.conditions || [];
                 const defaultConditions = [
@@ -86,6 +87,8 @@ export function ProposalDialog({ open, onOpenChange, proposal, onSave }: Proposa
                 ));
             } else {
                 resetForm();
+                const defaultTemplate = templates.find((t: any) => t.isDefault);
+                if (defaultTemplate) setTemplateId(defaultTemplate._id);
             }
         }
     }, [open, proposal]);

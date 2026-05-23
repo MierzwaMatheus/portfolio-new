@@ -56,3 +56,17 @@ describe("ProposalDialog — Ciclo 2: seletor de template renderiza templates", 
     expect(screen.getByRole("combobox")).toBeTruthy();
   });
 });
+
+describe("ProposalDialog — Ciclo 3: pré-seleção do template padrão", () => {
+  beforeEach(() => {
+    mockUseQuery.mockReset();
+    mockUseMutation.mockReset();
+  });
+
+  it("pré-seleciona o template marcado como isDefault ao abrir nova proposta", () => {
+    setup();
+    const combobox = screen.getByRole("combobox");
+    // Radix Select exibe o nome do item selecionado no trigger
+    expect(combobox.textContent).toContain("Template B");
+  });
+});
