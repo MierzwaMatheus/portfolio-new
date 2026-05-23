@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   generatePaymentMethods,
   generateContractContent,
+  applyProposalToTemplate,
 } from "@/utils/contractGenerator";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 
@@ -216,5 +217,16 @@ describe("contractGenerator · generateContractContent", () => {
     const { header } = generateContractContent(baseProposal, baseAcceptance);
     expect(header).toContain("MATHEUS MIERZWA");
     expect(header).toContain("57.900.589/0001-00");
+  });
+});
+
+describe("contractGenerator · applyProposalToTemplate", () => {
+  it("substitutes {{client_name}} with acceptance.client_name", () => {
+    const result = applyProposalToTemplate(
+      "Contrato para {{client_name}}.",
+      baseProposal,
+      baseAcceptance,
+    );
+    expect(result).toBe("Contrato para John Doe.");
   });
 });

@@ -1,4 +1,5 @@
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
+import { interpolateTemplate } from "@/utils/contractTemplate";
 
 export interface ProposalData {
   title?: string;
@@ -69,6 +70,22 @@ export function generatePaymentMethods(value: number): string[] {
     `Cartão de crédito até 3x sem juros (R$ ${installmentValue.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/mês)`,
     `Cartão de crédito até 12x com juros`
   ];
+}
+
+/**
+ * Aplica os dados de uma proposta e aceite a um template de contrato com variáveis {{var}}.
+ */
+export function applyProposalToTemplate(
+  templateContent: string,
+  proposal: ProposalData,
+  acceptance: AcceptanceData,
+): string {
+  const vars: Record<string, string> = {
+    client_name: acceptance.client_name,
+    client_email: acceptance.client_email,
+    client_role: acceptance.client_role ?? '',
+  };
+  return interpolateTemplate(templateContent, vars);
 }
 
 /**
