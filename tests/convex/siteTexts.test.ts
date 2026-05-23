@@ -21,7 +21,7 @@ vi.mock("@convex-dev/auth/providers/Password", () => ({
   Password: () => ({}),
 }));
 
-import { getAll, getByPage } from "../../convex/siteTexts";
+import { getAll, getByPage, seed } from "../../convex/siteTexts";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
 const handler = (fn: any) => fn._handler ?? fn;
@@ -74,5 +74,35 @@ describe("convex/siteTexts · getByPage", () => {
   it("retorna array vazio para página sem registros", async () => {
     const result = await handler(getByPage)(ctx, { page: "blog" });
     expect(result).toEqual([]);
+  });
+});
+
+describe("convex/siteTexts · seed", () => {
+  let ctx: MockCtx;
+
+  beforeEach(() => {
+    ctx = createMockCtx();
+    getAuthUserId.mockResolvedValue(null);
+  });
+
+  it("popula a tabela com todas as chaves dos arquivos de tradução (245 chaves)", async () => {
+    await handler(seed)(ctx, {});
+    const docs = ctx.db._all("siteTexts");
+    expect(docs.length).toBe(245);
+  });
+
+  it("é idempotente — rodar duas vezes não duplica registros", async () => {
+    await handler(seed)(ctx, {});
+    await handler(seed)(ctx, {});
+    const docs = ctx.db._all("siteTexts");
+    expect(docs.length).toBe(245);
+  });
+
+  it("cada registro tem key em dot-notation e page igual ao primeiro segmento", async () => {
+    await handler(seed)(ctx, {});
+    const homeGreeting = ctx.db._all("siteTexts").find((d: any) => d.key === "home.greeting");
+    expect(homeGreeting).toBeDefined();
+    expect(homeGreeting?.page).toBe("home");
+    expect(homeGreeting?.ptBR).toBeTruthy();
   });
 });
