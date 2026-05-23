@@ -51,6 +51,7 @@ import AdminPlugins from "./pages/admin/Plugins";
 import AdminSiteConfig from "./pages/admin/SiteConfig";
 import AdminTestimonials from "./pages/admin/Testimonials";
 import AdminLgpdErasure from "./pages/admin/LgpdErasure";
+import AdminContractTemplates from "./pages/admin/ContractTemplates";
 import TestimonialsPage from "./pages/Testimonials";
 import { PluginsProvider } from "./contexts/PluginsContext";
 import { PluginRoute } from "./components/PluginRoute";
@@ -216,6 +217,12 @@ function Router() {
         </Route>
         <Route path="/admin/lgpd">
           <ProtectedRoute component={AdminLgpdErasure} allowedRoles={["root"]} />
+        </Route>
+        <Route path="/admin/contracts">
+          <ProtectedRoute
+            component={() => <PluginRoute pluginId="contract-templates"><AdminContractTemplates /></PluginRoute>}
+            allowedRoles={["root", "admin"]}
+          />
         </Route>
       </Switch>
       </>

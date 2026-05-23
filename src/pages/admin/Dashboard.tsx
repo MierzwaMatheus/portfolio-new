@@ -25,6 +25,7 @@ import {
   Star,
   ShieldAlert,
   Settings2,
+  ClipboardList,
 } from "lucide-react";
 import { usePlugins } from "@/contexts/PluginsContext";
 import type { PluginId } from "../../../convex/pluginRegistry";
@@ -146,6 +147,13 @@ function AdminSidebar() {
       path: "/admin/logs",
       roles: ["root"],
       pluginId: "audit-log",
+    },
+    {
+      icon: ClipboardList,
+      label: "Contratos",
+      path: "/admin/contracts",
+      roles: ["root", "admin"],
+      pluginId: "contract-templates" as PluginId,
     },
     {
       icon: ShieldAlert,
