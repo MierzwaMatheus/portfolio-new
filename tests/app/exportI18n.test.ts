@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { unflattenTranslations, serializeTranslations } from "../../scripts/export-i18n";
+import { unflattenTranslations, serializeTranslations, validateEnv } from "../../scripts/export-i18n";
 
 describe("unflattenTranslations", () => {
   it("converte chave simples em objeto aninhado", () => {
@@ -64,6 +64,12 @@ describe("serializeTranslations", () => {
     expect(output).toMatch(/greeting:/);
   });
 
+  it("produz saída compatível com o formato atual de pt-BR.ts (export const ptBR)", () => {
+    const obj = { common: { close: "Fechar" } };
+    const output = serializeTranslations(obj, "ptBR");
+    expect(output).toMatch(/^export const ptBR = \{/);
+  });
+
   it("produz saída que, quando avaliada, resulta no objeto original", () => {
     const obj = { common: { close: "Fechar", save: "Salvar" }, nav: { home: "Início" } };
     const output = serializeTranslations(obj, "ptBR");
@@ -73,5 +79,29 @@ describe("serializeTranslations", () => {
     // eslint-disable-next-line no-eval
     const evaluated = eval(`(${match![1]})`);
     expect(evaluated).toEqual(obj);
+  });
+});
+
+describe("validateEnv", () => {
+  it("retorna a URL quando CONVEX_URL está definida", () => {
+    const url = validateEnv({ CONVEX_URL: "https://example.convex.cloud" });
+    expect(url).toBe("https://example.convex.cloud");
+  });
+
+  it("aceita VITE_CONVEX_URL como fallback quando CONVEX_URL está ausente", () => {
+    const url = validateEnv({ VITE_CONVEX_URL: "https://vite.convex.cloud" });
+    expect(url).toBe("https://vite.convex.cloud");
+  });
+
+  it("lança erro com mensagem clara quando nenhuma variável está definida", () => {
+    expect(() => validateEnv({})).toThrow(/CONVEX_URL/);
+  });
+
+  it("prefere CONVEX_URL sobre VITE_CONVEX_URL quando ambas existem", () => {
+    const url = validateEnv({
+      CONVEX_URL: "https://primary.convex.cloud",
+      VITE_CONVEX_URL: "https://fallback.convex.cloud",
+    });
+    expect(url).toBe("https://primary.convex.cloud");
   });
 });

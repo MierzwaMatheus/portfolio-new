@@ -1,3 +1,11 @@
+export function validateEnv(env: Record<string, string | undefined>): string {
+  const url = env.CONVEX_URL ?? env.VITE_CONVEX_URL;
+  if (!url) {
+    throw new Error("CONVEX_URL is not set. Configure it in .env.local before running build:i18n.");
+  }
+  return url;
+}
+
 export function serializeTranslations(obj: Record<string, unknown>, varName: string): string {
   function stringify(val: unknown, indent: number): string {
     const pad = "  ".repeat(indent);
