@@ -23,11 +23,15 @@ vi.mock("@/pages/admin/Dashboard", () => ({
   AdminLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
+import { useQuery } from "convex/react";
 import AdminTextos from "@/pages/admin/Textos";
+
+const mockUseQuery = vi.mocked(useQuery);
 
 describe("Textos — Ciclo 1: estrutura básica da página", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockUseQuery.mockReturnValue([] as any);
   });
 
   it("renderiza o heading 'Textos do Site'", () => {
@@ -38,5 +42,32 @@ describe("Textos — Ciclo 1: estrutura básica da página", () => {
   it("renderiza campo de busca", () => {
     render(<AdminTextos />);
     expect(screen.getByPlaceholderText(/buscar/i)).toBeInTheDocument();
+  });
+});
+
+describe("Textos — Ciclo 2: agrupamento por namespace", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUseQuery.mockReturnValue([
+      { _id: "1", key: "home.greeting", page: "home", ptBR: "Olá", enUS: "Hello" },
+      { _id: "2", key: "home.title", page: "home", ptBR: "Título", enUS: "Title" },
+      { _id: "3", key: "about.intro", page: "about", ptBR: "Sobre", enUS: "About" },
+    ] as any);
+  });
+
+  it("renderiza seção agrupada para namespace 'home'", () => {
+    render(<AdminTextos />);
+    expect(screen.getByText("home")).toBeInTheDocument();
+  });
+
+  it("renderiza seção agrupada para namespace 'about'", () => {
+    render(<AdminTextos />);
+    expect(screen.getByText("about")).toBeInTheDocument();
+  });
+
+  it("exibe a chave de cada item dentro da seção correta", () => {
+    render(<AdminTextos />);
+    expect(screen.getByText("home.greeting")).toBeInTheDocument();
+    expect(screen.getByText("about.intro")).toBeInTheDocument();
   });
 });
