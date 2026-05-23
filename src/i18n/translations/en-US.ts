@@ -245,6 +245,15 @@ export const enUS = {
       deleteError: "Error deleting.",
     },
   },
+  auth: {
+    adminArea: "Administrative Area",
+    enterCredentials: "Sign in with your credentials to access the dashboard",
+    emailPlaceholder: "admin@example.com",
+    password: "Password",
+    signingIn: "Signing in...",
+    signIn: "Sign in",
+    invalidCredentials: "Invalid credentials. Check your email and password.",
+  },
   notFound: {
     label: "system error",
     errorCode: "ERR_ROUTE_NOT_FOUND",

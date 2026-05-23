@@ -245,6 +245,15 @@ export const ptBR = {
       deleteError: "Erro ao excluir.",
     },
   },
+  auth: {
+    adminArea: "Área Administrativa",
+    enterCredentials: "Entre com suas credenciais para acessar o painel",
+    emailPlaceholder: "admin@exemplo.com",
+    password: "Senha",
+    signingIn: "Entrando...",
+    signIn: "Entrar",
+    invalidCredentials: "Credenciais inválidas. Verifique seu email e senha.",
+  },
   notFound: {
     label: "erro do sistema",
     errorCode: "ERR_ROTA_NAO_ENCONTRADA",
