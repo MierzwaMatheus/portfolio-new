@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { unflattenTranslations } from "../../scripts/export-i18n";
+import { unflattenTranslations, serializeTranslations } from "../../scripts/export-i18n";
 
 describe("unflattenTranslations", () => {
   it("converte chave simples em objeto aninhado", () => {
@@ -35,5 +35,43 @@ describe("unflattenTranslations", () => {
       common: { close: "Fechar" },
       navigation: { home: "Início" },
     });
+  });
+});
+
+describe("serializeTranslations", () => {
+  it("gera export const com o nome da variável fornecido", () => {
+    const obj = { home: { greeting: "Olá" } };
+    const output = serializeTranslations(obj, "ptBR");
+    expect(output).toContain("export const ptBR =");
+  });
+
+  it("termina com ponto-e-vírgula e newline", () => {
+    const obj = { common: { close: "Fechar" } };
+    const output = serializeTranslations(obj, "ptBR");
+    expect(output.trimEnd()).toMatch(/;$/);
+  });
+
+  it("valores de string são envolvidos em aspas duplas", () => {
+    const obj = { home: { greeting: "Olá" } };
+    const output = serializeTranslations(obj, "ptBR");
+    expect(output).toContain('"Olá"');
+  });
+
+  it("chaves são escritas sem aspas quando válidas como identificadores JS", () => {
+    const obj = { home: { greeting: "Olá" } };
+    const output = serializeTranslations(obj, "ptBR");
+    expect(output).toMatch(/home:/);
+    expect(output).toMatch(/greeting:/);
+  });
+
+  it("produz saída que, quando avaliada, resulta no objeto original", () => {
+    const obj = { common: { close: "Fechar", save: "Salvar" }, nav: { home: "Início" } };
+    const output = serializeTranslations(obj, "ptBR");
+    // Extrai o objeto literal da string e avalia
+    const match = output.match(/export const ptBR = ([\s\S]+);/);
+    expect(match).not.toBeNull();
+    // eslint-disable-next-line no-eval
+    const evaluated = eval(`(${match![1]})`);
+    expect(evaluated).toEqual(obj);
   });
 });

@@ -1,3 +1,21 @@
+export function serializeTranslations(obj: Record<string, unknown>, varName: string): string {
+  function stringify(val: unknown, indent: number): string {
+    const pad = "  ".repeat(indent);
+    const innerPad = "  ".repeat(indent + 1);
+    if (typeof val === "string") {
+      return JSON.stringify(val);
+    }
+    if (typeof val === "object" && val !== null) {
+      const entries = Object.entries(val as Record<string, unknown>);
+      if (entries.length === 0) return "{}";
+      const lines = entries.map(([k, v]) => `${innerPad}${k}: ${stringify(v, indent + 1)}`);
+      return `{\n${lines.join(",\n")},\n${pad}}`;
+    }
+    return String(val);
+  }
+  return `export const ${varName} = ${stringify(obj, 0)};\n`;
+}
+
 export function unflattenTranslations(
   entries: Array<{ key: string; value: string }>
 ): Record<string, unknown> {
