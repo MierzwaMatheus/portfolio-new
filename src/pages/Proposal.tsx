@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 import ReactMarkdown from "react-markdown";
 import { ContractModal } from "@/components/ContractModal";
-import { generatePaymentMethods } from "@/utils/contractGenerator";
+import { generatePaymentMethods, applyProposalToTemplate, resolveTemplateContent } from "@/utils/contractGenerator";
 import { printContractPDF } from "@/utils/contractPDF";
 
 // Build a snake_case adapter so existing utils (contractGenerator, ContractModal) still work
@@ -90,6 +90,8 @@ export default function Proposal() {
   ) ?? null;
   const contactInfo = useQuery(api.contactInfo.get);
 
+  const defaultTemplate = useQuery(api.contractTemplates.getDefault);
+
   const acceptanceData: any = useMemo(() => {
     if (!acceptanceDataRaw) return null;
     return {
@@ -157,7 +159,11 @@ export default function Proposal() {
     if (!proposal || !acceptanceData) return;
     try {
       const signatureUrl = acceptanceDataRaw?.signatureUrl ?? "";
-      await printContractPDF(proposal, acceptanceData, signatureUrl, contactInfo ?? undefined);
+      const rawContent = resolveTemplateContent(rawProposal, defaultTemplate);
+      const templateContent = rawContent
+        ? applyProposalToTemplate(rawContent, proposal, acceptanceData)
+        : undefined;
+      await printContractPDF(proposal, acceptanceData, signatureUrl, contactInfo ?? undefined, templateContent);
     } catch (error: any) {
       console.error("Error generating PDF:", error);
       toast.error(error.message || "Erro ao gerar PDF");
@@ -554,7 +560,11 @@ export default function Proposal() {
   async function handleDigitalSignature(signatureDataUrl: string) {
     if (!proposal || !acceptanceData) return;
     try {
-      await printContractPDF(proposal, acceptanceData, signatureDataUrl, contactInfo ?? undefined);
+      const rawContent = resolveTemplateContent(rawProposal, defaultTemplate);
+      const templateContent = rawContent
+        ? applyProposalToTemplate(rawContent, proposal, acceptanceData)
+        : undefined;
+      await printContractPDF(proposal, acceptanceData, signatureDataUrl, contactInfo ?? undefined, templateContent);
       toast.success("PDF do contrato gerado com sucesso!");
     } catch (error: any) {
       console.error("Error generating PDF:", error);
