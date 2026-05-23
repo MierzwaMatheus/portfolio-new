@@ -23,10 +23,11 @@ vi.mock("@/pages/admin/Dashboard", () => ({
   AdminLayout: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import AdminTextos from "@/pages/admin/Textos";
 
 const mockUseQuery = vi.mocked(useQuery);
+const mockUseMutation = vi.mocked(useMutation);
 
 describe("Textos — Ciclo 1: estrutura básica da página", () => {
   beforeEach(() => {
@@ -117,5 +118,31 @@ describe("Textos — Ciclo 4: busca/filtro em tempo real", () => {
     fireEvent.change(input, { target: { value: "sobre" } });
     expect(screen.getByText("about.intro")).toBeInTheDocument();
     expect(screen.queryByText("home.greeting")).not.toBeInTheDocument();
+  });
+});
+
+describe("Textos — Ciclo 5: salvar via mutation + toast", () => {
+  const mockUpdate = vi.fn().mockResolvedValue(undefined);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUseQuery.mockReturnValue([
+      { _id: "1", key: "home.greeting", page: "home", ptBR: "Olá", enUS: "Hello" },
+    ] as any);
+    mockUseMutation.mockReturnValue(mockUpdate as any);
+  });
+
+  it("renderiza botão 'Salvar' por item", () => {
+    render(<AdminTextos />);
+    expect(screen.getByRole("button", { name: /salvar/i })).toBeInTheDocument();
+  });
+
+  it("clicar em Salvar chama a mutation update", async () => {
+    render(<AdminTextos />);
+    const btn = screen.getByRole("button", { name: /salvar/i });
+    fireEvent.click(btn);
+    expect(mockUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ key: "home.greeting" }),
+    );
   });
 });
