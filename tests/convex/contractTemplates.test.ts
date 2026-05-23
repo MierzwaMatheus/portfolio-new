@@ -21,7 +21,7 @@ vi.mock("@convex-dev/auth/providers/Password", () => ({
   Password: () => ({}),
 }));
 
-import { list, getDefault } from "../../convex/contractTemplates";
+import { list, getDefault, create } from "../../convex/contractTemplates";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
 const handler = (fn: any) => fn._handler ?? fn;
@@ -85,6 +85,22 @@ describe("convex/contractTemplates · getDefault", () => {
     expect(result).not.toBeNull();
     expect(result.name).toBe("Padrão");
     expect(result.isDefault).toBe(true);
+  });
+});
+
+describe("convex/contractTemplates · create", () => {
+  let ctx: MockCtx;
+  beforeEach(() => {
+    ctx = createMockCtx();
+    getAuthUserId.mockResolvedValue(null);
+  });
+
+  it("lança erro de autorização quando plugin contract-templates está desativado", async () => {
+    enablePlugin(ctx, "contract-templates", false);
+    asRole(ctx, "admin");
+    await expect(
+      handler(create)(ctx, { name: "Novo", content: "Conteúdo", isDefault: false })
+    ).rejects.toThrow("PLUGIN_DISABLED:contract-templates");
   });
 });
 
