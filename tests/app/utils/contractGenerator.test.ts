@@ -247,4 +247,19 @@ describe("contractGenerator · applyProposalToTemplate", () => {
     );
     expect(result).toBe("Condições:\n• Cond C");
   });
+
+  it("substitutes {{timeline}} with formatted step - period lines", () => {
+    const result = applyProposalToTemplate(
+      "Cronograma:\n{{timeline}}",
+      {
+        ...baseProposal,
+        timeline: [
+          { step: "Design", period: "1 semana" },
+          { step: "Dev", period: "2 semanas" },
+        ],
+      },
+      baseAcceptance,
+    );
+    expect(result).toBe("Cronograma:\n• Design – 1 semana\n• Dev – 2 semanas");
+  });
 });

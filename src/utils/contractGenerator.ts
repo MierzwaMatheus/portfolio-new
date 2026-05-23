@@ -89,6 +89,9 @@ export function applyProposalToTemplate(
     client_role: acceptance.client_role ?? '',
     scope: formatArrayAsList(scopeItems),
     conditions: formatArrayAsList(proposal.conditions ?? []),
+    timeline: formatArrayAsList(
+      (proposal.timeline ?? []).map(t => `${t.step} – ${t.period}`)
+    ),
   };
   return interpolateTemplate(templateContent, vars);
 }
