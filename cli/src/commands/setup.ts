@@ -258,6 +258,13 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
     }
   }
 
+  // Seed textos de UI padrão
+  try {
+    execFileSync("npx", ["convex", "run", "siteTexts:seed"], { stdio: "pipe" });
+  } catch {
+    // não crítico — textos podem ser populados manualmente
+  }
+
   // 13. Vercel — sempre presentes (opcionais)
   const vercelHookUrl = await text({
     message: "VERCEL_DEPLOY_HOOK_URL (Enter para pular):",

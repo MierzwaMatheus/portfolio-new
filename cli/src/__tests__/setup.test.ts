@@ -703,3 +703,42 @@ describe("runSetup — Ciclo 8: setupAdmin execFileSync e outro()", () => {
     );
   });
 });
+
+describe("runSetup — Ciclo 9: siteTexts seed", () => {
+  function makeAdminSetup() {
+    const state = { ...BASE_STATE, plugins: {} };
+    const vol = Volume.fromJSON({
+      "/project/rubrica.json": JSON.stringify(state),
+      "/project/.env.local": VALID_ENV,
+    });
+    return {
+      cwd: "/project",
+      fs: makeFsModule(vol),
+      detectProject: vi.fn().mockResolvedValue("/project/rubrica.json"),
+      generateJwtKeys: vi.fn().mockResolvedValue({
+        JWT_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
+        JWKS: JSON.stringify({ keys: [{ use: "sig", kty: "RSA" }] }),
+      }),
+      readState: vi.fn().mockResolvedValue(state),
+      randomBytes: vi.fn().mockReturnValue(Buffer.alloc(32, 0)),
+      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
+    };
+  }
+
+  it("chama convex run siteTexts:seed durante o setup", async () => {
+    vi.mocked(textPrompt)
+      .mockResolvedValueOnce("https://meusite.com")
+      .mockResolvedValueOnce("admin@teste.com")
+      .mockResolvedValue("");
+
+    vi.mocked(passwordPrompt)
+      .mockResolvedValueOnce("minhaSenha123456")
+      .mockResolvedValueOnce("minhaSenha123456");
+
+    const deps = makeAdminSetup();
+    await runSetup(deps);
+
+    const calls = fileSyncArgs(deps.execFileSync as ReturnType<typeof vi.fn>);
+    expect(calls).toContain("convex run siteTexts:seed");
+  });
+});
