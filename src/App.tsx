@@ -52,6 +52,7 @@ import AdminSiteConfig from "./pages/admin/SiteConfig";
 import AdminTestimonials from "./pages/admin/Testimonials";
 import AdminLgpdErasure from "./pages/admin/LgpdErasure";
 import AdminContractTemplates from "./pages/admin/ContractTemplates";
+import AdminTextos from "./pages/admin/Textos";
 import TestimonialsPage from "./pages/Testimonials";
 import { PluginsProvider } from "./contexts/PluginsContext";
 import { PluginRoute } from "./components/PluginRoute";
@@ -201,6 +202,12 @@ function Router() {
           <ProtectedRoute
             component={AdminPlugins}
             allowedRoles={["root", "admin"]}
+          />
+        </Route>
+        <Route path="/admin/textos">
+          <ProtectedRoute
+            component={AdminTextos}
+            allowedRoles={["root", "admin", "content-editor"]}
           />
         </Route>
         <Route path="/admin/site-config">

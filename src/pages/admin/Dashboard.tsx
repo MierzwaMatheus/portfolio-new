@@ -26,6 +26,7 @@ import {
   ShieldAlert,
   Settings2,
   ClipboardList,
+  Type,
 } from "lucide-react";
 import { usePlugins } from "@/contexts/PluginsContext";
 import type { PluginId } from "../../../convex/pluginRegistry";
@@ -166,6 +167,12 @@ function AdminSidebar() {
       label: "Plugins",
       path: "/admin/plugins",
       roles: ["root", "admin"],
+    },
+    {
+      icon: Type,
+      label: "Textos",
+      path: "/admin/textos",
+      roles: ["root", "admin", "content-editor"],
     },
     {
       icon: Settings2,
