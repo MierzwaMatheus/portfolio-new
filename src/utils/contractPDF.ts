@@ -16,7 +16,7 @@ export interface ContactInfo {
   githubUrl?: string;
 }
 
-function formatClauseContent(text: string): string {
+export function formatClauseContent(text: string): string {
   return text
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/^#{1,6}\s+(.+)$/gm, "<strong>$1</strong>")
@@ -47,7 +47,7 @@ function extractClauseTitle(clause: string): { title: string; body: string } {
   return { title: "", body: clause.trim() };
 }
 
-function parseTemplateContent(content: string): { header: string; clauses: string[] } {
+export function parseTemplateContent(content: string): { header: string; clauses: string[] } {
   const parts = content.split(/(?=### )/);
   const header = parts[0] ?? '';
   const clauses = parts.slice(1).map(c => c.trim() + '\n');
