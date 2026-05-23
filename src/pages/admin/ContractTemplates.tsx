@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
@@ -6,7 +6,7 @@ import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { TemplateEditor } from "@/components/admin/TemplateEditor";
 import {
   Table,
   TableBody,
@@ -64,18 +64,6 @@ const TEMPLATE_VARIABLES = [
   { key: "accepted_at", label: "Data de aceite" },
 ];
 
-function insertAtCursor(
-  textarea: HTMLTextAreaElement,
-  variable: string,
-  currentValue: string
-): { newValue: string; newCursorPos: number } {
-  const start = textarea.selectionStart;
-  const end = textarea.selectionEnd;
-  const text = `{{${variable}}}`;
-  const newValue = currentValue.slice(0, start) + text + currentValue.slice(end);
-  return { newValue, newCursorPos: start + text.length };
-}
-
 export default function ContractTemplates() {
   const templates = useQuery(api.contractTemplates.list);
   const createTemplate = useMutation(api.contractTemplates.create);
@@ -88,7 +76,6 @@ export default function ContractTemplates() {
   const [form, setForm] = useState<FormState>({ name: "", description: "", content: "" });
   const [isSaving, setIsSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<Template | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isLoading = templates === undefined;
   const isEditing = editingTemplate !== null;
@@ -157,17 +144,6 @@ export default function ContractTemplates() {
 
   async function handleDelete(id: Id<"contractTemplates">) {
     await removeTemplate({ id });
-  }
-
-  function insertVariable(variable: string) {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
-    const { newValue, newCursorPos } = insertAtCursor(textarea, variable, form.content);
-    setForm(f => ({ ...f, content: newValue }));
-    setTimeout(() => {
-      textarea.focus();
-      textarea.setSelectionRange(newCursorPos, newCursorPos);
-    }, 0);
   }
 
   return (
@@ -313,35 +289,11 @@ export default function ContractTemplates() {
 
             <div className="space-y-2">
               <Label className="text-gray-300">Conteúdo</Label>
-
-              {/* Toolbar de variáveis */}
-              <div className="flex flex-wrap gap-1.5 p-3 bg-white/5 rounded-md border border-white/10">
-                <span className="text-xs text-gray-500 w-full mb-1">
-                  Clique para inserir variável na posição do cursor:
-                </span>
-                {TEMPLATE_VARIABLES.map((v) => (
-                  <button
-                    key={v.key}
-                    type="button"
-                    onClick={() => insertVariable(v.key)}
-                    className="text-xs px-2 py-1 rounded bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 transition-colors font-mono"
-                  >
-                    {`{{${v.key}}}`}
-                  </button>
-                ))}
-              </div>
-
-              <Textarea
-                ref={textareaRef}
-                value={form.content}
-                onChange={(e) => setForm(f => ({ ...f, content: e.target.value }))}
-                placeholder="Digite o conteúdo do template. Use as variáveis acima para inserir dados da proposta."
-                className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 font-mono text-sm min-h-[280px] resize-y"
-                rows={14}
+              <TemplateEditor
+                content={form.content}
+                onChange={(value) => setForm(f => ({ ...f, content: value }))}
+                variables={TEMPLATE_VARIABLES}
               />
-              <p className="text-xs text-gray-500">
-                As variáveis entre chaves duplas serão substituídas pelos dados da proposta no momento de gerar o PDF.
-              </p>
             </div>
           </div>
 
