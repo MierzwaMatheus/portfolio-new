@@ -384,6 +384,8 @@ export default defineSchema({
     updatedAt: v.optional(v.number()),
     deletedAt: v.optional(v.number()),
     deletedBy: v.optional(v.id('users')),
+    templateId: v.optional(v.id('contractTemplates')),
+    templateSnapshot: v.optional(v.string()),
   })
     .index('by_slug', ['slug'])
     .index('by_userId', ['userId'])

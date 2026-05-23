@@ -18,6 +18,7 @@ import type * as auth from "../auth.js";
 import type * as checkouts from "../checkouts.js";
 import type * as contactInfo from "../contactInfo.js";
 import type * as contactRequests from "../contactRequests.js";
+import type * as contractTemplates from "../contractTemplates.js";
 import type * as crons from "../crons.js";
 import type * as deploy from "../deploy.js";
 import type * as homeContent from "../homeContent.js";
@@ -64,6 +65,7 @@ declare const fullApi: ApiFromModules<{
   checkouts: typeof checkouts;
   contactInfo: typeof contactInfo;
   contactRequests: typeof contactRequests;
+  contractTemplates: typeof contractTemplates;
   crons: typeof crons;
   deploy: typeof deploy;
   homeContent: typeof homeContent;
