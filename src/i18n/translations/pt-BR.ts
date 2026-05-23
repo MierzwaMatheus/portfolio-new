@@ -88,6 +88,7 @@ export const ptBR = {
     language: "Idioma",
     languagePT: "Português",
     languageEN: "English",
+    terminalHint: "Press ~ for terminal",
   },
   resume: {
     title: "Currículo",

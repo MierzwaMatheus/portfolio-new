@@ -324,7 +324,7 @@ const NAV_ITEMS = NAV_ITEMS_KEYS
           </Button>
 
           <p className="text-center text-[10px] text-white/20 font-mono mt-1">
-            Press <kbd className="px-1 py-0.5 rounded bg-white/10 text-white/40">~</kbd> for terminal
+            {t("sidebar.terminalHint")}
           </p>
         </div>
       </div>

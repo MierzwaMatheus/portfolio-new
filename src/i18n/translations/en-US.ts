@@ -88,6 +88,7 @@ export const enUS = {
     language: "Language",
     languagePT: "Português",
     languageEN: "English",
+    terminalHint: "Press ~ for terminal",
   },
   resume: {
     title: "Resume",
