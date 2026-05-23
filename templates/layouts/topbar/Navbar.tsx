@@ -100,7 +100,7 @@ export function Navbar() {
   );
 
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-background/90 backdrop-blur-md border-b border-white/10 z-50 flex items-center justify-between px-4 md:px-8">
+    <header className="sticky top-0 w-full h-16 bg-background/90 backdrop-blur-md border-b border-white/10 z-50 flex items-center justify-between px-4 md:px-8">
       {/* Logo / site name */}
       <div className="flex items-center">
         <Link href="/">
