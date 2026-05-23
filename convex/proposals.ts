@@ -267,6 +267,29 @@ export const create = mutation({
   },
 });
 
+export const snapshotTemplate = mutation({
+  args: { proposalId: v.id('proposals') },
+  handler: async (ctx, { proposalId }) => {
+    await requireRole(ctx, ['root', 'admin', 'proposal-editor']);
+    const proposal = await ctx.db.get(proposalId);
+    if (!proposal) throw new Error('Proposal not found');
+    if (proposal.templateSnapshot) return;
+
+    let template: { content: string } | null = null;
+    if (proposal.templateId) {
+      template = await ctx.db.get(proposal.templateId);
+    } else {
+      template = await ctx.db
+        .query('contractTemplates')
+        .withIndex('by_is_default', (q) => q.eq('isDefault', true))
+        .unique();
+    }
+    if (!template) throw new Error('No template found');
+
+    await ctx.db.patch(proposalId, { templateSnapshot: template.content });
+  },
+});
+
 export const update = mutation({
   args: {
     id: v.id('proposals'),

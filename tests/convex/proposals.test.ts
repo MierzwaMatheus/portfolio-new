@@ -36,6 +36,7 @@ import {
   requestErasure,
   exportTitularData,
   resetPassword,
+  snapshotTemplate,
 } from "../../convex/proposals";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
@@ -118,6 +119,52 @@ describe("convex/proposals · create", () => {
     const id = await handler(create)(ctx, { ...baseProposalArgs, slug: "acme-template", templateId });
     const proposal = await ctx.db.get(id);
     expect(proposal!.templateId).toBe(templateId);
+  });
+});
+
+describe("convex/proposals · snapshotTemplate", () => {
+  let ctx: MockCtx;
+  beforeEach(() => {
+    ctx = createMockCtx();
+    getAuthUserId.mockReset();
+  });
+
+  function seedTemplate(overrides: Record<string, unknown> = {}) {
+    const [id] = ctx.db._seed("contractTemplates", [
+      { name: "Padrão", content: "# Contrato Padrão", isDefault: true, createdAt: Date.now(), updatedAt: Date.now(), ...overrides },
+    ]);
+    return id;
+  }
+
+  async function createProposal(extra: Record<string, unknown> = {}) {
+    asRoot(ctx);
+    return handler(create)(ctx, { ...baseProposalArgs, slug: `slug-${Date.now()}`, ...extra });
+  }
+
+  it("sets templateSnapshot from default template when proposal has no templateId", async () => {
+    seedTemplate();
+    const id = await createProposal();
+    await handler(snapshotTemplate)(ctx, { proposalId: id });
+    const proposal = await ctx.db.get(id);
+    expect(proposal!.templateSnapshot).toBe("# Contrato Padrão");
+  });
+
+  it("uses the specific templateId when present on the proposal", async () => {
+    seedTemplate();
+    const specificId = seedTemplate({ name: "Específico", content: "# Específico", isDefault: false });
+    const id = await createProposal({ templateId: specificId });
+    await handler(snapshotTemplate)(ctx, { proposalId: id });
+    const proposal = await ctx.db.get(id);
+    expect(proposal!.templateSnapshot).toBe("# Específico");
+  });
+
+  it("does not overwrite existing templateSnapshot (idempotent)", async () => {
+    seedTemplate({ content: "# Novo Conteúdo" });
+    const id = await createProposal();
+    await ctx.db.patch(id, { templateSnapshot: "# Snapshot Anterior" });
+    await handler(snapshotTemplate)(ctx, { proposalId: id });
+    const proposal = await ctx.db.get(id);
+    expect(proposal!.templateSnapshot).toBe("# Snapshot Anterior");
   });
 });
 
