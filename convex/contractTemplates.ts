@@ -11,3 +11,14 @@ export const list = query({
     return ctx.db.query("contractTemplates").collect();
   },
 });
+
+export const getDefault = query({
+  args: {},
+  handler: async (ctx) => {
+    await requirePlugin(ctx, "contract-templates");
+    return ctx.db
+      .query("contractTemplates")
+      .withIndex("by_is_default", (q) => q.eq("isDefault", true))
+      .unique();
+  },
+});

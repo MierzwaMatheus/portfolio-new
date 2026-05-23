@@ -21,7 +21,7 @@ vi.mock("@convex-dev/auth/providers/Password", () => ({
   Password: () => ({}),
 }));
 
-import { list } from "../../convex/contractTemplates";
+import { list, getDefault } from "../../convex/contractTemplates";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
 const handler = (fn: any) => fn._handler ?? fn;
@@ -37,6 +37,56 @@ function enablePlugin(ctx: MockCtx, pluginId: string, enabled: boolean) {
     { key: `plugin:${pluginId}:enabled`, value: enabled },
   ]);
 }
+
+describe("convex/contractTemplates · getDefault", () => {
+  let ctx: MockCtx;
+  beforeEach(() => {
+    ctx = createMockCtx();
+    getAuthUserId.mockResolvedValue(null);
+  });
+
+  it("retorna null quando nenhum template tem isDefault: true", async () => {
+    enablePlugin(ctx, "contract-templates", true);
+    ctx.db._seed("contractTemplates", [
+      {
+        _id: "t1",
+        name: "Template A",
+        content: "Conteúdo",
+        isDefault: false,
+        createdAt: 1,
+        updatedAt: 1,
+      },
+    ]);
+    const result = await handler(getDefault)(ctx, {});
+    expect(result).toBeNull();
+  });
+
+  it("retorna o template com isDefault: true quando existe", async () => {
+    enablePlugin(ctx, "contract-templates", true);
+    ctx.db._seed("contractTemplates", [
+      {
+        _id: "t1",
+        name: "Padrão",
+        content: "Conteúdo padrão",
+        isDefault: true,
+        createdAt: 1,
+        updatedAt: 1,
+      },
+      {
+        _id: "t2",
+        name: "Outro",
+        content: "Outro conteúdo",
+        isDefault: false,
+        createdAt: 2,
+        updatedAt: 2,
+      },
+    ]);
+    const result = await handler(getDefault)(ctx, {});
+    expect(result).not.toBeNull();
+    expect(result.name).toBe("Padrão");
+    expect(result.isDefault).toBe(true);
+  });
+});
 
 describe("convex/contractTemplates · list", () => {
   let ctx: MockCtx;
