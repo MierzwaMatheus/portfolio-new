@@ -208,6 +208,18 @@ describe("convex/proposals · snapshotTemplateOnView", () => {
     const updated = await ctx.db.get(id);
     expect(updated!.templateSnapshot).toBe("# Snapshot Anterior");
   });
+
+  it("uses the specific templateId when present on the proposal", async () => {
+    seedTemplate();
+    const [specificId] = ctx.db._seed("contractTemplates", [
+      { name: "Específico", content: "# Template Específico", isDefault: false, createdAt: Date.now(), updatedAt: Date.now() },
+    ]);
+    const id = await createProposalAnon({ templateId: specificId });
+    const proposal = await ctx.db.get(id);
+    await handler(snapshotTemplateOnView)(ctx, { slug: proposal!.slug });
+    const updated = await ctx.db.get(id);
+    expect(updated!.templateSnapshot).toBe("# Template Específico");
+  });
 });
 
 describe("convex/proposals · update", () => {
