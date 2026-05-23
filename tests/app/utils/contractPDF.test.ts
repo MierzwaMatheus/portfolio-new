@@ -117,6 +117,16 @@ describe("contractPDF · generateContractHTML", () => {
     expect(liCount).toBeGreaterThan(1);
   });
 
+  it("handles bullet and numbered lists in same clause without mixing tags", () => {
+    const html = generateContractHTML(
+      { ...baseProposal, rescision_policy: "- Alpha\n1. Beta" },
+      baseAcceptance,
+      "",
+    );
+    expect(html).toMatch(/<ul>[^]*<li>Alpha<\/li>[^]*<\/ul>/);
+    expect(html).toMatch(/<ol>[^]*<li>Beta<\/li>[^]*<\/ol>/);
+  });
+
   it("uses contractId='—' fallback when slug missing", () => {
     const { slug: _slug, ...noSlug } = baseProposal as any;
     void _slug;
