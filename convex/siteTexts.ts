@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import { action, internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { requireRole } from "./auth";
 import { ptBR } from "../src/i18n/translations/pt-BR";
 import { enUS } from "../src/i18n/translations/en-US";
@@ -39,6 +40,11 @@ export const getAll = query({
   handler: async (ctx) => ctx.db.query("siteTexts").collect(),
 });
 
+export const getAllInternal = internalQuery({
+  args: {},
+  handler: async (ctx) => ctx.db.query("siteTexts").collect(),
+});
+
 export const getByPage = query({
   args: { page: v.string() },
   handler: async (ctx, { page }) =>
@@ -74,5 +80,49 @@ export const update = mutation({
       .unique();
     if (!doc) throw new Error(`siteTexts key not found: ${key}`);
     await ctx.db.patch(doc._id, { ptBR, enUS, updatedAt: Date.now() });
+  },
+});
+
+export const updateInternal = internalMutation({
+  args: { key: v.string(), enUS: v.string() },
+  handler: async (ctx, { key, enUS }) => {
+    const doc = await ctx.db
+      .query("siteTexts")
+      .withIndex("by_key", (q) => q.eq("key", key))
+      .unique();
+    if (!doc) throw new Error(`siteTexts key not found: ${key}`);
+    await ctx.db.patch(doc._id, { enUS, updatedAt: Date.now() });
+  },
+});
+
+export const translateAllMissing = action({
+  args: {},
+  handler: async (ctx) => {
+    await ctx.runQuery(internal.auth.requireAuthQuery, {});
+
+    const all = await ctx.runQuery(internal.siteTexts.getAllInternal, {});
+    const missing = (all as Array<{ key: string; ptBR: string; enUS?: string }>).filter(
+      (i) => !i.enUS
+    );
+
+    if (missing.length === 0) return;
+
+    const { translatedTexts } = await ctx.runAction(
+      internal.translation.translateBatchInternal,
+      { texts: missing.map((i) => i.ptBR) }
+    ) as { translatedTexts: string[] };
+
+    for (let idx = 0; idx < missing.length; idx++) {
+      const translated = translatedTexts[idx];
+      if (!translated) continue;
+      try {
+        await ctx.runMutation(internal.siteTexts.updateInternal, {
+          key: missing[idx].key,
+          enUS: translated,
+        });
+      } catch {
+        // erro individual não trava o processo
+      }
+    }
   },
 });

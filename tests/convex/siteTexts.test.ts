@@ -21,7 +21,7 @@ vi.mock("@convex-dev/auth/providers/Password", () => ({
   Password: () => ({}),
 }));
 
-import { getAll, getByPage, seed, update } from "../../convex/siteTexts";
+import { getAll, getByPage, seed, update, updateInternal, translateAllMissing } from "../../convex/siteTexts";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
 const handler = (fn: any) => fn._handler ?? fn;
@@ -143,5 +143,86 @@ describe("convex/siteTexts · update", () => {
     await expect(
       handler(update)(ctx, { key: "home.inexistente", ptBR: "Valor" })
     ).rejects.toThrow("siteTexts key not found: home.inexistente");
+  });
+});
+
+describe("convex/siteTexts · updateInternal", () => {
+  let ctx: MockCtx;
+
+  beforeEach(() => {
+    ctx = createMockCtx();
+    ctx.db._seed("siteTexts", [
+      { _id: "s1", key: "home.greeting", page: "home", ptBR: "Olá" },
+    ]);
+  });
+
+  it("salva enUS em registro existente sem verificação de role", async () => {
+    await handler(updateInternal)(ctx, { key: "home.greeting", enUS: "Hello" });
+    const doc = ctx.db._all("siteTexts").find((d: any) => d.key === "home.greeting");
+    expect(doc?.enUS).toBe("Hello");
+  });
+
+  it("lança erro quando chave não existe", async () => {
+    await expect(
+      handler(updateInternal)(ctx, { key: "home.inexistente", enUS: "Hello" })
+    ).rejects.toThrow("siteTexts key not found: home.inexistente");
+  });
+});
+
+describe("convex/siteTexts · translateAllMissing", () => {
+  let ctx: MockCtx;
+
+  beforeEach(() => {
+    ctx = createMockCtx();
+    getAuthUserId.mockResolvedValue(null);
+    ctx.db._seed("siteTexts", [
+      { _id: "s1", key: "home.greeting", page: "home", ptBR: "Olá", enUS: "Hello" },
+      { _id: "s2", key: "home.title", page: "home", ptBR: "Título" },
+      { _id: "s3", key: "about.desc", page: "about", ptBR: "Descrição" },
+    ]);
+  });
+
+  it("chama runAction apenas com os textos dos itens sem enUS", async () => {
+    asRole(ctx, "admin");
+    const allDocs = ctx.db._all("siteTexts");
+    ctx.runQuery
+      .mockResolvedValueOnce({ userId: "u1" }) // requireAuthQuery
+      .mockResolvedValueOnce(allDocs);           // getAllInternal
+    ctx.runAction.mockResolvedValue({ translatedTexts: ["Title", "Description"] });
+    ctx.runMutation.mockResolvedValue(undefined);
+
+    await handler(translateAllMissing)(ctx, {});
+
+    const actionCall = ctx.runAction.mock.calls[0];
+    expect(actionCall[1].texts).toEqual(["Título", "Descrição"]);
+  });
+
+  it("não chama runAction quando todos os itens já têm enUS", async () => {
+    asRole(ctx, "admin");
+    const onlyTranslated = [
+      { _id: "s1", key: "home.greeting", page: "home", ptBR: "Olá", enUS: "Hello" },
+    ];
+    ctx.runQuery
+      .mockResolvedValueOnce({ userId: "u1" })
+      .mockResolvedValueOnce(onlyTranslated);
+
+    await handler(translateAllMissing)(ctx, {});
+
+    expect(ctx.runAction).not.toHaveBeenCalled();
+  });
+
+  it("erros individuais não travam o processo — salva os demais itens", async () => {
+    asRole(ctx, "admin");
+    const allDocs = ctx.db._all("siteTexts");
+    ctx.runQuery
+      .mockResolvedValueOnce({ userId: "u1" })
+      .mockResolvedValueOnce(allDocs);
+    ctx.runAction.mockResolvedValue({ translatedTexts: ["Title", "Description"] });
+    ctx.runMutation
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("falha simulada ao salvar item 2"));
+
+    await expect(handler(translateAllMissing)(ctx, {})).resolves.not.toThrow();
+    expect(ctx.runMutation).toHaveBeenCalledTimes(2);
   });
 });
