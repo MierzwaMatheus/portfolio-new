@@ -652,4 +652,14 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.optional(v.number()),
   }).index('by_key', ['key']),
+
+  // ── contractTemplates ──────────────────────────────────────────────────────
+  contractTemplates: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    content: v.string(),
+    isDefault: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index('by_is_default', ['isDefault']),
 });
