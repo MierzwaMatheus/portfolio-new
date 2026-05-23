@@ -21,10 +21,16 @@ vi.mock("@convex-dev/auth/providers/Password", () => ({
   Password: () => ({}),
 }));
 
-import { getAll, getByPage, seed } from "../../convex/siteTexts";
+import { getAll, getByPage, seed, update } from "../../convex/siteTexts";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
 const handler = (fn: any) => fn._handler ?? fn;
+
+function asRole(ctx: MockCtx, role: string, userId = "u1") {
+  ctx.db._seed("users", [{ _id: userId, email: "u@x.com" }]);
+  ctx.db._seed("userRoles", [{ userId, role }]);
+  getAuthUserId.mockResolvedValue(userId);
+}
 
 describe("convex/siteTexts · getAll", () => {
   let ctx: MockCtx;
@@ -104,5 +110,38 @@ describe("convex/siteTexts · seed", () => {
     expect(homeGreeting).toBeDefined();
     expect(homeGreeting?.page).toBe("home");
     expect(homeGreeting?.ptBR).toBeTruthy();
+  });
+});
+
+describe("convex/siteTexts · update", () => {
+  let ctx: MockCtx;
+
+  beforeEach(() => {
+    ctx = createMockCtx();
+    getAuthUserId.mockResolvedValue(null);
+    ctx.db._seed("siteTexts", [
+      { _id: "s1", key: "home.greeting", page: "home", ptBR: "Olá", enUS: "Hello" },
+    ]);
+  });
+
+  it("admin pode atualizar ptBR e enUS de um registro existente", async () => {
+    asRole(ctx, "admin");
+    await handler(update)(ctx, { key: "home.greeting", ptBR: "Novo valor", enUS: "New value" });
+    const doc = ctx.db._all("siteTexts").find((d: any) => d.key === "home.greeting");
+    expect(doc?.ptBR).toBe("Novo valor");
+    expect(doc?.enUS).toBe("New value");
+  });
+
+  it("lança erro quando usuário não autenticado tenta atualizar", async () => {
+    await expect(
+      handler(update)(ctx, { key: "home.greeting", ptBR: "Tentativa" })
+    ).rejects.toThrow();
+  });
+
+  it("lança erro quando chave não existe", async () => {
+    asRole(ctx, "admin");
+    await expect(
+      handler(update)(ctx, { key: "home.inexistente", ptBR: "Valor" })
+    ).rejects.toThrow("siteTexts key not found: home.inexistente");
   });
 });
