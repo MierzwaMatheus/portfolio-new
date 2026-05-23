@@ -733,10 +733,10 @@
 - [x] Adicionar teste: `applyProposalToTemplate` com template vazio retorna string vazia
 - [x] Atualizar fixture `baseProposal` / `baseAcceptance` em `tests/app/utils/contractPDF.test.ts` para que nenhum assertion dependa de `"MATHEUS MIERZWA"` ou `"57.900.589"`
 - [x] Atualizar o teste de `contractPDF.test.ts` que verifica `"includes the contractor's default name"` — agora deve verificar que o nome vem do contactInfo e não do fallback hardcoded
-- [ ] Atualizar snapshots de `cli/src/__tests__/create.validity.e2e.test.ts` rodando `pnpm test -- --update-snapshots` e confirmando que nenhum snapshot contém dados pessoais
+- [x] Atualizar snapshots de `cli/src/__tests__/create.validity.e2e.test.ts` rodando `pnpm test -- --update-snapshots` e confirmando que nenhum snapshot contém dados pessoais
 - [x] Verificar que `pnpm test tests/app/utils/contractGenerator.test.ts` passa
 - [x] Verificar que `pnpm test tests/app/utils/contractPDF.test.ts` passa
-- [ ] Verificar que `pnpm test cli/src/__tests__/create.validity.e2e.test.ts` passa
+- [x] Verificar que `pnpm test cli/src/__tests__/create.validity.e2e.test.ts` passa
 - [x] Executar `grep -r "MATHEUS\|57.900.589\|matheusmierzwa" src/ tests/` e verificar que retorna vazio
 
 ---
