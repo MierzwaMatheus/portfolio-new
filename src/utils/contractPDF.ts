@@ -42,7 +42,7 @@ function extractClauseTitle(clause: string): { title: string; body: string } {
   const match = clause.match(/^#{1,6}\s+(CLÁUSULA[^:\n]+(?::[^\n]*)?)?\n?([\s\S]*)/i)
     ?? clause.match(/^(CLÁUSULA[^\n]+)\n?([\s\S]*)/i);
   if (match) {
-    return { title: match[1].replace(/^#{1,6}\s+/, "").trim(), body: match[2].trim() };
+    return { title: (match[1] ?? "").replace(/^#{1,6}\s+/, "").trim(), body: (match[2] ?? "").trim() };
   }
   return { title: "", body: clause.trim() };
 }
