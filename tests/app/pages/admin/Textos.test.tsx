@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 vi.mock("convex/react", () => ({
   useMutation: vi.fn(() => vi.fn()),
   useQuery: vi.fn(() => []),
+  useAction: vi.fn(() => vi.fn()),
 }));
 
 vi.mock("../../../../convex/_generated/api", () => ({
@@ -11,6 +12,7 @@ vi.mock("../../../../convex/_generated/api", () => ({
     siteTexts: {
       getAll: "siteTexts:getAll",
       update: "siteTexts:update",
+      translateAllMissing: "siteTexts:translateAllMissing",
     },
   },
 }));

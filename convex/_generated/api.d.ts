@@ -40,6 +40,7 @@ import type * as resumeItems from "../resumeItems.js";
 import type * as seed from "../seed.js";
 import type * as services from "../services.js";
 import type * as siteConfig from "../siteConfig.js";
+import type * as siteTexts from "../siteTexts.js";
 import type * as stats from "../stats.js";
 import type * as stripe from "../stripe.js";
 import type * as telegram from "../telegram.js";
@@ -87,6 +88,7 @@ declare const fullApi: ApiFromModules<{
   seed: typeof seed;
   services: typeof services;
   siteConfig: typeof siteConfig;
+  siteTexts: typeof siteTexts;
   stats: typeof stats;
   stripe: typeof stripe;
   telegram: typeof telegram;

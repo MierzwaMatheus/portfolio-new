@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { AdminLayout } from "./Dashboard";
 import { Input } from "@/components/ui/input";
@@ -67,8 +67,10 @@ function TextItem({
 
 export default function AdminTextos() {
   const [search, setSearch] = useState("");
+  const [isTranslating, setIsTranslating] = useState(false);
   const allTexts = (useQuery(api.siteTexts.getAll) ?? []) as SiteText[];
   const update = useMutation(api.siteTexts.update);
+  const translateAllMissing = useAction(api.siteTexts.translateAllMissing);
 
   const filtered = useMemo(() => {
     if (!search.trim()) return allTexts;
@@ -84,6 +86,18 @@ export default function AdminTextos() {
   const grouped = useMemo(() => groupByPage(filtered), [filtered]);
   const namespaces = Object.keys(grouped).sort();
 
+  async function handleTranslateAll() {
+    setIsTranslating(true);
+    try {
+      await translateAllMissing({});
+      toast.success("Tradução concluída!");
+    } catch {
+      toast.error("Erro ao traduzir textos.");
+    } finally {
+      setIsTranslating(false);
+    }
+  }
+
   async function handleSave(key: string, ptBR: string, enUS: string) {
     try {
       await update({ key, ptBR, enUS: enUS || undefined });
@@ -96,7 +110,12 @@ export default function AdminTextos() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Textos do Site</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold">Textos do Site</h1>
+          <Button onClick={handleTranslateAll} disabled={isTranslating}>
+            {isTranslating ? "Traduzindo..." : "Traduzir tudo com IA"}
+          </Button>
+        </div>
         <Input
           placeholder="Buscar por chave ou conteúdo..."
           value={search}
