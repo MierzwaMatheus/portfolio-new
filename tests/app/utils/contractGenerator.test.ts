@@ -248,6 +248,19 @@ describe("contractGenerator · applyProposalToTemplate", () => {
     expect(result).toBe("Condições:\n• Cond C");
   });
 
+  it("returns empty string for empty template", () => {
+    expect(applyProposalToTemplate("", baseProposal, baseAcceptance)).toBe("");
+  });
+
+  it("preserves {{unknown}} variable when not in map", () => {
+    const result = applyProposalToTemplate(
+      "{{unknown_var}} e {{client_name}}",
+      baseProposal,
+      baseAcceptance,
+    );
+    expect(result).toBe("{{unknown_var}} e John Doe");
+  });
+
   it("substitutes {{client_document}} with CPF mask for 11 digits", () => {
     const result = applyProposalToTemplate(
       "Doc: {{client_document}}",
