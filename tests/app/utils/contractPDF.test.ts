@@ -106,6 +106,17 @@ describe("contractPDF · generateContractHTML", () => {
     expect(html).toMatch(/<ol>[^]*<li>[^]*Transferência de Titularidade[^]*<\/li>[^]*<\/ol>/);
   });
 
+  it("groups consecutive numbered items into a single <ol>", () => {
+    const html = generateContractHTML(baseProposal, baseAcceptance, "");
+    // Cláusula 6 tem itens "1. ..." e "2. ..." consecutivos — devem formar um único <ol>
+    const olMatches = html.match(/<ol>/g) ?? [];
+    expect(olMatches.length).toBeGreaterThanOrEqual(1);
+    // O primeiro <ol> deve conter múltiplos <li> (não múltiplos <ol>)
+    const firstOl = html.match(/<ol>([\s\S]*?)<\/ol>/)?.[0] ?? "";
+    const liCount = (firstOl.match(/<li>/g) ?? []).length;
+    expect(liCount).toBeGreaterThan(1);
+  });
+
   it("uses contractId='—' fallback when slug missing", () => {
     const { slug: _slug, ...noSlug } = baseProposal as any;
     void _slug;

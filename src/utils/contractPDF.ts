@@ -23,7 +23,7 @@ function formatClauseContent(text: string): string {
     .replace(/^\d+\. (.+)$/gm, "<oli>$1</oli>")
     .replace(/^- (.+)$/gm, "<li>$1</li>")
     .replace(/(<li>[^]*?<\/li>\n?)+/gm, (match) => `<ul>${match}</ul>`)
-    .replace(/(<oli>[^]*?<\/oli>\n?)+/gm, (match) =>
+    .replace(/(<oli>[^]*?<\/oli>\n{0,2})+/g, (match) =>
       `<ol>${match.replace(/<oli>/g, "<li>").replace(/<\/oli>/g, "</li>")}</ol>`,
     )
     .replace(/---/g, "")
