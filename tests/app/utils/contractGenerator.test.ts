@@ -213,10 +213,10 @@ describe("contractGenerator · generateContractContent", () => {
     expect(text).toContain("CLÁUSULA 12");
   });
 
-  it("includes the contractor identification in header", () => {
+  it("does not include hardcoded contractor personal data in header", () => {
     const { header } = generateContractContent(baseProposal, baseAcceptance);
-    expect(header).toContain("MATHEUS MIERZWA");
-    expect(header).toContain("57.900.589/0001-00");
+    expect(header).not.toContain("MATHEUS MIERZWA");
+    expect(header).not.toContain("57.900.589");
   });
 });
 

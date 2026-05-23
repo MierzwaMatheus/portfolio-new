@@ -115,10 +115,8 @@ export function generateContractContent(
   
   const docType = formattedDoc.includes('/') ? 'CNPJ' : 'CPF';
 
-  // Cabeçalho com identificação das partes
-  const header = `**CONTRATADA:** MATHEUS MIERZWA LEME DE OLIVEIRA, inscrito no CNPJ sob nº 57.900.589/0001-00, com sede na Rua do Ouvidor, 480, Jd Califórnia, Barueri - SP.
-
-**CONTRATANTE:** ${acceptanceData.client_name}${formattedDoc ? `, inscrito no ${docType} sob nº ${formattedDoc}` : ''}${acceptanceData.client_email ? `, com e-mail ${acceptanceData.client_email}` : ''}.
+  // Cabeçalho com identificação do contratante
+  const header = `**CONTRATANTE:** ${acceptanceData.client_name}${formattedDoc ? `, inscrito no ${docType} sob nº ${formattedDoc}` : ''}${acceptanceData.client_email ? `, com e-mail ${acceptanceData.client_email}` : ''}.
 
 ---
 
