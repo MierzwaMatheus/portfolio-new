@@ -229,6 +229,7 @@ export const create = mutation({
     rescissionPolicyTranslations: v.optional(
       v.object({ 'ptBR': v.string(), 'enUS': v.optional(v.string()) }),
     ),
+    templateId: v.optional(v.id('contractTemplates')),
   },
   handler: async (ctx, args) => {
     await requirePlugin(ctx, 'proposals');

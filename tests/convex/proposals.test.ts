@@ -109,6 +109,16 @@ describe("convex/proposals · create", () => {
     getAuthUserId.mockResolvedValue("u1");
     await expect(handler(create)(ctx, baseProposalArgs)).rejects.toThrow("Forbidden");
   });
+
+  it("persists templateId when provided", async () => {
+    asRoot(ctx);
+    const templateId = ctx.db._seed("contractTemplates", [
+      { name: "Padrão", content: "# Contrato", isDefault: true, createdAt: Date.now(), updatedAt: Date.now() },
+    ])[0]._id;
+    const id = await handler(create)(ctx, { ...baseProposalArgs, slug: "acme-template", templateId });
+    const proposal = await ctx.db.get(id);
+    expect(proposal!.templateId).toBe(templateId);
+  });
 });
 
 describe("convex/proposals · update", () => {
