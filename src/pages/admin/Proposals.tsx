@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Plus, Pencil, Trash2, RefreshCw, Link as LinkIcon, X, Copy, KeyRound, Upload, Download, RotateCcw, ShieldAlert } from "lucide-react";
+import { Plus, Pencil, Trash2, RefreshCw, Link as LinkIcon, X, Copy, KeyRound, Upload, Download, RotateCcw, ShieldAlert, FileText } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 
 import { useQuery, useMutation } from "convex/react";
@@ -92,6 +93,9 @@ export default function AdminProposals() {
   const proposals = proposalsData ?? [];
   const isLoading = proposalsData === undefined;
 
+  const allTemplates = useQuery(api.contractTemplates.list);
+  const defaultTemplate = useQuery(api.contractTemplates.getDefault);
+
   const createProposal = useMutation(api.proposals.create);
   const updateProposal = useMutation(api.proposals.update);
   const removeProposal = useMutation(api.proposals.remove);
@@ -133,6 +137,7 @@ export default function AdminProposals() {
   // Legal fields
   const [password, setPassword] = useState("");
   const [rescisionPolicy, setRescisionPolicy] = useState(DEFAULT_RESCISION_POLICY);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>("default");
 
   const checkSlugAvailability = (slugToCheck: string) => {
     if (!slugToCheck) return;
@@ -168,6 +173,7 @@ export default function AdminProposals() {
           conditions: selectedConditions,
           password: password || undefined,
           rescissionPolicy: rescisionPolicy || DEFAULT_RESCISION_POLICY,
+          templateId: selectedTemplateId !== "default" ? selectedTemplateId as Id<"contractTemplates"> : undefined,
         });
         toast.success("Proposta atualizada com sucesso! Uma nova versão foi criada.");
         setIsModalOpen(false);
@@ -187,6 +193,7 @@ export default function AdminProposals() {
           conditions: selectedConditions,
           password: password || undefined,
           rescissionPolicy: rescisionPolicy || DEFAULT_RESCISION_POLICY,
+          templateId: selectedTemplateId !== "default" ? selectedTemplateId as Id<"contractTemplates"> : undefined,
         });
         toast.success("Proposta criada com sucesso!");
         setIsModalOpen(false);
@@ -218,6 +225,7 @@ export default function AdminProposals() {
     ]);
     setPassword("");
     setRescisionPolicy(DEFAULT_RESCISION_POLICY);
+    setSelectedTemplateId("default");
   };
 
   const calculateValidUntil = (dateString: string) => {
@@ -309,6 +317,7 @@ export default function AdminProposals() {
 
     setPassword("");
     setRescisionPolicy(proposal.rescissionPolicy || DEFAULT_RESCISION_POLICY);
+    setSelectedTemplateId(proposal.templateId ?? "default");
     setIsModalOpen(true);
   };
 
@@ -785,6 +794,26 @@ export default function AdminProposals() {
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       Esta política será exibida na proposta e deve incluir hipóteses de rescisão, multas ou proporcionalidades, procedimentos e prazos.
+                    </p>
+                  </div>
+
+                  <div>
+                    <Label className="block text-sm mb-1">Template de Contrato</Label>
+                    <Select value={selectedTemplateId} onValueChange={setSelectedTemplateId}>
+                      <SelectTrigger className="bg-background border-input">
+                        <SelectValue placeholder="Selecionar template..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="default">
+                          Padrão{defaultTemplate ? ` — ${defaultTemplate.name}` : ""}
+                        </SelectItem>
+                        {allTemplates?.filter(t => !t.isDefault).map(t => (
+                          <SelectItem key={t._id} value={t._id}>{t.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Template usado para gerar o PDF do contrato ao aceitar a proposta.
                     </p>
                   </div>
                 </div>

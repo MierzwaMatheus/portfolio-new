@@ -350,9 +350,12 @@ export const update = mutation({
     const newVersion = proposal.version + 1;
     const hashedPassword = plainPassword ? await hashPassword(plainPassword) : undefined;
 
+    const templateChanged = args.templateId !== undefined && args.templateId !== proposal.templateId;
+
     await ctx.db.patch(id, {
       ...fields,
       ...(hashedPassword !== undefined ? { password: hashedPassword } : {}),
+      ...(templateChanged ? { templateSnapshot: undefined } : {}),
       version: newVersion,
       updatedAt: Date.now(),
     });

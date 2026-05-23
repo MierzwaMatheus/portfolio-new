@@ -250,7 +250,7 @@ export default function ContractTemplates() {
 
       {/* Modal de criar/editar */}
       <Dialog open={modalOpen} onOpenChange={(open) => { if (!open) closeModal(); }}>
-        <DialogContent className="bg-card border-white/10 max-w-[92vw] xl:max-w-6xl w-full max-h-[90vh] flex flex-col text-white p-0 min-h-0">
+        <DialogContent className="bg-card border-white/10 max-w-[92vw] xl:max-w-6xl w-full h-[90vh] flex flex-col text-white p-0 overflow-hidden">
           <DialogHeader className="px-6 pt-6 pb-4 border-b border-white/10 shrink-0">
             <DialogTitle className="text-xl font-bold">
               {isEditing ? "Editar Template" : "Novo Template"}

@@ -160,8 +160,8 @@ export function ContractModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-white/10">
+      <DialogContent className="max-w-4xl h-[90vh] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b border-white/10 shrink-0">
           <DialogTitle className="text-2xl font-bold flex items-center gap-2">
             <FileText className="w-6 h-6 text-neon-purple" />
             Contrato Eletrônico
@@ -170,8 +170,7 @@ export function ContractModal({
 
         <div
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto px-6 py-4"
-          style={{ maxHeight: "calc(90vh - 300px)" }}
+          className="flex-1 overflow-y-auto px-6 py-4 min-h-0"
         >
           <div className="mb-6">
             <Card className="bg-yellow-500/10 border-yellow-500/30">
