@@ -102,6 +102,10 @@ export function applyProposalToTemplate(
     ),
     investment_value: `R$ ${proposal.investment_value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
     accepted_at: new Date(acceptance.accepted_at).toLocaleDateString('pt-BR', { timeZone: 'UTC' }),
+    objective: typeof proposal.objective === 'string' ? proposal.objective : (proposal.objective ?? []).join('\n\n'),
+    delivery_date: proposal.delivery_date ? new Date(proposal.delivery_date).toLocaleDateString('pt-BR') : '',
+    payment_methods: formatArrayAsList(proposal.payment_methods ?? []),
+    rescission_policy: proposal.rescision_policy || DEFAULT_RESCISION_POLICY,
   };
   return interpolateTemplate(templateContent, vars);
 }

@@ -77,6 +77,10 @@ export default function ProposalAccept() {
   const isLoading = queryResult === undefined;
   const rawProposal: any = queryResult ?? null;
   const proposal: any = useMemo(() => toLegacyProposal(rawProposal), [rawProposal]);
+  const resolvedTemplateContent = useMemo(
+    () => resolveTemplateContent(rawProposal ?? {}, defaultTemplate ?? undefined),
+    [rawProposal, defaultTemplate]
+  );
 
   // If proposal requires password and we have no token, redirect back to view
   useEffect(() => {
@@ -389,6 +393,7 @@ export default function ProposalAccept() {
           sessionToken={sessionToken}
           onSign={(sig) => handleDigitalSignature(sig)}
           isSigning={isSigning}
+          templateContent={resolvedTemplateContent}
         />
       )}
     </div>

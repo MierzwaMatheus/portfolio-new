@@ -6,7 +6,7 @@ import { AlertCircle, FileText, CheckCircle2, Pen, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import ReactMarkdown from "react-markdown";
 import SignaturePad from "signature_pad";
-import { generateContractContent, ProposalData, AcceptanceData } from "@/utils/contractGenerator";
+import { generateContractContent, applyProposalToTemplate, ProposalData, AcceptanceData } from "@/utils/contractGenerator";
 
 interface ClientData {
   client_name: string;
@@ -24,6 +24,7 @@ interface ContractModalProps {
   sessionToken: string | null;
   onSign: (signatureDataUrl: string) => Promise<void>;
   isSigning?: boolean;
+  templateContent?: string;
 }
 
 export function ContractModal({
@@ -33,7 +34,8 @@ export function ContractModal({
   clientData,
   sessionToken,
   onSign,
-  isSigning = false
+  isSigning = false,
+  templateContent,
 }: ContractModalProps) {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -150,7 +152,10 @@ export function ContractModal({
     accepted_at: new Date().toISOString(),
   };
 
-  const contractContent = generateContractContent(proposal, tempAcceptanceData);
+  const resolvedContent = templateContent
+    ? applyProposalToTemplate(templateContent, proposal, tempAcceptanceData)
+    : null;
+  const contractContent = resolvedContent ? null : generateContractContent(proposal, tempAcceptanceData);
 
   const handleSign = async () => {
     if (!signaturePadRef.current || signaturePadRef.current.isEmpty()) return;
@@ -196,12 +201,18 @@ export function ContractModal({
             ref={contentRef}
             className="prose prose-invert prose-headings:text-white prose-p:text-gray-300 prose-strong:text-white prose-ul:text-gray-300 prose-li:text-gray-300 prose-hr:border-white/10 max-w-none prose-p:leading-relaxed prose-p:mb-6 prose-h2:mt-10 prose-h2:mb-5 prose-h3:mt-8 prose-h3:mb-4 prose-ul:my-6 prose-ol:my-6 prose-ul:pl-6 prose-ol:pl-6 prose-li:mb-3 prose-blockquote:border-l-4 prose-blockquote:border-neon-purple prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-gray-400"
           >
-            <ReactMarkdown components={markdownComponents}>{normalizeMarkdown(contractContent.header)}</ReactMarkdown>
-            {contractContent.clauses.map((clause, index) => (
-              <ReactMarkdown key={index} components={markdownComponents}>
-                {normalizeMarkdown(clause)}
-              </ReactMarkdown>
-            ))}
+            {resolvedContent ? (
+              <ReactMarkdown components={markdownComponents}>{normalizeMarkdown(resolvedContent)}</ReactMarkdown>
+            ) : (
+              <>
+                <ReactMarkdown components={markdownComponents}>{normalizeMarkdown(contractContent!.header)}</ReactMarkdown>
+                {contractContent!.clauses.map((clause, index) => (
+                  <ReactMarkdown key={index} components={markdownComponents}>
+                    {normalizeMarkdown(clause)}
+                  </ReactMarkdown>
+                ))}
+              </>
+            )}
           </div>
 
           {/* Canvas de assinatura manuscrita */}
