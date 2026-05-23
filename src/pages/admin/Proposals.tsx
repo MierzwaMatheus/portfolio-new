@@ -18,7 +18,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 import { toast } from "sonner";
 import { printContractPDF, generateContractHTML } from "@/utils/contractPDF";
-import { applyProposalToTemplate } from "@/utils/contractGenerator";
+import { applyProposalToTemplate, resolveTemplateContent } from "@/utils/contractGenerator";
 import { useIsRoot } from "@/hooks/useIsRoot";
 import { buildProposalPrompt } from "@/utils/proposalPrompt";
 
@@ -56,11 +56,12 @@ function DownloadContractButton({ proposal }: { proposal: any }) {
         proposal_version: String(acceptanceRaw.proposalVersion ?? 1),
       };
       const signatureUrl = (acceptanceRaw as any).signatureUrl ?? "";
-      if (!defaultTemplate) {
-        toast.error("Nenhum template de contrato padrão encontrado. Configure um template em Templates de Contrato.");
+      const rawContent = resolveTemplateContent(proposal, defaultTemplate);
+      if (!rawContent) {
+        toast.error("Nenhum template de contrato encontrado. Configure um template em Templates de Contrato.");
         return;
       }
-      const interpolated = applyProposalToTemplate(defaultTemplate.content, legacyProposal, legacyAcceptance);
+      const interpolated = applyProposalToTemplate(rawContent, legacyProposal, legacyAcceptance);
       await printContractPDF(legacyProposal, legacyAcceptance, signatureUrl, contactInfo ?? undefined, interpolated);
     } catch (e: any) {
       toast.error(e.message || "Erro ao gerar PDF");
