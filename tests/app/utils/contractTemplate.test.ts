@@ -19,3 +19,9 @@ describe('interpolateTemplate', () => {
     expect(interpolateTemplate('{{name}} {{role}}', vars)).toBe('{{name}} {{role}}')
   })
 })
+
+describe('formatArrayAsList', () => {
+  it('formata array como lista com bullets', () => {
+    expect(formatArrayAsList(['A', 'B', 'C'])).toBe('• A\n• B\n• C')
+  })
+})
