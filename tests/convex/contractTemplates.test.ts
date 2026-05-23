@@ -21,7 +21,7 @@ vi.mock("@convex-dev/auth/providers/Password", () => ({
   Password: () => ({}),
 }));
 
-import { list, getDefault, create, setDefault } from "../../convex/contractTemplates";
+import { list, getDefault, create, setDefault, remove } from "../../convex/contractTemplates";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
 const handler = (fn: any) => fn._handler ?? fn;
@@ -85,6 +85,25 @@ describe("convex/contractTemplates · getDefault", () => {
     expect(result).not.toBeNull();
     expect(result.name).toBe("Padrão");
     expect(result.isDefault).toBe(true);
+  });
+});
+
+describe("convex/contractTemplates · remove", () => {
+  let ctx: MockCtx;
+  beforeEach(() => {
+    ctx = createMockCtx();
+    getAuthUserId.mockResolvedValue(null);
+  });
+
+  it("exclui o registro pelo id", async () => {
+    enablePlugin(ctx, "contract-templates", true);
+    asRole(ctx, "admin");
+    ctx.db._seed("contractTemplates", [
+      { _id: "t1", name: "Para Remover", content: "x", isDefault: false, createdAt: 1, updatedAt: 1 },
+    ]);
+    await handler(remove)(ctx, { id: "t1" });
+    const all = ctx.db._all("contractTemplates");
+    expect(all).toHaveLength(0);
   });
 });
 
