@@ -127,6 +127,7 @@ export const enUS = {
       title: "About me",
       text: "I'm a tech guy who lives on challenges and loves creating things with incredible visuals. My mission is to make every project not only work, but leave the client amazed with a design that represents the brand.\n\nWhen I'm not in front of the computer, my world spins at a different pace. Rap is the soundtrack of my day, and my free time is divided between epic adventures in tabletop RPGs and board games with the crew. And, even though I might seem a bit tough, I confess I'm a fan of a good romance, those almost platonic ones. Oh, and New Girl was a marathon that got me last year.\n\nMy travel dream is a bit different: I really want to meet indigenous tribes and understand in practice what their daily life is like. You'll probably see me around always with my headphones and some silver necklaces. For me, facing a technical challenge, like setting up my own server or testing a new technology, is pure fun and a way to learn hands-on.",
     },
+    tapToKnowMore: "Tap to Learn More",
     dailyRoutine: {
       title: "My day-to-day",
       empty: "No items added yet",

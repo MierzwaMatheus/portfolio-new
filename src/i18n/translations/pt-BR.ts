@@ -127,6 +127,7 @@ export const ptBR = {
       title: "Sobre mim",
       text: "Sou um cara da tecnologia que vive de desafios e se amarra em criar coisas com um visual incrível. Minha missão é fazer com que cada projeto não só funcione, mas deixe o cliente de queixo caído com um design que é a cara da marca.\n\nQuando não estou na frente do computador, meu mundo gira em outro ritmo. O rap é a trilha sonora do meu dia, e meu tempo livre é dividido entre aventuras épicas em RPGs de mesa e board games com a galera. E, por mais que eu pareça meio marrento, confesso que sou fã de um bom romance, daqueles quase platônicos. Ah, e New Girl foi uma maratona que me pegou de jeito no ano passado.\n\nMeu sonho de viagem é um pouco diferente: quero muito conhecer tribos indígenas e entender na prática como é o dia a dia deles. Você provavelmente vai me ver por aí sempre com meus fones de ouvido e alguns colares de prata. Para mim, encarar um desafio técnico, como montar meu próprio servidor ou testar uma tecnologia nova, é pura diversão e um jeito de aprender na prática.",
     },
+    tapToKnowMore: "Toque para Saber Mais",
     dailyRoutine: {
       title: "Meu dia-a-dia",
       empty: "Nenhum item adicionado ainda",
