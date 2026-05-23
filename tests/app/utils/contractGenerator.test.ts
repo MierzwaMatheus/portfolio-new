@@ -322,4 +322,12 @@ describe("contractGenerator · resolveTemplateContent", () => {
     );
     expect(result).toBe("### CLÁUSULA\nConteúdo");
   });
+
+  it("falls back to defaultTemplate.content when templateSnapshot is absent", () => {
+    const result = resolveTemplateContent(
+      { templateSnapshot: null },
+      { content: "default content" },
+    );
+    expect(result).toBe("default content");
+  });
 });
