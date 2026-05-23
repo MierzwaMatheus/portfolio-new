@@ -250,8 +250,8 @@ export default function ContractTemplates() {
 
       {/* Modal de criar/editar */}
       <Dialog open={modalOpen} onOpenChange={(open) => { if (!open) closeModal(); }}>
-        <DialogContent className="bg-card border-white/10 max-w-3xl w-full max-h-[85vh] flex flex-col text-white p-0 min-h-0">
-          <DialogHeader className="px-6 pt-6 pb-4 border-b border-white/10">
+        <DialogContent className="bg-card border-white/10 max-w-[92vw] xl:max-w-6xl w-full max-h-[90vh] flex flex-col text-white p-0 min-h-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b border-white/10 shrink-0">
             <DialogTitle className="text-xl font-bold">
               {isEditing ? "Editar Template" : "Novo Template"}
             </DialogTitle>
@@ -260,7 +260,7 @@ export default function ContractTemplates() {
             </VisuallyHidden>
           </DialogHeader>
 
-          <div className="space-y-5 py-4 px-6 overflow-y-auto flex-1 min-h-0">
+          <div className="space-y-4 py-4 px-6 shrink-0">
             <div className="space-y-2">
               <Label htmlFor="template-name" className="text-gray-300">
                 Nome <span className="text-red-400">*</span>
@@ -286,15 +286,14 @@ export default function ContractTemplates() {
                 className="bg-white/5 border-white/10 text-white placeholder:text-gray-500"
               />
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <Label className="text-gray-300">Conteúdo</Label>
-              <TemplateEditor
-                content={form.content}
-                onChange={(value) => setForm(f => ({ ...f, content: value }))}
-                variables={TEMPLATE_VARIABLES}
-              />
-            </div>
+          <div className="flex-1 min-h-0 px-6 pb-2">
+            <TemplateEditor
+              content={form.content}
+              onChange={(value) => setForm(f => ({ ...f, content: value }))}
+              variables={TEMPLATE_VARIABLES}
+            />
           </div>
 
           <div className="border-t border-white/10 px-6 py-4 mt-auto flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2 bg-card">

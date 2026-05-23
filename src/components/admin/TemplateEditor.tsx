@@ -41,8 +41,8 @@ export function TemplateEditor({ content, onChange, variables }: Props) {
     }, 0);
   }
 
-  const editorContent = (
-    <div className="space-y-2">
+  const syntaxAndToolbar = (
+    <div className="space-y-2 shrink-0">
       <TemplateSyntaxGuide />
       {variables.length > 0 && (
         <div className="flex flex-wrap gap-1.5 p-3 bg-white/5 rounded-md border border-white/10">
@@ -61,58 +61,67 @@ export function TemplateEditor({ content, onChange, variables }: Props) {
           ))}
         </div>
       )}
-      <Textarea
-        ref={textareaRef}
-        value={content}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Digite o conteúdo do template. Use as variáveis acima para inserir dados da proposta."
-        className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 font-mono text-sm min-h-[280px] resize-y"
-        rows={14}
-      />
-    </div>
-  );
-
-  const previewContent = (
-    <div
-      data-testid="preview-pane"
-      className="min-h-[280px] rounded-md border border-white/10 bg-white/5 p-4 overflow-y-auto"
-    >
-      {content.trim() ? (
-        <TemplateContentPreview content={content} />
-      ) : (
-        <p className="text-gray-500 text-sm italic">
-          O preview aparecerá aqui conforme você digita.
-        </p>
-      )}
     </div>
   );
 
   return (
-    <div>
+    <div className="h-full flex flex-col">
       {/* Mobile: abas */}
-      <div className="md:hidden">
-        <Tabs defaultValue="editor">
-          <TabsList className="mb-3 bg-white/5 border border-white/10">
+      <div className="md:hidden flex flex-col h-full">
+        <Tabs defaultValue="editor" className="flex flex-col h-full">
+          <TabsList className="mb-3 bg-white/5 border border-white/10 shrink-0">
             <TabsTrigger value="editor">Editor</TabsTrigger>
             <TabsTrigger value="preview">Preview</TabsTrigger>
           </TabsList>
-          <TabsContent value="editor">
-            {editorContent}
+          <TabsContent value="editor" className="flex flex-col flex-1 space-y-2 overflow-y-auto">
+            {syntaxAndToolbar}
+            <Textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder="Digite o conteúdo do template."
+              className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 font-mono text-sm flex-1 resize-none"
+            />
           </TabsContent>
-          <TabsContent value="preview">
-            {previewContent}
+          <TabsContent value="preview" className="flex-1 overflow-y-auto" data-testid="preview-pane">
+            <div className="rounded-md border border-white/10 bg-white/5 p-4 min-h-full">
+              {content.trim() ? (
+                <TemplateContentPreview content={content} />
+              ) : (
+                <p className="text-gray-500 text-sm italic">O preview aparecerá aqui conforme você digita.</p>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
       </div>
 
-      {/* Desktop: side-by-side */}
-      <div className="hidden md:grid md:grid-cols-2 md:gap-4">
-        <div data-testid="editor-pane" className="space-y-2">
-          {editorContent}
+      {/* Desktop: side-by-side com scroll independente */}
+      <div className="hidden md:grid md:grid-cols-2 md:gap-4 h-full">
+        {/* Coluna editor */}
+        <div data-testid="editor-pane" className="flex flex-col h-full overflow-hidden">
+          {syntaxAndToolbar}
+          <Textarea
+            ref={textareaRef}
+            value={content}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder="Digite o conteúdo do template. Use as variáveis acima para inserir dados da proposta."
+            className="bg-white/5 border-white/10 text-white placeholder:text-gray-500 font-mono text-sm flex-1 resize-none mt-2"
+          />
         </div>
-        <div>
-          <p className="text-xs text-gray-500 mb-2">Preview</p>
-          {previewContent}
+
+        {/* Coluna preview */}
+        <div className="flex flex-col h-full overflow-hidden">
+          <p className="text-xs text-gray-500 mb-2 shrink-0">Preview</p>
+          <div
+            data-testid="preview-pane"
+            className="flex-1 overflow-y-auto rounded-md border border-white/10 bg-white/5 p-4"
+          >
+            {content.trim() ? (
+              <TemplateContentPreview content={content} />
+            ) : (
+              <p className="text-gray-500 text-sm italic">O preview aparecerá aqui conforme você digita.</p>
+            )}
+          </div>
         </div>
       </div>
     </div>

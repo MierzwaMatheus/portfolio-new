@@ -56,23 +56,13 @@ describe("TemplateEditor", () => {
   });
 
   it("preview atualiza ao alterar conteúdo", () => {
-    let value = "";
     const { rerender, container } = render(
-      <TemplateEditor
-        content={value}
-        onChange={(v) => { value = v; }}
-        variables={[]}
-      />,
+      <TemplateEditor content="" onChange={vi.fn()} variables={[]} />,
     );
     rerender(
-      <TemplateEditor
-        content="**negrito**"
-        onChange={vi.fn()}
-        variables={[]}
-      />,
+      <TemplateEditor content={"**negrito**"} onChange={vi.fn()} variables={[]} />,
     );
-    const preview = container.querySelector("[data-testid='preview-pane']");
-    expect(preview?.querySelector("strong")?.textContent).toBe("negrito");
+    expect(container.querySelector("strong")?.textContent).toBe("negrito");
   });
 
   it("chama onChange ao digitar na textarea", () => {

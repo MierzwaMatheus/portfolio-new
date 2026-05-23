@@ -10,7 +10,7 @@ export function TemplateContentPreview({ content }: Props) {
   const { header, clauses } = parseTemplateContent(content);
 
   return (
-    <div className="text-sm text-gray-200 space-y-4">
+    <div className="prose prose-invert prose-sm max-w-none text-gray-200">
       {header.trim() && (
         <div
           dangerouslySetInnerHTML={{ __html: formatClauseContent(header) }}
