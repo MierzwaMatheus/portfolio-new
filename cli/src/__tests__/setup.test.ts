@@ -72,6 +72,7 @@ describe("runSetup — Ciclo 1: .env.local e detectProject", () => {
       detectProject: detectProjectMock,
       generateJwtKeys: generateJwtKeysMock,
       execSync: execSyncMock,
+      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
     });
 
     expect(detectProjectMock).toHaveBeenCalled();
@@ -90,6 +91,7 @@ describe("runSetup — Ciclo 1: .env.local e detectProject", () => {
       detectProject: detectProjectMock,
       generateJwtKeys: vi.fn(),
       execSync: vi.fn(),
+      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
     });
 
     expect(cancel).toHaveBeenCalledWith(
@@ -111,6 +113,7 @@ describe("runSetup — Ciclo 1: .env.local e detectProject", () => {
       detectProject: detectProjectMock,
       generateJwtKeys: vi.fn(),
       execSync: vi.fn(),
+      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
     });
 
     expect(cancel).toHaveBeenCalledWith(
@@ -133,6 +136,7 @@ describe("runSetup — Ciclo 1: .env.local e detectProject", () => {
       detectProject: detectProjectMock,
       generateJwtKeys: vi.fn(),
       execSync: vi.fn(),
+      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
     });
 
     expect(cancel).toHaveBeenCalledWith(
@@ -155,6 +159,7 @@ describe("runSetup — Ciclo 1: .env.local e detectProject", () => {
       detectProject: detectProjectMock,
       generateJwtKeys: vi.fn(),
       execSync: vi.fn(),
+      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
     });
 
     expect(cancel).toHaveBeenCalledWith(
@@ -183,40 +188,26 @@ describe("runSetup — Ciclo 2: JWT keys e convex env set", () => {
         JWKS: JSON.stringify({ keys: [{ use: "sig", kty: "RSA" }] }),
       }),
       execSync: vi.fn().mockReturnValue(Buffer.from("")),
+      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
+      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
     };
   }
 
-  it("chama execSync com npx convex env set JWT_PRIVATE_KEY com valor não vazio", async () => {
+  it("JWT_PRIVATE_KEY é setado via execFileSync com args array (sem passar pelo shell)", async () => {
     const deps = makeValidSetup();
 
     await runSetup(deps);
 
-    const calls = (deps.execSync as ReturnType<typeof vi.fn>).mock.calls.map(
-      (c) => c[0] as string
+    // execFileSync deve ter sido chamado com array contendo JWT_PRIVATE_KEY e o valor PEM
+    const fileCalls = (deps.execFileSync as ReturnType<typeof vi.fn>).mock.calls;
+    const jwtCall = fileCalls.find(
+      (c) => Array.isArray(c[1]) && (c[1] as string[]).includes("JWT_PRIVATE_KEY")
     );
-    const jwtCall = calls.find((c) => c.includes("JWT_PRIVATE_KEY"));
     expect(jwtCall).toBeDefined();
-    expect(jwtCall).toMatch(/JWT_PRIVATE_KEY/);
-    // valor não vazio
-    expect(jwtCall).not.toMatch(/JWT_PRIVATE_KEY\s*"?\s*"?$/);
-  });
-
-  it("JWT_PRIVATE_KEY não aparece literalmente na string do comando execSync (passa via env)", async () => {
-    const deps = makeValidSetup();
-
-    await runSetup(deps);
-
-    const calls = (deps.execSync as ReturnType<typeof vi.fn>).mock.calls;
-    const jwtCall = calls.find((c) => (c[0] as string).includes("JWT_PRIVATE_KEY"));
-    expect(jwtCall).toBeDefined();
-    // o valor da chave não deve estar embutido na string do comando
-    expect(jwtCall![0] as string).not.toContain("BEGIN PRIVATE KEY");
-    // o valor deve ser passado via env no segundo argumento
-    const opts = jwtCall![1] as Record<string, unknown>;
-    expect(opts).toBeDefined();
-    const env = opts["env"] as Record<string, string>;
-    expect(env).toBeDefined();
-    expect(Object.values(env).some((v) => v.includes("BEGIN PRIVATE KEY"))).toBe(true);
+    const args = jwtCall![1] as string[];
+    // o valor PEM deve estar no array de args, não numa string de comando
+    const pemValue = args.find((a) => a.includes("BEGIN PRIVATE KEY"));
+    expect(pemValue).toBeDefined();
   });
 
   it("chama execSync com npx convex env set JWKS com JSON válido", async () => {
@@ -288,6 +279,7 @@ describe("runSetup — Ciclo 4: Telegram plugin vars", () => {
       readState: vi.fn().mockResolvedValue(state),
       randomBytes: vi.fn().mockReturnValue(Buffer.from("a".repeat(32))),
       execSync: vi.fn().mockReturnValue(Buffer.from("")),
+      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
     };
   }
 
@@ -358,6 +350,7 @@ describe("runSetup — Ciclo 5: AI, Playground e Payments vars", () => {
       readState: vi.fn().mockResolvedValue(state),
       randomBytes: vi.fn().mockReturnValue(Buffer.alloc(32, 0xab)),
       execSync: vi.fn().mockReturnValue(Buffer.from("")),
+      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
     };
   }
 
@@ -465,6 +458,7 @@ describe("runSetup — Ciclo 6: Vercel vars always-present", () => {
       readState: vi.fn().mockResolvedValue(state),
       randomBytes: vi.fn().mockReturnValue(Buffer.alloc(32, 0)),
       execSync: vi.fn().mockReturnValue(Buffer.from("")),
+      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
     };
   }
 
@@ -537,6 +531,7 @@ describe("runSetup — Ciclo 7: prompts de admin (validações)", () => {
       readState: vi.fn().mockResolvedValue(state),
       randomBytes: vi.fn().mockReturnValue(Buffer.alloc(32, 0)),
       execSync: vi.fn().mockReturnValue(Buffer.from("")),
+      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
     };
   }
 
@@ -641,6 +636,7 @@ describe("runSetup — Ciclo 8: setupAdmin execSync e outro()", () => {
       readState: vi.fn().mockResolvedValue(state),
       randomBytes: vi.fn().mockReturnValue(Buffer.alloc(32, 0)),
       execSync: vi.fn().mockReturnValue(Buffer.from("")),
+      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
     };
   }
 

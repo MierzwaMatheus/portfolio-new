@@ -2,7 +2,7 @@ import { outro, text, password, spinner, isCancel, cancel } from "@clack/prompts
 import * as nodeFsPromises from "node:fs/promises";
 import * as path from "node:path";
 import * as nodeCrypto from "node:crypto";
-import { execSync as defaultExecSync } from "node:child_process";
+import { execSync as defaultExecSync, execFileSync as defaultExecFileSync } from "node:child_process";
 import { detectProject as defaultDetectProject } from "../utils/detectProject.js";
 import { generateJwtKeys as defaultGenerateJwtKeys } from "../utils/generateJwtKeys.js";
 import { readState as defaultReadState } from "../state/readState.js";
@@ -24,6 +24,7 @@ export interface RunSetupDeps {
   readState?: typeof defaultReadState;
   randomBytes?: (size: number) => Buffer;
   execSync?: (cmd: string, opts?: object) => Buffer;
+  execFileSync?: (file: string, args: string[], opts?: object) => Buffer;
 }
 
 // ---- Helpers ----------------------------------------------------------------
@@ -61,6 +62,9 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
   const randomBytes = deps.randomBytes ?? ((size: number) => nodeCrypto.randomBytes(size));
   const execSync = deps.execSync ?? ((cmd: string, opts?: object) =>
     defaultExecSync(cmd, opts as Parameters<typeof defaultExecSync>[1]) as Buffer
+  );
+  const execFileSync = deps.execFileSync ?? ((file: string, args: string[], opts?: object) =>
+    defaultExecFileSync(file, args, opts as Parameters<typeof defaultExecFileSync>[2]) as Buffer
   );
 
   // 1. Detectar projeto Rubrica
@@ -107,9 +111,8 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
   s.stop("Chaves JWT geradas.");
 
   // 5. Setar JWT_PRIVATE_KEY e JWKS no Convex
-  execSync(`npx convex env set JWT_PRIVATE_KEY "$_RUBRICA_JWT_KEY"`, {
+  execFileSync("npx", ["convex", "env", "set", "JWT_PRIVATE_KEY", JWT_PRIVATE_KEY], {
     stdio: "pipe",
-    env: { ...process.env, _RUBRICA_JWT_KEY: JWT_PRIVATE_KEY },
   });
   execSync(`npx convex env set JWKS "${JWKS}"`, { stdio: "pipe" });
 

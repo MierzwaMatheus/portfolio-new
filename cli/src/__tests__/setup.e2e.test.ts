@@ -70,6 +70,7 @@ describe("setup E2E — Ciclo 1: sem .env.local", () => {
       detectProject: vi.fn().mockResolvedValue("/project/rubrica.json"),
       generateJwtKeys: vi.fn(),
       execSync: execSyncMock,
+      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
     });
 
     expect(cancel).toHaveBeenCalledWith(
@@ -119,6 +120,7 @@ describe("setup E2E — Ciclo 2: contact-wizard com readState real", () => {
         JWKS: JSON.stringify({ keys: [{ use: "sig", kty: "RSA" }] }),
       }),
       execSync: execSyncMock,
+      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
     });
 
     const calls = execSyncMock.mock.calls.map((c) => c[0] as string);
@@ -165,6 +167,7 @@ describe("setup E2E — Ciclo 3: playground com readState real", () => {
         JWKS: JSON.stringify({ keys: [{ use: "sig", kty: "RSA" }] }),
       }),
       execSync: execSyncMock,
+      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
     });
 
     const calls = execSyncMock.mock.calls.map((c) => c[0] as string);
