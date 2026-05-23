@@ -3,6 +3,7 @@ import {
   generatePaymentMethods,
   generateContractContent,
   applyProposalToTemplate,
+  resolveTemplateContent,
 } from "@/utils/contractGenerator";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 
@@ -310,5 +311,15 @@ describe("contractGenerator · applyProposalToTemplate", () => {
       baseAcceptance,
     );
     expect(result).toBe("Cronograma:\n• Design – 1 semana\n• Dev – 2 semanas");
+  });
+});
+
+describe("contractGenerator · resolveTemplateContent", () => {
+  it("returns templateSnapshot when present", () => {
+    const result = resolveTemplateContent(
+      { templateSnapshot: "### CLÁUSULA\nConteúdo" },
+      { content: "outro template" },
+    );
+    expect(result).toBe("### CLÁUSULA\nConteúdo");
   });
 });

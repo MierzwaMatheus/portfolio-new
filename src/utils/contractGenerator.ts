@@ -72,6 +72,13 @@ export function generatePaymentMethods(value: number): string[] {
   ];
 }
 
+export function resolveTemplateContent(
+  proposal: { templateSnapshot?: string | null },
+  defaultTemplate: { content: string } | null | undefined,
+): string | undefined {
+  return proposal.templateSnapshot ?? defaultTemplate?.content ?? undefined;
+}
+
 /**
  * Aplica os dados de uma proposta e aceite a um template de contrato com variáveis {{var}}.
  */
