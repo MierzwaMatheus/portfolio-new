@@ -71,3 +71,24 @@ describe("Textos — Ciclo 2: agrupamento por namespace", () => {
     expect(screen.getByText("about.intro")).toBeInTheDocument();
   });
 });
+
+describe("Textos — Ciclo 3: badge 'sem tradução EN'", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUseQuery.mockReturnValue([
+      { _id: "1", key: "home.greeting", page: "home", ptBR: "Olá", enUS: "Hello" },
+      { _id: "2", key: "home.missing", page: "home", ptBR: "Sem tradução" },
+    ] as any);
+  });
+
+  it("exibe badge para item sem enUS", () => {
+    render(<AdminTextos />);
+    expect(screen.getByText(/sem tradução en/i)).toBeInTheDocument();
+  });
+
+  it("não exibe badge para item com enUS preenchido", () => {
+    render(<AdminTextos />);
+    const badges = screen.queryAllByText(/sem tradução en/i);
+    expect(badges).toHaveLength(1);
+  });
+});

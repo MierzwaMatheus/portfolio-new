@@ -2,6 +2,7 @@ import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { AdminLayout } from "./Dashboard";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { useState, useMemo } from "react";
 
 type SiteText = {
@@ -53,8 +54,13 @@ export default function AdminTextos() {
               <h2 className="text-lg font-semibold capitalize mb-2">{ns}</h2>
               <div className="space-y-2">
                 {grouped[ns].map((item) => (
-                  <div key={item._id} className="text-sm text-muted-foreground">
-                    {item.key}
+                  <div key={item._id} className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <span>{item.key}</span>
+                    {!item.enUS && (
+                      <Badge variant="outline" className="text-xs text-yellow-600 border-yellow-400">
+                        Sem tradução EN
+                      </Badge>
+                    )}
                   </div>
                 ))}
               </div>
