@@ -330,4 +330,10 @@ describe("contractGenerator · resolveTemplateContent", () => {
     );
     expect(result).toBe("default content");
   });
+
+  it("returns undefined for legacy proposals with no template", () => {
+    expect(resolveTemplateContent({}, null)).toBeUndefined();
+    expect(resolveTemplateContent({ templateSnapshot: null }, null)).toBeUndefined();
+    expect(resolveTemplateContent({}, undefined)).toBeUndefined();
+  });
 });
