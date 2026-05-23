@@ -245,6 +245,19 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
     return;
   }
 
+  // Seed template padrão de contrato (se proposals habilitado)
+  if (plugins["proposals"]) {
+    try {
+      execFileSync(
+        "npx",
+        ["convex", "run", "contractTemplates:seedDefaultTemplate"],
+        { stdio: "pipe" }
+      );
+    } catch {
+      // não crítico — admin pode criar o template manualmente
+    }
+  }
+
   // 13. Vercel — sempre presentes (opcionais)
   const vercelHookUrl = await text({
     message: "VERCEL_DEPLOY_HOOK_URL (Enter para pular):",
