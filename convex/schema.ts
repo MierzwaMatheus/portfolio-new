@@ -29,8 +29,8 @@ const resumeItemVariants = v.union(
     content: v.object({ name: v.string(), level: v.string() }),
     contentTranslations: v.optional(
       v.object({
-        ptBR: v.optional(v.object({ name: v.optional(v.string()) })),
-        enUS: v.optional(v.object({ name: v.optional(v.string()) })),
+        ptBR: v.optional(v.object({ name: v.optional(v.string()), level: v.optional(v.string()) })),
+        enUS: v.optional(v.object({ name: v.optional(v.string()), level: v.optional(v.string()) })),
       }),
     ),
     orderIndex: v.number(),
