@@ -201,19 +201,22 @@ describe("runSetup — Ciclo 2: JWT keys e convex env set", () => {
     expect(jwtCall).not.toMatch(/JWT_PRIVATE_KEY\s*"?\s*"?$/);
   });
 
-  it("JWT_PRIVATE_KEY passado ao execSync tem newlines escapados (sem quebras de linha literais)", async () => {
+  it("JWT_PRIVATE_KEY não aparece literalmente na string do comando execSync (passa via env)", async () => {
     const deps = makeValidSetup();
 
     await runSetup(deps);
 
-    const calls = (deps.execSync as ReturnType<typeof vi.fn>).mock.calls.map(
-      (c) => c[0] as string
-    );
-    const jwtCall = calls.find((c) => c.includes("JWT_PRIVATE_KEY"));
+    const calls = (deps.execSync as ReturnType<typeof vi.fn>).mock.calls;
+    const jwtCall = calls.find((c) => (c[0] as string).includes("JWT_PRIVATE_KEY"));
     expect(jwtCall).toBeDefined();
-    // não deve conter quebra de linha literal — deve usar \n escapado
-    expect(jwtCall).not.toContain("\n");
-    expect(jwtCall).toContain("\\n");
+    // o valor da chave não deve estar embutido na string do comando
+    expect(jwtCall![0] as string).not.toContain("BEGIN PRIVATE KEY");
+    // o valor deve ser passado via env no segundo argumento
+    const opts = jwtCall![1] as Record<string, unknown>;
+    expect(opts).toBeDefined();
+    const env = opts["env"] as Record<string, string>;
+    expect(env).toBeDefined();
+    expect(Object.values(env).some((v) => v.includes("BEGIN PRIVATE KEY"))).toBe(true);
   });
 
   it("chama execSync com npx convex env set JWKS com JSON válido", async () => {
