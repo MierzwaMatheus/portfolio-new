@@ -29,3 +29,17 @@ describe('formatArrayAsList', () => {
     expect(formatArrayAsList([])).toBe('')
   })
 })
+
+describe('formatArrayAsText', () => {
+  it('formata array com vírgulas e "e" no último', () => {
+    expect(formatArrayAsText(['etapa 1', 'etapa 2', 'etapa 3'])).toBe('etapa 1, etapa 2 e etapa 3')
+  })
+
+  it('retorna item único sem vírgula', () => {
+    expect(formatArrayAsText(['etapa 1'])).toBe('etapa 1')
+  })
+
+  it('formata dois itens com "e" sem vírgula', () => {
+    expect(formatArrayAsText(['etapa 1', 'etapa 2'])).toBe('etapa 1 e etapa 2')
+  })
+})
