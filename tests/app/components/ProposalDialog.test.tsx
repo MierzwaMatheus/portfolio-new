@@ -17,6 +17,7 @@ vi.mock("sonner", () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock("@/constants/rescisionPolicy", () => ({ DEFAULT_RESCISION_POLICY: "Padrão" }));
 
 import { useQuery, useMutation } from "convex/react";
+import { fireEvent } from "@testing-library/react";
 import { ProposalDialog } from "@/components/admin/ProposalDialog";
 
 const mockUseQuery = vi.mocked(useQuery);
@@ -27,8 +28,8 @@ const baseTemplates = [
   { _id: "t2", name: "Template B", isDefault: true, content: "B", createdAt: 0, updatedAt: 0 },
 ];
 
-function setup(templates: typeof baseTemplates | null = baseTemplates, proposal: any = null) {
-  mockUseMutation.mockReturnValue(vi.fn() as any);
+function setup(templates: typeof baseTemplates | null = baseTemplates, proposal: any = null, mutationFn?: ReturnType<typeof vi.fn>) {
+  mockUseMutation.mockReturnValue((mutationFn ?? vi.fn()) as any);
   mockUseQuery.mockImplementation((query: any) => {
     if (query === "contractTemplates:list") return templates;
     return [];
@@ -81,5 +82,56 @@ describe("ProposalDialog — Ciclo 4: estado vazio sem templates", () => {
     setup([]);
     expect(screen.queryByText("Template de Contrato")).toBeNull();
     expect(screen.queryByRole("combobox")).toBeNull();
+  });
+});
+
+describe("ProposalDialog — Ciclo 5: templateId enviado ao salvar", () => {
+  beforeEach(() => {
+    mockUseQuery.mockReset();
+    mockUseMutation.mockReset();
+  });
+
+  it("passa o templateId selecionado ao criar proposta", async () => {
+    const createMock = vi.fn().mockResolvedValue("new-id");
+    setup(baseTemplates, null, createMock);
+
+    // Preenche campos obrigatórios via fireEvent
+    const inputs = screen.getAllByRole("textbox");
+    fireEvent.change(inputs[1], { target: { value: "Cliente Teste" } });
+    fireEvent.change(inputs[2], { target: { value: "slug-teste" } });
+
+    fireEvent.click(screen.getByRole("button", { name: /criar/i }));
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({ templateId: "t2" }),
+    );
+  });
+
+  it("passa o templateId ao atualizar proposta existente", async () => {
+    const updateMock = vi.fn().mockResolvedValue(undefined);
+    const proposal = {
+      _id: "p1",
+      title: "Proposta",
+      clientName: "Cliente",
+      slug: "slug-existente",
+      createdAt: Date.now(),
+      objective: "",
+      deliveryDate: "",
+      investmentValue: 0,
+      scope: [],
+      timeline: [],
+      paymentMethods: [],
+      conditions: [],
+      templateId: "t1",
+    };
+    setup(baseTemplates, proposal, updateMock);
+
+    fireEvent.click(screen.getByRole("button", { name: /salvar/i }));
+    await new Promise((r) => setTimeout(r, 50));
+
+    expect(updateMock).toHaveBeenCalledWith(
+      expect.objectContaining({ templateId: "t1" }),
+    );
   });
 });

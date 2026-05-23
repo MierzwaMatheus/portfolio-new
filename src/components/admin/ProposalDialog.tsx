@@ -140,6 +140,7 @@ export function ProposalDialog({ open, onOpenChange, proposal, onSave }: Proposa
                     investmentValue: investment,
                     paymentMethods: proposal.paymentMethods ?? [],
                     conditions: selectedConditions,
+                    templateId,
                 });
                 toast.success("Proposta atualizada com sucesso!");
                 onSave();
@@ -157,6 +158,7 @@ export function ProposalDialog({ open, onOpenChange, proposal, onSave }: Proposa
                     paymentMethods: [],
                     conditions: selectedConditions,
                     rescissionPolicy: DEFAULT_RESCISION_POLICY,
+                    templateId,
                 });
                 toast.success("Proposta criada com sucesso!");
                 onSave();
