@@ -655,3 +655,115 @@
 - [ ] Verificar manualmente: criar projeto com `create`, rodar `npx convex dev`, rodar `rubrica setup` → JWT_PRIVATE_KEY + JWKS + SITE_URL presentes no Convex Dashboard
 - [ ] Verificar manualmente: após `rubrica setup`, acessar `/login` com email e senha configurados → redireciona para `/admin` com acesso root
 - [ ] Verificar manualmente: rodar `rubrica setup` pela segunda vez num projeto já configurado → exibe mensagem "Admin já configurado" sem sobrescrever keys JWT
+
+---
+
+## Fase 5 — Sistema de Templates de Contrato
+
+> Substitui as cláusulas e dados pessoais hardcoded em `contractGenerator.ts` e `contractPDF.ts` por templates editáveis no admin, com variáveis interpoladas dos dados da proposta no momento de gerar o PDF.
+
+---
+
+### 5.1 interpolateTemplate — closes #37
+
+- [ ] **[TESTE]** Escrever teste: `interpolateTemplate("Olá {{name}}", { name: "Ana" })` retorna `"Olá Ana"`
+- [ ] **[TESTE]** Escrever teste: múltiplas ocorrências da mesma variável são todas substituídas
+- [ ] **[TESTE]** Escrever teste: variável ausente no mapa mantém `{{var}}` intacto no output (sem substituir por vazio)
+- [ ] **[TESTE]** Escrever teste: `formatArrayAsList(["A", "B", "C"])` retorna string com cada item em linha separada (ex: `"• A\n• B\n• C"`)
+- [ ] **[TESTE]** Escrever teste: `formatArrayAsText(["etapa 1", "etapa 2"])` retorna itens separados por vírgula e "e" no último
+- [ ] **[TESTE]** Escrever teste: `formatArrayAsList([])` retorna string vazia
+- [ ] **[TESTE]** Escrever teste: variável cujo valor é `undefined` ou `null` mantém `{{var}}` no output
+- [ ] Criar `src/utils/contractTemplate.ts` com função `interpolateTemplate(content: string, vars: Record<string, string>): string`
+- [ ] Implementar helper `formatArrayAsList(items: string[]): string` — cada item prefixado com `• `
+- [ ] Implementar helper `formatArrayAsText(items: string[]): string` — itens separados por vírgula, último com "e"
+- [ ] Verificar que `pnpm test tests/app/utils/contractTemplate.test.ts` passa sem erros
+
+---
+
+### 5.2 Convex: schema + contractTemplates functions — closes #38
+
+- [ ] **[TESTE]** Escrever teste: `list` retorna array vazio quando plugin `contract-templates` está desativado
+- [ ] **[TESTE]** Escrever teste: `getDefault` retorna `null` quando nenhum template tem `isDefault: true`
+- [ ] **[TESTE]** Escrever teste: `getDefault` retorna o template com `isDefault: true` quando existe
+- [ ] **[TESTE]** Escrever teste: `create` lança erro de autorização quando plugin desativado (`requirePlugin` bloqueando)
+- [ ] **[TESTE]** Escrever teste: `setDefault` marca o template alvo como `isDefault: true` e desmarca todos os outros
+- [ ] **[TESTE]** Escrever teste: `remove` exclui o registro pelo id
+- [ ] Adicionar tabela `contractTemplates` em `convex/schema.ts` com campos: `name: v.string()`, `description: v.optional(v.string())`, `content: v.string()`, `isDefault: v.boolean()`, `createdAt: v.number()`, `updatedAt: v.number()`
+- [ ] Adicionar índice `by_is_default` em `contractTemplates` para query eficiente do `getDefault`
+- [ ] Criar `convex/contractTemplates.ts` com query `list` — retorna todos os templates; gate: `isPluginEnabled(ctx, 'contract-templates')`
+- [ ] Adicionar query `get(id)` — busca template por id; gate: `isPluginEnabled`
+- [ ] Adicionar query `getDefault` — busca template com `isDefault: true`; gate: `isPluginEnabled`
+- [ ] Adicionar mutation `create({ name, description, content, isDefault })` — gate: `requirePlugin`
+- [ ] Adicionar mutation `update({ id, name, description, content })` — gate: `requirePlugin`
+- [ ] Adicionar mutation `remove(id)` — gate: `requirePlugin`
+- [ ] Adicionar mutation `setDefault(id)` — desmarca todos, marca o alvo; gate: `requirePlugin`
+- [ ] Registrar plugin `contract-templates` em `convex/pluginRegistry.ts` (PLUGIN_REGISTRY) com label, descrição e `defaultEnabled: false`
+- [ ] Escrever função de seed/migration em `convex/contractTemplates.ts` que insere template padrão com cláusulas atuais (sem dados pessoais) quando a tabela está vazia
+- [ ] Verificar que `npx convex dev` não apresenta erros de schema após as alterações
+
+---
+
+### 5.3 applyProposalToTemplate + refatoração da geração de PDF — closes #39
+
+- [ ] **[TESTE]** Escrever teste: `applyProposalToTemplate(template, proposal, acceptance)` substitui `{{client_name}}` com `proposal.clientName`
+- [ ] **[TESTE]** Escrever teste: `{{scope}}` é substituído pelo output de `formatArrayAsList(proposal.scope)`
+- [ ] **[TESTE]** Escrever teste: `{{timeline}}` é substituído por texto formatado dos passos do timeline
+- [ ] **[TESTE]** Escrever teste: `{{investment_value}}` é substituído por valor formatado em R$ pt-BR (ex: `"R$ 1.500,00"`)
+- [ ] **[TESTE]** Escrever teste: `{{accepted_at}}` é substituído por data formatada em pt-BR (ex: `"15/06/2024"`)
+- [ ] **[TESTE]** Escrever teste: `{{client_document}}` com CPF de 11 dígitos recebe máscara `###.###.###-##`
+- [ ] **[TESTE]** Escrever teste: `{{client_document}}` com CNPJ de 14 dígitos recebe máscara `##.###.###/####-##`
+- [ ] **[TESTE]** Escrever teste: variável `{{conditions}}` é substituída por `formatArrayAsList(proposal.conditions)`
+- [ ] Renomear/refatorar `generateContractContent()` em `contractGenerator.ts` para `applyProposalToTemplate(templateContent: string, proposal: ProposalData, acceptance: AcceptanceData): string`
+- [ ] Remover a linha com `MATHEUS MIERZWA LEME DE OLIVEIRA` e `57.900.589/0001-00` de `contractGenerator.ts` (linha 91)
+- [ ] Remover todas as cláusulas hardcoded de `contractGenerator.ts` — a função passa a apenas montar o mapa de variáveis e chamar `interpolateTemplate`
+- [ ] Refatorar `generateContractHTML()` em `contractPDF.ts` para receber `templateContent: string` (já interpolado) em vez de chamar `generateContractContent()` internamente
+- [ ] Remover fallback `"MATHEUS MIERZWA"` da linha 64 de `contractPDF.ts`
+- [ ] Remover fallback `"Barueri/SP"` da linha 66 de `contractPDF.ts`
+- [ ] Remover CNPJ `57.900.589/0001-00` hardcoded da linha 306 de `contractPDF.ts`
+- [ ] Atualizar `DownloadContractButton` em `src/pages/admin/Proposals.tsx`: chamar `api.contractTemplates.getDefault` antes de acionar a impressão
+- [ ] Passar `templateContent` retornado pelo `getDefault` para `applyProposalToTemplate` e em seguida para `generateContractHTML`
+- [ ] Executar `grep -r "MATHEUS\|57.900.589\|matheusmierzwa" src/` e verificar que retorna vazio
+
+---
+
+### 5.4 Corrigir testes existentes após refatoração — closes #40
+
+- [ ] Remover de `tests/app/utils/contractGenerator.test.ts` todos os testes que verificam cláusulas hardcoded (ex: os que usam `generateContractContent` para verificar texto de cláusulas)
+- [ ] Adicionar em `tests/app/utils/contractGenerator.test.ts` testes de `applyProposalToTemplate`: dado um template com `{{client_name}}`, retorna string com o nome substituído
+- [ ] Adicionar teste: `applyProposalToTemplate` com template vazio retorna string vazia
+- [ ] Atualizar fixture `baseProposal` / `baseAcceptance` em `tests/app/utils/contractPDF.test.ts` para que nenhum assertion dependa de `"MATHEUS MIERZWA"` ou `"57.900.589"`
+- [ ] Atualizar o teste de `contractPDF.test.ts` que verifica `"includes the contractor's default name"` — agora deve verificar que o nome vem do contactInfo e não do fallback hardcoded
+- [ ] Atualizar snapshots de `cli/src/__tests__/create.validity.e2e.test.ts` rodando `pnpm test -- --update-snapshots` e confirmando que nenhum snapshot contém dados pessoais
+- [ ] Verificar que `pnpm test tests/app/utils/contractGenerator.test.ts` passa
+- [ ] Verificar que `pnpm test tests/app/utils/contractPDF.test.ts` passa
+- [ ] Verificar que `pnpm test cli/src/__tests__/create.validity.e2e.test.ts` passa
+- [ ] Executar `grep -r "MATHEUS\|57.900.589\|matheusmierzwa" src/ tests/` e verificar que retorna vazio
+
+---
+
+### 5.5 Admin UI: CRUD de templates de contrato — closes #41
+
+- [ ] Criar `src/pages/admin/ContractTemplates.tsx` com listagem de todos os templates (nome, descrição, badge "Padrão" quando `isDefault: true`)
+- [ ] Adicionar botão "Definir como padrão" em cada item da lista — chama mutation `setDefault`
+- [ ] Adicionar botão "Editar" em cada item — abre modal de edição
+- [ ] Adicionar botão "Remover" em cada item — abre confirmação antes de chamar mutation `remove`
+- [ ] Criar modal de edição com campo `nome` (input text, obrigatório), campo `descrição` (input text, opcional) e campo `conteúdo` (textarea grande)
+- [ ] Implementar toolbar de variáveis acima do textarea: um botão por variável disponível (`{{client_name}}`, `{{objective}}`, `{{scope}}`, `{{timeline}}`, `{{delivery_date}}`, `{{investment_value}}`, `{{payment_methods}}`, `{{conditions}}`, `{{rescission_policy}}`, `{{accepted_at}}`, `{{client_document}}`, `{{client_email}}`, `{{client_role}}`)
+- [ ] Ao clicar num botão da toolbar, inserir `{{variable_name}}` na posição atual do cursor do textarea (usar `selectionStart`/`selectionEnd`)
+- [ ] Botão "Salvar" no modal chama `create` (novo template) ou `update` (edição existente) conforme contexto
+- [ ] Adicionar rota `/admin/contracts` em `src/App.tsx` apontando para `ContractTemplates` e wrappada com `<PluginRoute pluginId="contract-templates">`
+- [ ] Adicionar navItem `contract-templates` no Dashboard admin (ícone, label e path seguindo o padrão dos demais itens)
+- [ ] Verificar manualmente: acessar `/admin/contracts` com plugin ativado → lista de templates carrega
+- [ ] Verificar manualmente: criar template, editar e remover → operações refletem na lista sem reload
+- [ ] Verificar manualmente: desativar plugin `contract-templates` na página de plugins → rota `/admin/contracts` retorna 404 e item some do nav
+
+---
+
+### 5.6 Integração: templates ↔ geração de PDF — closes #37, #38, #39, #40, #41
+
+> Ponto de conexão entre o backend de templates e o fluxo de download de contrato. Revisar após 5.1–5.5 estarem prontos.
+
+- [ ] Verificar manualmente: com template padrão cadastrado, abrir uma proposta aceita no admin e clicar em "Download Contrato" → PDF gerado contém dados da proposta (nome do cliente, valor, datas) sem nenhum dado pessoal do autor hardcoded
+- [ ] Verificar manualmente: editar o template padrão trocando o texto de uma cláusula → próximo PDF gerado reflete a alteração
+- [ ] Verificar manualmente: sem nenhum template padrão cadastrado → botão "Download Contrato" exibe erro/aviso adequado ao invés de quebrar silenciosamente
+- [ ] Verificar manualmente: criar segundo template (ex: "Contrato de Consultoria") e defini-lo como padrão → PDF passa a usar o novo template
