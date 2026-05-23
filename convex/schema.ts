@@ -664,4 +664,15 @@ export default defineSchema({
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index('by_is_default', ['isDefault']),
+
+  // ── siteTexts ──────────────────────────────────────────────────────────────
+  siteTexts: defineTable({
+    key: v.string(),
+    page: v.string(),
+    ptBR: v.string(),
+    enUS: v.optional(v.string()),
+    updatedAt: v.optional(v.number()),
+  })
+    .index('by_key', ['key'])
+    .index('by_page', ['page']),
 });
