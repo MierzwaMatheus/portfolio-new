@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render } from "@testing-library/react";
 import { TemplateContentPreview } from "@/components/admin/TemplateContentPreview";
+import { TemplateSyntaxGuide } from "@/components/admin/TemplateSyntaxGuide";
 
 describe("TemplateContentPreview", () => {
   it("renderiza bold (**texto**) como <strong>", () => {
@@ -47,5 +48,32 @@ describe("TemplateContentPreview", () => {
   it("exibe estado vazio para conteúdo vazio", () => {
     const { container } = render(<TemplateContentPreview content="" />);
     expect(container.textContent?.trim()).toBe("");
+  });
+});
+
+describe("TemplateSyntaxGuide", () => {
+  it("documenta **bold** como sintaxe suportada", () => {
+    const { container } = render(<TemplateSyntaxGuide />);
+    expect(container.textContent).toContain("**bold**");
+  });
+
+  it("documenta ### Título como sintaxe suportada", () => {
+    const { container } = render(<TemplateSyntaxGuide />);
+    expect(container.textContent).toContain("###");
+  });
+
+  it("documenta - item (bullet) como sintaxe suportada", () => {
+    const { container } = render(<TemplateSyntaxGuide />);
+    expect(container.textContent).toContain("- item");
+  });
+
+  it("documenta 1. item (numerado) como sintaxe suportada", () => {
+    const { container } = render(<TemplateSyntaxGuide />);
+    expect(container.textContent).toContain("1. item");
+  });
+
+  it("deixa claro que não é Markdown padrão", () => {
+    const { container } = render(<TemplateSyntaxGuide />);
+    expect(container.textContent?.toLowerCase()).toContain("markdown");
   });
 });
