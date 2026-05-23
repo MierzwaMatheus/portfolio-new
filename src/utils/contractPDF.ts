@@ -397,9 +397,10 @@ export async function printContractPDF(
   proposal: ProposalData,
   acceptanceData: PDFAcceptanceData,
   signatureDataUrl: string,
-  contactInfo?: ContactInfo
+  contactInfo?: ContactInfo,
+  templateContent?: string,
 ): Promise<void> {
-  const html = generateContractHTML(proposal, acceptanceData, signatureDataUrl, contactInfo);
+  const html = generateContractHTML(proposal, acceptanceData, signatureDataUrl, contactInfo, templateContent);
   const blob = new Blob([html], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const win = window.open(url, "_blank");

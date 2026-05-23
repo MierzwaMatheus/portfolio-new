@@ -17,7 +17,8 @@ import { api } from "../../../convex/_generated/api";
 import { Id } from "../../../convex/_generated/dataModel";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 import { toast } from "sonner";
-import { printContractPDF } from "@/utils/contractPDF";
+import { printContractPDF, generateContractHTML } from "@/utils/contractPDF";
+import { applyProposalToTemplate } from "@/utils/contractGenerator";
 import { useIsRoot } from "@/hooks/useIsRoot";
 import { buildProposalPrompt } from "@/utils/proposalPrompt";
 
@@ -28,6 +29,7 @@ function DownloadContractButton({ proposal }: { proposal: any }) {
   const [loading, setLoading] = useState(false);
   const acceptanceRaw = useQuery(api.proposals.getAcceptance, { slug: proposal.slug });
   const contactInfo = useQuery(api.contactInfo.get);
+  const defaultTemplate = useQuery(api.contractTemplates.getDefault);
 
   const handleDownload = async () => {
     if (!acceptanceRaw) { toast.error("Dados do aceite não encontrados"); return; }
@@ -54,7 +56,12 @@ function DownloadContractButton({ proposal }: { proposal: any }) {
         proposal_version: String(acceptanceRaw.proposalVersion ?? 1),
       };
       const signatureUrl = (acceptanceRaw as any).signatureUrl ?? "";
-      await printContractPDF(legacyProposal, legacyAcceptance, signatureUrl, contactInfo ?? undefined);
+      if (!defaultTemplate) {
+        toast.error("Nenhum template de contrato padrão encontrado. Configure um template em Templates de Contrato.");
+        return;
+      }
+      const interpolated = applyProposalToTemplate(defaultTemplate.content, legacyProposal, legacyAcceptance);
+      await printContractPDF(legacyProposal, legacyAcceptance, signatureUrl, contactInfo ?? undefined, interpolated);
     } catch (e: any) {
       toast.error(e.message || "Erro ao gerar PDF");
     } finally {
