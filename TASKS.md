@@ -666,17 +666,17 @@
 
 ### 5.1 interpolateTemplate — closes #37
 
-- [ ] **[TESTE]** Escrever teste: `interpolateTemplate("Olá {{name}}", { name: "Ana" })` retorna `"Olá Ana"`
-- [ ] **[TESTE]** Escrever teste: múltiplas ocorrências da mesma variável são todas substituídas
-- [ ] **[TESTE]** Escrever teste: variável ausente no mapa mantém `{{var}}` intacto no output (sem substituir por vazio)
-- [ ] **[TESTE]** Escrever teste: `formatArrayAsList(["A", "B", "C"])` retorna string com cada item em linha separada (ex: `"• A\n• B\n• C"`)
-- [ ] **[TESTE]** Escrever teste: `formatArrayAsText(["etapa 1", "etapa 2"])` retorna itens separados por vírgula e "e" no último
-- [ ] **[TESTE]** Escrever teste: `formatArrayAsList([])` retorna string vazia
-- [ ] **[TESTE]** Escrever teste: variável cujo valor é `undefined` ou `null` mantém `{{var}}` no output
-- [ ] Criar `src/utils/contractTemplate.ts` com função `interpolateTemplate(content: string, vars: Record<string, string>): string`
-- [ ] Implementar helper `formatArrayAsList(items: string[]): string` — cada item prefixado com `• `
-- [ ] Implementar helper `formatArrayAsText(items: string[]): string` — itens separados por vírgula, último com "e"
-- [ ] Verificar que `pnpm test tests/app/utils/contractTemplate.test.ts` passa sem erros
+- [x] **[TESTE]** Escrever teste: `interpolateTemplate("Olá {{name}}", { name: "Ana" })` retorna `"Olá Ana"`
+- [x] **[TESTE]** Escrever teste: múltiplas ocorrências da mesma variável são todas substituídas
+- [x] **[TESTE]** Escrever teste: variável ausente no mapa mantém `{{var}}` intacto no output (sem substituir por vazio)
+- [x] **[TESTE]** Escrever teste: `formatArrayAsList(["A", "B", "C"])` retorna string com cada item em linha separada (ex: `"• A\n• B\n• C"`)
+- [x] **[TESTE]** Escrever teste: `formatArrayAsText(["etapa 1", "etapa 2"])` retorna itens separados por vírgula e "e" no último
+- [x] **[TESTE]** Escrever teste: `formatArrayAsList([])` retorna string vazia
+- [x] **[TESTE]** Escrever teste: variável cujo valor é `undefined` ou `null` mantém `{{var}}` no output
+- [x] Criar `src/utils/contractTemplate.ts` com função `interpolateTemplate(content: string, vars: Record<string, string>): string`
+- [x] Implementar helper `formatArrayAsList(items: string[]): string` — cada item prefixado com `• `
+- [x] Implementar helper `formatArrayAsText(items: string[]): string` — itens separados por vírgula, último com "e"
+- [x] Verificar que `pnpm test tests/app/utils/contractTemplate.test.ts` passa sem erros
 
 ---
 
