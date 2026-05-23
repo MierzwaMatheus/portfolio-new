@@ -290,6 +290,31 @@ export const snapshotTemplate = mutation({
   },
 });
 
+export const snapshotTemplateOnView = mutation({
+  args: { slug: v.string() },
+  handler: async (ctx, { slug }) => {
+    const proposal = await ctx.db
+      .query('proposals')
+      .withIndex('by_slug', (q) => q.eq('slug', slug))
+      .unique();
+    if (!proposal) return;
+    if (proposal.templateSnapshot) return;
+
+    let template: { content: string } | null = null;
+    if (proposal.templateId) {
+      template = await ctx.db.get(proposal.templateId);
+    } else {
+      template = await ctx.db
+        .query('contractTemplates')
+        .withIndex('by_is_default', (q) => q.eq('isDefault', true))
+        .unique();
+    }
+    if (!template) return;
+
+    await ctx.db.patch(proposal._id, { templateSnapshot: template.content });
+  },
+});
+
 export const update = mutation({
   args: {
     id: v.id('proposals'),
@@ -311,6 +336,7 @@ export const update = mutation({
     password: v.optional(v.string()),
     rescissionPolicy: v.optional(v.string()),
     expiresAt: v.optional(v.number()),
+    templateId: v.optional(v.id('contractTemplates')),
   },
   handler: async (ctx, args) => {
     await requirePlugin(ctx, 'proposals');

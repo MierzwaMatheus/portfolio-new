@@ -37,6 +37,7 @@ import {
   exportTitularData,
   resetPassword,
   snapshotTemplate,
+  snapshotTemplateOnView,
 } from "../../convex/proposals";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
@@ -168,6 +169,37 @@ describe("convex/proposals · snapshotTemplate", () => {
   });
 });
 
+describe("convex/proposals · snapshotTemplateOnView", () => {
+  let ctx: MockCtx;
+  beforeEach(() => {
+    ctx = createMockCtx();
+    getAuthUserId.mockReset();
+  });
+
+  function seedTemplate(overrides: Record<string, unknown> = {}) {
+    const [id] = ctx.db._seed("contractTemplates", [
+      { name: "Padrão", content: "# Contrato Padrão", isDefault: true, createdAt: Date.now(), updatedAt: Date.now(), ...overrides },
+    ]);
+    return id;
+  }
+
+  async function createProposalAnon(extra: Record<string, unknown> = {}) {
+    asRoot(ctx);
+    const id = await handler(create)(ctx, { ...baseProposalArgs, slug: `slug-view-${Date.now()}`, ...extra });
+    getAuthUserId.mockReset();
+    return id;
+  }
+
+  it("sets templateSnapshot from default template when called without auth", async () => {
+    seedTemplate();
+    const id = await createProposalAnon();
+    const proposal = await ctx.db.get(id);
+    await handler(snapshotTemplateOnView)(ctx, { slug: proposal!.slug });
+    const updated = await ctx.db.get(id);
+    expect(updated!.templateSnapshot).toBe("# Contrato Padrão");
+  });
+});
+
 describe("convex/proposals · update", () => {
   let ctx: MockCtx;
   beforeEach(() => {
@@ -213,6 +245,17 @@ describe("convex/proposals · update", () => {
     await expect(
       handler(update)(ctx, { id, title: "x" }),
     ).rejects.toThrow("immutable");
+  });
+
+  it("persists templateId when updated", async () => {
+    asRoot(ctx);
+    const [{ _id: templateId }] = ctx.db._seed("contractTemplates", [
+      { name: "Padrão", content: "# Contrato", isDefault: true, createdAt: Date.now(), updatedAt: Date.now() },
+    ]);
+    const id = await handler(create)(ctx, baseProposalArgs);
+    await handler(update)(ctx, { id, templateId });
+    const updated = await ctx.db.get(id);
+    expect(updated!.templateId).toBe(templateId);
   });
 });
 
