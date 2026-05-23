@@ -198,6 +198,16 @@ describe("convex/proposals · snapshotTemplateOnView", () => {
     const updated = await ctx.db.get(id);
     expect(updated!.templateSnapshot).toBe("# Contrato Padrão");
   });
+
+  it("does not overwrite existing templateSnapshot (idempotent)", async () => {
+    seedTemplate({ content: "# Novo Conteúdo" });
+    const id = await createProposalAnon();
+    const proposal = await ctx.db.get(id);
+    await ctx.db.patch(id, { templateSnapshot: "# Snapshot Anterior" });
+    await handler(snapshotTemplateOnView)(ctx, { slug: proposal!.slug });
+    const updated = await ctx.db.get(id);
+    expect(updated!.templateSnapshot).toBe("# Snapshot Anterior");
+  });
 });
 
 describe("convex/proposals · update", () => {
