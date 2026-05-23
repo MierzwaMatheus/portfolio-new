@@ -1,5 +1,5 @@
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
-import { interpolateTemplate } from "@/utils/contractTemplate";
+import { interpolateTemplate, formatArrayAsList } from "@/utils/contractTemplate";
 
 export interface ProposalData {
   title?: string;
@@ -80,10 +80,15 @@ export function applyProposalToTemplate(
   proposal: ProposalData,
   acceptance: AcceptanceData,
 ): string {
+  const scopeItems = proposal.scope
+    ? typeof proposal.scope === 'string' ? [proposal.scope] : proposal.scope
+    : [];
   const vars: Record<string, string> = {
     client_name: acceptance.client_name,
     client_email: acceptance.client_email,
     client_role: acceptance.client_role ?? '',
+    scope: formatArrayAsList(scopeItems),
+    conditions: formatArrayAsList(proposal.conditions ?? []),
   };
   return interpolateTemplate(templateContent, vars);
 }

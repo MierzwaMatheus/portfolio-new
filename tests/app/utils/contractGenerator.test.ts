@@ -229,4 +229,22 @@ describe("contractGenerator · applyProposalToTemplate", () => {
     );
     expect(result).toBe("Contrato para John Doe.");
   });
+
+  it("substitutes {{scope}} with formatArrayAsList output", () => {
+    const result = applyProposalToTemplate(
+      "Escopo:\n{{scope}}",
+      { ...baseProposal, scope: ["Item A", "Item B"] },
+      baseAcceptance,
+    );
+    expect(result).toBe("Escopo:\n• Item A\n• Item B");
+  });
+
+  it("substitutes {{conditions}} with formatArrayAsList output", () => {
+    const result = applyProposalToTemplate(
+      "Condições:\n{{conditions}}",
+      { ...baseProposal, conditions: ["Cond C"] },
+      baseAcceptance,
+    );
+    expect(result).toBe("Condições:\n• Cond C");
+  });
 });
