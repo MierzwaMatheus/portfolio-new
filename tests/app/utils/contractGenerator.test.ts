@@ -248,6 +248,24 @@ describe("contractGenerator · applyProposalToTemplate", () => {
     expect(result).toBe("Condições:\n• Cond C");
   });
 
+  it("substitutes {{investment_value}} with pt-BR currency format", () => {
+    const result = applyProposalToTemplate(
+      "Valor: {{investment_value}}",
+      { ...baseProposal, investment_value: 1500 },
+      baseAcceptance,
+    );
+    expect(result).toBe("Valor: R$ 1.500,00");
+  });
+
+  it("substitutes {{accepted_at}} with pt-BR date", () => {
+    const result = applyProposalToTemplate(
+      "Aceito em: {{accepted_at}}",
+      baseProposal,
+      { ...baseAcceptance, accepted_at: "2024-06-15T00:00:00Z" },
+    );
+    expect(result).toBe("Aceito em: 15/06/2024");
+  });
+
   it("substitutes {{timeline}} with formatted step - period lines", () => {
     const result = applyProposalToTemplate(
       "Cronograma:\n{{timeline}}",

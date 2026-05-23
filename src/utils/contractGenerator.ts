@@ -92,6 +92,8 @@ export function applyProposalToTemplate(
     timeline: formatArrayAsList(
       (proposal.timeline ?? []).map(t => `${t.step} – ${t.period}`)
     ),
+    investment_value: `R$ ${proposal.investment_value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+    accepted_at: new Date(acceptance.accepted_at).toLocaleDateString('pt-BR', { timeZone: 'UTC' }),
   };
   return interpolateTemplate(templateContent, vars);
 }
