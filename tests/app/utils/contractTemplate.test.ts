@@ -24,4 +24,8 @@ describe('formatArrayAsList', () => {
   it('formata array como lista com bullets', () => {
     expect(formatArrayAsList(['A', 'B', 'C'])).toBe('• A\n• B\n• C')
   })
+
+  it('retorna string vazia para array vazio', () => {
+    expect(formatArrayAsList([])).toBe('')
+  })
 })
