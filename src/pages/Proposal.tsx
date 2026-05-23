@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
@@ -67,6 +67,14 @@ export default function Proposal() {
 
   const isLoading = queryResult === undefined;
   const rawProposal: any = queryResult ?? null;
+
+  const snapshotTemplateOnView = useMutation(api.proposals.snapshotTemplateOnView);
+
+  useEffect(() => {
+    if (rawProposal && !rawProposal.templateSnapshot && slug) {
+      snapshotTemplateOnView({ slug });
+    }
+  }, [rawProposal?._id, rawProposal?.templateSnapshot]);
 
   // requiresPassword and gating
   const requiresPassword = !!rawProposal?.requiresPassword;
