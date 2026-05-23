@@ -70,3 +70,16 @@ describe("ProposalDialog — Ciclo 3: pré-seleção do template padrão", () =>
     expect(combobox.textContent).toContain("Template B");
   });
 });
+
+describe("ProposalDialog — Ciclo 4: estado vazio sem templates", () => {
+  beforeEach(() => {
+    mockUseQuery.mockReset();
+    mockUseMutation.mockReset();
+  });
+
+  it("oculta o seletor de template quando não há templates disponíveis", () => {
+    setup([]);
+    expect(screen.queryByText("Template de Contrato")).toBeNull();
+    expect(screen.queryByRole("combobox")).toBeNull();
+  });
+});
