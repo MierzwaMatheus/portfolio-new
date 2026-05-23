@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 
 vi.mock("convex/react", () => ({
   useMutation: vi.fn(() => vi.fn()),
@@ -90,5 +90,32 @@ describe("Textos — Ciclo 3: badge 'sem tradução EN'", () => {
     render(<AdminTextos />);
     const badges = screen.queryAllByText(/sem tradução en/i);
     expect(badges).toHaveLength(1);
+  });
+});
+
+describe("Textos — Ciclo 4: busca/filtro em tempo real", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockUseQuery.mockReturnValue([
+      { _id: "1", key: "home.greeting", page: "home", ptBR: "Olá mundo", enUS: "Hello world" },
+      { _id: "2", key: "about.intro", page: "about", ptBR: "Sobre mim", enUS: "About me" },
+      { _id: "3", key: "blog.title", page: "blog", ptBR: "Blog", enUS: "Blog" },
+    ] as any);
+  });
+
+  it("filtrar por chave oculta itens que não correspondem", () => {
+    render(<AdminTextos />);
+    const input = screen.getByPlaceholderText(/buscar/i);
+    fireEvent.change(input, { target: { value: "home" } });
+    expect(screen.getByText("home.greeting")).toBeInTheDocument();
+    expect(screen.queryByText("about.intro")).not.toBeInTheDocument();
+  });
+
+  it("filtrar por valor PT-BR mostra item correspondente", () => {
+    render(<AdminTextos />);
+    const input = screen.getByPlaceholderText(/buscar/i);
+    fireEvent.change(input, { target: { value: "sobre" } });
+    expect(screen.getByText("about.intro")).toBeInTheDocument();
+    expect(screen.queryByText("home.greeting")).not.toBeInTheDocument();
   });
 });
