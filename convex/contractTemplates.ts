@@ -80,3 +80,19 @@ export const remove = mutation({
     await ctx.db.delete(id);
   },
 });
+
+export const setDefault = mutation({
+  args: { id: v.id("contractTemplates") },
+  handler: async (ctx, { id }) => {
+    await requirePlugin(ctx, "contract-templates");
+    await requireRole(ctx, ["root", "admin"]);
+    const current = await ctx.db
+      .query("contractTemplates")
+      .withIndex("by_is_default", (q) => q.eq("isDefault", true))
+      .collect();
+    for (const doc of current) {
+      await ctx.db.patch(doc._id, { isDefault: false, updatedAt: Date.now() });
+    }
+    await ctx.db.patch(id, { isDefault: true, updatedAt: Date.now() });
+  },
+});

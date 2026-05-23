@@ -21,7 +21,7 @@ vi.mock("@convex-dev/auth/providers/Password", () => ({
   Password: () => ({}),
 }));
 
-import { list, getDefault, create } from "../../convex/contractTemplates";
+import { list, getDefault, create, setDefault } from "../../convex/contractTemplates";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
 const handler = (fn: any) => fn._handler ?? fn;
@@ -85,6 +85,29 @@ describe("convex/contractTemplates · getDefault", () => {
     expect(result).not.toBeNull();
     expect(result.name).toBe("Padrão");
     expect(result.isDefault).toBe(true);
+  });
+});
+
+describe("convex/contractTemplates · setDefault", () => {
+  let ctx: MockCtx;
+  beforeEach(() => {
+    ctx = createMockCtx();
+    getAuthUserId.mockResolvedValue(null);
+  });
+
+  it("marca o template alvo como isDefault: true e desmarca todos os outros", async () => {
+    enablePlugin(ctx, "contract-templates", true);
+    asRole(ctx, "admin");
+    ctx.db._seed("contractTemplates", [
+      { _id: "t1", name: "A", content: "x", isDefault: true, createdAt: 1, updatedAt: 1 },
+      { _id: "t2", name: "B", content: "y", isDefault: false, createdAt: 2, updatedAt: 2 },
+    ]);
+    await handler(setDefault)(ctx, { id: "t2" });
+    const all = ctx.db._all("contractTemplates");
+    const t1 = all.find((t: any) => t._id === "t1");
+    const t2 = all.find((t: any) => t._id === "t2");
+    expect(t1.isDefault).toBe(false);
+    expect(t2.isDefault).toBe(true);
   });
 });
 
