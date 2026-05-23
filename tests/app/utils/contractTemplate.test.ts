@@ -9,4 +9,8 @@ describe('interpolateTemplate', () => {
   it('substitui múltiplas ocorrências da mesma variável', () => {
     expect(interpolateTemplate('{{x}} e {{x}}', { x: 'A' })).toBe('A e A')
   })
+
+  it('mantém {{var}} quando variável não está no mapa', () => {
+    expect(interpolateTemplate('Olá {{name}} {{missing}}', { name: 'Ana' })).toBe('Olá Ana {{missing}}')
+  })
 })
