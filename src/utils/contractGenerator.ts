@@ -87,6 +87,7 @@ export function applyProposalToTemplate(
     client_name: acceptance.client_name,
     client_email: acceptance.client_email,
     client_role: acceptance.client_role ?? '',
+    client_document: formatDocument(acceptance.client_document),
     scope: formatArrayAsList(scopeItems),
     conditions: formatArrayAsList(proposal.conditions ?? []),
     timeline: formatArrayAsList(

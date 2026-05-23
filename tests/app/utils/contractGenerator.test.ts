@@ -248,6 +248,24 @@ describe("contractGenerator · applyProposalToTemplate", () => {
     expect(result).toBe("Condições:\n• Cond C");
   });
 
+  it("substitutes {{client_document}} with CPF mask for 11 digits", () => {
+    const result = applyProposalToTemplate(
+      "Doc: {{client_document}}",
+      baseProposal,
+      { ...baseAcceptance, client_document: "12345678900" },
+    );
+    expect(result).toBe("Doc: 123.456.789-00");
+  });
+
+  it("substitutes {{client_document}} with CNPJ mask for 14 digits", () => {
+    const result = applyProposalToTemplate(
+      "Doc: {{client_document}}",
+      baseProposal,
+      { ...baseAcceptance, client_document: "12345678000190" },
+    );
+    expect(result).toBe("Doc: 12.345.678/0001-90");
+  });
+
   it("substitutes {{investment_value}} with pt-BR currency format", () => {
     const result = applyProposalToTemplate(
       "Valor: {{investment_value}}",
