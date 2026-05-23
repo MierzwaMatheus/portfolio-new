@@ -56,9 +56,10 @@ describe("contractPDF · generateContractHTML", () => {
     expect(html).toContain("data:image/png;base64,SIGNATURE");
   });
 
-  it("includes the contractor's default name (uppercased) when no contactInfo", () => {
-    const html = generateContractHTML(baseProposal, baseAcceptance, "");
-    expect(html).toContain("MATHEUS MIERZWA");
+  it("renders empty contractor name when no contactInfo provided", () => {
+    const html = generateContractHTML(baseProposal, baseAcceptance, "", undefined, "");
+    expect(html).not.toContain("MATHEUS MIERZWA");
+    expect(html).not.toContain("57.900.589");
   });
 
   it("uses provided contactInfo name (uppercased) when present", () => {

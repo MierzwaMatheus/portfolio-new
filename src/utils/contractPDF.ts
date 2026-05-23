@@ -41,13 +41,23 @@ function extractClauseTitle(clause: string): { title: string; body: string } {
   return { title: "", body: clause.trim() };
 }
 
+function parseTemplateContent(content: string): { header: string; clauses: string[] } {
+  const parts = content.split(/(?=### )/);
+  const header = parts[0] ?? '';
+  const clauses = parts.slice(1).map(c => c.trim() + '\n');
+  return { header, clauses };
+}
+
 export function generateContractHTML(
   proposal: ProposalData,
   acceptanceData: PDFAcceptanceData,
   signatureDataUrl: string,
-  contactInfo?: ContactInfo
+  contactInfo?: ContactInfo,
+  templateContent?: string,
 ): string {
-  const contractContent = generateContractContent(proposal, acceptanceData);
+  const contractContent = templateContent !== undefined
+    ? parseTemplateContent(templateContent)
+    : generateContractContent(proposal, acceptanceData);
   const signedAt = new Date(acceptanceData.accepted_at).toLocaleString("pt-BR", {
     timeZone: "America/Sao_Paulo",
     day: "2-digit",
@@ -61,9 +71,9 @@ export function generateContractHTML(
   const contractVersion = (proposal as any).version ?? 1;
 
   const ci = contactInfo ?? {};
-  const displayName = ci.name || "MATHEUS MIERZWA";
+  const displayName = ci.name || "";
   const displayEmail = ci.email || "";
-  const displayLocation = ci.location || "Barueri/SP";
+  const displayLocation = ci.location || "";
   const displayLinkedin = ci.linkedinUrl ? ci.linkedinUrl.replace(/^https?:\/\/(www\.)?/, "") : "";
   const displayGithub = ci.githubUrl ? ci.githubUrl.replace(/^https?:\/\/(www\.)?/, "") : "";
 
@@ -302,8 +312,7 @@ export function generateContractHTML(
 
   <div class="header">
     <div class="header-left">
-      <h1>${displayName.toUpperCase()}</h1>
-      <p>Desenvolvimento de Software · CNPJ 57.900.589/0001-00</p>
+      ${displayName ? `<h1>${displayName.toUpperCase()}</h1>` : ""}
       ${displayLocation ? `<p>${displayLocation}</p>` : ""}
     </div>
     <div class="header-right">
