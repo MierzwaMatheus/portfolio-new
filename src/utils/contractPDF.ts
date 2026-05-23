@@ -22,9 +22,9 @@ export function formatClauseContent(text: string): string {
     .replace(/^#{1,6}\s+(.+)$/gm, "<strong>$1</strong>")
     .replace(/^\d+\. (.+)$/gm, "<oli>$1</oli>")
     .replace(/^- (.+)$/gm, "<li>$1</li>")
-    .replace(/(<li>[^]*?<\/li>\n?)+/gm, (match) => `<ul>${match}</ul>`)
+    .replace(/(<li>[^]*?<\/li>\n?)+/gm, (match) => `<ul>${match.replace(/\n/g, "")}</ul>`)
     .replace(/(<oli>[^]*?<\/oli>\n{0,2})+/g, (match) =>
-      `<ol>${match.replace(/<oli>/g, "<li>").replace(/<\/oli>/g, "</li>")}</ol>`,
+      `<ol>${match.replace(/<oli>/g, "<li>").replace(/<\/oli>/g, "</li>").replace(/\n/g, "")}</ol>`,
     )
     .replace(/---/g, "")
     .replace(/\n\n/g, "</p><p>")
