@@ -743,19 +743,19 @@
 
 ### 5.5 Admin UI: CRUD de templates de contrato — closes #41
 
-- [ ] Criar `src/pages/admin/ContractTemplates.tsx` com listagem de todos os templates (nome, descrição, badge "Padrão" quando `isDefault: true`)
-- [ ] Adicionar botão "Definir como padrão" em cada item da lista — chama mutation `setDefault`
-- [ ] Adicionar botão "Editar" em cada item — abre modal de edição
-- [ ] Adicionar botão "Remover" em cada item — abre confirmação antes de chamar mutation `remove`
-- [ ] Criar modal de edição com campo `nome` (input text, obrigatório), campo `descrição` (input text, opcional) e campo `conteúdo` (textarea grande)
-- [ ] Implementar toolbar de variáveis acima do textarea: um botão por variável disponível (`{{client_name}}`, `{{objective}}`, `{{scope}}`, `{{timeline}}`, `{{delivery_date}}`, `{{investment_value}}`, `{{payment_methods}}`, `{{conditions}}`, `{{rescission_policy}}`, `{{accepted_at}}`, `{{client_document}}`, `{{client_email}}`, `{{client_role}}`)
-- [ ] Ao clicar num botão da toolbar, inserir `{{variable_name}}` na posição atual do cursor do textarea (usar `selectionStart`/`selectionEnd`)
-- [ ] Botão "Salvar" no modal chama `create` (novo template) ou `update` (edição existente) conforme contexto
-- [ ] Adicionar rota `/admin/contracts` em `src/App.tsx` apontando para `ContractTemplates` e wrappada com `<PluginRoute pluginId="contract-templates">`
-- [ ] Adicionar navItem `contract-templates` no Dashboard admin (ícone, label e path seguindo o padrão dos demais itens)
-- [ ] Verificar manualmente: acessar `/admin/contracts` com plugin ativado → lista de templates carrega
-- [ ] Verificar manualmente: criar template, editar e remover → operações refletem na lista sem reload
-- [ ] Verificar manualmente: desativar plugin `contract-templates` na página de plugins → rota `/admin/contracts` retorna 404 e item some do nav
+- [x] Criar `src/pages/admin/ContractTemplates.tsx` com listagem de todos os templates (nome, descrição, badge "Padrão" quando `isDefault: true`)
+- [x] Adicionar botão "Definir como padrão" em cada item da lista — chama mutation `setDefault`
+- [x] Adicionar botão "Editar" em cada item — abre modal de edição
+- [x] Adicionar botão "Remover" em cada item — abre confirmação antes de chamar mutation `remove`
+- [x] Criar modal de edição com campo `nome` (input text, obrigatório), campo `descrição` (input text, opcional) e campo `conteúdo` (textarea grande)
+- [x] Implementar toolbar de variáveis acima do textarea: um botão por variável disponível (`{{client_name}}`, `{{objective}}`, `{{scope}}`, `{{timeline}}`, `{{delivery_date}}`, `{{investment_value}}`, `{{payment_methods}}`, `{{conditions}}`, `{{rescission_policy}}`, `{{accepted_at}}`, `{{client_document}}`, `{{client_email}}`, `{{client_role}}`)
+- [x] Ao clicar num botão da toolbar, inserir `{{variable_name}}` na posição atual do cursor do textarea (usar `selectionStart`/`selectionEnd`)
+- [x] Botão "Salvar" no modal chama `create` (novo template) ou `update` (edição existente) conforme contexto
+- [x] Adicionar rota `/admin/contracts` em `src/App.tsx` apontando para `ContractTemplates` e wrappada com `<PluginRoute pluginId="contract-templates">`
+- [x] Adicionar navItem `contract-templates` no Dashboard admin (ícone, label e path seguindo o padrão dos demais itens)
+- [x] Verificar manualmente: acessar `/admin/contracts` com plugin ativado → lista de templates carrega
+- [x] Verificar manualmente: criar template, editar e remover → operações refletem na lista sem reload
+- [x] Verificar manualmente: desativar plugin `contract-templates` na página de plugins → rota `/admin/contracts` retorna 404 e item some do nav
 
 ---
 
