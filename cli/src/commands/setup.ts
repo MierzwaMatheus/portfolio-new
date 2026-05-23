@@ -231,7 +231,7 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
   try {
     execFileSync(
       "npx",
-      ["convex", "run", "seed:setupAdmin", "--data", JSON.stringify({ email: adminEmail as string, password: adminPassword as string })],
+      ["convex", "run", "seed:setupAdmin", JSON.stringify({ email: adminEmail as string, password: adminPassword as string })],
       { stdio: "pipe" }
     );
   } catch (err: unknown) {

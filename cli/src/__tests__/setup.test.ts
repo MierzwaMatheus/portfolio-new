@@ -618,7 +618,6 @@ describe("runSetup — Ciclo 8: setupAdmin execFileSync e outro()", () => {
     const setupCall = fileCalls.find((c) => c[1].includes("seed:setupAdmin"));
     expect(setupCall).toBeDefined();
     const argsStr = setupCall![1].join(" ");
-    expect(argsStr).toContain("--data");
     expect(argsStr).toContain("admin@teste.com");
     expect(argsStr).toContain("minhaSenha123456");
   });
