@@ -13,4 +13,9 @@ describe('interpolateTemplate', () => {
   it('mantém {{var}} quando variável não está no mapa', () => {
     expect(interpolateTemplate('Olá {{name}} {{missing}}', { name: 'Ana' })).toBe('Olá Ana {{missing}}')
   })
+
+  it('mantém {{var}} quando valor é undefined ou null', () => {
+    const vars = { name: undefined as unknown as string, role: null as unknown as string }
+    expect(interpolateTemplate('{{name}} {{role}}', vars)).toBe('{{name}} {{role}}')
+  })
 })
