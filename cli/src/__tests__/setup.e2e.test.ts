@@ -62,21 +62,20 @@ describe("setup E2E — Ciclo 1: sem .env.local", () => {
       // sem .env.local
     });
     const fs = makeFsModule(vol);
-    const execSyncMock = vi.fn();
+    const execFileSyncMock = vi.fn();
 
     await runSetup({
       cwd: "/project",
       fs,
       detectProject: vi.fn().mockResolvedValue("/project/rubrica.json"),
       generateJwtKeys: vi.fn(),
-      execSync: execSyncMock,
-      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
+      execFileSync: execFileSyncMock,
     });
 
     expect(cancel).toHaveBeenCalledWith(
       expect.stringContaining("npx convex dev")
     );
-    expect(execSyncMock).not.toHaveBeenCalled();
+    expect(execFileSyncMock).not.toHaveBeenCalled();
   });
 });
 
@@ -108,7 +107,7 @@ describe("setup E2E — Ciclo 2: contact-wizard com readState real", () => {
       "/project/.env.local": VALID_ENV,
     });
     const fs = makeFsModule(vol);
-    const execSyncMock = vi.fn().mockReturnValue(Buffer.from(""));
+    const execFileSyncMock = vi.fn().mockReturnValue(Buffer.from(""));
 
     // NÃO passa readState: usa a implementação real com fs injetado
     await runSetup({
@@ -119,11 +118,10 @@ describe("setup E2E — Ciclo 2: contact-wizard com readState real", () => {
         JWT_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
         JWKS: JSON.stringify({ keys: [{ use: "sig", kty: "RSA" }] }),
       }),
-      execSync: execSyncMock,
-      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
+      execFileSync: execFileSyncMock,
     });
 
-    const calls = execSyncMock.mock.calls.map((c) => c[0] as string);
+    const calls = execFileSyncMock.mock.calls.map((c) => (c[1] as string[]).join(" "));
     expect(calls.some((c) => c.includes("TELEGRAM_BOT_TOKEN"))).toBe(true);
   });
 });
@@ -155,7 +153,7 @@ describe("setup E2E — Ciclo 3: playground com readState real", () => {
       "/project/.env.local": VALID_ENV,
     });
     const fs = makeFsModule(vol);
-    const execSyncMock = vi.fn().mockReturnValue(Buffer.from(""));
+    const execFileSyncMock = vi.fn().mockReturnValue(Buffer.from(""));
 
     // NÃO passa readState: usa a implementação real com fs injetado
     await runSetup({
@@ -166,16 +164,16 @@ describe("setup E2E — Ciclo 3: playground com readState real", () => {
         JWT_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\ntest\n-----END PRIVATE KEY-----",
         JWKS: JSON.stringify({ keys: [{ use: "sig", kty: "RSA" }] }),
       }),
-      execSync: execSyncMock,
-      execFileSync: vi.fn().mockReturnValue(Buffer.from("")),
+      execFileSync: execFileSyncMock,
     });
 
-    const calls = execSyncMock.mock.calls.map((c) => c[0] as string);
-    const pepperCall = calls.find((c) => c.includes("PLAYGROUND_KEY_PEPPER"));
+    const calls = execFileSyncMock.mock.calls as [string, string[], object][];
+    const pepperCall = calls.find((c) => c[1].includes("PLAYGROUND_KEY_PEPPER"));
     expect(pepperCall).toBeDefined();
 
-    // Extrai o valor e verifica 64 chars hex
-    const hexMatch = pepperCall?.match(/PLAYGROUND_KEY_PEPPER "([0-9a-f]+)"/i);
-    expect(hexMatch?.[1]).toMatch(/^[0-9a-f]{64}$/i);
+    // Extrai o valor: args = ["convex", "env", "set", "--", "PLAYGROUND_KEY_PEPPER", "<value>"]
+    const args = pepperCall![1];
+    const pepperValue = args[args.indexOf("PLAYGROUND_KEY_PEPPER") + 1];
+    expect(pepperValue).toMatch(/^[0-9a-f]{64}$/i);
   });
 });

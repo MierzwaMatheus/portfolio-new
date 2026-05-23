@@ -2,7 +2,7 @@ import { outro, text, password, spinner, isCancel, cancel } from "@clack/prompts
 import * as nodeFsPromises from "node:fs/promises";
 import * as path from "node:path";
 import * as nodeCrypto from "node:crypto";
-import { execSync as defaultExecSync, execFileSync as defaultExecFileSync } from "node:child_process";
+import { execFileSync as defaultExecFileSync } from "node:child_process";
 import { detectProject as defaultDetectProject } from "../utils/detectProject.js";
 import { generateJwtKeys as defaultGenerateJwtKeys } from "../utils/generateJwtKeys.js";
 import { readState as defaultReadState } from "../state/readState.js";
@@ -23,7 +23,7 @@ export interface RunSetupDeps {
   generateJwtKeys?: typeof defaultGenerateJwtKeys;
   readState?: typeof defaultReadState;
   randomBytes?: (size: number) => Buffer;
-  execSync?: (cmd: string, opts?: object) => Buffer;
+  execSync?: (cmd: string, opts?: object) => Buffer; // mantido para compatibilidade com testes existentes
   execFileSync?: (file: string, args: string[], opts?: object) => Buffer;
 }
 
@@ -60,9 +60,6 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
   const generateJwtKeys = deps.generateJwtKeys ?? defaultGenerateJwtKeys;
   const readState = deps.readState ?? defaultReadState;
   const randomBytes = deps.randomBytes ?? ((size: number) => nodeCrypto.randomBytes(size));
-  const execSync = deps.execSync ?? ((cmd: string, opts?: object) =>
-    defaultExecSync(cmd, opts as Parameters<typeof defaultExecSync>[1]) as Buffer
-  );
   const execFileSync = deps.execFileSync ?? ((file: string, args: string[], opts?: object) =>
     defaultExecFileSync(file, args, opts as Parameters<typeof defaultExecFileSync>[2]) as Buffer
   );
@@ -111,10 +108,12 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
   s.stop("Chaves JWT geradas.");
 
   // 5. Setar JWT_PRIVATE_KEY e JWKS no Convex
-  execFileSync("npx", ["convex", "env", "set", "JWT_PRIVATE_KEY", JWT_PRIVATE_KEY], {
+  execFileSync("npx", ["convex", "env", "set", "--", "JWT_PRIVATE_KEY", JWT_PRIVATE_KEY], {
     stdio: "pipe",
   });
-  execSync(`npx convex env set JWKS "${JWKS}"`, { stdio: "pipe" });
+  execFileSync("npx", ["convex", "env", "set", "--", "JWKS", JWKS], {
+    stdio: "pipe",
+  });
 
   // 6. Prompt e set de SITE_URL
   const siteUrl = await text({
@@ -131,7 +130,7 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
     return;
   }
 
-  execSync(`npx convex env set SITE_URL "${siteUrl as string}"`, {
+  execFileSync("npx", ["convex", "env", "set", "--", "SITE_URL", siteUrl as string], {
     stdio: "pipe",
   });
 
@@ -146,10 +145,7 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
       initialValue: "",
     });
     if (!isCancel(telegramToken) && (telegramToken as string).trim()) {
-      execSync(
-        `npx convex env set TELEGRAM_BOT_TOKEN "${telegramToken as string}"`,
-        { stdio: "pipe" }
-      );
+      execFileSync("npx", ["convex", "env", "set", "--", "TELEGRAM_BOT_TOKEN", telegramToken as string], { stdio: "pipe" });
     }
 
     const telegramChatId = await text({
@@ -157,19 +153,14 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
       initialValue: "",
     });
     if (!isCancel(telegramChatId) && (telegramChatId as string).trim()) {
-      execSync(
-        `npx convex env set TELEGRAM_ADMIN_CHAT_ID "${telegramChatId as string}"`,
-        { stdio: "pipe" }
-      );
+      execFileSync("npx", ["convex", "env", "set", "--", "TELEGRAM_ADMIN_CHAT_ID", telegramChatId as string], { stdio: "pipe" });
     }
   }
 
   // 9. Playground — gerar PLAYGROUND_KEY_PEPPER silenciosamente
   if (plugins["playground"]) {
     const pepper = randomBytes(32).toString("hex");
-    execSync(`npx convex env set PLAYGROUND_KEY_PEPPER "${pepper}"`, {
-      stdio: "pipe",
-    });
+    execFileSync("npx", ["convex", "env", "set", "--", "PLAYGROUND_KEY_PEPPER", pepper], { stdio: "pipe" });
   }
 
   // 10. AI (ai-resumes, i18n ou playground)
@@ -179,10 +170,7 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
       initialValue: "",
     });
     if (!isCancel(openrouterKey) && (openrouterKey as string).trim()) {
-      execSync(
-        `npx convex env set OPENROUTER_API_KEY "${openrouterKey as string}"`,
-        { stdio: "pipe" }
-      );
+      execFileSync("npx", ["convex", "env", "set", "--", "OPENROUTER_API_KEY", openrouterKey as string], { stdio: "pipe" });
     }
   }
 
@@ -193,10 +181,7 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
       initialValue: "",
     });
     if (!isCancel(stripeSecret) && (stripeSecret as string).trim()) {
-      execSync(
-        `npx convex env set STRIPE_WEBHOOK_SECRET "${stripeSecret as string}"`,
-        { stdio: "pipe" }
-      );
+      execFileSync("npx", ["convex", "env", "set", "--", "STRIPE_WEBHOOK_SECRET", stripeSecret as string], { stdio: "pipe" });
     }
 
     const asaasToken = await text({
@@ -204,10 +189,7 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
       initialValue: "",
     });
     if (!isCancel(asaasToken) && (asaasToken as string).trim()) {
-      execSync(
-        `npx convex env set ASAAS_WEBHOOK_TOKEN "${asaasToken as string}"`,
-        { stdio: "pipe" }
-      );
+      execFileSync("npx", ["convex", "env", "set", "--", "ASAAS_WEBHOOK_TOKEN", asaasToken as string], { stdio: "pipe" });
     }
   }
 
@@ -247,8 +229,9 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
   }
 
   try {
-    execSync(
-      `npx convex run seed:setupAdmin --data '${JSON.stringify({ email: adminEmail as string, password: adminPassword as string })}'`,
+    execFileSync(
+      "npx",
+      ["convex", "run", "seed:setupAdmin", "--data", JSON.stringify({ email: adminEmail as string, password: adminPassword as string })],
       { stdio: "pipe" }
     );
   } catch (err: unknown) {
@@ -268,10 +251,7 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
     initialValue: "",
   });
   if (!isCancel(vercelHookUrl) && (vercelHookUrl as string).trim()) {
-    execSync(
-      `npx convex env set VERCEL_DEPLOY_HOOK_URL "${vercelHookUrl as string}"`,
-      { stdio: "pipe" }
-    );
+    execFileSync("npx", ["convex", "env", "set", "--", "VERCEL_DEPLOY_HOOK_URL", vercelHookUrl as string], { stdio: "pipe" });
   }
 
   const vercelWebhookSecret = await text({
@@ -279,10 +259,7 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
     initialValue: "",
   });
   if (!isCancel(vercelWebhookSecret) && (vercelWebhookSecret as string).trim()) {
-    execSync(
-      `npx convex env set VERCEL_WEBHOOK_SECRET "${vercelWebhookSecret as string}"`,
-      { stdio: "pipe" }
-    );
+    execFileSync("npx", ["convex", "env", "set", "--", "VERCEL_WEBHOOK_SECRET", vercelWebhookSecret as string], { stdio: "pipe" });
   }
 
   outro(
