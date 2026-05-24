@@ -278,6 +278,67 @@ describe("create — applyFont", () => {
   });
 });
 
+// ---- Ciclo 5b: novas fontes e recomendação por template --------------------
+
+describe("create — novas fontes e recomendação por template", () => {
+  it("novas fontes aparecem nas opções de fontSans", async () => {
+    vi.clearAllMocks();
+    setupPrompts({ fontSans: "Bodoni Moda" });
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+    await runCreate("meu-portfolio", makeDefaultDeps(vol));
+    const fontSansCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Fonte principal"
+    );
+    expect(fontSansCall?.[0]).toEqual(
+      expect.objectContaining({
+        options: expect.arrayContaining([
+          expect.objectContaining({ value: "Bodoni Moda" }),
+          expect.objectContaining({ value: "IBM Plex Serif" }),
+          expect.objectContaining({ value: "Manrope" }),
+          expect.objectContaining({ value: "Archivo" }),
+        ]),
+      })
+    );
+  });
+
+  it("Chakra Petch aparece como recomendada quando cyberpunk é selecionado", async () => {
+    vi.clearAllMocks();
+    setupPrompts({ layout: "cyberpunk", fontSans: "Inter" });
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+    await runCreate("meu-portfolio", makeDefaultDeps(vol));
+    const fontSansCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Fonte principal"
+    );
+    expect(fontSansCall?.[0]).toEqual(
+      expect.objectContaining({
+        options: expect.arrayContaining([
+          expect.objectContaining({ value: "Chakra Petch", hint: "recomendada" }),
+        ]),
+      })
+    );
+  });
+
+  it("JetBrains Mono aparece como recomendada no fontMono quando cyberpunk é selecionado", async () => {
+    vi.clearAllMocks();
+    setupPrompts({ layout: "cyberpunk", fontMono: "Fira Code" });
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+    await runCreate("meu-portfolio", makeDefaultDeps(vol));
+    const fontMonoCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Fonte mono"
+    );
+    expect(fontMonoCall?.[0]).toEqual(
+      expect.objectContaining({
+        options: expect.arrayContaining([
+          expect.objectContaining({ value: "JetBrains Mono", hint: "recomendada" }),
+        ]),
+      })
+    );
+  });
+});
+
 // ---- Ciclo 6: applyPlugins -------------------------------------------------
 
 describe("create — applyPlugins", () => {

@@ -12,6 +12,14 @@ import { writeState as defaultWriteState } from "../state/writeState.js";
 
 // ---- Tipos -----------------------------------------------------------------
 
+const TEMPLATE_FONTS: Record<string, { fontSans: string; fontMono: string }> = {
+  cyberpunk: { fontSans: "Chakra Petch", fontMono: "JetBrains Mono" },
+  magazine:  { fontSans: "Bodoni Moda",  fontMono: "JetBrains Mono" },
+  bento:     { fontSans: "Manrope",      fontMono: "JetBrains Mono" },
+  brutalist: { fontSans: "JetBrains Mono", fontMono: "JetBrains Mono" },
+  swiss:     { fontSans: "Archivo",      fontMono: "" },
+};
+
 const ALL_PLUGINS = [
   "contact-wizard",
   "proposals",
@@ -145,24 +153,30 @@ export async function runCreate(
   );
 
   // Ciclo 5: prompts de fonte
+  const recommendedFonts = TEMPLATE_FONTS[layout] ?? { fontSans: "", fontMono: "" };
+
   const fontSans = await select({
     message: "Fonte principal",
     options: [
-      { value: "Inter", label: "Inter — neutra, legível, padrão de produtos digitais" },
-      { value: "Chakra Petch", label: "Chakra Petch — geométrica, tech, futurista" },
-      { value: "Playfair Display", label: "Playfair Display — elegante, editorial" },
-      { value: "Space Grotesk", label: "Space Grotesk — moderna, startup" },
-      { value: "DM Sans", label: "DM Sans — limpa, amigável, versátil" },
+      { value: "Inter", label: "Inter", hint: "neutra, legível, padrão de produtos digitais" },
+      { value: "Chakra Petch", label: "Chakra Petch", hint: recommendedFonts.fontSans === "Chakra Petch" ? "recomendada" : "geométrica, tech, futurista" },
+      { value: "Playfair Display", label: "Playfair Display", hint: "elegante, editorial clássico" },
+      { value: "Space Grotesk", label: "Space Grotesk", hint: "moderna, startup" },
+      { value: "DM Sans", label: "DM Sans", hint: "limpa, amigável, versátil" },
+      { value: "Bodoni Moda", label: "Bodoni Moda", hint: recommendedFonts.fontSans === "Bodoni Moda" ? "recomendada" : "display serifado elegante, editorial clássico" },
+      { value: "IBM Plex Serif", label: "IBM Plex Serif", hint: recommendedFonts.fontSans === "IBM Plex Serif" ? "recomendada" : "serifa técnica, confiança e rigor" },
+      { value: "Manrope", label: "Manrope", hint: recommendedFonts.fontSans === "Manrope" ? "recomendada" : "geométrica humanista, moderna e acolhedora" },
+      { value: "Archivo", label: "Archivo", hint: recommendedFonts.fontSans === "Archivo" ? "recomendada" : "grotesca utilitária, clareza e força tipográfica" },
     ],
   }) as string;
 
   const fontMono = await select({
     message: "Fonte mono",
     options: [
-      { value: "JetBrains Mono", label: "JetBrains Mono — dev-friendly, clara" },
-      { value: "Fira Code", label: "Fira Code — clássico, com ligatures" },
-      { value: "Space Mono", label: "Space Mono — retro digital" },
-      { value: "IBM Plex Mono", label: "IBM Plex Mono — corporativo-tech" },
+      { value: "JetBrains Mono", label: "JetBrains Mono", hint: recommendedFonts.fontMono === "JetBrains Mono" ? "recomendada" : "dev-friendly, clara" },
+      { value: "Fira Code", label: "Fira Code", hint: "clássico, com ligatures" },
+      { value: "Space Mono", label: "Space Mono", hint: "retro digital" },
+      { value: "IBM Plex Mono", label: "IBM Plex Mono", hint: "corporativo-tech" },
     ],
   }) as string;
 
