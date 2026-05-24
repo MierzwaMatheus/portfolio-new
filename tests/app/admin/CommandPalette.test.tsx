@@ -139,6 +139,29 @@ describe("CommandPalette — Ciclo 1b: grupo Criar", () => {
   });
 });
 
+describe("CommandPalette — Ciclo 2: filtragem de ações de criação", () => {
+  const createActions = [
+    { label: "Nova Proposta", description: "Criar nova proposta comercial", path: "/admin/proposals?create=true" },
+    { label: "Novo Projeto", description: "Adicionar projeto ao portfólio", path: "/admin/projects?create=true" },
+  ];
+
+  it("filtrando por 'proposta' mostra Nova Proposta no grupo Criar", () => {
+    render(
+      <CommandPalette
+        open={true}
+        onOpenChange={vi.fn()}
+        items={[]}
+        createActions={createActions}
+        onNavigate={vi.fn()}
+      />
+    );
+    fireEvent.change(screen.getByPlaceholderText("Buscar página..."), {
+      target: { value: "proposta" },
+    });
+    expect(screen.getByText("Nova Proposta")).toBeInTheDocument();
+  });
+});
+
 describe("CommandPalette — Ciclo 3: seleção navega e fecha", () => {
   it("chama onNavigate com o path correto ao clicar num item", async () => {
     const onNavigate = vi.fn();
