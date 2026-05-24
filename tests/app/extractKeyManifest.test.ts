@@ -58,7 +58,10 @@ describe("extractKeysFromContent", () => {
   });
 });
 
-import { mergeManifests } from "../../scripts/extract-key-manifest";
+import { mergeManifests, extractKeysFromDir } from "../../scripts/extract-key-manifest";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 
 describe("mergeManifests", () => {
   it("combina manifests de arquivos diferentes para a mesma chave", () => {
@@ -80,5 +83,47 @@ describe("mergeManifests", () => {
 
   it("retorna manifesto vazio quando não recebe argumentos", () => {
     expect(mergeManifests()).toEqual({});
+  });
+});
+
+describe("extractKeysFromDir", () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = mkdtempSync(join(tmpdir(), "key-manifest-test-"));
+  });
+
+  afterEach(() => {
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it("extrai chaves de arquivo .tsx na raiz do diretório", async () => {
+    writeFileSync(join(tmpDir, "Hero.tsx"), `t('home.title')`);
+    const result = await extractKeysFromDir(tmpDir);
+    expect(result["home.title"]).toBeDefined();
+    expect(result["home.title"][0].file).toBe("Hero.tsx");
+    expect(result["home.title"][0].line).toBe(1);
+  });
+
+  it("varre subdiretórios recursivamente", async () => {
+    const sub = join(tmpDir, "components");
+    mkdirSync(sub);
+    writeFileSync(join(sub, "Card.tsx"), `t('card.label')`);
+    const result = await extractKeysFromDir(tmpDir);
+    expect(result["card.label"]).toBeDefined();
+    expect(result["card.label"][0].file).toContain("Card.tsx");
+  });
+
+  it("ignora arquivos que não são .ts ou .tsx", async () => {
+    writeFileSync(join(tmpDir, "styles.css"), `t('should.be.ignored')`);
+    writeFileSync(join(tmpDir, "readme.md"), `t('also.ignored')`);
+    const result = await extractKeysFromDir(tmpDir);
+    expect(Object.keys(result)).toHaveLength(0);
+  });
+
+  it("retorna manifesto vazio para diretório sem chamadas t()", async () => {
+    writeFileSync(join(tmpDir, "Empty.tsx"), `const x = 1;`);
+    const result = await extractKeysFromDir(tmpDir);
+    expect(result).toEqual({});
   });
 });
