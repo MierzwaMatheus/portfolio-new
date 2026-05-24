@@ -1,4 +1,4 @@
-import { outro, text, password, spinner, isCancel, cancel } from "@clack/prompts";
+import { outro, text, password, spinner, isCancel, cancel, log } from "@clack/prompts";
 import * as nodeFsPromises from "node:fs/promises";
 import * as path from "node:path";
 import * as nodeCrypto from "node:crypto";
@@ -238,11 +238,11 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
     const e = err as { stdout?: Buffer; stderr?: Buffer; message?: string };
     const output = e.stdout?.toString() ?? e.stderr?.toString() ?? e.message ?? "";
     if (output.includes("Root user already exists")) {
-      cancel("Admin já configurado. Para redefinir, acesse o Convex Dashboard.");
+      log.warn("Admin já configurado — credenciais mantidas. Para redefinir, acesse o Convex Dashboard.");
     } else {
       cancel(`Erro ao criar usuário root: ${output || String(err)}`);
+      return;
     }
-    return;
   }
 
   // Seed template padrão de contrato (se proposals habilitado)
