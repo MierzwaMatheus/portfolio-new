@@ -17,11 +17,9 @@ function makeFsModule(vol: InstanceType<typeof Volume>) {
 const baseState: RubricaState = {
   version: "1.0.0",
   layout: "cyberpunk",
-  theme: "cyberpunk",
-  accentColor: null,
+  theme: "editorial-cream",
   fontSans: "Inter",
   fontMono: "JetBrains Mono",
-  radius: "0.5rem",
   plugins: { blog: true, portfolio: true },
 };
 
@@ -82,7 +80,7 @@ describe("writeState", () => {
 
     expect(parsed.version).toBe("2.0.0");
     expect(parsed.layout).toBe("cyberpunk");
-    expect(parsed.theme).toBe("cyberpunk");
+    expect(parsed.theme).toBe("editorial-cream");
     expect(parsed.plugins).toEqual({ blog: true, portfolio: true });
   });
 
@@ -97,11 +95,9 @@ describe("writeState", () => {
 
     expect(parsed.version).toBe("1.0.0");
     expect(parsed.layout).toBe("cyberpunk");
-    expect(parsed.theme).toBe("cyberpunk");
-    expect(parsed.accentColor).toBeNull();
+    expect(parsed.theme).toBe("editorial-cream");
     expect(parsed.fontSans).toBe("Inter");
     expect(parsed.fontMono).toBe("JetBrains Mono");
-    expect(parsed.radius).toBe("0.5rem");
     expect(parsed.plugins).toEqual({ blog: true, portfolio: true });
     expect(written).toBe(JSON.stringify(baseState, null, 2));
   });

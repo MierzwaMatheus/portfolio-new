@@ -145,7 +145,7 @@ export async function runUpdate(deps: RunUpdateDeps = {}): Promise<void> {
 
   const htmlPath = path.join(projectDir, "index.html");
   await applyFontFn(
-    { fontSans: state.fontSans, fontMono: state.fontMono, radius: state.radius },
+    { fontSans: state.fontSans, fontMono: state.fontMono, radius: (state as Record<string, unknown>).radius as string ?? "0.5rem" },
     { css: cssPath, html: htmlPath },
     fs as Parameters<typeof defaultApplyFont>[2]
   );

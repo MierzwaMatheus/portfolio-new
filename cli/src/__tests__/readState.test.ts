@@ -16,11 +16,9 @@ function makeFsModule(vol: InstanceType<typeof Volume>) {
 const validState = {
   version: "1.0.0",
   layout: "cyberpunk" as const,
-  theme: "cyberpunk",
-  accentColor: null,
+  theme: "editorial-cream",
   fontSans: "Chakra Petch",
   fontMono: "JetBrains Mono",
-  radius: "0.5rem",
   plugins: { blog: true, portfolio: true },
 };
 
@@ -33,12 +31,39 @@ describe("readState", () => {
 
     expect(result.version).toBe("0.0.0");
     expect(result.layout).toBe("cyberpunk");
-    expect(result.theme).toBe("cyberpunk");
-    expect(result.accentColor).toBeNull();
+    expect(result.theme).toBe("editorial-cream");
     expect(result.plugins).toEqual({});
+  });
 
-    const written = vol.readFileSync("/project/rubrica.json", "utf-8") as string;
-    expect(JSON.parse(written).version).toBe("0.0.0");
+  it("DEFAULT_STATE não possui campo radius", async () => {
+    const vol = Volume.fromJSON({});
+    const fs = makeFsModule(vol);
+
+    const result = await readState("/project", fs);
+
+    expect((result as Record<string, unknown>).radius).toBeUndefined();
+  });
+
+  it("DEFAULT_STATE não possui campo accentColor", async () => {
+    const vol = Volume.fromJSON({});
+    const fs = makeFsModule(vol);
+
+    const result = await readState("/project", fs);
+
+    expect((result as Record<string, unknown>).accentColor).toBeUndefined();
+  });
+
+  it("arquivo existente com radius e accentColor ainda parseia (forward-compat)", async () => {
+    const stateWithOldFields = { ...validState, radius: "0.5rem", accentColor: null };
+    const vol = Volume.fromJSON({
+      "/project/rubrica.json": JSON.stringify(stateWithOldFields),
+    });
+    const fs = makeFsModule(vol);
+
+    const result = await readState("/project", fs);
+
+    expect(result.version).toBe("1.0.0");
+    expect(result.layout).toBe("cyberpunk");
   });
 
   it("preserva campos desconhecidos no objeto retornado (forward-compat)", async () => {
@@ -72,7 +97,7 @@ describe("readState", () => {
     await expect(readState("/project", fs)).rejects.toThrow(/version/);
   });
 
-  it("lê rubrica.json existente e retorna objeto tipado", async () => {
+  it("lê rubrica.json existente e retorna objeto tipado sem radius nem accentColor", async () => {
     const vol = Volume.fromJSON({
       "/project/rubrica.json": JSON.stringify(validState),
     });
@@ -82,11 +107,11 @@ describe("readState", () => {
 
     expect(result.version).toBe("1.0.0");
     expect(result.layout).toBe("cyberpunk");
-    expect(result.theme).toBe("cyberpunk");
-    expect(result.accentColor).toBeNull();
+    expect(result.theme).toBe("editorial-cream");
     expect(result.fontSans).toBe("Chakra Petch");
     expect(result.fontMono).toBe("JetBrains Mono");
-    expect(result.radius).toBe("0.5rem");
     expect(result.plugins).toEqual({ blog: true, portfolio: true });
+    expect((result as Record<string, unknown>).radius).toBeUndefined();
+    expect((result as Record<string, unknown>).accentColor).toBeUndefined();
   });
 });

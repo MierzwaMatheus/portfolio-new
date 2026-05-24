@@ -11,10 +11,8 @@ export type RubricaState = {
   version: string;
   layout: "cyberpunk";
   theme: string;
-  accentColor: string | null;
   fontSans: string;
   fontMono: string;
-  radius: string;
   plugins: Record<string, boolean>;
   [key: string]: unknown;
 };
@@ -22,11 +20,9 @@ export type RubricaState = {
 const DEFAULT_STATE: RubricaState = {
   version: "0.0.0",
   layout: "cyberpunk",
-  theme: "cyberpunk",
-  accentColor: null,
+  theme: "editorial-cream",
   fontSans: "Inter",
   fontMono: "JetBrains Mono",
-  radius: "0.5rem",
   plugins: {},
 };
 
