@@ -40,7 +40,7 @@ vi.mock("@clack/prompts", () => ({
   intro: vi.fn(),
   outro: vi.fn(),
   text: vi.fn().mockResolvedValue(""),
-  select: vi.fn().mockResolvedValue("sidebar"),
+  select: vi.fn().mockResolvedValue("cyberpunk"),
   multiselect: vi.fn().mockResolvedValue([]),
   confirm: vi.fn().mockResolvedValue(false),
   isCancel: vi.fn(() => false),
@@ -64,7 +64,7 @@ function setupPrompts(opts: {
   packageManager?: string;
 }) {
   vi.mocked(select)
-    .mockResolvedValueOnce(opts.layout ?? "sidebar")
+    .mockResolvedValueOnce(opts.layout ?? "cyberpunk")
     .mockResolvedValueOnce(opts.theme ?? "cyberpunk")
     .mockResolvedValueOnce(opts.fontSans ?? "Inter")
     .mockResolvedValueOnce(opts.fontMono ?? "JetBrains Mono")
@@ -188,7 +188,7 @@ describe("create — download e limpeza do projeto extraído", () => {
     setupPrompts({});
     const vol = Volume.fromJSON({});
     vol.mkdirSync("/projects", { recursive: true });
-    const deps = makeDefaultDeps(vol, ["templates/layouts/sidebar"]);
+    const deps = makeDefaultDeps(vol, ["templates/layouts/cyberpunk"]);
 
     await runCreate("meu-portfolio", deps);
 
@@ -211,19 +211,10 @@ describe("create — download e limpeza do projeto extraído", () => {
 // ---- Ciclo 3: applyLayout --------------------------------------------------
 
 describe("create — applyLayout", () => {
-  it("chama applyLayout com layout sidebar quando selecionado nos prompts", async () => {
-    const { mockApplyLayout } = await callRunCreate({ layout: "sidebar" });
+  it("chama applyLayout com layout cyberpunk quando selecionado nos prompts", async () => {
+    const { mockApplyLayout } = await callRunCreate({ layout: "cyberpunk" });
     expect(mockApplyLayout).toHaveBeenCalledWith(
-      "sidebar",
-      expect.objectContaining({ projectDir: "/projects/meu-portfolio" }),
-      expect.anything()
-    );
-  });
-
-  it("chama applyLayout com topbar quando selecionado nos prompts", async () => {
-    const { mockApplyLayout } = await callRunCreate({ layout: "topbar" });
-    expect(mockApplyLayout).toHaveBeenCalledWith(
-      "topbar",
+      "cyberpunk",
       expect.objectContaining({ projectDir: "/projects/meu-portfolio" }),
       expect.anything()
     );
@@ -361,14 +352,14 @@ describe("create — applyRubricalConfig", () => {
 describe("create — writeState", () => {
   it("cria rubrica.json com version, layout, theme e plugins", async () => {
     vi.clearAllMocks();
-    setupPrompts({ layout: "topbar", theme: "minimal", plugins: ["blog"] });
+    setupPrompts({ layout: "cyberpunk", theme: "minimal", plugins: ["blog"] });
 
     const vol = Volume.fromJSON({});
     vol.mkdirSync("/projects", { recursive: true });
 
     const mockWriteState = vi.fn(async () => ({
       version: "0.1.0",
-      layout: "topbar",
+      layout: "cyberpunk",
       theme: "minimal",
       accentColor: null,
       fontSans: "Inter",
@@ -387,7 +378,7 @@ describe("create — writeState", () => {
     expect(mockWriteState).toHaveBeenCalledWith(
       "/projects/meu-portfolio",
       expect.objectContaining({
-        layout: "topbar",
+        layout: "cyberpunk",
         theme: "minimal",
         plugins: expect.objectContaining({ blog: true }),
       }),

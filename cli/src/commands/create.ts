@@ -117,11 +117,9 @@ export async function runCreate(
   const layout = await select({
     message: "Layout",
     options: [
-      { value: "sidebar", label: "Sidebar — navegação lateral com perfil completo" },
-      { value: "topbar", label: "Topbar — navbar horizontal fixa no topo" },
-      { value: "centered", label: "Centered — sem nav persistente, foco no conteúdo" },
+      { value: "cyberpunk", label: "Cyberpunk — navegação lateral com perfil completo" },
     ],
-  }) as "sidebar" | "topbar" | "centered";
+  }) as "cyberpunk";
 
   await applyLayoutFn(
     layout,
