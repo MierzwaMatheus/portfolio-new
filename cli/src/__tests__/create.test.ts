@@ -292,6 +292,38 @@ describe("create — hints descritivos nos selects de tema e layout", () => {
 
 // ---- Ciclo 5: applyFont ----------------------------------------------------
 
+describe("create — hints descritivos nas fontes (sans e mono)", () => {
+  it("todas as opções de fontMono têm hint descritivo", async () => {
+    vi.clearAllMocks();
+    setupPrompts({});
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+    await runCreate("meu-portfolio", makeDefaultDeps(vol));
+    const fontMonoCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Fonte mono"
+    );
+    const options = (fontMonoCall?.[0] as { options?: Array<{ value: string; hint?: string }> })?.options ?? [];
+    for (const opt of options) {
+      expect(opt.hint, `opção "${opt.value}" deve ter hint`).toBeTruthy();
+    }
+  });
+
+  it("todas as opções de fontSans têm hint descritivo", async () => {
+    vi.clearAllMocks();
+    setupPrompts({});
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+    await runCreate("meu-portfolio", makeDefaultDeps(vol));
+    const fontSansCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Fonte principal"
+    );
+    const options = (fontSansCall?.[0] as { options?: Array<{ value: string; hint?: string }> })?.options ?? [];
+    for (const opt of options) {
+      expect(opt.hint, `opção "${opt.value}" deve ter hint`).toBeTruthy();
+    }
+  });
+});
+
 describe("create — applyFont", () => {
   it("chama applyFont com fontSans e fontMono selecionados (sem radius)", async () => {
     const { mockApplyFont } = await callRunCreate({
