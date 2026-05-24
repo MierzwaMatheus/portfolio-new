@@ -29,6 +29,24 @@ describe("extractKeysFromContent", () => {
     expect(result).toEqual({});
   });
 
+  it("ignora template literals — t(`key`) não é capturado", () => {
+    const content = "const x = t(`home.title`);";
+    const result = extractKeysFromContent(content, "Hero.tsx");
+    expect(result).toEqual({});
+  });
+
+  it("ignora chamadas com variável — t(variable) não é capturado", () => {
+    const content = `const k = 'home.title'; t(k);`;
+    const result = extractKeysFromContent(content, "Hero.tsx");
+    expect(result).toEqual({});
+  });
+
+  it("ignora template literals dinâmicos — t(`nav.${key}`) não é capturado", () => {
+    const content = "t(`nav.${key}`)";
+    const result = extractKeysFromContent(content, "Nav.tsx");
+    expect(result).toEqual({});
+  });
+
   it("acumula múltiplas ocorrências da mesma chave no mesmo arquivo", () => {
     const content = `t('home.title');\nt('home.title');`;
     const result = extractKeysFromContent(content, "Hero.tsx");
