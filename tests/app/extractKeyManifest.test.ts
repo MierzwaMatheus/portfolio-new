@@ -28,4 +28,39 @@ describe("extractKeysFromContent", () => {
     const result = extractKeysFromContent(content, "Hero.tsx");
     expect(result).toEqual({});
   });
+
+  it("acumula múltiplas ocorrências da mesma chave no mesmo arquivo", () => {
+    const content = `t('home.title');\nt('home.title');`;
+    const result = extractKeysFromContent(content, "Hero.tsx");
+    expect(result["home.title"]).toHaveLength(2);
+    expect(result["home.title"]).toEqual([
+      { file: "Hero.tsx", line: 1 },
+      { file: "Hero.tsx", line: 2 },
+    ]);
+  });
+});
+
+import { mergeManifests } from "../../scripts/extract-key-manifest";
+
+describe("mergeManifests", () => {
+  it("combina manifests de arquivos diferentes para a mesma chave", () => {
+    const a: ReturnType<typeof extractKeysFromContent> = { "home.title": [{ file: "A.tsx", line: 1 }] };
+    const b: ReturnType<typeof extractKeysFromContent> = { "home.title": [{ file: "B.tsx", line: 5 }] };
+    const result = mergeManifests(a, b);
+    expect(result["home.title"]).toHaveLength(2);
+    expect(result["home.title"]).toContainEqual({ file: "A.tsx", line: 1 });
+    expect(result["home.title"]).toContainEqual({ file: "B.tsx", line: 5 });
+  });
+
+  it("mantém chaves exclusivas de cada manifesto", () => {
+    const a = { "home.title": [{ file: "A.tsx", line: 1 }] };
+    const b = { "nav.home": [{ file: "B.tsx", line: 3 }] };
+    const result = mergeManifests(a, b);
+    expect(result["home.title"]).toBeDefined();
+    expect(result["nav.home"]).toBeDefined();
+  });
+
+  it("retorna manifesto vazio quando não recebe argumentos", () => {
+    expect(mergeManifests()).toEqual({});
+  });
 });
