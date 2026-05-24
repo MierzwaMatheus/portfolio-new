@@ -10,20 +10,12 @@ export interface LayoutFsModule {
   exists: (path: string) => Promise<boolean>;
 }
 
-type Layout = "sidebar" | "topbar" | "centered";
+type Layout = "cyberpunk";
 
 const LAYOUT_FILES: Record<Layout, { copy: string[]; remove: string[] }> = {
-  sidebar: {
+  cyberpunk: {
     copy: ["Layout.tsx", "Sidebar.tsx"],
     remove: ["Navbar.tsx", "Footer.tsx"],
-  },
-  topbar: {
-    copy: ["Layout.tsx", "Navbar.tsx"],
-    remove: ["Sidebar.tsx", "Footer.tsx"],
-  },
-  centered: {
-    copy: ["Layout.tsx", "Footer.tsx"],
-    remove: ["Sidebar.tsx", "Navbar.tsx"],
   },
 };
 

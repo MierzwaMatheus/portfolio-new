@@ -29,62 +29,38 @@ const TEMPLATES_DIR = "/templates";
 const PROJECT_DIR = "/project";
 
 function makeTemplates(vol: InstanceType<typeof Volume>) {
-  vol.mkdirSync("/templates/layouts/sidebar", { recursive: true });
-  vol.writeFileSync("/templates/layouts/sidebar/Layout.tsx", "// sidebar Layout");
-  vol.writeFileSync("/templates/layouts/sidebar/Sidebar.tsx", "// Sidebar");
-
-  vol.mkdirSync("/templates/layouts/topbar", { recursive: true });
-  vol.writeFileSync("/templates/layouts/topbar/Layout.tsx", "// topbar Layout");
-  vol.writeFileSync("/templates/layouts/topbar/Navbar.tsx", "// Navbar");
-
-  vol.mkdirSync("/templates/layouts/centered", { recursive: true });
-  vol.writeFileSync("/templates/layouts/centered/Layout.tsx", "// centered Layout");
-  vol.writeFileSync("/templates/layouts/centered/Footer.tsx", "// Footer");
+  vol.mkdirSync("/templates/layouts/cyberpunk", { recursive: true });
+  vol.writeFileSync("/templates/layouts/cyberpunk/Layout.tsx", "// cyberpunk Layout");
+  vol.writeFileSync("/templates/layouts/cyberpunk/Sidebar.tsx", "// Sidebar");
 
   vol.mkdirSync("/project/src/components", { recursive: true });
 }
 
 describe("applyLayout", () => {
-  it("layout sidebar copia Layout.tsx e Sidebar.tsx para src/components/", async () => {
+  it("layout cyberpunk copia Layout.tsx e Sidebar.tsx para src/components/", async () => {
     const vol = Volume.fromJSON({});
     makeTemplates(vol);
     const fs = makeFsModule(vol);
 
-    await applyLayout("sidebar", { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs);
+    await applyLayout("cyberpunk", { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs);
 
     const layout = vol.readFileSync("/project/src/components/Layout.tsx", "utf-8") as string;
     const sidebar = vol.readFileSync("/project/src/components/Sidebar.tsx", "utf-8") as string;
-    expect(layout).toContain("sidebar Layout");
+    expect(layout).toContain("cyberpunk Layout");
     expect(sidebar).toContain("Sidebar");
   });
 
-  it("layout topbar copia Layout.tsx e Navbar.tsx, não copia Sidebar.tsx", async () => {
+  it("layout cyberpunk remove Navbar.tsx e Footer.tsx se existirem", async () => {
     const vol = Volume.fromJSON({});
     makeTemplates(vol);
+    vol.writeFileSync("/project/src/components/Navbar.tsx", "// old");
+    vol.writeFileSync("/project/src/components/Footer.tsx", "// old");
     const fs = makeFsModule(vol);
 
-    await applyLayout("topbar", { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs);
+    await applyLayout("cyberpunk", { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs);
 
-    const layout = vol.readFileSync("/project/src/components/Layout.tsx", "utf-8") as string;
-    const navbar = vol.readFileSync("/project/src/components/Navbar.tsx", "utf-8") as string;
-    expect(layout).toContain("topbar Layout");
-    expect(navbar).toContain("Navbar");
-    expect(await fs.exists("/project/src/components/Sidebar.tsx")).toBe(false);
-  });
-
-  it("layout centered copia Layout.tsx e Footer.tsx, não copia Sidebar.tsx nem Navbar.tsx", async () => {
-    const vol = Volume.fromJSON({});
-    makeTemplates(vol);
-    const fs = makeFsModule(vol);
-
-    await applyLayout("centered", { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs);
-
-    const layout = vol.readFileSync("/project/src/components/Layout.tsx", "utf-8") as string;
-    const footer = vol.readFileSync("/project/src/components/Footer.tsx", "utf-8") as string;
-    expect(layout).toContain("centered Layout");
-    expect(footer).toContain("Footer");
-    expect(await fs.exists("/project/src/components/Sidebar.tsx")).toBe(false);
     expect(await fs.exists("/project/src/components/Navbar.tsx")).toBe(false);
+    expect(await fs.exists("/project/src/components/Footer.tsx")).toBe(false);
   });
 
   it("layout inexistente lança erro descritivo com o nome inválido", async () => {
@@ -93,7 +69,7 @@ describe("applyLayout", () => {
     const fs = makeFsModule(vol);
 
     await expect(
-      applyLayout("naoexiste" as "sidebar", { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs)
+      applyLayout("naoexiste" as "cyberpunk", { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs)
     ).rejects.toThrow(/naoexiste/);
   });
 });
