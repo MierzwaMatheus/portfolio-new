@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { getKeyOriginLabel } from "@/i18n/utils/keyOriginLabel";
 import {
   CommandDialog,
   CommandEmpty,
@@ -32,6 +33,7 @@ type CommandPaletteProps = {
   items: CommandPaletteItem[];
   createActions?: CommandPaletteItem[];
   siteTexts?: SiteText[];
+  manifest?: Record<string, { file: string; line: number }[]>;
   contentGroups?: ContentGroup[];
   onNavigate: (path: string) => void;
 };
@@ -42,6 +44,7 @@ export function CommandPalette({
   items,
   createActions,
   siteTexts,
+  manifest,
   contentGroups,
   onNavigate,
 }: CommandPaletteProps) {
@@ -105,6 +108,9 @@ export function CommandPalette({
                 onSelect={() => handleSelect("/admin/textos?highlight=" + encodeURIComponent(text.key))}
               >
                 <span className="font-mono text-xs">{text.key}</span>
+                <span className="text-muted-foreground ml-2 text-xs">
+                  {getKeyOriginLabel(text.key, manifest ?? {})}
+                </span>
                 {!text.enUS && (
                   <Badge variant="outline" className="ml-2 text-xs text-yellow-600 border-yellow-400">
                     Sem tradução EN

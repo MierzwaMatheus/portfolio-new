@@ -195,6 +195,45 @@ const contentGroups = [
   },
 ];
 
+describe("CommandPalette — Ciclo 8: label de origem nos siteTexts", () => {
+  const siteTexts = [
+    { key: "home.availability.label", ptBR: "Disponível", enUS: "Available" },
+    { key: "home.unknownKey", ptBR: "Texto", enUS: "Text" },
+  ];
+
+  const manifest = {
+    "home.availability.label": [{ file: "components/AvailabilityBadge.tsx", line: 10 }],
+  };
+
+  it("exibe label do componente quando chave existe no manifesto", () => {
+    render(
+      <CommandPalette
+        open={true}
+        onOpenChange={vi.fn()}
+        items={[]}
+        siteTexts={siteTexts}
+        manifest={manifest}
+        onNavigate={vi.fn()}
+      />
+    );
+    expect(screen.getByText("AvailabilityBadge")).toBeInTheDocument();
+  });
+
+  it("exibe namespace como label quando chave não está no manifesto", () => {
+    render(
+      <CommandPalette
+        open={true}
+        onOpenChange={vi.fn()}
+        items={[]}
+        siteTexts={siteTexts}
+        manifest={manifest}
+        onNavigate={vi.fn()}
+      />
+    );
+    expect(screen.getByText("home")).toBeInTheDocument();
+  });
+});
+
 describe("CommandPalette — Ciclo 6: busca cross-content com contentGroups", () => {
   beforeEach(() => vi.clearAllMocks());
 
