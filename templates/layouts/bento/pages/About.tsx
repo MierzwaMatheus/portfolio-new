@@ -158,7 +158,7 @@ export default function BentoAbout() {
               const rowSpans = [2, 1, 1, 1, 1, 1];
               return (
                 <BentoCard
-                  key={item._id}
+                  key={item.id}
                   span={spans[i] ?? 1}
                   padding={16}
                   style={{
@@ -172,26 +172,11 @@ export default function BentoAbout() {
                     color: i === 0 ? "hsl(var(--primary-foreground))" : undefined,
                   }}
                 >
-                  {item.emoji && (
-                    <div style={{ fontSize: 22, marginBottom: 8 }}>{item.emoji}</div>
-                  )}
                   <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.3 }}>
-                    {item.title}
+                    {item.description.length > 60
+                      ? item.description.slice(0, 60) + "…"
+                      : item.description}
                   </div>
-                  {item.description && (
-                    <div
-                      style={{
-                        fontSize: 10.5,
-                        lineHeight: 1.4,
-                        opacity: 0.75,
-                        marginTop: 4,
-                      }}
-                    >
-                      {item.description.length > 60
-                        ? item.description.slice(0, 60) + "…"
-                        : item.description}
-                    </div>
-                  )}
                 </BentoCard>
               );
             })}
@@ -223,7 +208,7 @@ export default function BentoAbout() {
           >
             {faq.slice(0, 4).map((f, i) => (
               <BentoCard
-                key={f._id}
+                key={f.id}
                 padding={20}
                 style={
                   i === 0

@@ -43,7 +43,7 @@ export default function BentoBlog() {
 
   const gap = 14;
   const featured = featuredPosts[0] ?? posts[0];
-  const remaining = posts.filter((p) => p._id !== featured?._id).slice(0, 10);
+  const remaining = posts.filter((p) => p.id !== featured?.id).slice(0, 10);
 
   const spanMap = [2, 2, 2, 3, 3, 2, 2, 2, 2, 2];
 
@@ -185,13 +185,7 @@ export default function BentoBlog() {
                   opacity: 0.85,
                 }}
               >
-                {featured.publishedAt && <span>{featured.publishedAt}</span>}
-                {featured.readingTime && (
-                  <>
-                    <span>·</span>
-                    <span>{featured.readingTime}</span>
-                  </>
-                )}
+                {featured.published_at && <span>{featured.published_at}</span>}
               </div>
               <div style={{ marginTop: "auto", paddingTop: 24 }}>
                 <Link
@@ -213,10 +207,10 @@ export default function BentoBlog() {
                 </Link>
               </div>
             </div>
-            {featured.cover_url && (
+            {featured.image && (
               <div style={{ width: 200, flexShrink: 0 }}>
                 <img
-                  src={featured.cover_url}
+                  src={featured.image}
                   alt={featured.title}
                   style={{ width: "100%", height: "100%", objectFit: "cover" }}
                 />
@@ -255,7 +249,7 @@ export default function BentoBlog() {
                     letterSpacing: "0.1em",
                   }}
                 >
-                  {p.publishedAt}
+                  {p.published_at}
                 </div>
                 <h3
                   style={{

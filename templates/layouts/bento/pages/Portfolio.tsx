@@ -186,9 +186,9 @@ export default function BentoPortfolio() {
                   position: "relative",
                 }}
               >
-                {featured.image_url ? (
+                {featured.images?.[0] ? (
                   <img
-                    src={featured.image_url}
+                    src={featured.images?.[0]}
                     alt={featured.title}
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
@@ -255,7 +255,7 @@ export default function BentoPortfolio() {
 
           {/* Two top-right cards */}
           {secondary.map((p) => (
-            <BentoCard key={p._id} span={5} padding={0} style={{ overflow: "hidden" }}>
+            <BentoCard key={p.id} span={5} padding={0} style={{ overflow: "hidden" }}>
               <div
                 style={{
                   height: 140,
@@ -265,9 +265,9 @@ export default function BentoPortfolio() {
                   justifyContent: "center",
                 }}
               >
-                {p.image_url ? (
+                {p.images?.[0] ? (
                   <img
-                    src={p.image_url}
+                    src={p.images?.[0]}
                     alt={p.title}
                     style={{ width: "100%", height: "100%", objectFit: "cover" }}
                   />
@@ -310,7 +310,7 @@ export default function BentoPortfolio() {
 
           {/* Remaining cards */}
           {rest.map((p) => (
-            <BentoCard key={p._id} span={4} padding={20}>
+            <BentoCard key={p.id} span={4} padding={20}>
               <div
                 style={{
                   display: "flex",

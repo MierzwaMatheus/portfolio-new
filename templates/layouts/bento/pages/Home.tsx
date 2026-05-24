@@ -46,8 +46,6 @@ export default function BentoHome() {
   const ownerFirstName = contactInfo?.name?.split(" ")[0] ?? "";
   const email = contactInfo?.email ?? "";
   const phone = contactInfo?.phone ?? "";
-  const location = contactInfo?.location ?? "";
-
   const gap = 14;
 
   return (
@@ -165,22 +163,10 @@ export default function BentoHome() {
           <div style={{ marginTop: 14, fontSize: 18, fontWeight: 700 }}>
             {contactInfo?.name ?? ""}
           </div>
-          {location && (
-            <div
-              style={{
-                fontSize: 11.5,
-                opacity: 0.6,
-                marginTop: 4,
-                fontFamily: "var(--font-mono)",
-              }}
-            >
-              {location}
-            </div>
-          )}
           <div style={{ display: "flex", gap: 6, marginTop: 16 }}>
-            {contactInfo?.github && (
+            {contactInfo?.github_url && (
               <a
-                href={contactInfo.github}
+                href={contactInfo.github_url}
                 target="_blank"
                 rel="noreferrer"
                 style={{
@@ -196,9 +182,9 @@ export default function BentoHome() {
                 <Github size={15} />
               </a>
             )}
-            {contactInfo?.linkedin && (
+            {contactInfo?.linkedin_url && (
               <a
-                href={contactInfo.linkedin}
+                href={contactInfo.linkedin_url}
                 target="_blank"
                 rel="noreferrer"
                 style={{

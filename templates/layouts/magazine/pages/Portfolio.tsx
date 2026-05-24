@@ -24,7 +24,7 @@ export default function Portfolio() {
         {projects.map((p, i) => {
           const flip = i % 2 === 1;
           return (
-            <article key={p._id} style={{ display: "grid", gridTemplateColumns: flip ? "1fr 1.2fr" : "1.2fr 1fr", gap: 48, paddingBottom: 56, marginBottom: 56, borderBottom: i < projects.length - 1 ? "0.5px solid var(--text)" : "none", alignItems: "center" }}>
+            <article key={p.id} style={{ display: "grid", gridTemplateColumns: flip ? "1fr 1.2fr" : "1.2fr 1fr", gap: 48, paddingBottom: 56, marginBottom: 56, borderBottom: i < projects.length - 1 ? "0.5px solid var(--text)" : "none", alignItems: "center" }}>
               <div style={{ order: flip ? 2 : 1, background: "var(--text)", opacity: 0.08, aspectRatio: "4/3" }} />
               <div style={{ order: flip ? 1 : 2 }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 14, marginBottom: 8 }}>
