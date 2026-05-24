@@ -162,3 +162,33 @@ describe("saveManifest", () => {
     expect(content.endsWith("\n")).toBe(true);
   });
 });
+
+describe("integração: extractKeysFromDir + saveManifest", () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = mkdtempSync(join(tmpdir(), "integration-manifest-test-"));
+  });
+
+  afterEach(() => {
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it("fluxo completo: varre src mock e gera key-manifest.json com conteúdo correto", async () => {
+    const srcDir = join(tmpDir, "src");
+    mkdirSync(srcDir);
+    writeFileSync(join(srcDir, "Home.tsx"), `t('home.title')\nt('home.subtitle')`);
+    writeFileSync(join(srcDir, "Nav.tsx"), `t('nav.home')`);
+
+    const manifest = await extractKeysFromDir(srcDir);
+    const outputPath = join(tmpDir, "src", "i18n", "key-manifest.json");
+    await saveManifest(manifest, outputPath);
+
+    const parsed = JSON.parse(readFileSync(outputPath, "utf-8"));
+    expect(parsed["home.title"]).toBeDefined();
+    expect(parsed["home.subtitle"]).toBeDefined();
+    expect(parsed["nav.home"]).toBeDefined();
+    expect(parsed["home.title"][0].file).toBe("Home.tsx");
+    expect(parsed["nav.home"][0].file).toBe("Nav.tsx");
+  });
+});

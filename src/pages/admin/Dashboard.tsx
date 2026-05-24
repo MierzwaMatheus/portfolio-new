@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 import { usePlugins } from "@/contexts/PluginsContext";
 import type { PluginId } from "../../../convex/pluginRegistry";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useQuery } from "convex/react";
@@ -41,6 +41,7 @@ import { ProposalDialog } from "@/components/admin/ProposalDialog";
 import { ResumeExperienceDialog } from "@/components/admin/ResumeExperienceDialog";
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { PublishStatus } from "@/components/admin/PublishStatus";
+import { CommandPalette } from "@/components/admin/CommandPalette";
 
 type NavItem = {
   icon: React.ElementType;
@@ -368,11 +369,38 @@ function AdminSidebar() {
 
 // Admin Layout Wrapper
 export function AdminLayout({ children, title = "Admin" }: { children: React.ReactNode; title?: string }) {
+  const { checkRole } = useAuth();
+  const { isEnabled } = usePlugins();
+  const [, navigate] = useLocation();
+  const [paletteOpen, setPaletteOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setPaletteOpen((prev) => !prev);
+      }
+    };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, []);
+
+  const paletteItems = navGroups
+    .flatMap((g) => g.items)
+    .filter((item) => checkRole(item.roles) && (!item.pluginId || isEnabled(item.pluginId)))
+    .map(({ label, description, path }) => ({ label, description, path }));
+
   return (
     <div className="min-h-screen bg-background text-white">
       <Helmet><title>{title} — Admin</title></Helmet>
       <AdminSidebar />
       <main className="md:ml-64 p-8 pt-20 md:pt-8">{children}</main>
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        items={paletteItems}
+        onNavigate={navigate}
+      />
     </div>
   );
 }

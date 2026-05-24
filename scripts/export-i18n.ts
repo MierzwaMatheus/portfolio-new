@@ -51,6 +51,7 @@ if (!process.env.VITEST) {
   const { api } = await import("../convex/_generated/api");
   const { writeFileSync } = await import("fs");
   const { join } = await import("path");
+  const { extractKeysFromDir, saveManifest } = await import("./extract-key-manifest");
 
   const convexUrl = validateEnv(process.env as Record<string, string | undefined>);
   const client = new ConvexHttpClient(convexUrl);
@@ -73,5 +74,13 @@ if (!process.env.VITEST) {
 
   console.log(`✓ pt-BR.ts (${rows.length} keys)`);
   console.log(`✓ en-US.ts (${rows.filter((r) => r.enUS).length} keys)`);
+
+  console.log("Generating key manifest...");
+  const srcDir = join(process.cwd(), "src");
+  const manifest = await extractKeysFromDir(srcDir);
+  const manifestPath = join(process.cwd(), "src/i18n/key-manifest.json");
+  await saveManifest(manifest, manifestPath);
+  console.log(`✓ key-manifest.json (${Object.keys(manifest).length} keys)`);
+
   console.log("Done!");
 }
