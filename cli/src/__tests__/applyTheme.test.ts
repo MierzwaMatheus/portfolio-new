@@ -158,6 +158,60 @@ describe("applyTheme", () => {
     ).rejects.toThrow(/naoexiste/);
   });
 
+  // ---- contrato hex (--bg, --text, --primary, --accent) -------------------------
+
+  it("editorial-cream expõe variáveis hex do contrato no :root", async () => {
+    const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
+    const fs = makeFsModule(vol);
+
+    await applyTheme({ preset: "editorial-cream" }, "/project/src/index.css", fs);
+
+    const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
+    expect(result).toContain("--bg: #faf7f2");
+    expect(result).toContain("--text: #1a1614");
+    expect(result).toContain("--primary: #a855f7");
+    expect(result).toContain("--accent: #ef4444");
+  });
+
+  it("midnight-blue expõe variáveis hex do contrato no :root", async () => {
+    const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
+    const fs = makeFsModule(vol);
+
+    await applyTheme({ preset: "midnight-blue" }, "/project/src/index.css", fs);
+
+    const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
+    expect(result).toContain("--bg: #0a1224");
+    expect(result).toContain("--text: #e8e6e0");
+    expect(result).toContain("--primary: #06b6d4");
+    expect(result).toContain("--accent: #facc15");
+  });
+
+  it("solar-warm expõe variáveis hex do contrato no :root", async () => {
+    const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
+    const fs = makeFsModule(vol);
+
+    await applyTheme({ preset: "solar-warm" }, "/project/src/index.css", fs);
+
+    const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
+    expect(result).toContain("--bg: #1a1410");
+    expect(result).toContain("--text: #f2ede4");
+    expect(result).toContain("--primary: #f97316");
+    expect(result).toContain("--accent: #facc15");
+  });
+
+  it("paper-noir expõe variáveis hex do contrato no :root", async () => {
+    const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
+    const fs = makeFsModule(vol);
+
+    await applyTheme({ preset: "paper-noir" }, "/project/src/index.css", fs);
+
+    const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
+    expect(result).toContain("--bg: #f0eee9");
+    expect(result).toContain("--text: #0a0a0a");
+    expect(result).toContain("--primary: #ef4444");
+    expect(result).toContain("--accent: #3b82f6");
+  });
+
   it("presets antigos (minimal, forest, editorial, cyberpunk) não existem mais", async () => {
     const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
     const fs = makeFsModule(vol);

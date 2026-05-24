@@ -41,7 +41,11 @@ const PRESETS: Record<string, ThemeVars> = {
   --sidebar-border: 35 20% 85%;
   --sidebar-ring: 35 90% 50%;
   --neon-purple: 35 90% 50%;
-  --neon-lime: 45 93% 47%;`,
+  --neon-lime: 45 93% 47%;
+  --bg: #faf7f2;
+  --text: #1a1614;
+  --primary: #a855f7;
+  --accent: #ef4444;`,
     dark: `  --background: 25 20% 8%;
   --foreground: 38 20% 90%;
   --card: 25 18% 12%;
@@ -99,7 +103,11 @@ const PRESETS: Record<string, ThemeVars> = {
   --sidebar-border: 0 0% 88%;
   --sidebar-ring: 0 84% 50%;
   --neon-purple: 0 84% 50%;
-  --neon-lime: 0 0% 20%;`,
+  --neon-lime: 0 0% 20%;
+  --bg: #f0eee9;
+  --text: #0a0a0a;
+  --primary: #ef4444;
+  --accent: #3b82f6;`,
     dark: `  --background: 0 0% 5%;
   --foreground: 0 0% 95%;
   --card: 0 0% 8%;
@@ -157,7 +165,11 @@ const PRESETS: Record<string, ThemeVars> = {
   --sidebar-border: 217 33% 17%;
   --sidebar-ring: 220 90% 56%;
   --neon-purple: 220 90% 56%;
-  --neon-lime: 190 90% 50%;`,
+  --neon-lime: 190 90% 50%;
+  --bg: #0a1224;
+  --text: #e8e6e0;
+  --primary: #06b6d4;
+  --accent: #facc15;`,
     dark: `  --background: 220 14% 5%;
   --foreground: 210 40% 96%;
   --card: 222 47% 8%;
@@ -215,7 +227,11 @@ const PRESETS: Record<string, ThemeVars> = {
   --sidebar-border: 20 25% 18%;
   --sidebar-ring: 25 95% 53%;
   --neon-purple: 25 95% 53%;
-  --neon-lime: 45 93% 47%;`,
+  --neon-lime: 45 93% 47%;
+  --bg: #1a1410;
+  --text: #f2ede4;
+  --primary: #f97316;
+  --accent: #facc15;`,
     dark: `  --background: 20 35% 5%;
   --foreground: 35 30% 92%;
   --card: 20 30% 8%;
