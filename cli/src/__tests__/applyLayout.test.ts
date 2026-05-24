@@ -111,6 +111,36 @@ describe("applyLayout", () => {
     expect(sidebar).toContain("swiss Sidebar");
   });
 
+  it("layout bento copia Layout.tsx e FloatingDock.tsx para src/components/", async () => {
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/templates/layouts/bento", { recursive: true });
+    vol.writeFileSync("/templates/layouts/bento/Layout.tsx", "// bento Layout");
+    vol.writeFileSync("/templates/layouts/bento/FloatingDock.tsx", "// bento FloatingDock");
+    vol.mkdirSync("/project/src/components", { recursive: true });
+    const fs = makeFsModule(vol);
+
+    await applyLayout("bento" as Parameters<typeof applyLayout>[0], { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs);
+
+    const layout = vol.readFileSync("/project/src/components/Layout.tsx", "utf-8") as string;
+    const dock = vol.readFileSync("/project/src/components/FloatingDock.tsx", "utf-8") as string;
+    expect(layout).toContain("bento Layout");
+    expect(dock).toContain("bento FloatingDock");
+  });
+
+  it("layout bento não remove arquivos de outros layouts", async () => {
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/templates/layouts/bento", { recursive: true });
+    vol.writeFileSync("/templates/layouts/bento/Layout.tsx", "// bento Layout");
+    vol.writeFileSync("/templates/layouts/bento/FloatingDock.tsx", "// bento FloatingDock");
+    vol.mkdirSync("/project/src/components", { recursive: true });
+    vol.writeFileSync("/project/src/components/Sidebar.tsx", "// existing sidebar");
+    const fs = makeFsModule(vol);
+
+    await applyLayout("bento" as Parameters<typeof applyLayout>[0], { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs);
+
+    expect(await fs.exists("/project/src/components/Sidebar.tsx")).toBe(true);
+  });
+
   it("layout inexistente lança erro descritivo com o nome inválido", async () => {
     const vol = Volume.fromJSON({});
     makeTemplates(vol);
