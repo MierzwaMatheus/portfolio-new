@@ -117,9 +117,14 @@ describe("applyLayout", () => {
 
   it("layout bento copia Layout.tsx e FloatingDock.tsx para src/components/", async () => {
     const vol = Volume.fromJSON({});
-    vol.mkdirSync("/templates/layouts/bento", { recursive: true });
+    vol.mkdirSync("/templates/layouts/bento/pages", { recursive: true });
     vol.writeFileSync("/templates/layouts/bento/Layout.tsx", "// bento Layout");
     vol.writeFileSync("/templates/layouts/bento/FloatingDock.tsx", "// bento FloatingDock");
+    vol.writeFileSync("/templates/layouts/bento/pages/Home.tsx", "// bento Home");
+    vol.writeFileSync("/templates/layouts/bento/pages/Resume.tsx", "// bento Resume");
+    vol.writeFileSync("/templates/layouts/bento/pages/Portfolio.tsx", "// bento Portfolio");
+    vol.writeFileSync("/templates/layouts/bento/pages/About.tsx", "// bento About");
+    vol.writeFileSync("/templates/layouts/bento/pages/Blog.tsx", "// bento Blog");
     vol.mkdirSync("/project/src/components", { recursive: true });
     const fs = makeFsModule(vol);
 
@@ -133,9 +138,14 @@ describe("applyLayout", () => {
 
   it("layout bento não remove arquivos de outros layouts", async () => {
     const vol = Volume.fromJSON({});
-    vol.mkdirSync("/templates/layouts/bento", { recursive: true });
+    vol.mkdirSync("/templates/layouts/bento/pages", { recursive: true });
     vol.writeFileSync("/templates/layouts/bento/Layout.tsx", "// bento Layout");
     vol.writeFileSync("/templates/layouts/bento/FloatingDock.tsx", "// bento FloatingDock");
+    vol.writeFileSync("/templates/layouts/bento/pages/Home.tsx", "// bento Home");
+    vol.writeFileSync("/templates/layouts/bento/pages/Resume.tsx", "// bento Resume");
+    vol.writeFileSync("/templates/layouts/bento/pages/Portfolio.tsx", "// bento Portfolio");
+    vol.writeFileSync("/templates/layouts/bento/pages/About.tsx", "// bento About");
+    vol.writeFileSync("/templates/layouts/bento/pages/Blog.tsx", "// bento Blog");
     vol.mkdirSync("/project/src/components", { recursive: true });
     vol.writeFileSync("/project/src/components/Sidebar.tsx", "// existing sidebar");
     const fs = makeFsModule(vol);
@@ -231,6 +241,33 @@ describe("applyLayout", () => {
     await applyLayout("cyberpunk", { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs);
 
     expect(await fs.exists("/project/src/pages")).toBe(false);
+  });
+
+  it("layout bento copia as 5 páginas para src/pages/", async () => {
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/templates/layouts/bento/pages", { recursive: true });
+    vol.writeFileSync("/templates/layouts/bento/Layout.tsx", "// bento Layout");
+    vol.writeFileSync("/templates/layouts/bento/FloatingDock.tsx", "// bento FloatingDock");
+    vol.writeFileSync("/templates/layouts/bento/pages/Home.tsx", "// bento Home");
+    vol.writeFileSync("/templates/layouts/bento/pages/Resume.tsx", "// bento Resume");
+    vol.writeFileSync("/templates/layouts/bento/pages/Portfolio.tsx", "// bento Portfolio");
+    vol.writeFileSync("/templates/layouts/bento/pages/About.tsx", "// bento About");
+    vol.writeFileSync("/templates/layouts/bento/pages/Blog.tsx", "// bento Blog");
+    vol.mkdirSync("/project/src/components", { recursive: true });
+    const fs = makeFsModule(vol);
+
+    await applyLayout("bento" as Parameters<typeof applyLayout>[0], { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs);
+
+    const home = vol.readFileSync("/project/src/pages/Home.tsx", "utf-8") as string;
+    const resume = vol.readFileSync("/project/src/pages/Resume.tsx", "utf-8") as string;
+    const portfolio = vol.readFileSync("/project/src/pages/Portfolio.tsx", "utf-8") as string;
+    const about = vol.readFileSync("/project/src/pages/About.tsx", "utf-8") as string;
+    const blog = vol.readFileSync("/project/src/pages/Blog.tsx", "utf-8") as string;
+    expect(home).toContain("bento Home");
+    expect(resume).toContain("bento Resume");
+    expect(portfolio).toContain("bento Portfolio");
+    expect(about).toContain("bento About");
+    expect(blog).toContain("bento Blog");
   });
 
   it("layout inexistente lança erro descritivo com o nome inválido", async () => {
