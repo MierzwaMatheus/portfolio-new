@@ -30,6 +30,7 @@ vi.mock("../../../convex/_generated/api", () => ({
     proposals: { listAdmin: "proposals:listAdmin" },
     services: { list: "services:list" },
     siteTexts: { getAll: "siteTexts:getAll" },
+    contactInfo: { get: "contactInfo:get" },
   },
 }));
 

@@ -32,6 +32,7 @@ vi.mock("../../../convex/_generated/api", () => ({
     services: { list: "services:list" },
     imageMetadata: { list: "imageMetadata:list" },
     testimonials: { getByProject: "testimonials:getByProject" },
+    contactInfo: { get: "contactInfo:get" },
     images: { generateUploadUrl: "images:generateUploadUrl", deleteImage: "images:deleteImage" },
   },
 }));

@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 
 vi.mock("wouter", () => ({
   useLocation: vi.fn(() => ["/admin/textos"]),
+  useSearch: vi.fn(() => ""),
   Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   ),
@@ -39,6 +40,7 @@ vi.mock("../../../convex/_generated/api", () => ({
     projects: { list: "projects:list" },
     proposals: { listAdmin: "proposals:listAdmin" },
     services: { list: "services:list" },
+    contactInfo: { get: "contactInfo:get" },
   },
 }));
 

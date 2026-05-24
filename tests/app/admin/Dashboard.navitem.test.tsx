@@ -4,6 +4,7 @@ import userEvent from "@testing-library/user-event";
 
 vi.mock("wouter", () => ({
   useLocation: vi.fn(() => ["/admin/textos"]),
+  useSearch: vi.fn(() => ""),
   Link: ({ children, href }: { children: React.ReactNode; href: string }) => (
     <a href={href}>{children}</a>
   ),
@@ -30,6 +31,7 @@ vi.mock("../../../convex/_generated/api", () => ({
     proposals: { listAdmin: "proposals:listAdmin" },
     services: { list: "services:list" },
     siteTexts: { getAll: "siteTexts:getAll" },
+    contactInfo: { get: "contactInfo:get" },
   },
 }));
 
