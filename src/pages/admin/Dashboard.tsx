@@ -42,6 +42,7 @@ import { ResumeExperienceDialog } from "@/components/admin/ResumeExperienceDialo
 import { ImagePicker } from "@/components/admin/ImagePicker";
 import { PublishStatus } from "@/components/admin/PublishStatus";
 import { CommandPalette } from "@/components/admin/CommandPalette";
+import keyManifest from "@/i18n/key-manifest.json";
 
 type NavItem = {
   icon: React.ElementType;
@@ -111,6 +112,13 @@ const navGroups: NavGroup[] = [
         path: "/admin/about",
         roles: ["root", "admin"],
         pluginId: "about",
+      },
+      {
+        icon: Type,
+        label: "Textos",
+        description: "Strings de interface em pt-BR e en-US",
+        path: "/admin/textos",
+        roles: ["root", "admin", "content-editor"],
       },
     ],
   },
@@ -193,13 +201,6 @@ const navGroups: NavGroup[] = [
   {
     label: "Configurações",
     items: [
-      {
-        icon: Type,
-        label: "Textos",
-        description: "Strings de interface em pt-BR e en-US",
-        path: "/admin/textos",
-        roles: ["root", "admin", "content-editor"],
-      },
       {
         icon: Settings2,
         label: "Site & Aparência",
@@ -390,6 +391,41 @@ export function AdminLayout({ children, title = "Admin" }: { children: React.Rea
     .filter((item) => checkRole(item.roles) && (!item.pluginId || isEnabled(item.pluginId)))
     .map(({ label, description, path }) => ({ label, description, path }));
 
+  const siteTextsData = useQuery(api.siteTexts.getAll) as { key: string; ptBR: string; enUS?: string }[] | undefined;
+  const posts = useQuery(api.posts.listAdmin) as { _id: string; title: string }[] | undefined;
+  const projects = useQuery(api.projects.list) as { _id: string; title: string }[] | undefined;
+  const proposals = useQuery(api.proposals.listAdmin, { filter: "all" }) as { _id: string; title: string }[] | undefined;
+  const services = useQuery(api.services.list) as { _id: string; title: string }[] | undefined;
+
+  const createActions = [
+    { label: "Nova Proposta", description: "Criar nova proposta comercial", path: "/admin/proposals?create=true" },
+    { label: "Novo Projeto", description: "Adicionar projeto ao portfólio", path: "/admin/projects?create=true" },
+    { label: "Novo Post", description: "Publicar post no blog", path: "/admin/blog?create=true" },
+    { label: "Nova Experiência", description: "Adicionar experiência ao currículo", path: "/admin/resume?create=true&type=experience" },
+    { label: "Nova Formação", description: "Adicionar formação ao currículo", path: "/admin/resume?create=true&type=education" },
+    { label: "Nova Habilidade", description: "Adicionar habilidade ao currículo", path: "/admin/resume?create=true&type=skill" },
+    { label: "Novo Idioma", description: "Adicionar idioma ao currículo", path: "/admin/resume?create=true&type=language" },
+    { label: "Novo Depoimento", description: "Adicionar depoimento de cliente", path: "/admin/depoimentos?create=true" },
+    { label: "Novo Contrato", description: "Criar modelo de contrato", path: "/admin/contracts?create=true" },
+    { label: "Novo Link de Pagamento", description: "Criar link de checkout", path: "/admin/payment-links?create=true" },
+    { label: "Novo Currículo com IA", description: "Gerar currículo personalizado", path: "/admin/ai-resumes?create=true" },
+  ];
+
+  const contentGroups = [
+    ...(posts && posts.length > 0
+      ? [{ heading: "Posts", items: posts.map((p) => ({ label: p.title, path: "/admin/blog" })) }]
+      : []),
+    ...(projects && projects.length > 0
+      ? [{ heading: "Projetos", items: projects.map((p) => ({ label: p.title, path: "/admin/projects" })) }]
+      : []),
+    ...(proposals && proposals.length > 0
+      ? [{ heading: "Propostas", items: proposals.map((p) => ({ label: p.title, path: "/admin/proposals" })) }]
+      : []),
+    ...(services && services.length > 0
+      ? [{ heading: "Serviços", items: services.map((s) => ({ label: s.title, path: "/admin/home" })) }]
+      : []),
+  ];
+
   return (
     <div className="min-h-screen bg-background text-white">
       <Helmet><title>{title} — Admin</title></Helmet>
@@ -399,6 +435,10 @@ export function AdminLayout({ children, title = "Admin" }: { children: React.Rea
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
         items={paletteItems}
+        createActions={createActions}
+        contentGroups={contentGroups}
+        siteTexts={siteTextsData}
+        manifest={keyManifest as Record<string, { file: string; line: number }[]>}
         onNavigate={navigate}
       />
     </div>
