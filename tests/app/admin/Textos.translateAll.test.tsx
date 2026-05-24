@@ -35,6 +35,10 @@ vi.mock("../../../convex/_generated/api", () => ({
       translateAllMissing: "siteTexts:translateAllMissing",
     },
     siteConfig: { getAll: "siteConfig:getAll" },
+    posts: { listAdmin: "posts:listAdmin" },
+    projects: { list: "projects:list" },
+    proposals: { listAdmin: "proposals:listAdmin" },
+    services: { list: "services:list" },
   },
 }));
 
