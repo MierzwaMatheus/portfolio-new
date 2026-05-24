@@ -18,7 +18,7 @@ type CommandPaletteItem = {
 
 type ContentGroup = {
   heading: string;
-  items: { label: string; path: string }[];
+  items: { label: string; path: string; description?: string }[];
 };
 
 type SiteText = {
@@ -126,10 +126,13 @@ export function CommandPalette({
               {group.items.map((item) => (
                 <CommandItem
                   key={`${group.heading}-${item.label}`}
-                  value={item.label}
+                  value={`${item.label} ${item.description ?? ""}`}
                   onSelect={() => handleSelect(item.path)}
                 >
                   <span>{item.label}</span>
+                  {item.description && (
+                    <span className="text-muted-foreground ml-2 text-xs truncate">{item.description}</span>
+                  )}
                 </CommandItem>
               ))}
             </CommandGroup>

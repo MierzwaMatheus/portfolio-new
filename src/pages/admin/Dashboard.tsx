@@ -392,6 +392,7 @@ export function AdminLayout({ children, title = "Admin" }: { children: React.Rea
     .map(({ label, description, path }) => ({ label, description, path }));
 
   const siteTextsData = useQuery(api.siteTexts.getAll) as { key: string; ptBR: string; enUS?: string }[] | undefined;
+  const contactInfoData = useQuery(api.contactInfo.get) as { proposalIntro?: string; proposalAiContext?: string } | undefined | null;
   const posts = useQuery(api.posts.listAdmin) as { _id: string; title: string }[] | undefined;
   const projects = useQuery(api.projects.list) as { _id: string; title: string }[] | undefined;
   const proposals = useQuery(api.proposals.listAdmin, { filter: "all" }) as { _id: string; title: string }[] | undefined;
@@ -423,6 +424,19 @@ export function AdminLayout({ children, title = "Admin" }: { children: React.Rea
       : []),
     ...(services && services.length > 0
       ? [{ heading: "Serviços", items: services.map((s) => ({ label: s.title, path: "/admin/home" })) }]
+      : []),
+    ...(contactInfoData && (contactInfoData.proposalIntro || contactInfoData.proposalAiContext)
+      ? [{
+          heading: "Textos de Proposta",
+          items: [
+            contactInfoData.proposalIntro
+              ? { label: "Intro da Proposta", description: contactInfoData.proposalIntro.slice(0, 80), path: "/admin/contact" }
+              : null,
+            contactInfoData.proposalAiContext
+              ? { label: "Contexto IA para Propostas", description: contactInfoData.proposalAiContext.slice(0, 80), path: "/admin/contact" }
+              : null,
+          ].filter((item): item is { label: string; description: string; path: string } => item !== null),
+        }]
       : []),
   ];
 
