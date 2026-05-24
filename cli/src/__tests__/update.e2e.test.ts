@@ -105,7 +105,7 @@ function makeFsModule(vol: InstanceType<typeof Volume>) {
 
 const BASE_STATE = {
   version: "1.0.0",
-  layout: "sidebar" as const,
+  layout: "cyberpunk" as const,
   theme: "cyberpunk",
   accentColor: "#ff5500" as string | null,
   fontSans: "Playfair Display",
@@ -138,12 +138,8 @@ function makeProjectVolume(state = BASE_STATE, extraFiles: Record<string, string
     [`${projectDir}/index.html`]: MINIMAL_HTML,
     [`${projectDir}/convex/pluginRegistry.ts`]: MINIMAL_REGISTRY,
     [`${projectDir}/package.json`]: JSON.stringify({ name: "meu-portfolio" }),
-    [`${projectDir}/templates/layouts/sidebar/Layout.tsx`]: "// sidebar Layout",
-    [`${projectDir}/templates/layouts/sidebar/Sidebar.tsx`]: "// Sidebar",
-    [`${projectDir}/templates/layouts/topbar/Layout.tsx`]: "// topbar Layout",
-    [`${projectDir}/templates/layouts/topbar/Navbar.tsx`]: "// Navbar",
-    [`${projectDir}/templates/layouts/centered/Layout.tsx`]: "// centered Layout",
-    [`${projectDir}/templates/layouts/centered/Footer.tsx`]: "// Footer",
+    [`${projectDir}/templates/layouts/cyberpunk/Layout.tsx`]: "// cyberpunk Layout",
+    [`${projectDir}/templates/layouts/cyberpunk/Sidebar.tsx`]: "// Sidebar",
     ...extraFiles,
   });
   return vol;
@@ -153,19 +149,13 @@ function makeProjectVolume(state = BASE_STATE, extraFiles: Record<string, string
 function makeDownloadMock(vol: InstanceType<typeof Volume>, requiredEnvContent?: string) {
   return vi.fn(async (projectDir: string, _version: string) => {
     const dirs = [
-      `${projectDir}/templates/layouts/sidebar`,
-      `${projectDir}/templates/layouts/topbar`,
-      `${projectDir}/templates/layouts/centered`,
+      `${projectDir}/templates/layouts/cyberpunk`,
     ];
     for (const dir of dirs) {
       vol.mkdirSync(dir, { recursive: true });
     }
-    vol.writeFileSync(`${projectDir}/templates/layouts/sidebar/Layout.tsx`, "// sidebar Layout v2");
-    vol.writeFileSync(`${projectDir}/templates/layouts/sidebar/Sidebar.tsx`, "// Sidebar v2");
-    vol.writeFileSync(`${projectDir}/templates/layouts/topbar/Layout.tsx`, "// topbar Layout v2");
-    vol.writeFileSync(`${projectDir}/templates/layouts/topbar/Navbar.tsx`, "// Navbar v2");
-    vol.writeFileSync(`${projectDir}/templates/layouts/centered/Layout.tsx`, "// centered Layout v2");
-    vol.writeFileSync(`${projectDir}/templates/layouts/centered/Footer.tsx`, "// Footer v2");
+    vol.writeFileSync(`${projectDir}/templates/layouts/cyberpunk/Layout.tsx`, "// cyberpunk Layout v2");
+    vol.writeFileSync(`${projectDir}/templates/layouts/cyberpunk/Sidebar.tsx`, "// Sidebar v2");
 
     if (requiredEnvContent !== undefined) {
       vol.writeFileSync(`${projectDir}/required-env.json`, requiredEnvContent);
@@ -264,7 +254,7 @@ describe("update e2e — rubrica.json version atualizado, configs preservados", 
     const raw = await fs.readFile("/project/rubrica.json", "utf-8");
     const state = JSON.parse(raw) as Record<string, unknown>;
 
-    expect(state.layout).toBe("sidebar");
+    expect(state.layout).toBe("cyberpunk");
     expect(state.theme).toBe("cyberpunk");
     expect(state.fontSans).toBe("Playfair Display");
     expect(state.fontMono).toBe("Fira Code");

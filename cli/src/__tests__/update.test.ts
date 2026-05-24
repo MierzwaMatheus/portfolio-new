@@ -19,7 +19,7 @@ function makeFsModule(vol: InstanceType<typeof Volume>) {
 
 const BASE_STATE = {
   version: "1.0.0",
-  layout: "sidebar" as const,
+  layout: "cyberpunk" as const,
   theme: "cyberpunk",
   accentColor: null,
   fontSans: "Inter",
@@ -205,14 +205,14 @@ describe("runUpdate — re-aplicação de applyLayout", () => {
   });
 
   it("chama applyLayout com o layout do rubrica.json após update", async () => {
-    const stateTopbar = { ...BASE_STATE, layout: "topbar" as const };
+    const stateCyberpunk = { ...BASE_STATE, layout: "cyberpunk" as const };
     const vol = Volume.fromJSON({
-      "/project/rubrica.json": JSON.stringify(stateTopbar),
+      "/project/rubrica.json": JSON.stringify(stateCyberpunk),
     });
     const fs = makeFsModule(vol);
 
     const detectProjectMock = vi.fn().mockResolvedValue("/project/rubrica.json");
-    const readStateMock = vi.fn().mockResolvedValue(stateTopbar);
+    const readStateMock = vi.fn().mockResolvedValue(stateCyberpunk);
     const getLatestVersionMock = vi.fn().mockResolvedValue("1.1.0");
     const downloadReleaseMock = vi.fn().mockResolvedValue(undefined);
     const applyLayoutMock = vi.fn().mockResolvedValue(undefined);
@@ -241,7 +241,7 @@ describe("runUpdate — re-aplicação de applyLayout", () => {
 
     expect(applyLayoutMock).toHaveBeenCalled();
     const [layoutArg] = applyLayoutMock.mock.calls[0];
-    expect(layoutArg).toBe("topbar");
+    expect(layoutArg).toBe("cyberpunk");
   });
 });
 

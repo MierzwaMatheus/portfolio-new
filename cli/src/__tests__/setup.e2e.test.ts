@@ -51,7 +51,7 @@ describe("setup E2E — Ciclo 1: sem .env.local", () => {
     const vol = Volume.fromJSON({
       "/project/rubrica.json": JSON.stringify({
         version: "1.0.0",
-        layout: "sidebar" as const,
+        layout: "cyberpunk" as const,
         theme: "cyberpunk",
         accentColor: null,
         fontSans: "Inter",
@@ -96,7 +96,7 @@ describe("setup E2E — Ciclo 2: contact-wizard com readState real", () => {
     const vol = Volume.fromJSON({
       "/project/rubrica.json": JSON.stringify({
         version: "1.0.0",
-        layout: "sidebar" as const,
+        layout: "cyberpunk" as const,
         theme: "cyberpunk",
         accentColor: null,
         fontSans: "Inter",
@@ -142,7 +142,7 @@ describe("setup E2E — Ciclo 3: playground com readState real", () => {
     const vol = Volume.fromJSON({
       "/project/rubrica.json": JSON.stringify({
         version: "1.0.0",
-        layout: "sidebar" as const,
+        layout: "cyberpunk" as const,
         theme: "cyberpunk",
         accentColor: null,
         fontSans: "Inter",

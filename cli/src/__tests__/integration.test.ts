@@ -132,7 +132,7 @@ const FULL_CONFIG = {
 
 const FULL_STATE = {
   version: "1.0.0",
-  layout: "topbar" as const,
+  layout: "cyberpunk" as const,
   theme: "minimal",
   accentColor: "#0065fe",
   fontSans: "Inter",
@@ -171,32 +171,26 @@ describe("integração: applyTheme + applyFont em cadeia", () => {
 });
 
 // ---------------------------------------------------------------------------
-// Ciclo 2 — applyLayout("topbar") + applyIndexHtml em sequência
+// Ciclo 2 — applyLayout("cyberpunk") + applyIndexHtml em sequência
 // ---------------------------------------------------------------------------
 
-describe("integração: applyLayout(topbar) + applyIndexHtml em sequência", () => {
-  it("Navbar.tsx copiado e index.html com font link e og:title corretos", async () => {
+describe("integração: applyLayout(cyberpunk) + applyIndexHtml em sequência", () => {
+  it("Sidebar.tsx copiado e index.html com font link e og:title corretos", async () => {
     const vol = Volume.fromJSON({
       "/project/index.html": STUB_HTML,
     });
 
     // montar templates
-    vol.mkdirSync("/templates/layouts/topbar", { recursive: true });
-    vol.writeFileSync("/templates/layouts/topbar/Layout.tsx", "// topbar Layout");
-    vol.writeFileSync("/templates/layouts/topbar/Navbar.tsx", STUB_NAVBAR);
-    vol.mkdirSync("/templates/layouts/sidebar", { recursive: true });
-    vol.writeFileSync("/templates/layouts/sidebar/Layout.tsx", "// sidebar Layout");
-    vol.writeFileSync("/templates/layouts/sidebar/Sidebar.tsx", "// Sidebar");
-    vol.mkdirSync("/templates/layouts/centered", { recursive: true });
-    vol.writeFileSync("/templates/layouts/centered/Layout.tsx", "// centered Layout");
-    vol.writeFileSync("/templates/layouts/centered/Footer.tsx", "// Footer");
+    vol.mkdirSync("/templates/layouts/cyberpunk", { recursive: true });
+    vol.writeFileSync("/templates/layouts/cyberpunk/Layout.tsx", "// cyberpunk Layout");
+    vol.writeFileSync("/templates/layouts/cyberpunk/Sidebar.tsx", STUB_NAVBAR);
     vol.mkdirSync("/project/src/components", { recursive: true });
 
     const layoutFs = makeLayoutFsModule(vol);
     const htmlFs = makeFsModule(vol);
 
     await applyLayout(
-      "topbar",
+      "cyberpunk",
       { projectDir: "/project", templatesDir: "/templates" },
       layoutFs
     );
@@ -215,11 +209,11 @@ describe("integração: applyLayout(topbar) + applyIndexHtml em sequência", () 
     );
 
     // layout
-    const navbar = vol.readFileSync("/project/src/components/Navbar.tsx", "utf-8") as string;
-    expect(navbar).toContain("usePlugins");
+    const sidebar = vol.readFileSync("/project/src/components/Sidebar.tsx", "utf-8") as string;
+    expect(sidebar).toContain("usePlugins");
 
-    const hasSidebar = await layoutFs.exists("/project/src/components/Sidebar.tsx");
-    expect(hasSidebar).toBe(false);
+    const hasNavbar = await layoutFs.exists("/project/src/components/Navbar.tsx");
+    expect(hasNavbar).toBe(false);
 
     // html
     const html = vol.readFileSync("/project/index.html", "utf-8") as string;
@@ -232,37 +226,31 @@ describe("integração: applyLayout(topbar) + applyIndexHtml em sequência", () 
 // Ciclo 3 — applyPlugins desativa blog → applyLayout copia navbar com filtragem dinâmica
 // ---------------------------------------------------------------------------
 
-describe("integração: applyPlugins(blog=false) + applyLayout(topbar)", () => {
-  it("registry tem blog desativado e Navbar copiada não tem rota /blog hardcoded", async () => {
+describe("integração: applyPlugins(blog=false) + applyLayout(cyberpunk)", () => {
+  it("registry tem blog desativado e Sidebar copiada não tem rota /blog hardcoded", async () => {
     const vol = Volume.fromJSON({
       "/project/convex/pluginRegistry.ts": STUB_REGISTRY,
     });
 
-    vol.mkdirSync("/templates/layouts/topbar", { recursive: true });
-    vol.writeFileSync("/templates/layouts/topbar/Layout.tsx", "// topbar Layout");
-    vol.writeFileSync("/templates/layouts/topbar/Navbar.tsx", STUB_NAVBAR);
-    vol.mkdirSync("/templates/layouts/sidebar", { recursive: true });
-    vol.writeFileSync("/templates/layouts/sidebar/Layout.tsx", "// sidebar");
-    vol.writeFileSync("/templates/layouts/sidebar/Sidebar.tsx", "// Sidebar");
-    vol.mkdirSync("/templates/layouts/centered", { recursive: true });
-    vol.writeFileSync("/templates/layouts/centered/Layout.tsx", "// centered");
-    vol.writeFileSync("/templates/layouts/centered/Footer.tsx", "// Footer");
+    vol.mkdirSync("/templates/layouts/cyberpunk", { recursive: true });
+    vol.writeFileSync("/templates/layouts/cyberpunk/Layout.tsx", "// cyberpunk Layout");
+    vol.writeFileSync("/templates/layouts/cyberpunk/Sidebar.tsx", STUB_NAVBAR);
     vol.mkdirSync("/project/src/components", { recursive: true });
 
     const pluginFs = makeFsModule(vol);
     const layoutFs = makeLayoutFsModule(vol);
 
     await applyPlugins({ blog: false }, "/project/convex/pluginRegistry.ts", pluginFs);
-    await applyLayout("topbar", { projectDir: "/project", templatesDir: "/templates" }, layoutFs);
+    await applyLayout("cyberpunk", { projectDir: "/project", templatesDir: "/templates" }, layoutFs);
 
     // registry tem blog desativado
     const registry = vol.readFileSync("/project/convex/pluginRegistry.ts", "utf-8") as string;
     expect(registry).toMatch(/id: 'blog'[\s\S]*?defaultEnabled: false/);
 
-    // Navbar copiada existe e não tem rota hardcoded para blog
-    const navbar = vol.readFileSync("/project/src/components/Navbar.tsx", "utf-8") as string;
-    expect(navbar).toContain("usePlugins");
-    expect(navbar).not.toMatch(/href=["']\/blog["']/);
+    // Sidebar copiada existe e não tem rota hardcoded para blog
+    const sidebar = vol.readFileSync("/project/src/components/Sidebar.tsx", "utf-8") as string;
+    expect(sidebar).toContain("usePlugins");
+    expect(sidebar).not.toMatch(/href=["']\/blog["']/);
   });
 });
 
@@ -287,7 +275,7 @@ describe("integração: applyRubricalConfig + writeState com mesmos valores de i
     const state = await readState("/project", fs);
     expect(state.accentColor).toBe("#0065fe");
     expect(state.fontSans).toBe("Inter");
-    expect(state.layout).toBe("topbar");
+    expect(state.layout).toBe("cyberpunk");
   });
 });
 
@@ -303,15 +291,9 @@ describe("integração: idempotência do pipeline completo", () => {
       "/project/convex/pluginRegistry.ts": STUB_REGISTRY,
     });
 
-    vol.mkdirSync("/templates/layouts/topbar", { recursive: true });
-    vol.writeFileSync("/templates/layouts/topbar/Layout.tsx", "// topbar Layout");
-    vol.writeFileSync("/templates/layouts/topbar/Navbar.tsx", STUB_NAVBAR);
-    vol.mkdirSync("/templates/layouts/sidebar", { recursive: true });
-    vol.writeFileSync("/templates/layouts/sidebar/Layout.tsx", "// sidebar");
-    vol.writeFileSync("/templates/layouts/sidebar/Sidebar.tsx", "// Sidebar");
-    vol.mkdirSync("/templates/layouts/centered", { recursive: true });
-    vol.writeFileSync("/templates/layouts/centered/Layout.tsx", "// centered");
-    vol.writeFileSync("/templates/layouts/centered/Footer.tsx", "// Footer");
+    vol.mkdirSync("/templates/layouts/cyberpunk", { recursive: true });
+    vol.writeFileSync("/templates/layouts/cyberpunk/Layout.tsx", "// cyberpunk Layout");
+    vol.writeFileSync("/templates/layouts/cyberpunk/Sidebar.tsx", STUB_NAVBAR);
     vol.mkdirSync("/project/src/components", { recursive: true });
 
     const fs = makeFsModule(vol);
@@ -333,7 +315,7 @@ describe("integração: idempotência do pipeline completo", () => {
         { css: "/project/src/index.css", html: "/project/index.html" },
         fs
       );
-      await applyLayout("topbar", { projectDir: "/project", templatesDir: "/templates" }, layoutFs);
+      await applyLayout("cyberpunk", { projectDir: "/project", templatesDir: "/templates" }, layoutFs);
       await applyPlugins({ blog: true, portfolio: true }, "/project/convex/pluginRegistry.ts", fs);
       await applyIndexHtml(htmlData, "/project/index.html", fs);
       await applyRubricalConfig(FULL_CONFIG, "/project", fs);

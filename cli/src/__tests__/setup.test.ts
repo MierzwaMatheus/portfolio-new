@@ -24,7 +24,7 @@ function fileSyncArgs(mock: ReturnType<typeof vi.fn>): string[] {
 
 const BASE_STATE = {
   version: "1.0.0",
-  layout: "sidebar" as const,
+  layout: "cyberpunk" as const,
   theme: "cyberpunk",
   accentColor: null,
   fontSans: "Inter",

@@ -73,7 +73,7 @@ export async function runConfig(deps: RunConfigDeps = {}): Promise<void> {
     options: [
       { value: "identity", label: "Identidade (nome, URL, SEO, RSS)" },
       { value: "appearance", label: "Aparência (tema, cores, fonte, radius)" },
-      { value: "layout", label: "Layout (sidebar / topbar / centered)" },
+      { value: "layout", label: "Layout" },
       { value: "plugins", label: "Plugins" },
     ],
     required: false,
@@ -193,11 +193,9 @@ export async function runConfig(deps: RunConfigDeps = {}): Promise<void> {
       message: "Layout",
       initialValue: currentState.layout,
       options: [
-        { value: "sidebar", label: "Sidebar — navegação lateral com perfil completo" },
-        { value: "topbar", label: "Topbar — navbar horizontal fixa no topo" },
-        { value: "centered", label: "Centered — sem nav persistente, foco no conteúdo" },
+        { value: "cyberpunk", label: "Cyberpunk — navegação lateral com perfil completo" },
       ],
-    }) as "sidebar" | "topbar" | "centered";
+    }) as "cyberpunk";
 
     const confirmed = await confirm({
       message: "⚠ Isso sobrescreve Layout.tsx e arquivos de navegação. Customizações manuais serão perdidas. Continuar?",

@@ -23,7 +23,7 @@ vi.mock("@clack/prompts", () => ({
   intro: vi.fn(),
   outro: vi.fn(),
   text: vi.fn().mockResolvedValue(""),
-  select: vi.fn().mockResolvedValue("sidebar"),
+  select: vi.fn().mockResolvedValue("cyberpunk"),
   multiselect: vi.fn().mockResolvedValue([]),
   confirm: vi.fn().mockResolvedValue(false),
   isCancel: vi.fn(() => false),
@@ -57,7 +57,7 @@ describe("runConfig — detecção de projeto", () => {
   });
 
   it("não lança erro quando rubrica.json existe no diretório atual", async () => {
-    const state = { version: "1.0.0", layout: "sidebar", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
+    const state = { version: "1.0.0", layout: "cyberpunk", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
     const vol = Volume.fromJSON({
       "/project/rubrica.json": JSON.stringify(state),
     });
@@ -90,7 +90,7 @@ describe("runConfig — leitura do estado atual", () => {
   });
 
   it("lê rubrica.json via readState após detectar o projeto", async () => {
-    const state = { version: "1.0.0", layout: "sidebar", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
+    const state = { version: "1.0.0", layout: "cyberpunk", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
     const vol = Volume.fromJSON({
       "/project/rubrica.json": JSON.stringify(state),
     });
@@ -120,7 +120,7 @@ describe("runConfig — prompt multi-select de seções", () => {
   });
 
   it("exibe multi-select com as 4 opções de reconfiguração", async () => {
-    const state = { version: "1.0.0", layout: "sidebar", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
+    const state = { version: "1.0.0", layout: "cyberpunk", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
     const vol = Volume.fromJSON({ "/project/rubrica.json": JSON.stringify(state) });
     const fs = makeFsModule(vol);
 
@@ -159,7 +159,7 @@ describe("runConfig — identidade", () => {
   });
 
   it("chama identityPrompt e applyRubricalConfig quando Identidade selecionada", async () => {
-    const state = { version: "1.0.0", layout: "sidebar", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
+    const state = { version: "1.0.0", layout: "cyberpunk", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
     const vol = Volume.fromJSON({ "/project/rubrica.json": JSON.stringify(state) });
     const fs = makeFsModule(vol);
 
@@ -199,7 +199,7 @@ describe("runConfig — aparência", () => {
   });
 
   it("chama applyTheme, applyFont e applyIndexHtml quando Aparência selecionada", async () => {
-    const state = { version: "1.0.0", layout: "sidebar", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
+    const state = { version: "1.0.0", layout: "cyberpunk", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
     const vol = Volume.fromJSON({
       "/project/rubrica.json": JSON.stringify(state),
       "/project/src/index.css": ":root {}",
@@ -238,7 +238,7 @@ describe("runConfig — aparência", () => {
   });
 
   it("usa valores atuais do estado como defaults nos prompts de aparência", async () => {
-    const state = { version: "1.0.0", layout: "sidebar", theme: "editorial", accentColor: null, fontSans: "Playfair Display", fontMono: "Fira Code", radius: "0.75rem", plugins: {} };
+    const state = { version: "1.0.0", layout: "cyberpunk", theme: "editorial", accentColor: null, fontSans: "Playfair Display", fontMono: "Fira Code", radius: "0.75rem", plugins: {} };
     const vol = Volume.fromJSON({
       "/project/rubrica.json": JSON.stringify(state),
       "/project/src/index.css": ":root {}",
@@ -286,12 +286,12 @@ describe("runConfig — layout", () => {
   });
 
   it("chama applyLayout quando Layout selecionado e usuário confirma", async () => {
-    const state = { version: "1.0.0", layout: "sidebar", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
+    const state = { version: "1.0.0", layout: "cyberpunk", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
     const vol = Volume.fromJSON({ "/project/rubrica.json": JSON.stringify(state) });
     const fs = makeFsModule(vol);
 
     vi.mocked(multiselect).mockResolvedValueOnce(["layout"]);
-    vi.mocked(select).mockResolvedValueOnce("topbar");
+    vi.mocked(select).mockResolvedValueOnce("cyberpunk");
     vi.mocked(confirm).mockResolvedValueOnce(true);
 
     const applyLayoutMock = vi.fn().mockResolvedValue(undefined);
@@ -309,19 +309,19 @@ describe("runConfig — layout", () => {
     });
 
     expect(applyLayoutMock).toHaveBeenCalledWith(
-      "topbar",
+      "cyberpunk",
       expect.anything(),
       expect.anything()
     );
   });
 
   it("não chama applyLayout quando usuário cancela confirmação", async () => {
-    const state = { version: "1.0.0", layout: "sidebar", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
+    const state = { version: "1.0.0", layout: "cyberpunk", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
     const vol = Volume.fromJSON({ "/project/rubrica.json": JSON.stringify(state) });
     const fs = makeFsModule(vol);
 
     vi.mocked(multiselect).mockResolvedValueOnce(["layout"]);
-    vi.mocked(select).mockResolvedValueOnce("topbar");
+    vi.mocked(select).mockResolvedValueOnce("cyberpunk");
     vi.mocked(confirm).mockResolvedValueOnce(false);
 
     const applyLayoutMock = vi.fn().mockResolvedValue(undefined);
@@ -350,7 +350,7 @@ describe("runConfig — plugins", () => {
   });
 
   it("chama applyPlugins com o novo mapa quando Plugins selecionado", async () => {
-    const state = { version: "1.0.0", layout: "sidebar", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: { blog: true, portfolio: true, resume: false } };
+    const state = { version: "1.0.0", layout: "cyberpunk", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: { blog: true, portfolio: true, resume: false } };
     const vol = Volume.fromJSON({ "/project/rubrica.json": JSON.stringify(state) });
     const fs = makeFsModule(vol);
 
@@ -380,7 +380,7 @@ describe("runConfig — plugins", () => {
   });
 
   it("usa plugins ativos atuais como initialValues no multi-select", async () => {
-    const state = { version: "1.0.0", layout: "sidebar", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: { blog: true, portfolio: false, resume: true } };
+    const state = { version: "1.0.0", layout: "cyberpunk", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: { blog: true, portfolio: false, resume: true } };
     const vol = Volume.fromJSON({ "/project/rubrica.json": JSON.stringify(state) });
     const fs = makeFsModule(vol);
 
@@ -420,12 +420,12 @@ describe("runConfig — persistência em rubrica.json", () => {
   });
 
   it("chama writeState com o layout atualizado após trocar layout", async () => {
-    const state = { version: "1.0.0", layout: "sidebar" as const, theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
+    const state = { version: "1.0.0", layout: "cyberpunk" as const, theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
     const vol = Volume.fromJSON({ "/project/rubrica.json": JSON.stringify(state) });
     const fs = makeFsModule(vol);
 
     vi.mocked(multiselect).mockResolvedValueOnce(["layout"]);
-    vi.mocked(select).mockResolvedValueOnce("topbar");
+    vi.mocked(select).mockResolvedValueOnce("cyberpunk");
     vi.mocked(confirm).mockResolvedValueOnce(true);
 
     const applyLayoutMock = vi.fn().mockResolvedValue(undefined);
@@ -444,13 +444,13 @@ describe("runConfig — persistência em rubrica.json", () => {
 
     expect(writeStateMock).toHaveBeenCalledWith(
       "/project",
-      expect.objectContaining({ layout: "topbar" }),
+      expect.objectContaining({ layout: "cyberpunk"}),
       expect.anything()
     );
   });
 
   it("chama writeState com tema e fontes atualizados após trocar aparência", async () => {
-    const state = { version: "1.0.0", layout: "sidebar", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
+    const state = { version: "1.0.0", layout: "cyberpunk", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
     const vol = Volume.fromJSON({
       "/project/rubrica.json": JSON.stringify(state),
       "/project/src/index.css": ":root {}",

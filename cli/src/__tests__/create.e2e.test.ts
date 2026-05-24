@@ -108,20 +108,14 @@ function makeE2eDownloadMock(vol: InstanceType<typeof Volume>) {
     const dirs = [
       `${projectDir}/src`,
       `${projectDir}/convex`,
-      `${projectDir}/templates/layouts/sidebar`,
-      `${projectDir}/templates/layouts/topbar`,
-      `${projectDir}/templates/layouts/centered`,
+      `${projectDir}/templates/layouts/cyberpunk`,
     ];
     for (const dir of dirs) {
       vol.mkdirSync(dir, { recursive: true });
     }
 
-    vol.writeFileSync(`${projectDir}/templates/layouts/sidebar/Layout.tsx`, "// sidebar Layout");
-    vol.writeFileSync(`${projectDir}/templates/layouts/sidebar/Sidebar.tsx`, "// Sidebar");
-    vol.writeFileSync(`${projectDir}/templates/layouts/topbar/Layout.tsx`, "// topbar Layout");
-    vol.writeFileSync(`${projectDir}/templates/layouts/topbar/Navbar.tsx`, "// Navbar");
-    vol.writeFileSync(`${projectDir}/templates/layouts/centered/Layout.tsx`, "// centered Layout");
-    vol.writeFileSync(`${projectDir}/templates/layouts/centered/Footer.tsx`, "// Footer");
+    vol.writeFileSync(`${projectDir}/templates/layouts/cyberpunk/Layout.tsx`, "// cyberpunk Layout");
+    vol.writeFileSync(`${projectDir}/templates/layouts/cyberpunk/Sidebar.tsx`, "// Sidebar");
 
     vol.writeFileSync(`${projectDir}/src/index.css`, MINIMAL_CSS);
     vol.writeFileSync(`${projectDir}/index.html`, MINIMAL_HTML);
@@ -183,41 +177,19 @@ async function runE2eCreate(layout: string, plugins: string[] = ["blog", "portfo
   return { vol, fs: deps.fs as ReturnType<typeof makeFsModule> };
 }
 
-// ---- Ciclo 1: layout sidebar ------------------------------------------------
+// ---- Ciclo 1: layout cyberpunk -----------------------------------------------
 
-describe("create e2e — layout sidebar", () => {
+describe("create e2e — layout cyberpunk", () => {
   it("gera Layout.tsx e Sidebar.tsx em src/components/", async () => {
-    const { fs } = await runE2eCreate("sidebar");
+    const { fs } = await runE2eCreate("cyberpunk");
 
     expect(await fs.exists("/projects/meu-portfolio/src/components/Layout.tsx")).toBe(true);
     expect(await fs.exists("/projects/meu-portfolio/src/components/Sidebar.tsx")).toBe(true);
   });
 
-  it("não gera Navbar.tsx com layout sidebar", async () => {
-    const { fs } = await runE2eCreate("sidebar");
+  it("não gera Navbar.tsx com layout cyberpunk", async () => {
+    const { fs } = await runE2eCreate("cyberpunk");
 
-    expect(await fs.exists("/projects/meu-portfolio/src/components/Navbar.tsx")).toBe(false);
-  });
-});
-
-// ---- Ciclo 2: layout topbar e centered --------------------------------------
-
-describe("create e2e — layout topbar", () => {
-  it("gera Layout.tsx e Navbar.tsx, não gera Sidebar.tsx", async () => {
-    const { fs } = await runE2eCreate("topbar");
-
-    expect(await fs.exists("/projects/meu-portfolio/src/components/Layout.tsx")).toBe(true);
-    expect(await fs.exists("/projects/meu-portfolio/src/components/Navbar.tsx")).toBe(true);
-    expect(await fs.exists("/projects/meu-portfolio/src/components/Sidebar.tsx")).toBe(false);
-  });
-});
-
-describe("create e2e — layout centered", () => {
-  it("gera Layout.tsx e Footer.tsx, não gera Navbar.tsx", async () => {
-    const { fs } = await runE2eCreate("centered");
-
-    expect(await fs.exists("/projects/meu-portfolio/src/components/Layout.tsx")).toBe(true);
-    expect(await fs.exists("/projects/meu-portfolio/src/components/Footer.tsx")).toBe(true);
     expect(await fs.exists("/projects/meu-portfolio/src/components/Navbar.tsx")).toBe(false);
   });
 });
@@ -226,7 +198,7 @@ describe("create e2e — layout centered", () => {
 
 describe("create e2e — rubrica.config.ts", () => {
   it("gera rubrica.config.ts com todos os campos de identidade e aparência", async () => {
-    const { fs } = await runE2eCreate("sidebar");
+    const { fs } = await runE2eCreate("cyberpunk");
 
     const content = await fs.readFile("/projects/meu-portfolio/rubrica.config.ts", "utf-8");
 
@@ -244,7 +216,7 @@ describe("create e2e — rubrica.config.ts", () => {
 describe("create e2e — rubrica.json", () => {
   it("gera rubrica.json com version, layout, theme e plugins corretos", async () => {
     vi.clearAllMocks();
-    setupSelectPrompts("topbar", "minimal");
+    setupSelectPrompts("cyberpunk", "minimal");
     vi.mocked(multiselect).mockResolvedValueOnce(["blog"]);
 
     const vol = Volume.fromJSON({});
@@ -258,7 +230,7 @@ describe("create e2e — rubrica.json", () => {
     const state = JSON.parse(raw) as Record<string, unknown>;
 
     expect(state.version).toBeTruthy();
-    expect(state.layout).toBe("topbar");
+    expect(state.layout).toBe("cyberpunk");
     expect(state.theme).toBe("minimal");
     expect((state.plugins as Record<string, boolean>).blog).toBe(true);
     expect((state.plugins as Record<string, boolean>).portfolio).toBe(false);

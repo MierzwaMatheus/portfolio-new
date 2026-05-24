@@ -138,23 +138,14 @@ function makeDownloadMock(
     const dirs = [
       `${projectDir}/src`,
       `${projectDir}/convex`,
-      `${projectDir}/templates/layouts/sidebar`,
-      `${projectDir}/templates/layouts/topbar`,
-      `${projectDir}/templates/layouts/centered`,
+      `${projectDir}/templates/layouts/cyberpunk`,
     ];
     for (const dir of dirs) {
       vol.mkdirSync(dir, { recursive: true });
     }
 
-    // Conteúdo sidebar — mesmo padrão do create.e2e.test.ts
-    vol.writeFileSync(`${projectDir}/templates/layouts/sidebar/Layout.tsx`, "// sidebar Layout");
-    vol.writeFileSync(`${projectDir}/templates/layouts/sidebar/Sidebar.tsx`, "// Sidebar");
-
-    // Conteúdo topbar/centered
-    vol.writeFileSync(`${projectDir}/templates/layouts/topbar/Layout.tsx`, "// topbar Layout");
-    vol.writeFileSync(`${projectDir}/templates/layouts/topbar/Navbar.tsx`, "// Navbar");
-    vol.writeFileSync(`${projectDir}/templates/layouts/centered/Layout.tsx`, "// centered Layout");
-    vol.writeFileSync(`${projectDir}/templates/layouts/centered/Footer.tsx`, "// Footer");
+    vol.writeFileSync(`${projectDir}/templates/layouts/cyberpunk/Layout.tsx`, "// cyberpunk Layout");
+    vol.writeFileSync(`${projectDir}/templates/layouts/cyberpunk/Sidebar.tsx`, "// Sidebar");
 
     vol.writeFileSync(`${projectDir}/src/index.css`, MINIMAL_CSS);
     vol.writeFileSync(`${projectDir}/index.html`, htmlContent);
@@ -210,7 +201,7 @@ async function runValidityCreate(
   plugins: string[],
   opts: { html?: string; registry?: string } = {}
 ) {
-  vi.clearAllMocks();
+  vi.resetAllMocks();
   setupSelectPrompts(layout);
   vi.mocked(multiselect).mockResolvedValueOnce(plugins);
 
@@ -228,7 +219,7 @@ async function runValidityCreate(
 
 describe("2.12 — rubrica.json campos obrigatórios", () => {
   it("é parseável como JSON e contém version, layout, theme e plugins", async () => {
-    const { fs } = await runValidityCreate("sidebar", ["blog", "portfolio"]);
+    const { fs } = await runValidityCreate("cyberpunk", ["blog", "portfolio"]);
 
     const raw = await fs.readFile("/projects/meu-portfolio/rubrica.json", "utf-8");
     const state = JSON.parse(raw) as Record<string, unknown>;
@@ -238,7 +229,7 @@ describe("2.12 — rubrica.json campos obrigatórios", () => {
     expect(state.version).toBeTruthy();
 
     expect(state).toHaveProperty("layout");
-    expect(state.layout).toBe("sidebar");
+    expect(state.layout).toBe("cyberpunk");
 
     expect(state).toHaveProperty("theme");
     expect(typeof state.theme).toBe("string");
@@ -253,7 +244,7 @@ describe("2.12 — rubrica.json campos obrigatórios", () => {
 
 describe("2.12 — rubrica.config.ts sintaxe TypeScript", () => {
   it("é TypeScript sintaticamente válido com export const rubricalConfig", async () => {
-    const { fs } = await runValidityCreate("sidebar", ["blog", "portfolio"]);
+    const { fs } = await runValidityCreate("cyberpunk", ["blog", "portfolio"]);
 
     const content = await fs.readFile("/projects/meu-portfolio/rubrica.config.ts", "utf-8");
 
@@ -419,38 +410,26 @@ function checkLayoutFileSyntax(filePath: string): { errors: number; messages: st
 }
 
 describe("2.12 — arquivos de layout são TypeScript sintaticamente válidos", () => {
-  it("layout sidebar — src/components/Layout.tsx é válido", () => {
+  it("layout cyberpunk — src/components/Layout.tsx é válido", () => {
     const filePath = resolve(PROJECT_SRC_COMPONENTS, "Layout.tsx");
     const result = checkLayoutFileSyntax(filePath);
     expect(result.errors, result.messages.join(", ")).toBe(0);
   });
 
-  it("layout sidebar — src/components/Sidebar.tsx é válido", () => {
+  it("layout cyberpunk — src/components/Sidebar.tsx é válido", () => {
     const filePath = resolve(PROJECT_SRC_COMPONENTS, "Sidebar.tsx");
     const result = checkLayoutFileSyntax(filePath);
     expect(result.errors, result.messages.join(", ")).toBe(0);
   });
 
-  it("layout topbar — templates/layouts/topbar/Layout.tsx é válido", () => {
-    const filePath = resolve(TEMPLATES_DIR, "topbar/Layout.tsx");
+  it("layout cyberpunk — templates/layouts/cyberpunk/Layout.tsx é válido", () => {
+    const filePath = resolve(TEMPLATES_DIR, "cyberpunk/Layout.tsx");
     const result = checkLayoutFileSyntax(filePath);
     expect(result.errors, result.messages.join(", ")).toBe(0);
   });
 
-  it("layout topbar — templates/layouts/topbar/Navbar.tsx é válido", () => {
-    const filePath = resolve(TEMPLATES_DIR, "topbar/Navbar.tsx");
-    const result = checkLayoutFileSyntax(filePath);
-    expect(result.errors, result.messages.join(", ")).toBe(0);
-  });
-
-  it("layout centered — templates/layouts/centered/Layout.tsx é válido", () => {
-    const filePath = resolve(TEMPLATES_DIR, "centered/Layout.tsx");
-    const result = checkLayoutFileSyntax(filePath);
-    expect(result.errors, result.messages.join(", ")).toBe(0);
-  });
-
-  it("layout centered — templates/layouts/centered/Footer.tsx é válido", () => {
-    const filePath = resolve(TEMPLATES_DIR, "centered/Footer.tsx");
+  it("layout cyberpunk — templates/layouts/cyberpunk/Sidebar.tsx é válido", () => {
+    const filePath = resolve(TEMPLATES_DIR, "cyberpunk/Sidebar.tsx");
     const result = checkLayoutFileSyntax(filePath);
     expect(result.errors, result.messages.join(", ")).toBe(0);
   });

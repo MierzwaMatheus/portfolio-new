@@ -54,7 +54,7 @@ const INITIAL_HTML = `<!DOCTYPE html>
 
 const INITIAL_STATE = {
   version: "0.1.0",
-  layout: "sidebar" as const,
+  layout: "cyberpunk" as const,
   theme: "cyberpunk",
   accentColor: null,
   fontSans: "Inter",
