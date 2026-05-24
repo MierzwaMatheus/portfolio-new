@@ -141,6 +141,38 @@ describe("applyLayout", () => {
     expect(await fs.exists("/project/src/components/Sidebar.tsx")).toBe(true);
   });
 
+  it("layout magazine copia Layout.tsx e Masthead.tsx para src/components/", async () => {
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/templates/layouts/magazine", { recursive: true });
+    vol.writeFileSync("/templates/layouts/magazine/Layout.tsx", "// magazine Layout");
+    vol.writeFileSync("/templates/layouts/magazine/Masthead.tsx", "// magazine Masthead");
+    vol.mkdirSync("/project/src/components", { recursive: true });
+    const fs = makeFsModule(vol);
+
+    await applyLayout("magazine" as Parameters<typeof applyLayout>[0], { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs);
+
+    const layout = vol.readFileSync("/project/src/components/Layout.tsx", "utf-8") as string;
+    const masthead = vol.readFileSync("/project/src/components/Masthead.tsx", "utf-8") as string;
+    expect(layout).toContain("magazine Layout");
+    expect(masthead).toContain("magazine Masthead");
+  });
+
+  it("layout magazine remove Sidebar.tsx e Footer.tsx se existirem", async () => {
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/templates/layouts/magazine", { recursive: true });
+    vol.writeFileSync("/templates/layouts/magazine/Layout.tsx", "// magazine Layout");
+    vol.writeFileSync("/templates/layouts/magazine/Masthead.tsx", "// magazine Masthead");
+    vol.mkdirSync("/project/src/components", { recursive: true });
+    vol.writeFileSync("/project/src/components/Sidebar.tsx", "// old sidebar");
+    vol.writeFileSync("/project/src/components/Footer.tsx", "// old footer");
+    const fs = makeFsModule(vol);
+
+    await applyLayout("magazine" as Parameters<typeof applyLayout>[0], { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs);
+
+    expect(await fs.exists("/project/src/components/Sidebar.tsx")).toBe(false);
+    expect(await fs.exists("/project/src/components/Footer.tsx")).toBe(false);
+  });
+
   it("layout inexistente lança erro descritivo com o nome inválido", async () => {
     const vol = Volume.fromJSON({});
     makeTemplates(vol);

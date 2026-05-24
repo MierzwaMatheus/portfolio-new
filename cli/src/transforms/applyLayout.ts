@@ -10,7 +10,7 @@ export interface LayoutFsModule {
   exists: (path: string) => Promise<boolean>;
 }
 
-type Layout = "cyberpunk" | "brutalist" | "swiss" | "bento";
+type Layout = "cyberpunk" | "brutalist" | "swiss" | "bento" | "magazine";
 
 const LAYOUT_FILES: Record<Layout, { copy: string[]; remove: string[] }> = {
   cyberpunk: {
@@ -28,6 +28,10 @@ const LAYOUT_FILES: Record<Layout, { copy: string[]; remove: string[] }> = {
   bento: {
     copy: ["Layout.tsx", "FloatingDock.tsx"],
     remove: [],
+  },
+  magazine: {
+    copy: ["Layout.tsx", "Masthead.tsx"],
+    remove: ["Sidebar.tsx", "Footer.tsx"],
   },
 };
 

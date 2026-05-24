@@ -128,8 +128,9 @@ export async function runCreate(
       { value: "cyberpunk", label: "Cyberpunk", hint: "sidebar lateral com foto de perfil — dev, designer, freelancer" },
       { value: "brutalist", label: "Brutalism Terminal", hint: "identidade hacker total — monospace, sem bordas arredondadas" },
       { value: "swiss", label: "Swiss Grid", hint: "grid de 12 colunas, tipografia forte, design suíço rigoroso" },
+      { value: "bento", label: "Bento", hint: "grid assimétrico com floating dock — moderno, orientado a produto" },
     ],
-  }) as "cyberpunk" | "brutalist" | "swiss";
+  }) as "cyberpunk" | "brutalist" | "swiss" | "bento";
 
   await applyLayoutFn(
     layout,
