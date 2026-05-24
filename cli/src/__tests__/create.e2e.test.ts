@@ -109,6 +109,7 @@ function makeE2eDownloadMock(vol: InstanceType<typeof Volume>) {
       `${projectDir}/src`,
       `${projectDir}/convex`,
       `${projectDir}/templates/layouts/cyberpunk`,
+      `${projectDir}/templates/layouts/brutalist`,
     ];
     for (const dir of dirs) {
       vol.mkdirSync(dir, { recursive: true });
@@ -116,6 +117,8 @@ function makeE2eDownloadMock(vol: InstanceType<typeof Volume>) {
 
     vol.writeFileSync(`${projectDir}/templates/layouts/cyberpunk/Layout.tsx`, "// cyberpunk Layout");
     vol.writeFileSync(`${projectDir}/templates/layouts/cyberpunk/Sidebar.tsx`, "// Sidebar");
+    vol.writeFileSync(`${projectDir}/templates/layouts/brutalist/Layout.tsx`, "// brutalist Layout");
+    vol.writeFileSync(`${projectDir}/templates/layouts/brutalist/Navbar.tsx`, "// brutalist Navbar");
 
     vol.writeFileSync(`${projectDir}/src/index.css`, MINIMAL_CSS);
     vol.writeFileSync(`${projectDir}/index.html`, MINIMAL_HTML);
@@ -234,5 +237,41 @@ describe("create e2e — rubrica.json", () => {
     expect((state.plugins as Record<string, boolean>).blog).toBe(true);
     expect((state.plugins as Record<string, boolean>).portfolio).toBe(false);
     expect((state.plugins as Record<string, boolean>).resume).toBe(false);
+  });
+});
+
+// ---- Ciclo brutalist: wizard expõe layout brutalist --------------------------
+
+describe("create e2e — layout brutalist", () => {
+  it("gera Layout.tsx e Navbar.tsx em src/components/ com layout brutalist", async () => {
+    const { fs } = await runE2eCreate("brutalist");
+
+    expect(await fs.exists("/projects/meu-portfolio/src/components/Layout.tsx")).toBe(true);
+    expect(await fs.exists("/projects/meu-portfolio/src/components/Navbar.tsx")).toBe(true);
+  });
+
+  it("não gera Sidebar.tsx com layout brutalist", async () => {
+    const { fs } = await runE2eCreate("brutalist");
+
+    expect(await fs.exists("/projects/meu-portfolio/src/components/Sidebar.tsx")).toBe(false);
+  });
+
+  it("gera rubrica.json com layout brutalist", async () => {
+    vi.clearAllMocks();
+    setupSelectPrompts("brutalist", "paper-noir");
+    vi.mocked(multiselect).mockResolvedValueOnce(["blog"]);
+
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+    const deps = makeRealDeps(vol);
+
+    await runCreate("meu-portfolio", deps);
+
+    const fsm = deps.fs as ReturnType<typeof makeFsModule>;
+    const raw = await fsm.readFile("/projects/meu-portfolio/rubrica.json", "utf-8");
+    const state = JSON.parse(raw) as Record<string, unknown>;
+
+    expect(state.layout).toBe("brutalist");
+    expect(state.theme).toBe("paper-noir");
   });
 });

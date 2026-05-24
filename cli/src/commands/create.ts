@@ -126,8 +126,10 @@ export async function runCreate(
     message: "Layout",
     options: [
       { value: "cyberpunk", label: "Cyberpunk", hint: "sidebar lateral com foto de perfil — dev, designer, freelancer" },
+      { value: "brutalist", label: "Brutalism Terminal", hint: "identidade hacker total — monospace, sem bordas arredondadas" },
+      { value: "swiss", label: "Swiss Grid", hint: "grid de 12 colunas, tipografia forte, design suíço rigoroso" },
     ],
-  }) as "cyberpunk";
+  }) as "cyberpunk" | "brutalist" | "swiss";
 
   await applyLayoutFn(
     layout,
