@@ -21,7 +21,7 @@ vi.mock("@convex-dev/auth/providers/Password", () => ({
   Password: () => ({}),
 }));
 
-import { getPublic, getByKey, set, setBatch, getAll, setOgImage } from "../../convex/siteConfig";
+import { getPublic, getByKey, set, setBatch, getAll, setOgImage, PUBLIC_KEYS } from "../../convex/siteConfig";
 import { createMockCtx, type MockCtx } from "../_helpers/convexCtx";
 
 const handler = (fn: any) => fn._handler ?? fn;
@@ -201,6 +201,19 @@ describe("convex/siteConfig · getAll", () => {
     ]);
     const result = await handler(getAll)(ctx, {});
     expect(result).toHaveLength(1);
+  });
+});
+
+describe("convex/siteConfig · PUBLIC_KEYS — esquema de 4 cores", () => {
+  it("contém theme_background, theme_foreground, theme_primary, theme_accent", () => {
+    expect(PUBLIC_KEYS).toContain("theme_background");
+    expect(PUBLIC_KEYS).toContain("theme_foreground");
+    expect(PUBLIC_KEYS).toContain("theme_primary");
+    expect(PUBLIC_KEYS).toContain("theme_accent");
+  });
+
+  it("não contém theme_radius", () => {
+    expect(PUBLIC_KEYS).not.toContain("theme_radius");
   });
 });
 
