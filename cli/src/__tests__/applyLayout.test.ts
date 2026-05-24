@@ -65,9 +65,11 @@ describe("applyLayout", () => {
 
   it("layout brutalist copia Layout.tsx e Navbar.tsx para src/components/", async () => {
     const vol = Volume.fromJSON({});
-    vol.mkdirSync("/templates/layouts/brutalist", { recursive: true });
+    vol.mkdirSync("/templates/layouts/brutalist/pages", { recursive: true });
     vol.writeFileSync("/templates/layouts/brutalist/Layout.tsx", "// brutalist Layout");
     vol.writeFileSync("/templates/layouts/brutalist/Navbar.tsx", "// brutalist Navbar");
+    vol.writeFileSync("/templates/layouts/brutalist/pages/Home.tsx", "// brutalist Home");
+    vol.writeFileSync("/templates/layouts/brutalist/pages/About.tsx", "// brutalist About");
     vol.mkdirSync("/project/src/components", { recursive: true });
     const fs = makeFsModule(vol);
 
@@ -81,9 +83,11 @@ describe("applyLayout", () => {
 
   it("layout brutalist remove Sidebar.tsx e Footer.tsx se existirem", async () => {
     const vol = Volume.fromJSON({});
-    vol.mkdirSync("/templates/layouts/brutalist", { recursive: true });
+    vol.mkdirSync("/templates/layouts/brutalist/pages", { recursive: true });
     vol.writeFileSync("/templates/layouts/brutalist/Layout.tsx", "// brutalist Layout");
     vol.writeFileSync("/templates/layouts/brutalist/Navbar.tsx", "// brutalist Navbar");
+    vol.writeFileSync("/templates/layouts/brutalist/pages/Home.tsx", "// brutalist Home");
+    vol.writeFileSync("/templates/layouts/brutalist/pages/About.tsx", "// brutalist About");
     vol.mkdirSync("/project/src/components", { recursive: true });
     vol.writeFileSync("/project/src/components/Sidebar.tsx", "// old sidebar");
     vol.writeFileSync("/project/src/components/Footer.tsx", "// old footer");
@@ -171,6 +175,28 @@ describe("applyLayout", () => {
 
     expect(await fs.exists("/project/src/components/Sidebar.tsx")).toBe(false);
     expect(await fs.exists("/project/src/components/Footer.tsx")).toBe(false);
+  });
+
+  it("layout com pages[] copia arquivos de templates/layouts/<layout>/pages/ para src/pages/", async () => {
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/templates/layouts/brutalist/pages", { recursive: true });
+    vol.writeFileSync("/templates/layouts/brutalist/Layout.tsx", "// brutalist Layout");
+    vol.writeFileSync("/templates/layouts/brutalist/Navbar.tsx", "// brutalist Navbar");
+    vol.writeFileSync("/templates/layouts/brutalist/pages/Home.tsx", "// brutalist Home");
+    vol.writeFileSync("/templates/layouts/brutalist/pages/About.tsx", "// brutalist About");
+    vol.mkdirSync("/project/src/components", { recursive: true });
+    const fs = makeFsModule(vol);
+
+    await applyLayout(
+      "brutalist" as Parameters<typeof applyLayout>[0],
+      { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR },
+      fs
+    );
+
+    const home = vol.readFileSync("/project/src/pages/Home.tsx", "utf-8") as string;
+    const about = vol.readFileSync("/project/src/pages/About.tsx", "utf-8") as string;
+    expect(home).toContain("brutalist Home");
+    expect(about).toContain("brutalist About");
   });
 
   it("layout sem campo pages não copia nada para src/pages/", async () => {

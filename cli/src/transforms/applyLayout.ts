@@ -20,6 +20,7 @@ const LAYOUT_FILES: Record<Layout, { copy: string[]; remove: string[]; pages?: s
   brutalist: {
     copy: ["Layout.tsx", "Navbar.tsx"],
     remove: ["Sidebar.tsx", "Footer.tsx"],
+    pages: ["Home.tsx", "About.tsx"],
   },
   swiss: {
     copy: ["Layout.tsx", "Sidebar.tsx"],
@@ -71,6 +72,17 @@ export async function applyLayout(
     const filePath = path.join(destDir, file);
     if (await fsModule.exists(filePath)) {
       await fsModule.unlink(filePath);
+    }
+  }
+
+  if (spec.pages?.length) {
+    const pagesDestDir = path.join(projectDir, "src", "pages");
+    await fsModule.mkdir(pagesDestDir, { recursive: true });
+    for (const file of spec.pages) {
+      await fsModule.copyFile(
+        path.join(srcDir, "pages", file),
+        path.join(pagesDestDir, file)
+      );
     }
   }
 }
