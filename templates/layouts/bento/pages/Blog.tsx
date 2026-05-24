@@ -235,7 +235,7 @@ export default function BentoBlog() {
             const isBig = i === 3 || i === 4;
             return (
               <BentoCard
-                key={p._id}
+                key={p.id}
                 span={span}
                 padding={isBig ? 24 : 18}
                 style={i % 5 === 2 ? { background: "hsl(var(--muted))" } : {}}

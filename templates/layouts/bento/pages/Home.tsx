@@ -46,6 +46,8 @@ export default function BentoHome() {
   const ownerFirstName = contactInfo?.name?.split(" ")[0] ?? "";
   const email = contactInfo?.email ?? "";
   const phone = contactInfo?.phone ?? "";
+  const showEmail = !!(contactInfo?.show_email && email);
+  const showPhone = !!(contactInfo?.show_phone && phone);
   const gap = 14;
 
   return (
@@ -204,7 +206,7 @@ export default function BentoHome() {
         </BentoCard>
 
         {/* Contact cards */}
-        {email && (
+        {showEmail && (
           <BentoCard
             span={2}
             padding={18}
@@ -216,7 +218,7 @@ export default function BentoHome() {
             <div style={{ fontSize: 12, fontWeight: 600, marginTop: 2 }}>{email}</div>
           </BentoCard>
         )}
-        {phone && (
+        {showPhone && (
           <BentoCard span={2} padding={18}>
             <Phone size={18} />
             <div style={{ fontSize: 10.5, marginTop: 8, opacity: 0.6 }}>whatsapp</div>
