@@ -5,8 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { toast } from "sonner";
+import { useSearch } from "wouter";
+import { cn } from "@/lib/utils";
 import keyManifest from "@/i18n/key-manifest.json";
 import { getKeyOriginLabel } from "@/i18n/utils/keyOriginLabel";
 
@@ -30,16 +32,25 @@ function TextItem({
   item,
   originLabel,
   onSave,
+  highlighted,
 }: {
   item: SiteText;
   originLabel: string;
   onSave: (key: string, ptBR: string, enUS: string) => void;
+  highlighted?: boolean;
 }) {
   const [ptBR, setPtBR] = useState(item.ptBR);
   const [enUS, setEnUS] = useState(item.enUS ?? "");
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (highlighted && ref.current) {
+      ref.current.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [highlighted]);
 
   return (
-    <div className="border rounded p-3 space-y-2">
+    <div ref={ref} className={cn("border rounded p-3 space-y-2", highlighted && "ring-2 ring-primary")}>
       <div className="flex items-center gap-2">
         <span className="text-xs font-mono text-muted-foreground">{item.key}</span>
         <Badge variant="secondary" className="text-xs">
@@ -76,6 +87,16 @@ export default function AdminTextos() {
   const [search, setSearch] = useState("");
   const [isTranslating, setIsTranslating] = useState(false);
   const allTexts = (useQuery(api.siteTexts.getAll) ?? []) as SiteText[];
+
+  const searchParams = useSearch();
+  const highlightKey = useMemo(() => {
+    const params = new URLSearchParams(searchParams);
+    return params.get("highlight") ?? "";
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (highlightKey) setSearch(highlightKey);
+  }, [highlightKey]);
   const update = useMutation(api.siteTexts.update);
   const translateAllMissing = useAction(api.siteTexts.translateAllMissing);
 
@@ -139,6 +160,7 @@ export default function AdminTextos() {
                     item={item}
                     originLabel={getKeyOriginLabel(item.key, keyManifest as Record<string, { file: string; line: number }[]>)}
                     onSave={handleSave}
+                    highlighted={item.key === highlightKey}
                   />
                 ))}
               </div>
