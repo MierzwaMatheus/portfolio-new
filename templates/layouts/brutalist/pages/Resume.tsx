@@ -85,8 +85,8 @@ export default function Resume() {
   const softSkills = getItemsByType("soft_skill");
   const education = getItemsByType("education");
   const languages = getItemsByType("language");
-  const certs = getItemsByType("certification");
-  const volunteering = getItemsByType("volunteering");
+  const certs = getItemsByType("course");
+  const volunteering = getItemsByType("volunteer");
 
   return (
     <div
@@ -131,12 +131,9 @@ export default function Resume() {
                 role?: string;
                 company?: string;
                 period?: string;
-                items?: string[];
-                groups?: { items: string[] }[];
+                description?: string;
               };
-              const items: string[] = c.groups
-                ? c.groups.flatMap((g) => g.items.slice(0, 1))
-                : (c.items ?? []).slice(0, 2);
+              const items: string[] = c.description ? [c.description] : [];
               return (
                 <span key={e.id}>
                   <span style={{ color: "var(--primary)" }}>{"*"}</span>{" "}
