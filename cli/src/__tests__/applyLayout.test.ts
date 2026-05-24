@@ -63,6 +63,54 @@ describe("applyLayout", () => {
     expect(await fs.exists("/project/src/components/Footer.tsx")).toBe(false);
   });
 
+  it("layout brutalist copia Layout.tsx e Navbar.tsx para src/components/", async () => {
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/templates/layouts/brutalist", { recursive: true });
+    vol.writeFileSync("/templates/layouts/brutalist/Layout.tsx", "// brutalist Layout");
+    vol.writeFileSync("/templates/layouts/brutalist/Navbar.tsx", "// brutalist Navbar");
+    vol.mkdirSync("/project/src/components", { recursive: true });
+    const fs = makeFsModule(vol);
+
+    await applyLayout("brutalist" as Parameters<typeof applyLayout>[0], { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs);
+
+    const layout = vol.readFileSync("/project/src/components/Layout.tsx", "utf-8") as string;
+    const navbar = vol.readFileSync("/project/src/components/Navbar.tsx", "utf-8") as string;
+    expect(layout).toContain("brutalist Layout");
+    expect(navbar).toContain("brutalist Navbar");
+  });
+
+  it("layout brutalist remove Sidebar.tsx e Footer.tsx se existirem", async () => {
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/templates/layouts/brutalist", { recursive: true });
+    vol.writeFileSync("/templates/layouts/brutalist/Layout.tsx", "// brutalist Layout");
+    vol.writeFileSync("/templates/layouts/brutalist/Navbar.tsx", "// brutalist Navbar");
+    vol.mkdirSync("/project/src/components", { recursive: true });
+    vol.writeFileSync("/project/src/components/Sidebar.tsx", "// old sidebar");
+    vol.writeFileSync("/project/src/components/Footer.tsx", "// old footer");
+    const fs = makeFsModule(vol);
+
+    await applyLayout("brutalist" as Parameters<typeof applyLayout>[0], { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs);
+
+    expect(await fs.exists("/project/src/components/Sidebar.tsx")).toBe(false);
+    expect(await fs.exists("/project/src/components/Footer.tsx")).toBe(false);
+  });
+
+  it("layout swiss copia Layout.tsx e Sidebar.tsx para src/components/", async () => {
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/templates/layouts/swiss", { recursive: true });
+    vol.writeFileSync("/templates/layouts/swiss/Layout.tsx", "// swiss Layout");
+    vol.writeFileSync("/templates/layouts/swiss/Sidebar.tsx", "// swiss Sidebar");
+    vol.mkdirSync("/project/src/components", { recursive: true });
+    const fs = makeFsModule(vol);
+
+    await applyLayout("swiss" as Parameters<typeof applyLayout>[0], { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs);
+
+    const layout = vol.readFileSync("/project/src/components/Layout.tsx", "utf-8") as string;
+    const sidebar = vol.readFileSync("/project/src/components/Sidebar.tsx", "utf-8") as string;
+    expect(layout).toContain("swiss Layout");
+    expect(sidebar).toContain("swiss Sidebar");
+  });
+
   it("layout inexistente lança erro descritivo com o nome inválido", async () => {
     const vol = Volume.fromJSON({});
     makeTemplates(vol);

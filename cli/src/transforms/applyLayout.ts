@@ -10,10 +10,18 @@ export interface LayoutFsModule {
   exists: (path: string) => Promise<boolean>;
 }
 
-type Layout = "cyberpunk";
+type Layout = "cyberpunk" | "brutalist" | "swiss";
 
 const LAYOUT_FILES: Record<Layout, { copy: string[]; remove: string[] }> = {
   cyberpunk: {
+    copy: ["Layout.tsx", "Sidebar.tsx"],
+    remove: ["Navbar.tsx", "Footer.tsx"],
+  },
+  brutalist: {
+    copy: ["Layout.tsx", "Navbar.tsx"],
+    remove: ["Sidebar.tsx", "Footer.tsx"],
+  },
+  swiss: {
     copy: ["Layout.tsx", "Sidebar.tsx"],
     remove: ["Navbar.tsx", "Footer.tsx"],
   },
