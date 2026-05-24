@@ -82,19 +82,26 @@ describe("useSiteConfig", () => {
   });
 
   describe("todas as chaves estão presentes", () => {
-    it("retorna todas as 19 chaves públicas", () => {
+    it("retorna as chaves públicas incluindo as 4 novas de tema", () => {
       mockUseQuery.mockReturnValue({ data: [], isLoading: false } as any);
       const { result } = renderHook(() => useSiteConfig());
       const expectedKeys = [
         "site_title", "site_description", "site_url", "site_name",
         "og_image_url", "twitter_handle", "author_name", "author_email",
         "rss_title", "rss_description", "seo_home_title", "seo_home_description",
+        "theme_background", "theme_foreground", "theme_primary", "theme_accent",
         "theme_accent_color", "theme_accent_hsl", "theme_font_sans",
-        "theme_font_mono", "theme_radius", "keywords", "lang",
+        "theme_font_mono", "keywords", "lang",
       ];
       for (const key of expectedKeys) {
         expect(result.current).toHaveProperty(key);
       }
+    });
+
+    it("não contém theme_radius", () => {
+      mockUseQuery.mockReturnValue({ data: [], isLoading: false } as any);
+      const { result } = renderHook(() => useSiteConfig());
+      expect(result.current).not.toHaveProperty("theme_radius");
     });
 
     it("keywords tem fallback de array vazio", () => {

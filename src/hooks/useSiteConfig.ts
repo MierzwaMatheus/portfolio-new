@@ -15,11 +15,14 @@ export type SiteConfig = {
   rss_description: string;
   seo_home_title: string;
   seo_home_description: string;
+  theme_background: string;
+  theme_foreground: string;
+  theme_primary: string;
+  theme_accent: string;
   theme_accent_color: string;
   theme_accent_hsl: string;
   theme_font_sans: string;
   theme_font_mono: string;
-  theme_radius: string;
   keywords: string[];
   lang: string;
 };
@@ -38,11 +41,14 @@ function buildFallback(): SiteConfig {
     rss_description: rubricalConfig.rssDescription,
     seo_home_title: rubricalConfig.seoHomeTitle,
     seo_home_description: rubricalConfig.seoHomeDescription,
+    theme_background: "#09090b",
+    theme_foreground: "#fafafa",
+    theme_primary: "#6366f1",
+    theme_accent: rubricalConfig.accentColor,
     theme_accent_color: rubricalConfig.accentColor,
     theme_accent_hsl: "",
     theme_font_sans: rubricalConfig.fontSans,
     theme_font_mono: rubricalConfig.fontMono,
-    theme_radius: rubricalConfig.radius,
     keywords: [],
     lang: rubricalConfig.lang,
   };
