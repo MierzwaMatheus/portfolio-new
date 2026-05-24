@@ -11,6 +11,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import { toast } from "sonner";
 import { AdminLayout } from "./Dashboard";
+import { contrastRatio, wcagLevel } from "@/lib/colorContrast";
 
 const FONT_SANS_OPTIONS = [
   { value: "Inter", label: "Inter" },
@@ -27,47 +28,85 @@ const FONT_MONO_OPTIONS = [
   { value: "IBM Plex Mono", label: "IBM Plex Mono" },
 ];
 
-const RADIUS_OPTIONS = [
-  { value: "0rem", label: "Nenhum" },
-  { value: "0.375rem", label: "Suave" },
-  { value: "0.5rem", label: "Médio" },
-  { value: "0.75rem", label: "Arredondado" },
-  { value: "1rem", label: "Pill" },
-];
-
-function hexToHsl(hex: string): { h: number; s: number; l: number } | null {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) return null;
-  let r = parseInt(result[1], 16) / 255;
-  let g = parseInt(result[2], 16) / 255;
-  let b = parseInt(result[3], 16) / 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h = 0, s = 0;
-  const l = (max + min) / 2;
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-      case g: h = ((b - r) / d + 2) / 6; break;
-      case b: h = ((r - g) / d + 4) / 6; break;
-    }
-  }
-  return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
-}
-
 function isValidHex(hex: string): boolean {
   return /^#[0-9a-fA-F]{6}$/.test(hex);
 }
 
+type ContrastBadgeProps = { hex: string; bg: string; testId: string };
+
+function ContrastBadge({ hex, bg, testId }: ContrastBadgeProps) {
+  if (!isValidHex(hex) || !isValidHex(bg)) return null;
+  const ratio = contrastRatio(hex, bg);
+  const level = wcagLevel(ratio);
+  const colorMap = { AAA: "bg-green-600", AA: "bg-yellow-500", fail: "bg-red-500" } as const;
+  const labelMap = { AAA: "✓ AAA", AA: "~ AA", fail: "✗ Falha" } as const;
+  return (
+    <span
+      data-testid={testId}
+      className={`text-white text-xs px-2 py-0.5 rounded font-mono ${colorMap[level]}`}
+    >
+      {labelMap[level]} ({ratio.toFixed(1)}:1)
+    </span>
+  );
+}
+
+type ColorPickerProps = {
+  label: string;
+  testIdSuffix: string;
+  value: string;
+  hexInput: string;
+  onNativeChange: (v: string) => void;
+  onHexChange: (v: string) => void;
+  bg?: string;
+};
+
+function ColorPickerField({ label, testIdSuffix, value, hexInput, onNativeChange, onHexChange, bg }: ColorPickerProps) {
+  return (
+    <div className="space-y-2 flex-1 min-w-0">
+      <Label className="text-white text-sm">{label}</Label>
+      <div className="flex items-center gap-2 flex-wrap">
+        <input
+          type="color"
+          data-testid={`color-picker-${testIdSuffix}-native`}
+          value={value}
+          onChange={(e) => onNativeChange(e.target.value)}
+          className="w-9 h-9 rounded cursor-pointer border-0 bg-transparent shrink-0"
+        />
+        <Input
+          data-testid={`color-picker-${testIdSuffix}-hex`}
+          value={hexInput}
+          onChange={(e) => onHexChange(e.target.value)}
+          placeholder="#000000"
+          className="bg-white/5 border-white/10 text-white w-28"
+          maxLength={7}
+        />
+        {bg && (
+          <ContrastBadge
+            hex={value}
+            bg={bg}
+            testId={`contrast-badge-${testIdSuffix}`}
+          />
+        )}
+      </div>
+      {!isValidHex(hexInput) && hexInput !== "" && (
+        <span className="text-red-400 text-xs">Formato inválido. Use #rrggbb</span>
+      )}
+    </div>
+  );
+}
+
 export default function AdminSiteConfig() {
-  // Admin sempre lê do Convex diretamente — dados ao vivo independente de ambiente
   const rawConfig = useQuery(api.siteConfig.getPublic);
-  const [accentColor, setAccentColor] = useState("#6366f1");
-  const [hexInput, setHexInput] = useState("#6366f1");
+  const [bgColor, setBgColor] = useState("#09090b");
+  const [bgHex, setBgHex] = useState("#09090b");
+  const [fgColor, setFgColor] = useState("#fafafa");
+  const [fgHex, setFgHex] = useState("#fafafa");
+  const [primaryColor, setPrimaryColor] = useState("#6366f1");
+  const [primaryHex, setPrimaryHex] = useState("#6366f1");
+  const [accentColor, setAccentColor] = useState("#f59e0b");
+  const [accentHex, setAccentHex] = useState("#f59e0b");
   const [fontSans, setFontSans] = useState("Inter");
   const [fontMono, setFontMono] = useState("JetBrains Mono");
-  const [radius, setRadius] = useState("0.5rem");
   const [siteTitle, setSiteTitle] = useState("");
   const [siteDescription, setSiteDescription] = useState("");
   const [twitterHandle, setTwitterHandle] = useState("");
@@ -81,11 +120,16 @@ export default function AdminSiteConfig() {
   useEffect(() => {
     if (rawConfig !== undefined && !initialized) {
       const cfg = Object.fromEntries(rawConfig.map((d) => [d.key, d.value]));
-      setAccentColor((cfg.theme_accent_color as string) || "#6366f1");
-      setHexInput((cfg.theme_accent_color as string) || "#6366f1");
+      const bg = (cfg.theme_background as string) || "#09090b";
+      setBgColor(bg); setBgHex(bg);
+      const fg = (cfg.theme_foreground as string) || "#fafafa";
+      setFgColor(fg); setFgHex(fg);
+      const primary = (cfg.theme_primary as string) || "#6366f1";
+      setPrimaryColor(primary); setPrimaryHex(primary);
+      const accent = (cfg.theme_accent as string) || "#f59e0b";
+      setAccentColor(accent); setAccentHex(accent);
       setFontSans((cfg.theme_font_sans as string) || "Inter");
       setFontMono((cfg.theme_font_mono as string) || "JetBrains Mono");
-      setRadius((cfg.theme_radius as string) || "0.5rem");
       setSiteTitle((cfg.site_title as string) || "");
       setSiteDescription((cfg.site_description as string) || "");
       setTwitterHandle((cfg.twitter_handle as string) || "");
@@ -96,6 +140,7 @@ export default function AdminSiteConfig() {
       setInitialized(true);
     }
   }, [rawConfig, initialized]);
+
   const [isUploadingOg, setIsUploadingOg] = useState(false);
   const ogFileInputRef = useRef<HTMLInputElement>(null);
   const generateUploadUrl = useMutation(api.images.generateUploadUrl);
@@ -109,10 +154,12 @@ export default function AdminSiteConfig() {
     try {
       await setBatch({
         items: [
-          { key: "theme_accent_color", value: accentColor },
+          { key: "theme_background", value: bgColor },
+          { key: "theme_foreground", value: fgColor },
+          { key: "theme_primary", value: primaryColor },
+          { key: "theme_accent", value: accentColor },
           { key: "theme_font_sans", value: fontSans },
           { key: "theme_font_mono", value: fontMono },
-          { key: "theme_radius", value: radius },
         ],
       });
       toast.success("Aparência salva com sucesso!");
@@ -144,19 +191,12 @@ export default function AdminSiteConfig() {
     }
   };
 
-  const handleHexChange = (value: string) => {
-    setHexInput(value);
-    if (isValidHex(value)) {
-      setAccentColor(value);
-    }
-  };
-
-  const handleNativeColorChange = (value: string) => {
-    setAccentColor(value);
-    setHexInput(value);
-  };
-
-  const hsl = hexToHsl(accentColor);
+  function makeHexHandler(setter: (v: string) => void, colorSetter: (v: string) => void) {
+    return (value: string) => {
+      setter(value);
+      if (isValidHex(value)) colorSetter(value);
+    };
+  }
 
   if (rawConfig === undefined) {
     return (
@@ -176,41 +216,42 @@ export default function AdminSiteConfig() {
           <CardTitle className="text-white">Aparência</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="space-y-3">
-            <Label className="text-white">Cor de destaque</Label>
-            <div className="flex items-center gap-3">
-              <input
-                type="color"
-                data-testid="color-picker-native"
-                value={accentColor}
-                onChange={(e) => handleNativeColorChange(e.target.value)}
-                className="w-10 h-10 rounded cursor-pointer border-0 bg-transparent"
-              />
-              <Input
-                data-testid="color-picker-hex"
-                value={hexInput}
-                onChange={(e) => handleHexChange(e.target.value)}
-                placeholder="#6366f1"
-                className="bg-white/5 border-white/10 text-white w-36"
-                maxLength={7}
-              />
-              {!isValidHex(hexInput) && hexInput !== "" && (
-                <span className="text-red-400 text-sm">Formato inválido. Use #rrggbb</span>
-              )}
-            </div>
-            {hsl && (
-              <div data-testid="color-preview" className="flex items-center gap-3 mt-2">
-                <div
-                  className="w-8 h-8 rounded-full"
-                  style={{ backgroundColor: accentColor }}
-                />
-                <div className="space-x-4 text-white/60 text-sm">
-                  <span>H: {hsl.h}°</span>
-                  <span>S: {hsl.s}%</span>
-                  <span>L: {hsl.l}%</span>
-                </div>
-              </div>
-            )}
+          <div className="grid grid-cols-2 gap-4">
+            <ColorPickerField
+              label="Fundo"
+              testIdSuffix="bg"
+              value={bgColor}
+              hexInput={bgHex}
+              onNativeChange={(v) => { setBgColor(v); setBgHex(v); }}
+              onHexChange={makeHexHandler(setBgHex, setBgColor)}
+            />
+            <ColorPickerField
+              label="Texto"
+              testIdSuffix="fg"
+              value={fgColor}
+              hexInput={fgHex}
+              onNativeChange={(v) => { setFgColor(v); setFgHex(v); }}
+              onHexChange={makeHexHandler(setFgHex, setFgColor)}
+              bg={bgColor}
+            />
+            <ColorPickerField
+              label="Primária"
+              testIdSuffix="primary"
+              value={primaryColor}
+              hexInput={primaryHex}
+              onNativeChange={(v) => { setPrimaryColor(v); setPrimaryHex(v); }}
+              onHexChange={makeHexHandler(setPrimaryHex, setPrimaryColor)}
+              bg={bgColor}
+            />
+            <ColorPickerField
+              label="Destaque"
+              testIdSuffix="accent"
+              value={accentColor}
+              hexInput={accentHex}
+              onNativeChange={(v) => { setAccentColor(v); setAccentHex(v); }}
+              onHexChange={makeHexHandler(setAccentHex, setAccentColor)}
+              bg={bgColor}
+            />
           </div>
 
           <div className="space-y-2">
@@ -235,20 +276,6 @@ export default function AdminSiteConfig() {
               </SelectTrigger>
               <SelectContent>
                 {FONT_MONO_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="text-white">Border radius</Label>
-            <Select value={radius} onValueChange={setRadius}>
-              <SelectTrigger data-testid="select-radius" className="bg-white/5 border-white/10 text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {RADIUS_OPTIONS.map((opt) => (
                   <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                 ))}
               </SelectContent>

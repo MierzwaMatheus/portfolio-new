@@ -42,10 +42,12 @@ const defaultRawConfig = [
   { key: "author_email", value: "autor@exemplo.com" },
   { key: "seo_home_title", value: "Título Home" },
   { key: "seo_home_description", value: "Descrição Home" },
-  { key: "theme_accent_color", value: "#6366f1" },
+  { key: "theme_background", value: "#09090b" },
+  { key: "theme_foreground", value: "#fafafa" },
+  { key: "theme_primary", value: "#6366f1" },
+  { key: "theme_accent", value: "#f59e0b" },
   { key: "theme_font_sans", value: "Inter" },
   { key: "theme_font_mono", value: "JetBrains Mono" },
-  { key: "theme_radius", value: "0.5rem" },
   { key: "keywords", value: [] },
   { key: "lang", value: "pt-BR" },
 ];
@@ -66,6 +68,71 @@ describe("SiteConfig — Ciclo 1: estrutura básica da página", () => {
   });
 });
 
+describe("SiteConfig — Ciclo 7: 4 color pickers", () => {
+  it("renderiza color picker nativo para fundo (theme_background)", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("color-picker-bg-native")).toBeInTheDocument();
+  });
+
+  it("renderiza color picker nativo para texto (theme_foreground)", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("color-picker-fg-native")).toBeInTheDocument();
+  });
+
+  it("renderiza color picker nativo para primária (theme_primary)", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("color-picker-primary-native")).toBeInTheDocument();
+  });
+
+  it("renderiza color picker nativo para destaque (theme_accent)", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("color-picker-accent-native")).toBeInTheDocument();
+  });
+
+  it("pickers carregam valores do Convex", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("color-picker-bg-hex")).toHaveValue("#09090b");
+    expect(screen.getByTestId("color-picker-fg-hex")).toHaveValue("#fafafa");
+    expect(screen.getByTestId("color-picker-primary-hex")).toHaveValue("#6366f1");
+    expect(screen.getByTestId("color-picker-accent-hex")).toHaveValue("#f59e0b");
+  });
+});
+
+describe("SiteConfig — Ciclo 8: contrast badges WCAG", () => {
+  it("renderiza badge de contraste para texto (fg vs bg)", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("contrast-badge-fg")).toBeInTheDocument();
+  });
+
+  it("renderiza badge de contraste para primária (primary vs bg)", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("contrast-badge-primary")).toBeInTheDocument();
+  });
+
+  it("renderiza badge de contraste para destaque (accent vs bg)", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.getByTestId("contrast-badge-accent")).toBeInTheDocument();
+  });
+
+  it("badge fg mostra AAA para branco (#fafafa) sobre preto (#09090b)", () => {
+    render(<AdminSiteConfig />);
+    const badge = screen.getByTestId("contrast-badge-fg");
+    expect(badge.textContent).toContain("AAA");
+  });
+});
+
+describe("SiteConfig — Ciclo 9: border-radius removido", () => {
+  it("não renderiza select de border radius", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.queryByTestId("select-radius")).not.toBeInTheDocument();
+  });
+
+  it("não exibe label 'Border radius'", () => {
+    render(<AdminSiteConfig />);
+    expect(screen.queryByText("Border radius")).not.toBeInTheDocument();
+  });
+});
+
 describe("SiteConfig — Ciclo 6: salvamento via setBatch + toast", () => {
   it("renderiza botão 'Salvar Aparência'", () => {
     render(<AdminSiteConfig />);
@@ -77,7 +144,7 @@ describe("SiteConfig — Ciclo 6: salvamento via setBatch + toast", () => {
     expect(screen.getByTestId("btn-save-seo")).toBeInTheDocument();
   });
 
-  it("clicar em 'Salvar Aparência' chama setBatch com chaves de aparência", async () => {
+  it("clicar em 'Salvar Aparência' chama setBatch com as 4 novas chaves de cor", async () => {
     const { useMutation: mockUseMutation } = await import("convex/react");
     const mockSetBatch = vi.fn().mockResolvedValue(undefined);
     vi.mocked(mockUseMutation).mockImplementation((fn: any) => {
@@ -93,13 +160,33 @@ describe("SiteConfig — Ciclo 6: salvamento via setBatch + toast", () => {
     expect(mockSetBatch).toHaveBeenCalledWith(
       expect.objectContaining({
         items: expect.arrayContaining([
-          expect.objectContaining({ key: "theme_accent_color" }),
+          expect.objectContaining({ key: "theme_background" }),
+          expect.objectContaining({ key: "theme_foreground" }),
+          expect.objectContaining({ key: "theme_primary" }),
+          expect.objectContaining({ key: "theme_accent" }),
           expect.objectContaining({ key: "theme_font_sans" }),
           expect.objectContaining({ key: "theme_font_mono" }),
-          expect.objectContaining({ key: "theme_radius" }),
         ]),
       })
     );
+  });
+
+  it("clicar em 'Salvar Aparência' não salva theme_radius", async () => {
+    const { useMutation: mockUseMutation } = await import("convex/react");
+    const mockSetBatch = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(mockUseMutation).mockImplementation((fn: any) => {
+      if (fn === "siteConfig:setBatch") return mockSetBatch;
+      return vi.fn();
+    });
+
+    const { fireEvent } = await import("@testing-library/react");
+    render(<AdminSiteConfig />);
+    fireEvent.click(screen.getByTestId("btn-save-aparencia"));
+
+    await new Promise((r) => setTimeout(r, 0));
+    const call = mockSetBatch.mock.calls[0]?.[0];
+    const keys = call?.items?.map((i: any) => i.key) ?? [];
+    expect(keys).not.toContain("theme_radius");
   });
 
   it("clicar em 'Salvar SEO' chama setBatch com chaves de identidade", async () => {
@@ -170,7 +257,7 @@ describe("SiteConfig — Ciclo 4: seção SEO campos de texto e keywords", () =>
   });
 });
 
-describe("SiteConfig — Ciclo 3: fontes e border radius", () => {
+describe("SiteConfig — Ciclo 3: fontes", () => {
   it("renderiza select de fonte principal com as 5 opções curadas", () => {
     render(<AdminSiteConfig />);
     expect(screen.getByTestId("select-font-sans")).toBeInTheDocument();
@@ -181,41 +268,8 @@ describe("SiteConfig — Ciclo 3: fontes e border radius", () => {
     expect(screen.getByTestId("select-font-mono")).toBeInTheDocument();
   });
 
-  it("renderiza select de border radius com as 5 opções", () => {
-    render(<AdminSiteConfig />);
-    expect(screen.getByTestId("select-radius")).toBeInTheDocument();
-  });
-
   it("select de fonte principal mostra valor atual do config", () => {
     render(<AdminSiteConfig />);
     expect(screen.getByText("Inter")).toBeInTheDocument();
-  });
-});
-
-describe("SiteConfig — Ciclo 2: cor de destaque", () => {
-  it("renderiza input de cor nativo com valor atual de theme_accent_color", () => {
-    render(<AdminSiteConfig />);
-    const colorInput = screen.getByTestId("color-picker-native");
-    expect(colorInput).toHaveValue("#6366f1");
-  });
-
-  it("renderiza input hex com valor atual de theme_accent_color", () => {
-    render(<AdminSiteConfig />);
-    const hexInput = screen.getByTestId("color-picker-hex");
-    expect(hexInput).toHaveValue("#6366f1");
-  });
-
-  it("exibe preview com cor de destaque atual", () => {
-    render(<AdminSiteConfig />);
-    expect(screen.getByTestId("color-preview")).toBeInTheDocument();
-  });
-
-  it("hex inválido não atualiza a cor (mantém anterior)", async () => {
-    const { container } = render(<AdminSiteConfig />);
-    const hexInput = screen.getByTestId("color-picker-hex");
-    const { fireEvent } = await import("@testing-library/react");
-    fireEvent.change(hexInput, { target: { value: "invalido" } });
-    const colorInput = container.querySelector('[data-testid="color-picker-native"]') as HTMLInputElement;
-    expect(colorInput.value).toBe("#6366f1");
   });
 });
