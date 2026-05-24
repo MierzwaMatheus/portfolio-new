@@ -32,104 +32,59 @@ body { margin: 0; }
 describe("applyTheme", () => {
   // ---- editorial-cream (☀ claro) -----------------------------------------------
 
-  it("editorial-cream injeta fundo claro creme e âmbar primário no :root", async () => {
+  it("editorial-cream injeta as 4 vars hex no :root e não modifica .dark", async () => {
     const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
     const fs = makeFsModule(vol);
 
     await applyTheme({ preset: "editorial-cream" }, "/project/src/index.css", fs);
 
     const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
-    expect(result).toContain("--background: 38 30% 96%");
-    expect(result).toContain("--foreground: 24 10% 10%");
-    expect(result).toContain("--primary: 35 90% 50%");
-    expect(result).toContain("--accent: 38 25% 90%");
-  });
-
-  it("editorial-cream injeta fundo quente escuro no .dark", async () => {
-    const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
-    const fs = makeFsModule(vol);
-
-    await applyTheme({ preset: "editorial-cream" }, "/project/src/index.css", fs);
-
-    const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
-    expect(result).toContain("--background: 25 20% 8%");
-    expect(result).toContain("--foreground: 38 20% 90%");
+    expect(result).toContain("--bg: #faf7f2");
+    expect(result).toContain("--text: #1a1614");
+    // bloco .dark permanece intacto (não é sobrescrito)
+    expect(result).toContain("--background: 0 0% 0%");
   });
 
   // ---- paper-noir (☀ claro) -----------------------------------------------------
 
-  it("paper-noir injeta fundo quase-branco e vermelho primário no :root", async () => {
+  it("paper-noir injeta as 4 vars hex no :root e não modifica .dark", async () => {
     const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
     const fs = makeFsModule(vol);
 
     await applyTheme({ preset: "paper-noir" }, "/project/src/index.css", fs);
 
     const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
-    expect(result).toContain("--background: 0 0% 98%");
-    expect(result).toContain("--foreground: 0 0% 5%");
-    expect(result).toContain("--primary: 0 84% 50%");
-    expect(result).toContain("--accent: 0 0% 92%");
-  });
-
-  it("paper-noir injeta fundo preto profundo no .dark", async () => {
-    const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
-    const fs = makeFsModule(vol);
-
-    await applyTheme({ preset: "paper-noir" }, "/project/src/index.css", fs);
-
-    const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
-    expect(result).toContain("--background: 0 0% 5%");
-    expect(result).toContain("--foreground: 0 0% 95%");
+    expect(result).toContain("--bg: #f0eee9");
+    expect(result).toContain("--text: #0a0a0a");
+    expect(result).toContain("--background: 0 0% 0%");
   });
 
   // ---- midnight-blue (🌑 escuro, dark-first) ------------------------------------
 
-  it("midnight-blue injeta fundo azul escuro e azul primário no :root", async () => {
+  it("midnight-blue injeta as 4 vars hex no :root e não modifica .dark", async () => {
     const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
     const fs = makeFsModule(vol);
 
     await applyTheme({ preset: "midnight-blue" }, "/project/src/index.css", fs);
 
     const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
-    expect(result).toContain("--background: 222 47% 8%");
-    expect(result).toContain("--foreground: 210 40% 96%");
-    expect(result).toContain("--primary: 220 90% 56%");
-    expect(result).toContain("--accent: 217 33% 17%");
-  });
-
-  it("midnight-blue injeta fundo ainda mais profundo no .dark", async () => {
-    const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
-    const fs = makeFsModule(vol);
-
-    await applyTheme({ preset: "midnight-blue" }, "/project/src/index.css", fs);
-
-    const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
-    expect(result).toContain("--background: 220 14% 5%");
+    expect(result).toContain("--bg: #0a1224");
+    expect(result).toContain("--text: #e8e6e0");
+    expect(result).toContain("--background: 0 0% 0%");
   });
 
   // ---- solar-warm (🌑 escuro, dark-first) ----------------------------------------
 
-  it("solar-warm injeta fundo quente escuro e laranja primário no :root", async () => {
+  it("solar-warm injeta as 4 vars hex no :root e não modifica .dark", async () => {
     const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
     const fs = makeFsModule(vol);
 
     await applyTheme({ preset: "solar-warm" }, "/project/src/index.css", fs);
 
     const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
-    expect(result).toContain("--background: 20 30% 8%");
-    expect(result).toContain("--foreground: 35 30% 92%");
-    expect(result).toContain("--primary: 25 95% 53%");
-    expect(result).toContain("--accent: 20 25% 18%");
-  });
-
-  it("solar-warm injeta fundo ainda mais escuro no .dark", async () => {
-    const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
-    const fs = makeFsModule(vol);
-
-    await applyTheme({ preset: "solar-warm" }, "/project/src/index.css", fs);
-
-    const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
-    expect(result).toContain("--background: 20 35% 5%");
+    expect(result).toContain("--bg: #1a1410");
+    expect(result).toContain("--text: #f2ede4");
+    expect(result).toContain("--background: 0 0% 0%");
   });
 
   // ---- comportamentos gerais -----------------------------------------------------
@@ -222,4 +177,71 @@ describe("applyTheme", () => {
       ).rejects.toThrow();
     }
   });
+
+  // ---- contrato: apenas 4 vars hex, sem legado HSL ----------------------------------
+
+  const PRESETS_ALL = [
+    "editorial-cream",
+    "paper-noir",
+    "midnight-blue",
+    "solar-warm",
+  ] as const;
+
+  const LEGACY_VARS = [
+    "--background:",
+    "--foreground:",
+    "--card:",
+    "--card-foreground:",
+    "--popover:",
+    "--muted:",
+    "--muted-foreground:",
+    "--border:",
+    "--input:",
+    "--ring:",
+    "--sidebar:",
+    "--sidebar-foreground:",
+    "--sidebar-primary:",
+    "--sidebar-accent:",
+    "--sidebar-border:",
+    "--sidebar-ring:",
+    "--neon-purple:",
+    "--neon-lime:",
+    "--primary-foreground:",
+    "--accent-foreground:",
+    "--secondary:",
+    "--secondary-foreground:",
+    "--destructive:",
+    "--destructive-foreground:",
+  ];
+
+  for (const preset of PRESETS_ALL) {
+    it(`${preset}: não injeta vars HSL legadas no CSS`, async () => {
+      const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
+      const fs = makeFsModule(vol);
+
+      await applyTheme({ preset }, "/project/src/index.css", fs);
+
+      const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
+      // Extrai somente o bloco :root injetado
+      const rootBlock = result.match(/:root \{([^}]*)\}/s)?.[1] ?? "";
+      for (const legacy of LEGACY_VARS) {
+        expect(rootBlock, `${preset} não deve conter "${legacy}"`).not.toContain(legacy);
+      }
+    });
+
+    it(`${preset}: bloco :root contém apenas as 4 vars do contrato hex`, async () => {
+      const vol = Volume.fromJSON({ "/project/src/index.css": stubCss });
+      const fs = makeFsModule(vol);
+
+      await applyTheme({ preset }, "/project/src/index.css", fs);
+
+      const result = vol.readFileSync("/project/src/index.css", "utf-8") as string;
+      const rootBlock = result.match(/:root \{([^}]*)\}/s)?.[1] ?? "";
+      // As 4 vars devem estar presentes
+      expect(rootBlock).toMatch(/--bg:\s*#[0-9a-fA-F]{3,6}/);
+      expect(rootBlock).toMatch(/--text:\s*#[0-9a-fA-F]{3,6}/);
+      expect(rootBlock).toMatch(/--primary:\s*#[0-9a-fA-F]{3,6}/);
+      expect(rootBlock).toMatch(/--accent:\s*#[0-9a-fA-F]{3,6}/);
+    });
+  }
 });
