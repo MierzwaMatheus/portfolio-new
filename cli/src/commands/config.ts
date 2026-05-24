@@ -117,10 +117,10 @@ export async function runConfig(deps: RunConfigDeps = {}): Promise<void> {
       message: "Tema visual",
       initialValue: currentState.theme,
       options: [
-        { value: "editorial-cream", label: "Editorial Cream — ☀ papel envelhecido, âmbar e tinta" },
-        { value: "paper-noir", label: "Paper Noir — ☀ preto e branco com detalhe em vermelho" },
-        { value: "midnight-blue", label: "Midnight Blue — 🌑 noite urbana, azul profundo e neon" },
-        { value: "solar-warm", label: "Solar Warm — 🌑 energia solar, laranja e areia" },
+        { value: "editorial-cream", label: "Editorial Cream", hint: "refinado e atemporal — blogs e portfólios literários" },
+        { value: "paper-noir", label: "Paper Noir", hint: "contraste máximo — identidade editorial forte" },
+        { value: "midnight-blue", label: "Midnight Blue", hint: "tech e premium — devs e designers noturnos" },
+        { value: "solar-warm", label: "Solar Warm", hint: "energia e criatividade — marcas pessoais vibrantes" },
       ],
     }) as string;
 
@@ -128,11 +128,15 @@ export async function runConfig(deps: RunConfigDeps = {}): Promise<void> {
       message: "Fonte principal",
       initialValue: currentState.fontSans,
       options: [
-        { value: "Inter", label: "Inter — neutra, padrão de produtos digitais" },
-        { value: "Chakra Petch", label: "Chakra Petch — geométrica, tech" },
-        { value: "Playfair Display", label: "Playfair Display — elegante, editorial" },
-        { value: "Space Grotesk", label: "Space Grotesk — moderna, startup" },
-        { value: "DM Sans", label: "DM Sans — limpa, amigável" },
+        { value: "Inter", label: "Inter", hint: "neutra, legível, padrão de produtos digitais" },
+        { value: "Chakra Petch", label: "Chakra Petch", hint: "geométrica, tech, futurista" },
+        { value: "Playfair Display", label: "Playfair Display", hint: "elegante, editorial clássico" },
+        { value: "Space Grotesk", label: "Space Grotesk", hint: "moderna, startup" },
+        { value: "DM Sans", label: "DM Sans", hint: "limpa, amigável, versátil" },
+        { value: "Bodoni Moda", label: "Bodoni Moda", hint: "display serifado elegante, editorial clássico" },
+        { value: "IBM Plex Serif", label: "IBM Plex Serif", hint: "serifa técnica, confiança e rigor" },
+        { value: "Manrope", label: "Manrope", hint: "geométrica humanista, moderna e acolhedora" },
+        { value: "Archivo", label: "Archivo", hint: "grotesca utilitária, clareza e força tipográfica" },
       ],
     }) as string;
 
@@ -140,10 +144,10 @@ export async function runConfig(deps: RunConfigDeps = {}): Promise<void> {
       message: "Fonte mono",
       initialValue: currentState.fontMono,
       options: [
-        { value: "JetBrains Mono", label: "JetBrains Mono" },
-        { value: "Fira Code", label: "Fira Code" },
-        { value: "Space Mono", label: "Space Mono" },
-        { value: "IBM Plex Mono", label: "IBM Plex Mono" },
+        { value: "JetBrains Mono", label: "JetBrains Mono", hint: "dev-friendly, clara" },
+        { value: "Fira Code", label: "Fira Code", hint: "clássico, com ligatures" },
+        { value: "Space Mono", label: "Space Mono", hint: "retro digital" },
+        { value: "IBM Plex Mono", label: "IBM Plex Mono", hint: "corporativo-tech" },
       ],
     }) as string;
 

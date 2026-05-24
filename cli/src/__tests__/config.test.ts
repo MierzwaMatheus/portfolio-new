@@ -276,6 +276,103 @@ describe("runConfig — aparência", () => {
   });
 });
 
+// ---- Ciclo 5b: novas fontes e hints no config --------------------------------
+
+describe("runConfig — novas fontes e hints descritivos", () => {
+  function makeConfigDeps(vol: ReturnType<typeof Volume.fromJSON>) {
+    const fs = makeFsModule(vol);
+    return {
+      cwd: "/project",
+      fs,
+      detectProject: vi.fn().mockResolvedValue("/project/rubrica.json"),
+      readState: vi.fn().mockResolvedValue({ version: "1.0.0", layout: "cyberpunk", theme: "editorial-cream", fontSans: "Inter", fontMono: "JetBrains Mono", plugins: {} }),
+      writeState: vi.fn().mockResolvedValue(undefined),
+      applyTheme: vi.fn().mockResolvedValue(undefined),
+      applyFont: vi.fn().mockResolvedValue(undefined),
+      applyIndexHtml: vi.fn().mockResolvedValue(undefined),
+    };
+  }
+
+  it("novas fontes aparecem nas opções de fontSans do config", async () => {
+    vi.clearAllMocks();
+    const vol = Volume.fromJSON({ "/project/rubrica.json": "{}", "/project/src/index.css": "", "/project/index.html": "" });
+    const deps = makeConfigDeps(vol);
+
+    vi.mocked(multiselect).mockResolvedValueOnce(["appearance"]);
+    vi.mocked(select)
+      .mockResolvedValueOnce("editorial-cream")
+      .mockResolvedValueOnce("Bodoni Moda")
+      .mockResolvedValueOnce("JetBrains Mono");
+
+    await runConfig(deps);
+
+    const fontSansCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Fonte principal"
+    );
+    expect(fontSansCall?.[0]).toEqual(
+      expect.objectContaining({
+        options: expect.arrayContaining([
+          expect.objectContaining({ value: "Bodoni Moda" }),
+          expect.objectContaining({ value: "IBM Plex Serif" }),
+          expect.objectContaining({ value: "Manrope" }),
+          expect.objectContaining({ value: "Archivo" }),
+        ]),
+      })
+    );
+  });
+
+  it("select de tema no config tem hints descritivos", async () => {
+    vi.clearAllMocks();
+    const vol = Volume.fromJSON({ "/project/rubrica.json": "{}", "/project/src/index.css": "", "/project/index.html": "" });
+    const deps = makeConfigDeps(vol);
+
+    vi.mocked(multiselect).mockResolvedValueOnce(["appearance"]);
+    vi.mocked(select)
+      .mockResolvedValueOnce("editorial-cream")
+      .mockResolvedValueOnce("Inter")
+      .mockResolvedValueOnce("JetBrains Mono");
+
+    await runConfig(deps);
+
+    const themeCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Tema visual"
+    );
+    expect(themeCall?.[0]).toEqual(
+      expect.objectContaining({
+        options: expect.arrayContaining([
+          expect.objectContaining({ value: "editorial-cream", hint: expect.any(String) }),
+          expect.objectContaining({ value: "midnight-blue", hint: expect.any(String) }),
+        ]),
+      })
+    );
+  });
+
+  it("select de fontMono no config tem hints descritivos", async () => {
+    vi.clearAllMocks();
+    const vol = Volume.fromJSON({ "/project/rubrica.json": "{}", "/project/src/index.css": "", "/project/index.html": "" });
+    const deps = makeConfigDeps(vol);
+
+    vi.mocked(multiselect).mockResolvedValueOnce(["appearance"]);
+    vi.mocked(select)
+      .mockResolvedValueOnce("editorial-cream")
+      .mockResolvedValueOnce("Inter")
+      .mockResolvedValueOnce("JetBrains Mono");
+
+    await runConfig(deps);
+
+    const fontMonoCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Fonte mono"
+    );
+    expect(fontMonoCall?.[0]).toEqual(
+      expect.objectContaining({
+        options: expect.arrayContaining([
+          expect.objectContaining({ value: "JetBrains Mono", hint: expect.any(String) }),
+        ]),
+      })
+    );
+  });
+});
+
 // ---- Ciclo 6: Re-configuração de Layout (com aviso) -------------------------
 
 describe("runConfig — layout", () => {
