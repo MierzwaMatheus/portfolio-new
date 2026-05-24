@@ -54,6 +54,91 @@ describe("CommandPalette — Ciclo 1: renderiza items", () => {
   });
 });
 
+describe("CommandPalette — Ciclo 7: renderiza grupo de siteTexts", () => {
+  const siteTexts = [
+    { key: "common.loading", ptBR: "Carregando...", enUS: "Loading..." },
+    { key: "common.error", ptBR: "Erro", enUS: undefined },
+  ];
+
+  it("exibe heading 'Textos' quando siteTexts é fornecido", () => {
+    render(
+      <CommandPalette
+        open={true}
+        onOpenChange={vi.fn()}
+        items={[]}
+        siteTexts={siteTexts}
+        onNavigate={vi.fn()}
+      />
+    );
+    expect(screen.getByText("Textos")).toBeInTheDocument();
+  });
+
+  it("exibe a chave de cada siteText como item", () => {
+    render(
+      <CommandPalette
+        open={true}
+        onOpenChange={vi.fn()}
+        items={[]}
+        siteTexts={siteTexts}
+        onNavigate={vi.fn()}
+      />
+    );
+    expect(screen.getByText("common.loading")).toBeInTheDocument();
+    expect(screen.getByText("common.error")).toBeInTheDocument();
+  });
+});
+
+describe("CommandPalette — Ciclo 1b: grupo Criar", () => {
+  const createActions = [
+    { label: "Nova Proposta", description: "Criar nova proposta comercial", path: "/admin/proposals?create=true" },
+    { label: "Novo Projeto", description: "Adicionar projeto ao portfólio", path: "/admin/projects?create=true" },
+  ];
+
+  it("exibe grupo 'Criar' com ações quando createActions é passado", () => {
+    render(
+      <CommandPalette
+        open={true}
+        onOpenChange={vi.fn()}
+        items={items}
+        createActions={createActions}
+        onNavigate={vi.fn()}
+      />
+    );
+    expect(screen.getByText("Criar")).toBeInTheDocument();
+    expect(screen.getByText("Nova Proposta")).toBeInTheDocument();
+    expect(screen.getByText("Novo Projeto")).toBeInTheDocument();
+  });
+
+  it("não exibe grupo 'Criar' quando createActions não é passado", () => {
+    render(
+      <CommandPalette
+        open={true}
+        onOpenChange={vi.fn()}
+        items={items}
+        onNavigate={vi.fn()}
+      />
+    );
+    expect(screen.queryByText("Criar")).not.toBeInTheDocument();
+  });
+
+  it("chama onNavigate com path correto ao selecionar ação de criação", () => {
+    const onNavigate = vi.fn();
+    const onOpenChange = vi.fn();
+    render(
+      <CommandPalette
+        open={true}
+        onOpenChange={onOpenChange}
+        items={items}
+        createActions={createActions}
+        onNavigate={onNavigate}
+      />
+    );
+    fireEvent.click(screen.getByText("Nova Proposta"));
+    expect(onNavigate).toHaveBeenCalledWith("/admin/proposals?create=true");
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+});
+
 describe("CommandPalette — Ciclo 3: seleção navega e fecha", () => {
   it("chama onNavigate com o path correto ao clicar num item", async () => {
     const onNavigate = vi.fn();
@@ -68,6 +153,92 @@ describe("CommandPalette — Ciclo 3: seleção navega e fecha", () => {
     );
     fireEvent.click(screen.getByText("Blog"));
     expect(onNavigate).toHaveBeenCalledWith("/admin/blog");
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+  });
+});
+
+// Issue #58: busca cross-content na paleta
+const contentGroups = [
+  {
+    heading: "Conteúdo: Posts",
+    items: [
+      { label: "Introdução ao TDD", path: "/admin/blog" },
+      { label: "Clean Architecture", path: "/admin/blog" },
+    ],
+  },
+  {
+    heading: "Conteúdo: Projetos",
+    items: [{ label: "Portfolio App", path: "/admin/projects" }],
+  },
+];
+
+describe("CommandPalette — Ciclo 6: busca cross-content com contentGroups", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("exibe headings dos grupos quando há texto no input", () => {
+    render(
+      <CommandPalette
+        open={true}
+        onOpenChange={vi.fn()}
+        items={items}
+        contentGroups={contentGroups}
+        onNavigate={vi.fn()}
+      />
+    );
+    fireEvent.change(screen.getByPlaceholderText("Buscar página..."), {
+      target: { value: "tdd" },
+    });
+    expect(screen.getByText("Conteúdo: Posts")).toBeInTheDocument();
+    expect(screen.getByText("Conteúdo: Projetos")).toBeInTheDocument();
+  });
+
+  it("não exibe grupos de conteúdo quando o input está vazio", () => {
+    render(
+      <CommandPalette
+        open={true}
+        onOpenChange={vi.fn()}
+        items={items}
+        contentGroups={contentGroups}
+        onNavigate={vi.fn()}
+      />
+    );
+    expect(screen.queryByText("Conteúdo: Posts")).not.toBeInTheDocument();
+    expect(screen.queryByText("Conteúdo: Projetos")).not.toBeInTheDocument();
+  });
+
+  it("exibe itens do grupo quando há query", () => {
+    render(
+      <CommandPalette
+        open={true}
+        onOpenChange={vi.fn()}
+        items={items}
+        contentGroups={contentGroups}
+        onNavigate={vi.fn()}
+      />
+    );
+    fireEvent.change(screen.getByPlaceholderText("Buscar página..."), {
+      target: { value: "tdd" },
+    });
+    expect(screen.getByText("Introdução ao TDD")).toBeInTheDocument();
+  });
+
+  it("ao clicar num item de contentGroup chama onNavigate e fecha", () => {
+    const onNavigate = vi.fn();
+    const onOpenChange = vi.fn();
+    render(
+      <CommandPalette
+        open={true}
+        onOpenChange={onOpenChange}
+        items={items}
+        contentGroups={contentGroups}
+        onNavigate={onNavigate}
+      />
+    );
+    fireEvent.change(screen.getByPlaceholderText("Buscar página..."), {
+      target: { value: "port" },
+    });
+    fireEvent.click(screen.getByText("Portfolio App"));
+    expect(onNavigate).toHaveBeenCalledWith("/admin/projects");
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });
