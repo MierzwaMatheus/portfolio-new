@@ -12,7 +12,7 @@ export interface LayoutFsModule {
 
 type Layout = "cyberpunk" | "brutalist" | "swiss" | "bento" | "magazine";
 
-const LAYOUT_FILES: Record<Layout, { copy: string[]; remove: string[] }> = {
+const LAYOUT_FILES: Record<Layout, { copy: string[]; remove: string[]; pages?: string[] }> = {
   cyberpunk: {
     copy: ["Layout.tsx", "Sidebar.tsx"],
     remove: ["Navbar.tsx", "Footer.tsx"],

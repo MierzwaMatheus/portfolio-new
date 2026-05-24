@@ -173,6 +173,16 @@ describe("applyLayout", () => {
     expect(await fs.exists("/project/src/components/Footer.tsx")).toBe(false);
   });
 
+  it("layout sem campo pages não copia nada para src/pages/", async () => {
+    const vol = Volume.fromJSON({});
+    makeTemplates(vol);
+    const fs = makeFsModule(vol);
+
+    await applyLayout("cyberpunk", { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR }, fs);
+
+    expect(await fs.exists("/project/src/pages")).toBe(false);
+  });
+
   it("layout inexistente lança erro descritivo com o nome inválido", async () => {
     const vol = Volume.fromJSON({});
     makeTemplates(vol);
