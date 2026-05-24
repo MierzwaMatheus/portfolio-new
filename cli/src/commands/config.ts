@@ -181,9 +181,12 @@ export async function runConfig(deps: RunConfigDeps = {}): Promise<void> {
       message: "Layout",
       initialValue: currentState.layout,
       options: [
-        { value: "cyberpunk", label: "Cyberpunk — navegação lateral com perfil completo" },
+        { value: "cyberpunk", label: "Cyberpunk", hint: "sidebar lateral com foto de perfil — dev, designer, freelancer" },
+        { value: "brutalist", label: "Brutalism Terminal", hint: "identidade hacker total — monospace, sem bordas arredondadas" },
+        { value: "swiss", label: "Swiss Grid", hint: "grid de 12 colunas, tipografia forte, design suíço rigoroso" },
+        { value: "bento", label: "Bento", hint: "grid assimétrico com floating dock — moderno, orientado a produto" },
       ],
-    }) as "cyberpunk";
+    }) as "cyberpunk" | "brutalist" | "swiss" | "bento";
 
     const confirmed = await confirm({
       message: "⚠ Isso sobrescreve Layout.tsx e arquivos de navegação. Customizações manuais serão perdidas. Continuar?",

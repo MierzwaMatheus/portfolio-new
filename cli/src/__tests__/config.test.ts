@@ -435,6 +435,69 @@ describe("runConfig — layout", () => {
 
     expect(applyLayoutMock).not.toHaveBeenCalled();
   });
+
+  it("select de layout inclui opção bento com hint descritivo", async () => {
+    const state = { version: "1.0.0", layout: "cyberpunk", theme: "editorial-cream", fontSans: "Inter", fontMono: "JetBrains Mono", plugins: {} };
+    const vol = Volume.fromJSON({ "/project/rubrica.json": JSON.stringify(state) });
+    const fs = makeFsModule(vol);
+
+    vi.mocked(multiselect).mockResolvedValueOnce(["layout"]);
+    vi.mocked(select).mockResolvedValueOnce("cyberpunk");
+    vi.mocked(confirm).mockResolvedValueOnce(false);
+
+    const detectProjectMock = vi.fn().mockResolvedValue("/project/rubrica.json");
+    const readStateMock = vi.fn().mockResolvedValue(state);
+    const writeStateMock = vi.fn().mockResolvedValue(undefined);
+
+    await runConfig({
+      cwd: "/project",
+      detectProject: detectProjectMock,
+      readState: readStateMock,
+      writeState: writeStateMock,
+      fs,
+    });
+
+    const layoutCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Layout"
+    );
+    expect(layoutCall?.[0]).toEqual(
+      expect.objectContaining({
+        options: expect.arrayContaining([
+          expect.objectContaining({ value: "bento", hint: expect.any(String) }),
+        ]),
+      })
+    );
+  });
+
+  it("chama applyLayout com bento quando selecionado e usuário confirma", async () => {
+    const state = { version: "1.0.0", layout: "cyberpunk", theme: "editorial-cream", fontSans: "Inter", fontMono: "JetBrains Mono", plugins: {} };
+    const vol = Volume.fromJSON({ "/project/rubrica.json": JSON.stringify(state) });
+    const fs = makeFsModule(vol);
+
+    vi.mocked(multiselect).mockResolvedValueOnce(["layout"]);
+    vi.mocked(select).mockResolvedValueOnce("bento");
+    vi.mocked(confirm).mockResolvedValueOnce(true);
+
+    const applyLayoutMock = vi.fn().mockResolvedValue(undefined);
+    const detectProjectMock = vi.fn().mockResolvedValue("/project/rubrica.json");
+    const readStateMock = vi.fn().mockResolvedValue(state);
+    const writeStateMock = vi.fn().mockResolvedValue(undefined);
+
+    await runConfig({
+      cwd: "/project",
+      detectProject: detectProjectMock,
+      readState: readStateMock,
+      writeState: writeStateMock,
+      applyLayout: applyLayoutMock,
+      fs,
+    });
+
+    expect(applyLayoutMock).toHaveBeenCalledWith(
+      "bento",
+      expect.anything(),
+      expect.anything()
+    );
+  });
 });
 
 // ---- Ciclo 7: Re-configuração de Plugins ------------------------------------
