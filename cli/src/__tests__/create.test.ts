@@ -53,6 +53,8 @@ import { select, text, multiselect, confirm } from "@clack/prompts";
 const DEFAULT_PLUGINS = { blog: true, portfolio: true };
 
 /** Configura a sequência de respostas dos prompts */
+const NO_MONO_LAYOUTS = new Set(["swiss"]);
+
 function setupPrompts(opts: {
   layout?: string;
   theme?: string;
@@ -61,12 +63,16 @@ function setupPrompts(opts: {
   plugins?: string[];
   packageManager?: string;
 }) {
-  vi.mocked(select)
-    .mockResolvedValueOnce(opts.layout ?? "cyberpunk")
+  const layout = opts.layout ?? "cyberpunk";
+  const hasMono = !NO_MONO_LAYOUTS.has(layout);
+  const mock = vi.mocked(select)
+    .mockResolvedValueOnce(layout)
     .mockResolvedValueOnce(opts.theme ?? "editorial-cream")
-    .mockResolvedValueOnce(opts.fontSans ?? "Inter")
-    .mockResolvedValueOnce(opts.fontMono ?? "JetBrains Mono")
-    .mockResolvedValueOnce(opts.packageManager ?? "none");
+    .mockResolvedValueOnce(opts.fontSans ?? "Inter");
+  if (hasMono) {
+    mock.mockResolvedValueOnce(opts.fontMono ?? "JetBrains Mono");
+  }
+  mock.mockResolvedValueOnce(opts.packageManager ?? "none");
   vi.mocked(multiselect).mockResolvedValueOnce(opts.plugins ?? ["blog", "portfolio"]);
 }
 

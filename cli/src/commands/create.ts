@@ -173,7 +173,7 @@ export async function runCreate(
     ],
   }) as string;
 
-  const fontMono = await select({
+  const fontMono = recommendedFonts.fontMono === "" ? "" : await select({
     message: "Fonte mono",
     options: [
       { value: "JetBrains Mono", label: "JetBrains Mono", hint: recommendedFonts.fontMono === "JetBrains Mono" ? "recomendada" : "dev-friendly, clara" },
