@@ -125,7 +125,7 @@ export async function runCreate(
   const layout = await select({
     message: "Layout",
     options: [
-      { value: "cyberpunk", label: "Cyberpunk — navegação lateral com perfil completo" },
+      { value: "cyberpunk", label: "Cyberpunk", hint: "sidebar lateral com foto de perfil — dev, designer, freelancer" },
     ],
   }) as "cyberpunk";
 
@@ -139,10 +139,10 @@ export async function runCreate(
   const themeChoice = await select({
     message: "Tema visual",
     options: [
-      { value: "editorial-cream", label: "Editorial Cream — ☀ papel envelhecido, âmbar e tinta" },
-      { value: "paper-noir", label: "Paper Noir — ☀ preto e branco com detalhe em vermelho" },
-      { value: "midnight-blue", label: "Midnight Blue — 🌑 noite urbana, azul profundo e neon" },
-      { value: "solar-warm", label: "Solar Warm — 🌑 energia solar, laranja e areia" },
+      { value: "editorial-cream", label: "Editorial Cream", hint: "refinado e atemporal — blogs e portfólios literários" },
+      { value: "paper-noir", label: "Paper Noir", hint: "contraste máximo — identidade editorial forte" },
+      { value: "midnight-blue", label: "Midnight Blue", hint: "tech e premium — devs e designers noturnos" },
+      { value: "solar-warm", label: "Solar Warm", hint: "energia e criatividade — marcas pessoais vibrantes" },
     ],
   }) as string;
 

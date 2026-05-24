@@ -247,6 +247,49 @@ describe("create — applyTheme", () => {
   });
 });
 
+// ---- Ciclo 4b: hints descritivos em temas e layout -------------------------
+
+describe("create — hints descritivos nos selects de tema e layout", () => {
+  it("select de tema tem hint descritivo nas opções", async () => {
+    vi.clearAllMocks();
+    setupPrompts({});
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+    await runCreate("meu-portfolio", makeDefaultDeps(vol));
+    const themeCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Tema visual"
+    );
+    expect(themeCall?.[0]).toEqual(
+      expect.objectContaining({
+        options: expect.arrayContaining([
+          expect.objectContaining({ value: "editorial-cream", hint: expect.any(String) }),
+          expect.objectContaining({ value: "paper-noir", hint: expect.any(String) }),
+          expect.objectContaining({ value: "midnight-blue", hint: expect.any(String) }),
+          expect.objectContaining({ value: "solar-warm", hint: expect.any(String) }),
+        ]),
+      })
+    );
+  });
+
+  it("select de layout tem hint descritivo nas opções", async () => {
+    vi.clearAllMocks();
+    setupPrompts({});
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+    await runCreate("meu-portfolio", makeDefaultDeps(vol));
+    const layoutCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Layout"
+    );
+    expect(layoutCall?.[0]).toEqual(
+      expect.objectContaining({
+        options: expect.arrayContaining([
+          expect.objectContaining({ value: "cyberpunk", hint: expect.any(String) }),
+        ]),
+      })
+    );
+  });
+});
+
 // ---- Ciclo 5: applyFont ----------------------------------------------------
 
 describe("create — applyFont", () => {
