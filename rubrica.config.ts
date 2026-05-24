@@ -20,10 +20,8 @@ export interface RubricalConfig {
   ogImageUrl: string;
 
   // Aparência (espelho do rubrica.json — mantidos em sincronia pela CLI)
-  accentColor: string;
   fontSans: string;
   fontMono: string;
-  radius: string;
 }
 
 export const rubricalConfig: RubricalConfig = {
@@ -48,8 +46,6 @@ export const rubricalConfig: RubricalConfig = {
   ogImageUrl: "",
 
   // Aparência
-  accentColor: "#6366f1",
   fontSans: "Inter",
   fontMono: "JetBrains Mono",
-  radius: "0.5rem",
 };

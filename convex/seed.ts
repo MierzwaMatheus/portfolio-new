@@ -44,10 +44,8 @@ export const seedSiteConfig = internalMutation({
       { key: "rss_title", value: rubricalConfig.rssTitle },
       { key: "rss_description", value: rubricalConfig.rssDescription },
       { key: "og_image_url", value: rubricalConfig.ogImageUrl },
-      { key: "theme_accent_color", value: rubricalConfig.accentColor },
       { key: "theme_font_sans", value: rubricalConfig.fontSans },
       { key: "theme_font_mono", value: rubricalConfig.fontMono },
-      { key: "theme_radius", value: rubricalConfig.radius },
     ];
 
     const now = Date.now();
