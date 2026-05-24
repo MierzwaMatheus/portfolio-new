@@ -55,7 +55,7 @@ const INITIAL_HTML = `<!DOCTYPE html>
 const INITIAL_STATE = {
   version: "0.1.0",
   layout: "cyberpunk" as const,
-  theme: "cyberpunk",
+  theme: "editorial-cream",
   accentColor: null,
   fontSans: "Inter",
   fontMono: "JetBrains Mono",
@@ -145,7 +145,7 @@ describe("config e2e — seção Aparência", () => {
     vi.mocked(multiselect).mockResolvedValueOnce(["appearance"]);
     // Prompts de aparência: tema minimal, Inter, JetBrains Mono, 0.5rem
     vi.mocked(select)
-      .mockResolvedValueOnce("minimal")
+      .mockResolvedValueOnce("editorial-cream")
       .mockResolvedValueOnce("Inter")
       .mockResolvedValueOnce("JetBrains Mono")
       .mockResolvedValueOnce("0.5rem");
@@ -166,7 +166,7 @@ describe("config e2e — seção Aparência", () => {
     // rubrica.json deve ter o tema atualizado
     const stateRaw = await fs.readFile("/project/rubrica.json", "utf-8");
     const state = JSON.parse(stateRaw) as { theme: string };
-    expect(state.theme).toBe("minimal");
+    expect(state.theme).toBe("editorial-cream");
 
     // rubrica.config.ts NÃO deve ter sido modificado
     const configContent = await fs.readFile("/project/rubrica.config.ts", "utf-8");
@@ -214,6 +214,6 @@ describe("config e2e — seção Identidade", () => {
     // rubrica.json NÃO deve ter sido modificado (sem stateUpdate)
     const stateRaw = await fs.readFile("/project/rubrica.json", "utf-8");
     const state = JSON.parse(stateRaw) as { theme: string };
-    expect(state.theme).toBe("cyberpunk");
+    expect(state.theme).toBe("editorial-cream");
   });
 });

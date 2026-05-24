@@ -124,20 +124,16 @@ const FULL_CONFIG = {
   rssTitle: "Dev Teste — Blog",
   rssDescription: "Artigos de teste.",
   ogImageUrl: "https://integracao.com/og.jpg",
-  accentColor: "#0065fe",
   fontSans: "Inter",
   fontMono: "JetBrains Mono",
-  radius: "0.5rem",
 };
 
 const FULL_STATE = {
   version: "1.0.0",
   layout: "cyberpunk" as const,
-  theme: "minimal",
-  accentColor: "#0065fe",
+  theme: "editorial-cream",
   fontSans: "Inter",
   fontMono: "JetBrains Mono",
-  radius: "0.5rem",
   plugins: { blog: true, portfolio: true },
 };
 
@@ -150,7 +146,7 @@ describe("integração: applyTheme + applyFont em cadeia", () => {
     const vol = Volume.fromJSON({ "/project/src/index.css": COMBINED_CSS });
     const fs = makeFsModule(vol);
 
-    await applyTheme({ preset: "minimal" }, "/project/src/index.css", fs);
+    await applyTheme({ preset: "editorial-cream" }, "/project/src/index.css", fs);
     await applyFont(
       { fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem" },
       { css: "/project/src/index.css", html: "/project/src/index.css" },
@@ -269,11 +265,9 @@ describe("integração: applyRubricalConfig + writeState com mesmos valores de i
 
     const configTs = vol.readFileSync("/project/rubrica.config.ts", "utf-8") as string;
     expect(configTs).toContain('"Portfólio Integração"');
-    expect(configTs).toContain('"#0065fe"');
     expect(configTs).toContain('"Inter"');
 
     const state = await readState("/project", fs);
-    expect(state.accentColor).toBe("#0065fe");
     expect(state.fontSans).toBe("Inter");
     expect(state.layout).toBe("cyberpunk");
   });
@@ -309,7 +303,7 @@ describe("integração: idempotência do pipeline completo", () => {
     };
 
     async function runPipeline() {
-      await applyTheme({ preset: "minimal" }, "/project/src/index.css", fs);
+      await applyTheme({ preset: "editorial-cream" }, "/project/src/index.css", fs);
       await applyFont(
         { fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem" },
         { css: "/project/src/index.css", html: "/project/index.html" },

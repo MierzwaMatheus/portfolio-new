@@ -20,10 +20,8 @@ export interface RubricalConfigInput {
   rssTitle: string;
   rssDescription: string;
   ogImageUrl: string;
-  accentColor: string;
   fontSans: string;
   fontMono: string;
-  radius: string;
 }
 
 function generateContent(config: RubricalConfigInput): string {
@@ -40,10 +38,8 @@ function generateContent(config: RubricalConfigInput): string {
   rssTitle: ${JSON.stringify(config.rssTitle)},
   rssDescription: ${JSON.stringify(config.rssDescription)},
   ogImageUrl: ${JSON.stringify(config.ogImageUrl)},
-  accentColor: ${JSON.stringify(config.accentColor)},
   fontSans: ${JSON.stringify(config.fontSans)},
   fontMono: ${JSON.stringify(config.fontMono)},
-  radius: ${JSON.stringify(config.radius)},
 };
 `;
 }

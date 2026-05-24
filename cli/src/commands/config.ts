@@ -103,10 +103,8 @@ export async function runConfig(deps: RunConfigDeps = {}): Promise<void> {
         rssTitle: "",
         rssDescription: "",
         ogImageUrl: "",
-        accentColor: currentState.accentColor ?? "",
         fontSans: currentState.fontSans,
         fontMono: currentState.fontMono,
-        radius: currentState.radius,
       },
       projectDir,
       fs as Parameters<typeof defaultApplyRubricalConfig>[2]

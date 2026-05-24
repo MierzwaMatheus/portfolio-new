@@ -134,7 +134,7 @@ const mockIdentityPrompt = vi.fn(async () => ({
   lang: "pt-BR",
 }));
 
-function setupSelectPrompts(layout: string, theme = "minimal") {
+function setupSelectPrompts(layout: string, theme = "editorial-cream") {
   vi.mocked(select)
     .mockResolvedValueOnce(layout)
     .mockResolvedValueOnce(theme)
@@ -216,7 +216,7 @@ describe("create e2e — rubrica.config.ts", () => {
 describe("create e2e — rubrica.json", () => {
   it("gera rubrica.json com version, layout, theme e plugins corretos", async () => {
     vi.clearAllMocks();
-    setupSelectPrompts("cyberpunk", "minimal");
+    setupSelectPrompts("cyberpunk", "editorial-cream");
     vi.mocked(multiselect).mockResolvedValueOnce(["blog"]);
 
     const vol = Volume.fromJSON({});
@@ -231,7 +231,7 @@ describe("create e2e — rubrica.json", () => {
 
     expect(state.version).toBeTruthy();
     expect(state.layout).toBe("cyberpunk");
-    expect(state.theme).toBe("minimal");
+    expect(state.theme).toBe("editorial-cream");
     expect((state.plugins as Record<string, boolean>).blog).toBe(true);
     expect((state.plugins as Record<string, boolean>).portfolio).toBe(false);
     expect((state.plugins as Record<string, boolean>).resume).toBe(false);

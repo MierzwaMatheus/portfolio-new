@@ -141,11 +141,7 @@ export async function runUpdate(deps: RunUpdateDeps = {}): Promise<void> {
   );
 
   const cssPath = path.join(projectDir, "src", "index.css");
-  const themeOpts = state.theme && state.theme !== "custom"
-    ? { preset: state.theme }
-    : { accentColor: state.accentColor ?? "#6366f1" };
-
-  await applyThemeFn(themeOpts, cssPath, fs as Parameters<typeof defaultApplyTheme>[2]);
+  await applyThemeFn({ preset: state.theme }, cssPath, fs as Parameters<typeof defaultApplyTheme>[2]);
 
   const htmlPath = path.join(projectDir, "index.html");
   await applyFontFn(
@@ -174,16 +170,14 @@ export async function runUpdate(deps: RunUpdateDeps = {}): Promise<void> {
     rssTitle: "",
     rssDescription: "",
     ogImageUrl: "",
-    accentColor: state.accentColor ?? "#6366f1",
     fontSans: state.fontSans,
     fontMono: state.fontMono,
-    radius: state.radius,
   };
 
   await applyIndexHtmlFn(
     {
       fontFamily: identity.fontSans,
-      themeColor: identity.accentColor,
+      themeColor: "",
       siteName: identity.siteName,
       siteUrl: identity.siteUrl,
       twitterHandle: identity.twitterHandle,

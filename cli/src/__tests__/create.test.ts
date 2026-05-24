@@ -242,14 +242,6 @@ describe("create — applyTheme", () => {
     );
   });
 
-  it("chama applyTheme com accentColor quando tema personalizado selecionado", async () => {
-    const { mockApplyTheme } = await callRunCreate({ theme: "custom", accentColor: "#0065fe" });
-    expect(mockApplyTheme).toHaveBeenCalledWith(
-      { accentColor: "#0065fe" },
-      "/projects/meu-portfolio/src/index.css",
-      expect.anything()
-    );
-  });
 });
 
 // ---- Ciclo 5: applyFont ----------------------------------------------------

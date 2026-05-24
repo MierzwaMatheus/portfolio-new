@@ -150,12 +150,8 @@ export async function runCreate(
     accentColor = hexInput;
   }
 
-  const themeOptions = themeChoice === "custom"
-    ? { accentColor }
-    : { preset: themeChoice };
-
   await applyThemeFn(
-    themeOptions,
+    { preset: themeChoice },
     `${projectDir}/src/index.css`,
     fs as Parameters<typeof defaultApplyTheme>[2]
   );
@@ -261,7 +257,6 @@ export async function runCreate(
       rssTitle: identity.siteName,
       rssDescription: identity.siteDescription,
       ogImageUrl: `${identity.siteUrl}/og.png`,
-      accentColor: accentColor ?? "#6d28d9",
       fontSans,
       fontMono,
     },

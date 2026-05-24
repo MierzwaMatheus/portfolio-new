@@ -164,7 +164,7 @@ const mockIdentityPrompt = vi.fn(async () => ({
   lang: "pt-BR",
 }));
 
-function setupSelectPrompts(layout: string, theme = "minimal") {
+function setupSelectPrompts(layout: string, theme = "editorial-cream") {
   vi.mocked(select)
     .mockResolvedValueOnce(layout)
     .mockResolvedValueOnce(theme)
@@ -281,7 +281,7 @@ describe("2.12 — index.html sem dados pessoais", () => {
   it("não contém strings pessoais do template original após create", async () => {
     // HTML injetado com dados pessoais reais do template pré-fase-1
     const { fs } = await runValidityCreate(
-      "sidebar",
+      "cyberpunk",
       ["blog"],
       { html: HTML_WITH_PERSONAL_DATA }
     );
@@ -295,7 +295,7 @@ describe("2.12 — index.html sem dados pessoais", () => {
 
   it("substitui dados pessoais pelos valores informados nos prompts", async () => {
     const { fs } = await runValidityCreate(
-      "sidebar",
+      "cyberpunk",
       ["blog"],
       { html: HTML_WITH_PERSONAL_DATA }
     );
@@ -315,7 +315,7 @@ describe("2.12 — plugins desmarcados têm defaultEnabled: false", () => {
   it("payments e ai-resumes ficam como false quando não selecionados", async () => {
     const selectedPlugins = ["blog", "portfolio", "resume", "about", "contact-wizard"];
     const { fs } = await runValidityCreate(
-      "sidebar",
+      "cyberpunk",
       selectedPlugins,
       { registry: FULL_REGISTRY }
     );
@@ -338,7 +338,7 @@ describe("2.12 — plugins desmarcados têm defaultEnabled: false", () => {
   it("todos os plugins desmarcados têm defaultEnabled: false", async () => {
     // Seleciona apenas blog — todos os outros devem ficar false
     const { fs } = await runValidityCreate(
-      "sidebar",
+      "cyberpunk",
       ["blog"],
       { registry: FULL_REGISTRY }
     );

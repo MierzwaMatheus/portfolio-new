@@ -106,7 +106,7 @@ function makeFsModule(vol: InstanceType<typeof Volume>) {
 const BASE_STATE = {
   version: "1.0.0",
   layout: "cyberpunk" as const,
-  theme: "cyberpunk",
+  theme: "midnight-blue",
   accentColor: "#ff5500" as string | null,
   fontSans: "Playfair Display",
   fontMono: "Fira Code",
@@ -196,7 +196,7 @@ function makeUpdateDeps(
 describe("update e2e — rubrica.config.ts preserva valores customizados", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("após update, rubrica.config.ts contém accentColor e fontes do state customizado", async () => {
+  it("após update, rubrica.config.ts contém fontes do state customizado", async () => {
     const vol = makeProjectVolume();
     vi.mocked(confirm).mockResolvedValueOnce(true);
 
@@ -207,8 +207,6 @@ describe("update e2e — rubrica.config.ts preserva valores customizados", () =>
 
     expect(content).toContain('"Playfair Display"');
     expect(content).toContain('"Fira Code"');
-    expect(content).toContain('"0.75rem"');
-    expect(content).toContain('"#ff5500"');
   });
 
   it("rubrica.config.ts não contém valores pessoais do autor original após update", async () => {
@@ -255,7 +253,7 @@ describe("update e2e — rubrica.json version atualizado, configs preservados", 
     const state = JSON.parse(raw) as Record<string, unknown>;
 
     expect(state.layout).toBe("cyberpunk");
-    expect(state.theme).toBe("cyberpunk");
+    expect(state.theme).toBe("midnight-blue");
     expect(state.fontSans).toBe("Playfair Display");
     expect(state.fontMono).toBe("Fira Code");
     expect(state.radius).toBe("0.75rem");
@@ -352,8 +350,6 @@ describe("update e2e — rubrica.config.ts gerado após patch é TypeScript vál
     expect(content).toContain("export const rubricalConfig");
     expect(content).toContain("fontSans:");
     expect(content).toContain("fontMono:");
-    expect(content).toContain("radius:");
-    expect(content).toContain("accentColor:");
     expect(content).toMatch(/^export const rubricalConfig = \{/m);
   });
 

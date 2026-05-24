@@ -27,10 +27,8 @@ const fullConfig: RubricalConfigInput = {
   rssTitle: "João Silva — Blog",
   rssDescription: "Artigos sobre desenvolvimento.",
   ogImageUrl: "https://meusite.com/og.jpg",
-  accentColor: "#0065fe",
   fontSans: "Inter",
   fontMono: "JetBrains Mono",
-  radius: "0.5rem",
 };
 
 describe("applyRubricalConfig", () => {
@@ -50,10 +48,8 @@ describe("applyRubricalConfig", () => {
     expect(content).toContain('seoHomeTitle: "Dev Full-Stack"');
     expect(content).toContain('rssTitle: "João Silva — Blog"');
     expect(content).toContain('ogImageUrl: "https://meusite.com/og.jpg"');
-    expect(content).toContain('accentColor: "#0065fe"');
     expect(content).toContain('fontSans: "Inter"');
     expect(content).toContain('fontMono: "JetBrains Mono"');
-    expect(content).toContain('radius: "0.5rem"');
   });
 
   it("campo twitterHandle incluído corretamente sem @", async () => {
