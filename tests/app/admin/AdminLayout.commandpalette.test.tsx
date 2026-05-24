@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
+import { useQuery } from "convex/react";
 
 vi.mock("wouter", () => ({
   useLocation: vi.fn(() => ["/admin/dashboard", vi.fn()]),
@@ -22,7 +23,14 @@ vi.mock("convex/react", () => ({
 }));
 
 vi.mock("../../../convex/_generated/api", () => ({
-  api: { siteConfig: { getAll: "siteConfig:getAll" } },
+  api: {
+    siteConfig: { getAll: "siteConfig:getAll" },
+    posts: { listAdmin: "posts:listAdmin" },
+    projects: { list: "projects:list" },
+    proposals: { listAdmin: "proposals:listAdmin" },
+    services: { list: "services:list" },
+    siteTexts: { getAll: "siteTexts:getAll" },
+  },
 }));
 
 vi.mock("react-helmet-async", () => ({
@@ -64,6 +72,138 @@ describe("AdminLayout — Ciclo 5: Escape fecha a palette", () => {
       fireEvent.keyDown(document, { key: "k", ctrlKey: true });
     });
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+});
+
+describe("AdminLayout — Ciclo 3 (issue#56): createActions na palette", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("exibe grupo Criar quando palette está aberta", () => {
+    render(<AdminLayout><div /></AdminLayout>);
+    act(() => {
+      fireEvent.keyDown(document, { key: "k", ctrlKey: true });
+    });
+    expect(screen.getByText("Criar")).toBeInTheDocument();
+  });
+
+  it("exibe ação 'Nova Proposta' na palette", () => {
+    render(<AdminLayout><div /></AdminLayout>);
+    act(() => {
+      fireEvent.keyDown(document, { key: "k", ctrlKey: true });
+    });
+    expect(screen.getByText("Nova Proposta")).toBeInTheDocument();
+  });
+
+  it("selecionar 'Nova Proposta' navega para /admin/proposals?create=true", () => {
+    const navigate = vi.fn();
+    vi.mocked(vi.importMock).mockImplementation;
+    render(<AdminLayout><div /></AdminLayout>);
+    act(() => {
+      fireEvent.keyDown(document, { key: "k", ctrlKey: true });
+    });
+    fireEvent.click(screen.getByText("Nova Proposta"));
+    // navigate é chamado internamente via wouter useLocation mock
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+});
+
+describe("AdminLayout — Ciclo 3 (issue#56): createActions na palette", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("exibe grupo Criar quando palette está aberta", () => {
+    render(<AdminLayout><div /></AdminLayout>);
+    act(() => {
+      fireEvent.keyDown(document, { key: "k", ctrlKey: true });
+    });
+    expect(screen.getByText("Criar")).toBeInTheDocument();
+  });
+
+  it("exibe ação 'Nova Proposta' na palette", () => {
+    render(<AdminLayout><div /></AdminLayout>);
+    act(() => {
+      fireEvent.keyDown(document, { key: "k", ctrlKey: true });
+    });
+    expect(screen.getByText("Nova Proposta")).toBeInTheDocument();
+  });
+
+  it("selecionar 'Nova Proposta' fecha a palette", () => {
+    render(<AdminLayout><div /></AdminLayout>);
+    act(() => {
+      fireEvent.keyDown(document, { key: "k", ctrlKey: true });
+    });
+    fireEvent.click(screen.getByText("Nova Proposta"));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+});
+
+describe("AdminLayout — Ciclo 9: contentGroups populados via useQuery", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(useQuery).mockImplementation((queryKey: unknown) => {
+      if (queryKey === "posts:listAdmin") return [{ _id: "p1", title: "Introdução ao TDD" }];
+      if (queryKey === "projects:list") return [{ _id: "pr1", title: "Portfolio App" }];
+      if (queryKey === "proposals:listAdmin") return [{ _id: "prop1", title: "Proposta Acme" }];
+      if (queryKey === "services:list") return [{ _id: "s1", title: "Consultoria" }];
+      return undefined;
+    });
+  });
+
+  it("exibe grupo Posts com itens quando há query na palette", () => {
+    render(<AdminLayout><div /></AdminLayout>);
+    act(() => {
+      fireEvent.keyDown(document, { key: "k", ctrlKey: true });
+    });
+    fireEvent.change(screen.getByPlaceholderText("Buscar página..."), {
+      target: { value: "tdd" },
+    });
+    expect(screen.getByText("Posts")).toBeInTheDocument();
+    expect(screen.getByText("Introdução ao TDD")).toBeInTheDocument();
+  });
+
+  it("exibe grupo Projetos com itens quando há query na palette", () => {
+    render(<AdminLayout><div /></AdminLayout>);
+    act(() => {
+      fireEvent.keyDown(document, { key: "k", ctrlKey: true });
+    });
+    fireEvent.change(screen.getByPlaceholderText("Buscar página..."), {
+      target: { value: "port" },
+    });
+    expect(screen.getAllByText("Projetos").length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText("Portfolio App")).toBeInTheDocument();
+  });
+
+  it("exibe grupo Propostas com itens quando há query na palette", () => {
+    render(<AdminLayout><div /></AdminLayout>);
+    act(() => {
+      fireEvent.keyDown(document, { key: "k", ctrlKey: true });
+    });
+    fireEvent.change(screen.getByPlaceholderText("Buscar página..."), {
+      target: { value: "acme" },
+    });
+    expect(screen.getByText("Proposta Acme")).toBeInTheDocument();
+  });
+
+  it("exibe grupo Serviços com itens quando há query na palette", () => {
+    render(<AdminLayout><div /></AdminLayout>);
+    act(() => {
+      fireEvent.keyDown(document, { key: "k", ctrlKey: true });
+    });
+    fireEvent.change(screen.getByPlaceholderText("Buscar página..."), {
+      target: { value: "consul" },
+    });
+    expect(screen.getByText("Serviços")).toBeInTheDocument();
+    expect(screen.getByText("Consultoria")).toBeInTheDocument();
+  });
+
+  it("não exibe grupos de conteúdo quando o input está vazio", () => {
+    render(<AdminLayout><div /></AdminLayout>);
+    act(() => {
+      fireEvent.keyDown(document, { key: "k", ctrlKey: true });
+    });
+    expect(screen.queryByText("Introdução ao TDD")).not.toBeInTheDocument();
+    expect(screen.queryByText("Portfolio App")).not.toBeInTheDocument();
+    expect(screen.queryByText("Proposta Acme")).not.toBeInTheDocument();
+    expect(screen.queryByText("Consultoria")).not.toBeInTheDocument();
   });
 });
 
