@@ -762,4 +762,10 @@ describe("2.12 — arquivos de layout são TypeScript sintaticamente válidos", 
     expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com/);
     expect(content).toMatch(/useBlogPosts/);
   });
+
+  it("layout swiss — pages/Blog.tsx formata datas em pt-BR (toLocaleDateString)", () => {
+    const filePath = resolve(TEMPLATES_DIR, "swiss/pages/Blog.tsx");
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).toMatch(/toLocaleDateString/);
+  });
 });

@@ -174,7 +174,7 @@ export default function SwissBlog() {
               }}
             >
               <span>★ Destaque · Edição .{String(posts.length).padStart(2, "0")}</span>
-              <span>{featuredPost.published_at}</span>
+              <span>{new Date(featuredPost.published_at).toLocaleDateString("pt-BR")}</span>
             </div>
             <h2
               style={{
@@ -291,7 +291,7 @@ export default function SwissBlog() {
                   textTransform: "uppercase",
                 }}
               >
-                {p.published_at}
+                {new Date(p.published_at).toLocaleDateString("pt-BR")}
               </span>
             </div>
             <h3
