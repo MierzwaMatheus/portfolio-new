@@ -236,7 +236,7 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
     );
   } catch (err: unknown) {
     const e = err as { stdout?: Buffer; stderr?: Buffer; message?: string };
-    const output = e.stdout?.toString() ?? e.stderr?.toString() ?? e.message ?? "";
+    const output = e.stdout?.toString() || e.stderr?.toString() || e.message || "";
     if (output.includes("Root user already exists")) {
       log.warn("Admin já configurado — credenciais mantidas. Para redefinir, acesse o Convex Dashboard.");
     } else {
