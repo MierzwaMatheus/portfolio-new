@@ -666,6 +666,25 @@ describe("2.12 — arquivos de layout são TypeScript sintaticamente válidos", 
     expect(content).toMatch(/useResume/);
   });
 
+  it("layout swiss — pages/Resume.tsx é válido", () => {
+    const filePath = resolve(TEMPLATES_DIR, "swiss/pages/Resume.tsx");
+    const result = checkLayoutFileSyntax(filePath);
+    expect(result.errors, result.messages.join(", ")).toBe(0);
+  });
+
+  it("layout swiss — pages/Resume.tsx não contém dados pessoais hardcoded", () => {
+    const filePath = resolve(TEMPLATES_DIR, "swiss/pages/Resume.tsx");
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com/);
+    expect(content).toMatch(/useResume/);
+  });
+
+  it("layout swiss — pages/Resume.tsx renderiza descriptions HTML via dangerouslySetInnerHTML", () => {
+    const filePath = resolve(TEMPLATES_DIR, "swiss/pages/Resume.tsx");
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).toMatch(/dangerouslySetInnerHTML/);
+  });
+
   it("layout swiss — pages/Portfolio.tsx é válido", () => {
     const filePath = resolve(TEMPLATES_DIR, "swiss/pages/Portfolio.tsx");
     const result = checkLayoutFileSyntax(filePath);

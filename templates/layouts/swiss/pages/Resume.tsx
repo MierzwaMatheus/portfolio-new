@@ -148,8 +148,7 @@ export default function SwissResume() {
             role?: string;
             company?: string;
             period?: string;
-            groups?: Array<{ title?: string; items: string[] }>;
-            items?: string[];
+            description?: string;
           };
           return (
             <div
@@ -203,48 +202,10 @@ export default function SwissResume() {
                   @ {c.company}
                 </div>
               </div>
-              <div>
-                {(c.groups ?? [{ items: c.items ?? [] }]).map((g, gi) => (
-                  <div key={gi} style={{ marginBottom: 12 }}>
-                    {g.title && (
-                      <div
-                        style={{
-                          fontSize: 10,
-                          fontWeight: 700,
-                          letterSpacing: "0.14em",
-                          textTransform: "uppercase",
-                          marginBottom: 6,
-                          color: "var(--accent)",
-                        }}
-                      >
-                        {g.title}
-                      </div>
-                    )}
-                    {g.items.map((it, j) => (
-                      <p
-                        key={j}
-                        style={{
-                          fontSize: 12,
-                          lineHeight: 1.55,
-                          opacity: 0.85,
-                          margin: "0 0 4px",
-                        }}
-                      >
-                        <span
-                          style={{
-                            color: "var(--primary)",
-                            marginRight: 6,
-                            fontWeight: 700,
-                          }}
-                        >
-                          —
-                        </span>
-                        {it}
-                      </p>
-                    ))}
-                  </div>
-                ))}
-              </div>
+              <div
+                dangerouslySetInnerHTML={{ __html: c.description ?? "" }}
+                style={{ fontSize: 12, lineHeight: 1.55, opacity: 0.85 }}
+              />
             </div>
           );
         })}
