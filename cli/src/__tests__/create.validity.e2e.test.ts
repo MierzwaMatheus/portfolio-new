@@ -691,4 +691,30 @@ describe("2.12 — arquivos de layout são TypeScript sintaticamente válidos", 
     expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com/);
     expect(content).toMatch(/usePortfolio/);
   });
+
+  it("layout brutalist — pages/About.tsx é válido TypeScript", () => {
+    const filePath = resolve(TEMPLATES_DIR, "brutalist/pages/About.tsx");
+    const result = checkLayoutFileSyntax(filePath);
+    expect(result.errors, result.messages.join(", ")).toBe(0);
+  });
+
+  it("layout brutalist — pages/About.tsx não contém dados pessoais hardcoded", () => {
+    const filePath = resolve(TEMPLATES_DIR, "brutalist/pages/About.tsx");
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com/);
+    expect(content).toMatch(/useAbout/);
+  });
+
+  it("layout swiss — pages/About.tsx é válido", () => {
+    const filePath = resolve(TEMPLATES_DIR, "swiss/pages/About.tsx");
+    const result = checkLayoutFileSyntax(filePath);
+    expect(result.errors, result.messages.join(", ")).toBe(0);
+  });
+
+  it("layout swiss — pages/About.tsx não contém dados pessoais hardcoded", () => {
+    const filePath = resolve(TEMPLATES_DIR, "swiss/pages/About.tsx");
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com/);
+    expect(content).toMatch(/useAbout/);
+  });
 });
