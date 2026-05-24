@@ -652,4 +652,17 @@ describe("2.12 — arquivos de layout são TypeScript sintaticamente válidos", 
     expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com/);
     expect(content).toMatch(/useHome/);
   });
+
+  it("layout brutalist — pages/Resume.tsx é válido TypeScript", () => {
+    const filePath = resolve(TEMPLATES_DIR, "brutalist/pages/Resume.tsx");
+    const result = checkLayoutFileSyntax(filePath);
+    expect(result.errors, result.messages.join(", ")).toBe(0);
+  });
+
+  it("layout brutalist — pages/Resume.tsx não contém dados pessoais hardcoded", () => {
+    const filePath = resolve(TEMPLATES_DIR, "brutalist/pages/Resume.tsx");
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com/);
+    expect(content).toMatch(/useResume/);
+  });
 });
