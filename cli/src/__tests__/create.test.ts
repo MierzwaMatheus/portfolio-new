@@ -476,6 +476,18 @@ describe("create — novas fontes e recomendação por template", () => {
     );
   });
 
+  it("prompt de fonte mono não é exibido quando swiss é selecionado", async () => {
+    vi.clearAllMocks();
+    setupPrompts({ layout: "swiss", fontSans: "Inter" });
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+    await runCreate("meu-portfolio", makeDefaultDeps(vol));
+    const fontMonoCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Fonte mono"
+    );
+    expect(fontMonoCall).toBeUndefined();
+  });
+
   it("JetBrains Mono aparece como recomendada no fontMono quando cyberpunk é selecionado", async () => {
     vi.clearAllMocks();
     setupPrompts({ layout: "cyberpunk", fontMono: "Fira Code" });
