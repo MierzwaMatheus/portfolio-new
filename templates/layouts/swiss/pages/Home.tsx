@@ -5,16 +5,16 @@ import { useSidebar } from "@/hooks/useSidebar";
 import { homeRepository, resumeRepository, sidebarRepository } from "@/repositories/instances";
 import { SwissShell, SwissGridLines } from "@/components/SwissShared";
 
-const SERVICE_ICONS: Record<string, React.ReactNode> = {
-  "frontend": <Code size={26} strokeWidth={2.5} />,
-  "backend": <Terminal size={26} strokeWidth={2.5} />,
-  "devops": <Cpu size={26} strokeWidth={2.5} />,
-  "design": <Palette size={26} strokeWidth={2.5} />,
-  "performance": <Zap size={26} strokeWidth={2.5} />,
-  "architecture": <Layout size={26} strokeWidth={2.5} />,
-  "consulting": <MessageSquare size={26} strokeWidth={2.5} />,
-  "fullstack": <Layers size={26} strokeWidth={2.5} />,
-};
+const SERVICE_ICONS = [
+  <Code size={26} strokeWidth={2.5} />,
+  <Terminal size={26} strokeWidth={2.5} />,
+  <Cpu size={26} strokeWidth={2.5} />,
+  <Palette size={26} strokeWidth={2.5} />,
+  <Zap size={26} strokeWidth={2.5} />,
+  <Layout size={26} strokeWidth={2.5} />,
+  <MessageSquare size={26} strokeWidth={2.5} />,
+  <Layers size={26} strokeWidth={2.5} />,
+];
 
 export default function SwissHome() {
   const { contactRole, aboutText, services, testimonials, isLoading } = useHome(homeRepository);
@@ -250,7 +250,7 @@ export default function SwissHome() {
                   marginBottom: 16,
                 }}
               >
-                {SERVICE_ICONS[c.id] ?? <Code size={26} strokeWidth={2.5} />}
+                {SERVICE_ICONS[i % SERVICE_ICONS.length]}
                 <span
                   style={{
                     fontSize: 30,

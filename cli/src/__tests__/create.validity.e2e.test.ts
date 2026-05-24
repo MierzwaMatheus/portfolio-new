@@ -588,6 +588,13 @@ describe("2.12 — arquivos de layout são TypeScript sintaticamente válidos", 
     expect(content).toMatch(/useHome|useResume/);
   });
 
+  it("layout swiss — pages/Home.tsx usa array posicional de ícones (não mapeamento por ID Convex)", () => {
+    const filePath = resolve(TEMPLATES_DIR, "swiss/pages/Home.tsx");
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).not.toMatch(/SERVICE_ICONS\[c\.id\]/);
+    expect(content).toMatch(/SERVICE_ICONS\[i/);
+  });
+
   it("layout magazine — pages/Resume.tsx é válido", () => {
     const filePath = resolve(TEMPLATES_DIR, "magazine/pages/Resume.tsx");
     const result = checkLayoutFileSyntax(filePath);
