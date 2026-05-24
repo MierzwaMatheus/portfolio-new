@@ -440,6 +440,42 @@ describe("create — novas fontes e recomendação por template", () => {
     );
   });
 
+  it("Archivo aparece como recomendada quando swiss é selecionado", async () => {
+    vi.clearAllMocks();
+    setupPrompts({ layout: "swiss", fontSans: "Inter" });
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+    await runCreate("meu-portfolio", makeDefaultDeps(vol));
+    const fontSansCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Fonte principal"
+    );
+    expect(fontSansCall?.[0]).toEqual(
+      expect.objectContaining({
+        options: expect.arrayContaining([
+          expect.objectContaining({ value: "Archivo", hint: "recomendada" }),
+        ]),
+      })
+    );
+  });
+
+  it("Manrope aparece como recomendada quando bento é selecionado", async () => {
+    vi.clearAllMocks();
+    setupPrompts({ layout: "bento", fontSans: "Inter" });
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+    await runCreate("meu-portfolio", makeDefaultDeps(vol));
+    const fontSansCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Fonte principal"
+    );
+    expect(fontSansCall?.[0]).toEqual(
+      expect.objectContaining({
+        options: expect.arrayContaining([
+          expect.objectContaining({ value: "Manrope", hint: "recomendada" }),
+        ]),
+      })
+    );
+  });
+
   it("JetBrains Mono aparece como recomendada no fontMono quando cyberpunk é selecionado", async () => {
     vi.clearAllMocks();
     setupPrompts({ layout: "cyberpunk", fontMono: "Fira Code" });
