@@ -154,30 +154,118 @@ export const enUS = {
     rateLimited: "Too many attempts. Please wait a moment.",
     summaryTitle: "Summary",
     flows: {
-      project: { label: "I have a project", description: "I want to build something new" },
-      job: { label: "Job opportunity", description: "I have a position for you" },
-      networking: { label: "Networking / Collaboration", description: "I want to exchange ideas" },
-      feedback: { label: "Feedback / Question", description: "I have a question or suggestion" },
+      project: {
+        label: "I have a project",
+        description: "I want to build something new",
+      },
+      job: {
+        label: "Job opportunity",
+        description: "I have a position for you",
+      },
+      networking: {
+        label: "Networking / Collaboration",
+        description: "I want to exchange ideas",
+      },
+      feedback: {
+        label: "Feedback / Question",
+        description: "I have a question or suggestion",
+      },
     },
     project: {
-      step1: { title: "What type of project?", options: { webapp: "Web App / SaaS", mobile: "Mobile", landing: "Landing Page", system: "Internal System", consulting: "Technical Consulting", other: "Other" } },
-      step2: { title: "What's the estimated timeline?", options: { urgent: "Urgent (< 1 month)", short: "Short (1–3 months)", medium: "Medium (3–6 months)", flexible: "No rush" } },
-      step3: { title: "What's the estimated budget?", options: { small: "Up to R$ 5,000", medium: "R$ 5,000 – R$ 15,000", large: "R$ 15,000 – R$ 30,000", enterprise: "Above R$ 30,000", unknown: "Not sure yet" } },
-      step4: { title: "Describe the project", placeholder: "Tell me a bit about what you have in mind..." },
+      step1: {
+        title: "What type of project?",
+        options: {
+          webapp: "Web App / SaaS",
+          mobile: "Mobile",
+          landing: "Landing Page",
+          system: "Internal System",
+          consulting: "Technical Consulting",
+          other: "Other",
+        },
+      },
+      step2: {
+        title: "What's the estimated timeline?",
+        options: {
+          urgent: "Urgent (< 1 month)",
+          short: "Short (1–3 months)",
+          medium: "Medium (3–6 months)",
+          flexible: "No rush",
+        },
+      },
+      step3: {
+        title: "What's the estimated budget?",
+        options: {
+          small: "Up to R$ 5,000",
+          medium: "R$ 5,000 – R$ 15,000",
+          large: "R$ 15,000 – R$ 30,000",
+          enterprise: "Above R$ 30,000",
+          unknown: "Not sure yet",
+        },
+      },
+      step4: {
+        title: "Describe the project",
+        placeholder: "Tell me a bit about what you have in mind...",
+      },
     },
     job: {
-      step1: { title: "What type of opportunity?", options: { clt: "Full-time (CLT)", pj: "Contractor (PJ)", freelance: "Freelance" } },
-      step2: { title: "What's the work modality?", options: { remote: "Remote", hybrid: "Hybrid", onsite: "On-site" } },
-      step3: { title: "What's the main area?", options: { frontend: "Frontend", fullstack: "Full Stack", techlead: "Tech Lead / Architecture" } },
-      step4: { title: "Company and position", companyPlaceholder: "Company name", rolePlaceholder: "Job title" },
+      step1: {
+        title: "What type of opportunity?",
+        options: {
+          clt: "Full-time (CLT)",
+          pj: "Contractor (PJ)",
+          freelance: "Freelance",
+        },
+      },
+      step2: {
+        title: "What's the work modality?",
+        options: {
+          remote: "Remote",
+          hybrid: "Hybrid",
+          onsite: "On-site",
+        },
+      },
+      step3: {
+        title: "What's the main area?",
+        options: {
+          frontend: "Frontend",
+          fullstack: "Full Stack",
+          techlead: "Tech Lead / Architecture",
+        },
+      },
+      step4: {
+        title: "Company and position",
+        companyPlaceholder: "Company name",
+        rolePlaceholder: "Job title",
+      },
     },
     networking: {
-      step1: { title: "How did you find me?", options: { blog: "Blog / Articles", linkedin: "LinkedIn", referral: "Referral", portfolio: "Portfolio" } },
-      step2: { title: "What would you like to talk about?", placeholder: "What's the topic of interest?" },
+      step1: {
+        title: "How did you find me?",
+        options: {
+          blog: "Blog / Articles",
+          linkedin: "LinkedIn",
+          referral: "Referral",
+          portfolio: "Portfolio",
+        },
+      },
+      step2: {
+        title: "What would you like to talk about?",
+        placeholder: "What's the topic of interest?",
+      },
     },
     feedback: {
-      step1: { title: "What is your feedback about?", options: { post: "A blog post", project: "A specific project", general: "Portfolio in general" } },
-      step2: { title: "Your message", placeholder: "Write here..." },
+      step1: {
+        title: "What is your feedback about?",
+        options: {
+          post: "A blog post",
+          project: "A specific project",
+          general: "Portfolio in general",
+        },
+      },
+      step2: {
+        title: "Your message",
+        placeholder: "Write here...",
+      },
     },
     contact: {
       title: "Your contact details",
@@ -258,13 +346,12 @@ export const enUS = {
   notFound: {
     label: "system error",
     errorCode: "ERR_ROUTE_NOT_FOUND",
-    lines: [
-      "> process exited with code 404",
-      "> route not found in manifest",
-      "> scanning fallback handlers...",
-      "> none matched. abort.",
-    ],
+    lines: {
+      0: "> process exited with code 404",
+      1: "> route not found in manifest",
+      2: "> scanning fallback handlers...",
+      3: "> none matched. abort.",
+    },
     cta: "back to home",
   },
 };
-
