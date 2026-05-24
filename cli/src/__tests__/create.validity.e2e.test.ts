@@ -170,7 +170,6 @@ function setupSelectPrompts(layout: string, theme = "editorial-cream") {
     .mockResolvedValueOnce(theme)
     .mockResolvedValueOnce("Inter")
     .mockResolvedValueOnce("JetBrains Mono")
-    .mockResolvedValueOnce("0.5rem")
     .mockResolvedValueOnce("none");
 }
 

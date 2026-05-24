@@ -56,24 +56,18 @@ const DEFAULT_PLUGINS = { blog: true, portfolio: true };
 function setupPrompts(opts: {
   layout?: string;
   theme?: string;
-  accentColor?: string;
   fontSans?: string;
   fontMono?: string;
-  radius?: string;
   plugins?: string[];
   packageManager?: string;
 }) {
   vi.mocked(select)
     .mockResolvedValueOnce(opts.layout ?? "cyberpunk")
-    .mockResolvedValueOnce(opts.theme ?? "cyberpunk")
+    .mockResolvedValueOnce(opts.theme ?? "editorial-cream")
     .mockResolvedValueOnce(opts.fontSans ?? "Inter")
     .mockResolvedValueOnce(opts.fontMono ?? "JetBrains Mono")
-    .mockResolvedValueOnce(opts.radius ?? "0.5rem")
     .mockResolvedValueOnce(opts.packageManager ?? "none");
   vi.mocked(multiselect).mockResolvedValueOnce(opts.plugins ?? ["blog", "portfolio"]);
-  if (opts.accentColor) {
-    vi.mocked(text).mockResolvedValueOnce(opts.accentColor);
-  }
 }
 
 /** Cria download mock que popula o volume */
@@ -224,37 +218,45 @@ describe("create — applyLayout", () => {
 // ---- Ciclo 4: applyTheme ---------------------------------------------------
 
 describe("create — applyTheme", () => {
-  it("chama applyTheme com preset cyberpunk quando selecionado", async () => {
-    const { mockApplyTheme } = await callRunCreate({ theme: "cyberpunk" });
+  it("chama applyTheme com preset editorial-cream quando selecionado", async () => {
+    const { mockApplyTheme } = await callRunCreate({ theme: "editorial-cream" });
     expect(mockApplyTheme).toHaveBeenCalledWith(
-      { preset: "cyberpunk" },
+      { preset: "editorial-cream" },
       "/projects/meu-portfolio/src/index.css",
       expect.anything()
     );
   });
 
-  it("chama applyTheme com preset minimal quando selecionado", async () => {
-    const { mockApplyTheme } = await callRunCreate({ theme: "minimal" });
+  it("chama applyTheme com preset midnight-blue quando selecionado", async () => {
+    const { mockApplyTheme } = await callRunCreate({ theme: "midnight-blue" });
     expect(mockApplyTheme).toHaveBeenCalledWith(
-      { preset: "minimal" },
+      { preset: "midnight-blue" },
       "/projects/meu-portfolio/src/index.css",
       expect.anything()
     );
   });
 
+  it("não chama text para cor personalizada — opção custom foi removida", async () => {
+    const { mockApplyTheme } = await callRunCreate({ theme: "paper-noir" });
+    expect(vi.mocked(text)).not.toHaveBeenCalled();
+    expect(mockApplyTheme).toHaveBeenCalledWith(
+      { preset: "paper-noir" },
+      expect.anything(),
+      expect.anything()
+    );
+  });
 });
 
 // ---- Ciclo 5: applyFont ----------------------------------------------------
 
 describe("create — applyFont", () => {
-  it("chama applyFont com fontSans, fontMono e radius selecionados nos prompts", async () => {
+  it("chama applyFont com fontSans e fontMono selecionados (sem radius)", async () => {
     const { mockApplyFont } = await callRunCreate({
       fontSans: "Inter",
       fontMono: "JetBrains Mono",
-      radius: "0.5rem",
     });
     expect(mockApplyFont).toHaveBeenCalledWith(
-      { fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem" },
+      { fontSans: "Inter", fontMono: "JetBrains Mono" },
       expect.objectContaining({
         css: "/projects/meu-portfolio/src/index.css",
         html: "/projects/meu-portfolio/index.html",
@@ -267,10 +269,9 @@ describe("create — applyFont", () => {
     const { mockApplyFont } = await callRunCreate({
       fontSans: "Playfair Display",
       fontMono: "Fira Code",
-      radius: "0rem",
     });
     expect(mockApplyFont).toHaveBeenCalledWith(
-      { fontSans: "Playfair Display", fontMono: "Fira Code", radius: "0rem" },
+      { fontSans: "Playfair Display", fontMono: "Fira Code" },
       expect.anything(),
       expect.anything()
     );
@@ -342,9 +343,9 @@ describe("create — applyRubricalConfig", () => {
 // ---- Ciclo 8: writeState (rubrica.json) ------------------------------------
 
 describe("create — writeState", () => {
-  it("cria rubrica.json com version, layout, theme e plugins", async () => {
+  it("cria rubrica.json com version, layout, theme e plugins (sem radius nem accentColor)", async () => {
     vi.clearAllMocks();
-    setupPrompts({ layout: "cyberpunk", theme: "minimal", plugins: ["blog"] });
+    setupPrompts({ layout: "cyberpunk", theme: "editorial-cream", plugins: ["blog"] });
 
     const vol = Volume.fromJSON({});
     vol.mkdirSync("/projects", { recursive: true });
@@ -352,11 +353,9 @@ describe("create — writeState", () => {
     const mockWriteState = vi.fn(async () => ({
       version: "0.1.0",
       layout: "cyberpunk",
-      theme: "minimal",
-      accentColor: null,
+      theme: "editorial-cream",
       fontSans: "Inter",
       fontMono: "JetBrains Mono",
-      radius: "0.5rem",
       plugins: { blog: true, portfolio: false, resume: false },
     }));
 
@@ -371,11 +370,14 @@ describe("create — writeState", () => {
       "/projects/meu-portfolio",
       expect.objectContaining({
         layout: "cyberpunk",
-        theme: "minimal",
+        theme: "editorial-cream",
         plugins: expect.objectContaining({ blog: true }),
       }),
       expect.anything()
     );
+    const call = vi.mocked(mockWriteState).mock.calls[0][1];
+    expect((call as Record<string, unknown>).radius).toBeUndefined();
+    expect((call as Record<string, unknown>).accentColor).toBeUndefined();
   });
 });
 

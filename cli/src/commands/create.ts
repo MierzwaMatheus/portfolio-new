@@ -1,4 +1,4 @@
-import { intro, outro, text, select, multiselect, confirm, isCancel, cancel } from "@clack/prompts";
+import { intro, outro, select, multiselect, confirm, isCancel, cancel } from "@clack/prompts";
 import * as nodeFsPromises from "node:fs/promises";
 import { identityPrompt as defaultIdentityPrompt } from "../prompts/identityPrompt.js";
 import { downloadRelease as defaultDownloadRelease, getLatestVersion as defaultGetLatestVersion } from "../utils/download.js";
@@ -131,24 +131,12 @@ export async function runCreate(
   const themeChoice = await select({
     message: "Tema visual",
     options: [
-      { value: "cyberpunk", label: "Cyberpunk — neon purple + lime, atmosfera dark" },
-      { value: "minimal", label: "Minimal — clean, azul neutro, máxima legibilidade" },
-      { value: "editorial", label: "Editorial — creme, âmbar, tipografia serifada" },
-      { value: "forest", label: "Forest — verde musgo, off-white, orgânico" },
-      { value: "custom", label: "Personalizado..." },
+      { value: "editorial-cream", label: "Editorial Cream — ☀ papel envelhecido, âmbar e tinta" },
+      { value: "paper-noir", label: "Paper Noir — ☀ preto e branco com detalhe em vermelho" },
+      { value: "midnight-blue", label: "Midnight Blue — 🌑 noite urbana, azul profundo e neon" },
+      { value: "solar-warm", label: "Solar Warm — 🌑 energia solar, laranja e areia" },
     ],
   }) as string;
-
-  let accentColor: string | undefined;
-  if (themeChoice === "custom") {
-    const hexInput = await text({
-      message: "Cor de destaque (hex, ex: #0065fe)",
-      validate: (v) => {
-        if (!/^#[0-9a-fA-F]{6}$/.test(v)) return "Informe um hex válido (ex: #0065fe)";
-      },
-    }) as string;
-    accentColor = hexInput;
-  }
 
   await applyThemeFn(
     { preset: themeChoice },
@@ -156,7 +144,7 @@ export async function runCreate(
     fs as Parameters<typeof defaultApplyTheme>[2]
   );
 
-  // Ciclo 5: prompts de fonte e radius
+  // Ciclo 5: prompts de fonte
   const fontSans = await select({
     message: "Fonte principal",
     options: [
@@ -178,19 +166,8 @@ export async function runCreate(
     ],
   }) as string;
 
-  const radius = await select({
-    message: "Border radius",
-    options: [
-      { value: "0rem", label: "Nenhum — bordas retas, minimalismo severo" },
-      { value: "0.375rem", label: "Suave — sutil arredondamento" },
-      { value: "0.5rem", label: "Médio — padrão shadcn/ui" },
-      { value: "0.75rem", label: "Arredondado — amigável, moderno" },
-      { value: "1rem", label: "Pill — muito arredondado, jovial" },
-    ],
-  }) as string;
-
   await applyFontFn(
-    { fontSans, fontMono, radius },
+    { fontSans, fontMono },
     { css: `${projectDir}/src/index.css`, html: `${projectDir}/index.html` },
     fs as Parameters<typeof defaultApplyFont>[2]
   );
@@ -233,7 +210,7 @@ export async function runCreate(
   await applyIndexHtmlFn(
     {
       fontFamily: fontSans,
-      themeColor: accentColor ?? "#6d28d9",
+      themeColor: "",
       siteName: identity.siteName,
       siteUrl: identity.siteUrl,
       twitterHandle: identity.twitterHandle,
@@ -277,11 +254,9 @@ export async function runCreate(
     {
       version: "0.1.0",
       layout,
-      theme: themeChoice === "custom" ? "custom" : themeChoice,
-      accentColor: accentColor ?? null,
+      theme: themeChoice,
       fontSans,
       fontMono,
-      radius,
       plugins: pluginsRecord,
     },
     fs as Parameters<typeof defaultWriteState>[2]

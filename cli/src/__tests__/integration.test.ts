@@ -148,7 +148,7 @@ describe("integração: applyTheme + applyFont em cadeia", () => {
 
     await applyTheme({ preset: "editorial-cream" }, "/project/src/index.css", fs);
     await applyFont(
-      { fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem" },
+      { fontSans: "Inter", fontMono: "JetBrains Mono" },
       { css: "/project/src/index.css", html: "/project/src/index.css" },
       fs
     );
@@ -305,7 +305,7 @@ describe("integração: idempotência do pipeline completo", () => {
     async function runPipeline() {
       await applyTheme({ preset: "editorial-cream" }, "/project/src/index.css", fs);
       await applyFont(
-        { fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem" },
+        { fontSans: "Inter", fontMono: "JetBrains Mono" },
         { css: "/project/src/index.css", html: "/project/index.html" },
         fs
       );

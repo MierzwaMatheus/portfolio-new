@@ -16,11 +16,11 @@ function buildFontLink(font: string): string {
 }
 
 export async function applyFont(
-  options: { fontSans: string; fontMono: string; radius: string },
+  options: { fontSans: string; fontMono: string },
   paths: { css: string; html: string },
   fsModule: FsModule = nodeFsPromises as unknown as FsModule
 ): Promise<void> {
-  const { fontSans, fontMono, radius } = options;
+  const { fontSans, fontMono } = options;
 
   let css = await fsModule.readFile(paths.css, "utf-8");
   css = css.replace(
@@ -30,10 +30,6 @@ export async function applyFont(
   css = css.replace(
     /(--font-mono:\s*")[^"]*(")/,
     `$1${fontMono}$2`
-  );
-  css = css.replace(
-    /(--radius:\s*)[^;]+(;)/,
-    `$1${radius}$2`
   );
   await fsModule.writeFile(paths.css, css);
 

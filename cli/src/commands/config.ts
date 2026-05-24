@@ -72,7 +72,7 @@ export async function runConfig(deps: RunConfigDeps = {}): Promise<void> {
     message: "O que deseja reconfigurar?",
     options: [
       { value: "identity", label: "Identidade (nome, URL, SEO, RSS)" },
-      { value: "appearance", label: "Aparência (tema, cores, fonte, radius)" },
+      { value: "appearance", label: "Aparência (tema, fonte)" },
       { value: "layout", label: "Layout" },
       { value: "plugins", label: "Plugins" },
     ],
@@ -117,10 +117,10 @@ export async function runConfig(deps: RunConfigDeps = {}): Promise<void> {
       message: "Tema visual",
       initialValue: currentState.theme,
       options: [
-        { value: "cyberpunk", label: "Cyberpunk — neon purple + lime" },
-        { value: "minimal", label: "Minimal — clean, azul neutro" },
-        { value: "editorial", label: "Editorial — creme, âmbar, serifado" },
-        { value: "forest", label: "Forest — verde musgo, off-white" },
+        { value: "editorial-cream", label: "Editorial Cream — ☀ papel envelhecido, âmbar e tinta" },
+        { value: "paper-noir", label: "Paper Noir — ☀ preto e branco com detalhe em vermelho" },
+        { value: "midnight-blue", label: "Midnight Blue — 🌑 noite urbana, azul profundo e neon" },
+        { value: "solar-warm", label: "Solar Warm — 🌑 energia solar, laranja e areia" },
       ],
     }) as string;
 
@@ -147,18 +147,6 @@ export async function runConfig(deps: RunConfigDeps = {}): Promise<void> {
       ],
     }) as string;
 
-    const radius = await select({
-      message: "Border radius",
-      initialValue: currentState.radius,
-      options: [
-        { value: "0rem", label: "Nenhum — 0rem" },
-        { value: "0.375rem", label: "Suave — 0.375rem" },
-        { value: "0.5rem", label: "Médio — 0.5rem" },
-        { value: "0.75rem", label: "Arredondado — 0.75rem" },
-        { value: "1rem", label: "Pill — 1rem" },
-      ],
-    }) as string;
-
     const cssPath = path.join(projectDir, "src", "index.css");
     const htmlPath = path.join(projectDir, "index.html");
 
@@ -168,7 +156,7 @@ export async function runConfig(deps: RunConfigDeps = {}): Promise<void> {
       fs as Parameters<typeof defaultApplyTheme>[2]
     );
     await applyFontFn(
-      { fontSans, fontMono, radius },
+      { fontSans, fontMono },
       { css: cssPath, html: htmlPath },
       fs as Parameters<typeof defaultApplyFont>[2]
     );
@@ -181,8 +169,6 @@ export async function runConfig(deps: RunConfigDeps = {}): Promise<void> {
     stateUpdate.theme = theme;
     stateUpdate.fontSans = fontSans;
     stateUpdate.fontMono = fontMono;
-    stateUpdate.radius = radius;
-    stateUpdate.accentColor = null;
   }
 
   // Ciclo 6: layout

@@ -46,7 +46,7 @@ describe("applyFont", () => {
     const fs = makeFsModule(vol);
 
     await applyFont(
-      { fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem" },
+      { fontSans: "Inter", fontMono: "JetBrains Mono" },
       { css: "/project/src/index.css", html: "/project/index.html" },
       fs
     );
@@ -63,7 +63,7 @@ describe("applyFont", () => {
     const fs = makeFsModule(vol);
 
     await applyFont(
-      { fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem" },
+      { fontSans: "Inter", fontMono: "JetBrains Mono" },
       { css: "/project/src/index.css", html: "/project/index.html" },
       fs
     );
@@ -72,7 +72,7 @@ describe("applyFont", () => {
     expect(css).toContain('--font-mono: "JetBrains Mono"');
   });
 
-  it("atualiza --radius em CSS", async () => {
+  it("não altera --radius no CSS", async () => {
     const vol = Volume.fromJSON({
       "/project/src/index.css": stubCss,
       "/project/index.html": stubHtml,
@@ -80,13 +80,13 @@ describe("applyFont", () => {
     const fs = makeFsModule(vol);
 
     await applyFont(
-      { fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.75rem" },
+      { fontSans: "Inter", fontMono: "JetBrains Mono" },
       { css: "/project/src/index.css", html: "/project/index.html" },
       fs
     );
 
     const css = vol.readFileSync("/project/src/index.css", "utf-8") as string;
-    expect(css).toContain("--radius: 0.75rem");
+    expect(css).toContain("--radius: 0.5rem");
   });
 
   it("substitui <link> do Google Fonts em index.html pela fonte correta", async () => {
@@ -97,7 +97,7 @@ describe("applyFont", () => {
     const fs = makeFsModule(vol);
 
     await applyFont(
-      { fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem" },
+      { fontSans: "Inter", fontMono: "JetBrains Mono" },
       { css: "/project/src/index.css", html: "/project/index.html" },
       fs
     );
@@ -115,14 +115,14 @@ describe("applyFont", () => {
     const fs = makeFsModule(vol);
 
     await applyFont(
-      { fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem" },
+      { fontSans: "Inter", fontMono: "JetBrains Mono" },
       { css: "/project/src/index.css", html: "/project/index.html" },
       fs
     );
     const first = vol.readFileSync("/project/index.html", "utf-8") as string;
 
     await applyFont(
-      { fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem" },
+      { fontSans: "Inter", fontMono: "JetBrains Mono" },
       { css: "/project/src/index.css", html: "/project/index.html" },
       fs
     );
