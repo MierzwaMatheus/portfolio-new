@@ -129,8 +129,9 @@ export async function runCreate(
       { value: "brutalist", label: "Brutalism Terminal", hint: "identidade hacker total — monospace, sem bordas arredondadas" },
       { value: "swiss", label: "Swiss Grid", hint: "grid de 12 colunas, tipografia forte, design suíço rigoroso" },
       { value: "bento", label: "Bento", hint: "grid assimétrico com floating dock — moderno, orientado a produto" },
+      { value: "magazine", label: "Magazine", hint: "editorial clássico · display serifado · grid assimétrico · áreas de respiro generosas" },
     ],
-  }) as "cyberpunk" | "brutalist" | "swiss" | "bento";
+  }) as "cyberpunk" | "brutalist" | "swiss" | "bento" | "magazine";
 
   await applyLayoutFn(
     layout,

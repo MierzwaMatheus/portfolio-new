@@ -246,6 +246,33 @@ describe("create — applyLayout", () => {
       })
     );
   });
+
+  it("select de layout inclui opção magazine com hint descritivo", async () => {
+    vi.clearAllMocks();
+    setupPrompts({});
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+    await runCreate("meu-portfolio", makeDefaultDeps(vol));
+    const layoutCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Layout"
+    );
+    expect(layoutCall?.[0]).toEqual(
+      expect.objectContaining({
+        options: expect.arrayContaining([
+          expect.objectContaining({ value: "magazine", hint: expect.any(String) }),
+        ]),
+      })
+    );
+  });
+
+  it("chama applyLayout com layout magazine quando selecionado nos prompts", async () => {
+    const { mockApplyLayout } = await callRunCreate({ layout: "magazine" });
+    expect(mockApplyLayout).toHaveBeenCalledWith(
+      "magazine",
+      expect.objectContaining({ projectDir: "/projects/meu-portfolio" }),
+      expect.anything()
+    );
+  });
 });
 
 // ---- Ciclo 4: applyTheme ---------------------------------------------------
