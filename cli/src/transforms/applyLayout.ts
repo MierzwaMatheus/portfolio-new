@@ -20,7 +20,7 @@ const LAYOUT_FILES: Record<Layout, { copy: string[]; remove: string[]; pages?: s
   brutalist: {
     copy: ["Layout.tsx", "Navbar.tsx"],
     remove: ["Sidebar.tsx", "Footer.tsx"],
-    pages: ["Home.tsx", "About.tsx"],
+    pages: ["Home.tsx", "Resume.tsx", "Portfolio.tsx", "About.tsx", "Blog.tsx"],
   },
   swiss: {
     copy: ["Layout.tsx", "Sidebar.tsx"],

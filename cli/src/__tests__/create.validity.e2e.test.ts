@@ -496,4 +496,43 @@ describe("2.12 — arquivos de layout são TypeScript sintaticamente válidos", 
     expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com/);
     expect(content).toMatch(/useHome/);
   });
+
+  it("layout bento — pages/Home.tsx é sintaticamente válido", () => {
+    const filePath = resolve(TEMPLATES_DIR, "bento/pages/Home.tsx");
+    const result = checkLayoutFileSyntax(filePath);
+    expect(result.errors, result.messages.join(", ")).toBe(0);
+  });
+
+  it("layout bento — pages/Home.tsx não contém dados pessoais hardcoded", () => {
+    const filePath = resolve(TEMPLATES_DIR, "bento/pages/Home.tsx");
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com/);
+    expect(content).toMatch(/useHome/);
+  });
+
+  it("layout swiss — SwissShared.tsx é válido", () => {
+    const filePath = resolve(TEMPLATES_DIR, "swiss/SwissShared.tsx");
+    const result = checkLayoutFileSyntax(filePath);
+    expect(result.errors, result.messages.join(", ")).toBe(0);
+  });
+
+  it("layout swiss — SwissShared.tsx não contém dados pessoais hardcoded", () => {
+    const filePath = resolve(TEMPLATES_DIR, "swiss/SwissShared.tsx");
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com|SP·BR/);
+    expect(content).toMatch(/useSiteConfig|useHome|useSidebar/);
+  });
+
+  it("layout swiss — pages/Home.tsx é válido", () => {
+    const filePath = resolve(TEMPLATES_DIR, "swiss/pages/Home.tsx");
+    const result = checkLayoutFileSyntax(filePath);
+    expect(result.errors, result.messages.join(", ")).toBe(0);
+  });
+
+  it("layout swiss — pages/Home.tsx não contém dados pessoais hardcoded", () => {
+    const filePath = resolve(TEMPLATES_DIR, "swiss/pages/Home.tsx");
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com/);
+    expect(content).toMatch(/useHome|useResume/);
+  });
 });

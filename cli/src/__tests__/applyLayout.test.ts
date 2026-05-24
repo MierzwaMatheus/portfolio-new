@@ -69,7 +69,10 @@ describe("applyLayout", () => {
     vol.writeFileSync("/templates/layouts/brutalist/Layout.tsx", "// brutalist Layout");
     vol.writeFileSync("/templates/layouts/brutalist/Navbar.tsx", "// brutalist Navbar");
     vol.writeFileSync("/templates/layouts/brutalist/pages/Home.tsx", "// brutalist Home");
+    vol.writeFileSync("/templates/layouts/brutalist/pages/Resume.tsx", "// brutalist Resume");
+    vol.writeFileSync("/templates/layouts/brutalist/pages/Portfolio.tsx", "// brutalist Portfolio");
     vol.writeFileSync("/templates/layouts/brutalist/pages/About.tsx", "// brutalist About");
+    vol.writeFileSync("/templates/layouts/brutalist/pages/Blog.tsx", "// brutalist Blog");
     vol.mkdirSync("/project/src/components", { recursive: true });
     const fs = makeFsModule(vol);
 
@@ -87,7 +90,10 @@ describe("applyLayout", () => {
     vol.writeFileSync("/templates/layouts/brutalist/Layout.tsx", "// brutalist Layout");
     vol.writeFileSync("/templates/layouts/brutalist/Navbar.tsx", "// brutalist Navbar");
     vol.writeFileSync("/templates/layouts/brutalist/pages/Home.tsx", "// brutalist Home");
+    vol.writeFileSync("/templates/layouts/brutalist/pages/Resume.tsx", "// brutalist Resume");
+    vol.writeFileSync("/templates/layouts/brutalist/pages/Portfolio.tsx", "// brutalist Portfolio");
     vol.writeFileSync("/templates/layouts/brutalist/pages/About.tsx", "// brutalist About");
+    vol.writeFileSync("/templates/layouts/brutalist/pages/Blog.tsx", "// brutalist Blog");
     vol.mkdirSync("/project/src/components", { recursive: true });
     vol.writeFileSync("/project/src/components/Sidebar.tsx", "// old sidebar");
     vol.writeFileSync("/project/src/components/Footer.tsx", "// old footer");
@@ -197,7 +203,10 @@ describe("applyLayout", () => {
     vol.writeFileSync("/templates/layouts/brutalist/Layout.tsx", "// brutalist Layout");
     vol.writeFileSync("/templates/layouts/brutalist/Navbar.tsx", "// brutalist Navbar");
     vol.writeFileSync("/templates/layouts/brutalist/pages/Home.tsx", "// brutalist Home");
+    vol.writeFileSync("/templates/layouts/brutalist/pages/Resume.tsx", "// brutalist Resume");
+    vol.writeFileSync("/templates/layouts/brutalist/pages/Portfolio.tsx", "// brutalist Portfolio");
     vol.writeFileSync("/templates/layouts/brutalist/pages/About.tsx", "// brutalist About");
+    vol.writeFileSync("/templates/layouts/brutalist/pages/Blog.tsx", "// brutalist Blog");
     vol.mkdirSync("/project/src/components", { recursive: true });
     const fs = makeFsModule(vol);
 
