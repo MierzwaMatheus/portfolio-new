@@ -58,8 +58,8 @@ describe("extractKeysFromContent", () => {
   });
 });
 
-import { mergeManifests, extractKeysFromDir } from "../../scripts/extract-key-manifest";
-import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from "fs";
+import { mergeManifests, extractKeysFromDir, saveManifest } from "../../scripts/extract-key-manifest";
+import { mkdtempSync, mkdirSync, writeFileSync, rmSync, readFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
 
@@ -125,5 +125,40 @@ describe("extractKeysFromDir", () => {
     writeFileSync(join(tmpDir, "Empty.tsx"), `const x = 1;`);
     const result = await extractKeysFromDir(tmpDir);
     expect(result).toEqual({});
+  });
+});
+
+describe("saveManifest", () => {
+  let tmpDir: string;
+
+  beforeEach(() => {
+    tmpDir = mkdtempSync(join(tmpdir(), "save-manifest-test-"));
+  });
+
+  afterEach(() => {
+    rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it("salva manifesto como JSON formatado no caminho especificado", async () => {
+    const manifest = { "home.title": [{ file: "Hero.tsx", line: 1 }] };
+    const outputPath = join(tmpDir, "key-manifest.json");
+    await saveManifest(manifest, outputPath);
+    const content = readFileSync(outputPath, "utf-8");
+    expect(JSON.parse(content)).toEqual(manifest);
+  });
+
+  it("cria diretórios intermediários se não existirem", async () => {
+    const manifest = { "nav.home": [{ file: "Nav.tsx", line: 3 }] };
+    const outputPath = join(tmpDir, "i18n", "nested", "key-manifest.json");
+    await saveManifest(manifest, outputPath);
+    const content = readFileSync(outputPath, "utf-8");
+    expect(JSON.parse(content)).toEqual(manifest);
+  });
+
+  it("arquivo termina com newline", async () => {
+    const outputPath = join(tmpDir, "key-manifest.json");
+    await saveManifest({}, outputPath);
+    const content = readFileSync(outputPath, "utf-8");
+    expect(content.endsWith("\n")).toBe(true);
   });
 });
