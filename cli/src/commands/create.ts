@@ -12,9 +12,9 @@ import { writeState as defaultWriteState } from "../state/writeState.js";
 
 // ---- Tipos -----------------------------------------------------------------
 
-const TEMPLATE_FONTS: Record<string, { fontSans: string; fontMono: string }> = {
+const TEMPLATE_FONTS: Record<string, { fontSans: string | string[]; fontMono: string }> = {
   cyberpunk: { fontSans: "Chakra Petch", fontMono: "JetBrains Mono" },
-  magazine:  { fontSans: "Bodoni Moda",  fontMono: "JetBrains Mono" },
+  magazine:  { fontSans: ["Bodoni Moda", "IBM Plex Serif"], fontMono: "JetBrains Mono" },
   bento:     { fontSans: "Manrope",      fontMono: "JetBrains Mono" },
   brutalist: { fontSans: "JetBrains Mono", fontMono: "JetBrains Mono" },
   swiss:     { fontSans: "Archivo",      fontMono: "" },
@@ -158,19 +158,22 @@ export async function runCreate(
 
   // Ciclo 5: prompts de fonte
   const recommendedFonts = TEMPLATE_FONTS[layout] ?? { fontSans: "", fontMono: "" };
+  const recommendedSans = Array.isArray(recommendedFonts.fontSans)
+    ? recommendedFonts.fontSans
+    : [recommendedFonts.fontSans];
 
   const fontSans = await select({
     message: "Fonte principal",
     options: [
       { value: "Inter", label: "Inter", hint: "neutra, legível, padrão de produtos digitais" },
-      { value: "Chakra Petch", label: "Chakra Petch", hint: recommendedFonts.fontSans === "Chakra Petch" ? "recomendada" : "geométrica, tech, futurista" },
+      { value: "Chakra Petch", label: "Chakra Petch", hint: recommendedSans.includes("Chakra Petch") ? "recomendada" : "geométrica, tech, futurista" },
       { value: "Playfair Display", label: "Playfair Display", hint: "elegante, editorial clássico" },
       { value: "Space Grotesk", label: "Space Grotesk", hint: "moderna, startup" },
       { value: "DM Sans", label: "DM Sans", hint: "limpa, amigável, versátil" },
-      { value: "Bodoni Moda", label: "Bodoni Moda", hint: recommendedFonts.fontSans === "Bodoni Moda" ? "recomendada" : "display serifado elegante, editorial clássico" },
-      { value: "IBM Plex Serif", label: "IBM Plex Serif", hint: recommendedFonts.fontSans === "IBM Plex Serif" ? "recomendada" : "serifa técnica, confiança e rigor" },
-      { value: "Manrope", label: "Manrope", hint: recommendedFonts.fontSans === "Manrope" ? "recomendada" : "geométrica humanista, moderna e acolhedora" },
-      { value: "Archivo", label: "Archivo", hint: recommendedFonts.fontSans === "Archivo" ? "recomendada" : "grotesca utilitária, clareza e força tipográfica" },
+      { value: "Bodoni Moda", label: "Bodoni Moda", hint: recommendedSans.includes("Bodoni Moda") ? "recomendada" : "display serifado elegante, editorial clássico" },
+      { value: "IBM Plex Serif", label: "IBM Plex Serif", hint: recommendedSans.includes("IBM Plex Serif") ? "recomendada" : "serifa técnica, confiança e rigor" },
+      { value: "Manrope", label: "Manrope", hint: recommendedSans.includes("Manrope") ? "recomendada" : "geométrica humanista, moderna e acolhedora" },
+      { value: "Archivo", label: "Archivo", hint: recommendedSans.includes("Archivo") ? "recomendada" : "grotesca utilitária, clareza e força tipográfica" },
     ],
   }) as string;
 

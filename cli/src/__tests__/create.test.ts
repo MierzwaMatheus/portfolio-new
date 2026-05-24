@@ -521,6 +521,42 @@ describe("create — novas fontes e recomendação por template", () => {
     expect(fontMonoCall).toBeUndefined();
   });
 
+  it("Bodoni Moda aparece como recomendada quando magazine é selecionado", async () => {
+    vi.clearAllMocks();
+    setupPrompts({ layout: "magazine", fontSans: "Inter" });
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+    await runCreate("meu-portfolio", makeDefaultDeps(vol));
+    const fontSansCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Fonte principal"
+    );
+    expect(fontSansCall?.[0]).toEqual(
+      expect.objectContaining({
+        options: expect.arrayContaining([
+          expect.objectContaining({ value: "Bodoni Moda", hint: "recomendada" }),
+        ]),
+      })
+    );
+  });
+
+  it("IBM Plex Serif aparece como recomendada quando magazine é selecionado", async () => {
+    vi.clearAllMocks();
+    setupPrompts({ layout: "magazine", fontSans: "Inter" });
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/projects", { recursive: true });
+    await runCreate("meu-portfolio", makeDefaultDeps(vol));
+    const fontSansCall = vi.mocked(select).mock.calls.find(
+      (args) => (args[0] as { message?: string }).message === "Fonte principal"
+    );
+    expect(fontSansCall?.[0]).toEqual(
+      expect.objectContaining({
+        options: expect.arrayContaining([
+          expect.objectContaining({ value: "IBM Plex Serif", hint: "recomendada" }),
+        ]),
+      })
+    );
+  });
+
   it("JetBrains Mono aparece como recomendada no fontMono quando cyberpunk é selecionado", async () => {
     vi.clearAllMocks();
     setupPrompts({ layout: "cyberpunk", fontMono: "Fira Code" });
