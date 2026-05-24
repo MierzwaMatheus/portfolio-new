@@ -1,4 +1,5 @@
 import { useHome } from "@/hooks/useHome";
+import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { homeRepository } from "@/repositories/instances";
 
 function AsciiRule({ char = "─", label }: { char?: string; label?: string }) {
@@ -68,6 +69,7 @@ function BrutPrompt({
 }
 
 export default function Home() {
+  const { t } = useTranslation();
   const { contactRole, aboutText, services, testimonials } =
     useHome(homeRepository);
 
@@ -122,7 +124,7 @@ export default function Home() {
                 margin: "6px 0",
               }}
             >
-              Olá! Sou seu desenvolvedor.
+              {t("home.greeting")}
             </div>
             <div style={{ opacity: 0.85, marginBottom: 8 }}>{contactRole}</div>
             <div style={{ opacity: 0.7, fontSize: 12, lineHeight: 1.6 }}>

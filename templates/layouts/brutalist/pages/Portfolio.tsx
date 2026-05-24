@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { usePortfolio } from "@/hooks/usePortfolio";
 import { portfolioRepository } from "@/repositories/instances";
 
@@ -69,11 +70,16 @@ function BrutPrompt({
 
 export default function Portfolio() {
   const { projects } = usePortfolio(portfolioRepository);
+  const [activeFilter, setActiveFilter] = useState("todos");
 
   const allTags = Array.from(
     new Set(projects.flatMap((p) => p.tags))
   );
   const filters = ["todos", ...allTags];
+
+  const filteredProjects = activeFilter === "todos"
+    ? projects
+    : projects.filter((p) => p.tags?.includes(activeFilter));
 
   return (
     <div
@@ -113,15 +119,17 @@ export default function Portfolio() {
               fontSize: 11.5,
             }}
           >
-            {filters.map((f, i) => (
+            {filters.map((f) => (
               <span
                 key={f}
+                onClick={() => setActiveFilter(f)}
                 style={{
                   padding: "3px 8px",
                   border: "1px solid var(--text)",
-                  background: i === 0 ? "var(--primary)" : "transparent",
-                  color: i === 0 ? "var(--bg)" : "var(--text)",
-                  fontWeight: i === 0 ? 700 : 400,
+                  background: activeFilter === f ? "var(--primary)" : "transparent",
+                  color: activeFilter === f ? "var(--bg)" : "var(--text)",
+                  fontWeight: activeFilter === f ? 700 : 400,
+                  cursor: "pointer",
                 }}
               >
                 <span style={{ opacity: i === 0 ? 0.8 : 0.6 }}>--</span>
@@ -145,8 +153,8 @@ export default function Portfolio() {
           padding: 14,
         }}
       >
-        {"total " + projects.length + " projects\n"}
-        {projects.map((p) => (
+        {"total " + filteredProjects.length + " projects\n"}
+        {filteredProjects.map((p) => (
           <span key={p.id}>
             <span style={{ opacity: 0.55 }}>drwxr-xr-x  </span>
             <span style={{ opacity: 0.65 }}>
@@ -169,7 +177,7 @@ export default function Portfolio() {
 
       <AsciiRule label="details" />
 
-      {projects.map((p, i) => (
+      {filteredProjects.map((p, i) => (
         <div
           key={p.id}
           style={{ marginBottom: 24, border: "1px solid var(--text)" }}

@@ -133,7 +133,6 @@ export default function Resume() {
                 period?: string;
                 description?: string;
               };
-              const items: string[] = c.description ? [c.description] : [];
               return (
                 <span key={e.id}>
                   <span style={{ color: "var(--primary)" }}>{"*"}</span>{" "}
@@ -150,21 +149,17 @@ export default function Resume() {
                   <span style={{ fontWeight: 700 }}>{c.role}</span>
                   <span style={{ opacity: 0.6 }}> @ {c.company}</span>
                   {"\n"}
-                  {items.map((it, j) => (
+                  {c.description && (
                     <span
-                      key={j}
                       style={{
                         display: "block",
                         fontSize: 11.5,
                         opacity: 0.8,
                         paddingLeft: 24,
                       }}
-                    >
-                      {"│  "}
-                      <span style={{ color: "var(--accent)" }}>•</span>{" "}
-                      {String(it).slice(0, 150)}…
-                    </span>
-                  ))}
+                      dangerouslySetInnerHTML={{ __html: c.description }}
+                    />
+                  )}
                   <span
                     style={{
                       display: "block",
