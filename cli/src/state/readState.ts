@@ -9,7 +9,7 @@ export interface FsModule {
 
 export type RubricaState = {
   version: string;
-  layout: "cyberpunk";
+  layout: "cyberpunk" | "brutalist" | "swiss" | "bento";
   theme: string;
   fontSans: string;
   fontMono: string;
