@@ -29,12 +29,11 @@ const LAYOUT_FILES: Record<Layout, { copy: string[]; remove: string[]; pages?: s
   bento: {
     copy: ["Layout.tsx", "FloatingDock.tsx"],
     remove: [],
-    pages: ["Home.tsx", "Resume.tsx", "Portfolio.tsx", "About.tsx", "Blog.tsx"],
   },
   magazine: {
     copy: ["Layout.tsx", "Masthead.tsx"],
     remove: ["Sidebar.tsx", "Footer.tsx"],
-    pages: ["Home.tsx", "About.tsx"],
+    pages: ["Home.tsx", "Resume.tsx", "Portfolio.tsx", "About.tsx", "Blog.tsx"],
   },
 };
 
