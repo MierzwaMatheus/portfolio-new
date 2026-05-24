@@ -147,9 +147,11 @@ describe("applyLayout", () => {
 
   it("layout magazine copia Layout.tsx e Masthead.tsx para src/components/", async () => {
     const vol = Volume.fromJSON({});
-    vol.mkdirSync("/templates/layouts/magazine", { recursive: true });
+    vol.mkdirSync("/templates/layouts/magazine/pages", { recursive: true });
     vol.writeFileSync("/templates/layouts/magazine/Layout.tsx", "// magazine Layout");
     vol.writeFileSync("/templates/layouts/magazine/Masthead.tsx", "// magazine Masthead");
+    vol.writeFileSync("/templates/layouts/magazine/pages/Home.tsx", "// magazine Home");
+    vol.writeFileSync("/templates/layouts/magazine/pages/About.tsx", "// magazine About");
     vol.mkdirSync("/project/src/components", { recursive: true });
     const fs = makeFsModule(vol);
 
@@ -163,9 +165,11 @@ describe("applyLayout", () => {
 
   it("layout magazine remove Sidebar.tsx e Footer.tsx se existirem", async () => {
     const vol = Volume.fromJSON({});
-    vol.mkdirSync("/templates/layouts/magazine", { recursive: true });
+    vol.mkdirSync("/templates/layouts/magazine/pages", { recursive: true });
     vol.writeFileSync("/templates/layouts/magazine/Layout.tsx", "// magazine Layout");
     vol.writeFileSync("/templates/layouts/magazine/Masthead.tsx", "// magazine Masthead");
+    vol.writeFileSync("/templates/layouts/magazine/pages/Home.tsx", "// magazine Home");
+    vol.writeFileSync("/templates/layouts/magazine/pages/About.tsx", "// magazine About");
     vol.mkdirSync("/project/src/components", { recursive: true });
     vol.writeFileSync("/project/src/components/Sidebar.tsx", "// old sidebar");
     vol.writeFileSync("/project/src/components/Footer.tsx", "// old footer");
@@ -197,6 +201,26 @@ describe("applyLayout", () => {
     const about = vol.readFileSync("/project/src/pages/About.tsx", "utf-8") as string;
     expect(home).toContain("brutalist Home");
     expect(about).toContain("brutalist About");
+  });
+
+  it("layout magazine copia pages Home.tsx e About.tsx para src/pages/", async () => {
+    const vol = Volume.fromJSON({});
+    vol.mkdirSync("/templates/layouts/magazine/pages", { recursive: true });
+    vol.writeFileSync("/templates/layouts/magazine/Layout.tsx", "// magazine Layout");
+    vol.writeFileSync("/templates/layouts/magazine/Masthead.tsx", "// magazine Masthead");
+    vol.writeFileSync("/templates/layouts/magazine/pages/Home.tsx", "// magazine Home");
+    vol.writeFileSync("/templates/layouts/magazine/pages/About.tsx", "// magazine About");
+    vol.mkdirSync("/project/src/components", { recursive: true });
+    const fs = makeFsModule(vol);
+
+    await applyLayout(
+      "magazine" as Parameters<typeof applyLayout>[0],
+      { projectDir: PROJECT_DIR, templatesDir: TEMPLATES_DIR },
+      fs
+    );
+
+    const home = vol.readFileSync("/project/src/pages/Home.tsx", "utf-8") as string;
+    expect(home).toContain("magazine Home");
   });
 
   it("layout sem campo pages não copia nada para src/pages/", async () => {

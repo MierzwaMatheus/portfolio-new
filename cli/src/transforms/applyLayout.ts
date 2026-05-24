@@ -33,6 +33,7 @@ const LAYOUT_FILES: Record<Layout, { copy: string[]; remove: string[]; pages?: s
   magazine: {
     copy: ["Layout.tsx", "Masthead.tsx"],
     remove: ["Sidebar.tsx", "Footer.tsx"],
+    pages: ["Home.tsx", "About.tsx"],
   },
 };
 
