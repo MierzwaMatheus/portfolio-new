@@ -112,6 +112,9 @@
   --neon-purple: 271 91% 65%;
   /* Lime 400: #bef264 -> 82 85% 67% */
   --neon-lime: 82 85% 67%;
+
+  --bg: var(--background);
+  --text: var(--foreground);
 }
 
 .dark {
