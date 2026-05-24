@@ -8,7 +8,7 @@ export const setupAdmin = internalAction({
   args: { email: v.string(), password: v.string() },
   handler: async (ctx, { email, password }) => {
     const setupRequired = await ctx.runQuery(api.users.isSetupRequired);
-    if (!setupRequired) throw new Error("Root user already exists");
+    if (!setupRequired) return { skipped: true };
 
     const result = await createAccount(ctx, {
       provider: "password",

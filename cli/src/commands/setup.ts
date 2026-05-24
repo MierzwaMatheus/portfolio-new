@@ -144,7 +144,7 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
       message: "TELEGRAM_BOT_TOKEN (Enter para pular):",
       initialValue: "",
     });
-    if (!isCancel(telegramToken) && (telegramToken as string).trim()) {
+    if (!isCancel(telegramToken) && telegramToken && (telegramToken as string).trim()) {
       execFileSync("npx", ["convex", "env", "set", "--", "TELEGRAM_BOT_TOKEN", telegramToken as string], { stdio: "pipe" });
     }
 
@@ -152,7 +152,7 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
       message: "TELEGRAM_ADMIN_CHAT_ID (Enter para pular):",
       initialValue: "",
     });
-    if (!isCancel(telegramChatId) && (telegramChatId as string).trim()) {
+    if (!isCancel(telegramChatId) && telegramChatId && (telegramChatId as string).trim()) {
       execFileSync("npx", ["convex", "env", "set", "--", "TELEGRAM_ADMIN_CHAT_ID", telegramChatId as string], { stdio: "pipe" });
     }
   }
@@ -169,7 +169,7 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
       message: "OPENROUTER_API_KEY (Enter para pular):",
       initialValue: "",
     });
-    if (!isCancel(openrouterKey) && (openrouterKey as string).trim()) {
+    if (!isCancel(openrouterKey) && openrouterKey && (openrouterKey as string).trim()) {
       execFileSync("npx", ["convex", "env", "set", "--", "OPENROUTER_API_KEY", openrouterKey as string], { stdio: "pipe" });
     }
   }
@@ -180,7 +180,7 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
       message: "STRIPE_WEBHOOK_SECRET (Enter para pular):",
       initialValue: "",
     });
-    if (!isCancel(stripeSecret) && (stripeSecret as string).trim()) {
+    if (!isCancel(stripeSecret) && stripeSecret && (stripeSecret as string).trim()) {
       execFileSync("npx", ["convex", "env", "set", "--", "STRIPE_WEBHOOK_SECRET", stripeSecret as string], { stdio: "pipe" });
     }
 
@@ -188,7 +188,7 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
       message: "ASAAS_WEBHOOK_TOKEN (Enter para pular):",
       initialValue: "",
     });
-    if (!isCancel(asaasToken) && (asaasToken as string).trim()) {
+    if (!isCancel(asaasToken) && asaasToken && (asaasToken as string).trim()) {
       execFileSync("npx", ["convex", "env", "set", "--", "ASAAS_WEBHOOK_TOKEN", asaasToken as string], { stdio: "pipe" });
     }
   }
@@ -270,7 +270,7 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
     message: "VERCEL_DEPLOY_HOOK_URL (Enter para pular):",
     initialValue: "",
   });
-  if (!isCancel(vercelHookUrl) && (vercelHookUrl as string).trim()) {
+  if (!isCancel(vercelHookUrl) && vercelHookUrl && (vercelHookUrl as string).trim()) {
     execFileSync("npx", ["convex", "env", "set", "--", "VERCEL_DEPLOY_HOOK_URL", vercelHookUrl as string], { stdio: "pipe" });
   }
 
@@ -278,7 +278,7 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
     message: "VERCEL_WEBHOOK_SECRET (Enter para pular):",
     initialValue: "",
   });
-  if (!isCancel(vercelWebhookSecret) && (vercelWebhookSecret as string).trim()) {
+  if (!isCancel(vercelWebhookSecret) && vercelWebhookSecret && (vercelWebhookSecret as string).trim()) {
     execFileSync("npx", ["convex", "env", "set", "--", "VERCEL_WEBHOOK_SECRET", vercelWebhookSecret as string], { stdio: "pipe" });
   }
 
