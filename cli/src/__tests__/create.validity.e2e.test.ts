@@ -432,4 +432,16 @@ describe("2.12 — arquivos de layout são TypeScript sintaticamente válidos", 
     const result = checkLayoutFileSyntax(filePath);
     expect(result.errors, result.messages.join(", ")).toBe(0);
   });
+
+  it("layout brutalist — templates/layouts/brutalist/Layout.tsx é válido", () => {
+    const filePath = resolve(TEMPLATES_DIR, "brutalist/Layout.tsx");
+    const result = checkLayoutFileSyntax(filePath);
+    expect(result.errors, result.messages.join(", ")).toBe(0);
+  });
+
+  it("layout brutalist — templates/layouts/brutalist/Navbar.tsx é válido", () => {
+    const filePath = resolve(TEMPLATES_DIR, "brutalist/Navbar.tsx");
+    const result = checkLayoutFileSyntax(filePath);
+    expect(result.errors, result.messages.join(", ")).toBe(0);
+  });
 });
