@@ -9,7 +9,7 @@ export interface FsModule {
 
 export type RubricaState = {
   version: string;
-  layout: "sidebar" | "topbar" | "centered";
+  layout: "cyberpunk";
   theme: string;
   accentColor: string | null;
   fontSans: string;
@@ -21,7 +21,7 @@ export type RubricaState = {
 
 const DEFAULT_STATE: RubricaState = {
   version: "0.0.0",
-  layout: "sidebar",
+  layout: "cyberpunk",
   theme: "cyberpunk",
   accentColor: null,
   fontSans: "Inter",

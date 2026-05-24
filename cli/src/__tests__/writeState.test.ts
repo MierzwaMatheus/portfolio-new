@@ -16,7 +16,7 @@ function makeFsModule(vol: InstanceType<typeof Volume>) {
 
 const baseState: RubricaState = {
   version: "1.0.0",
-  layout: "sidebar",
+  layout: "cyberpunk",
   theme: "cyberpunk",
   accentColor: null,
   fontSans: "Inter",
@@ -28,7 +28,7 @@ const baseState: RubricaState = {
 describe("writeState", () => {
   it("sobrescreve rubrica.json corrompido (sem version) usando o partial fornecido", async () => {
     const vol = Volume.fromJSON({
-      "/project/rubrica.json": JSON.stringify({ layout: "sidebar" }),
+      "/project/rubrica.json": JSON.stringify({ layout: "cyberpunk" }),
     });
     const fs = makeFsModule(vol);
 
@@ -49,7 +49,7 @@ describe("writeState", () => {
     const parsed = JSON.parse(written) as RubricaState;
 
     expect(parsed.version).toBe("1.0.0");
-    expect(parsed.layout).toBe("sidebar");
+    expect(parsed.layout).toBe("cyberpunk");
   });
 
   it("sobrescreve o arquivo se já existir sem duplicação", async () => {
@@ -81,7 +81,7 @@ describe("writeState", () => {
     const parsed = JSON.parse(written) as RubricaState;
 
     expect(parsed.version).toBe("2.0.0");
-    expect(parsed.layout).toBe("sidebar");
+    expect(parsed.layout).toBe("cyberpunk");
     expect(parsed.theme).toBe("cyberpunk");
     expect(parsed.plugins).toEqual({ blog: true, portfolio: true });
   });
@@ -96,7 +96,7 @@ describe("writeState", () => {
     const parsed = JSON.parse(written) as RubricaState;
 
     expect(parsed.version).toBe("1.0.0");
-    expect(parsed.layout).toBe("sidebar");
+    expect(parsed.layout).toBe("cyberpunk");
     expect(parsed.theme).toBe("cyberpunk");
     expect(parsed.accentColor).toBeNull();
     expect(parsed.fontSans).toBe("Inter");

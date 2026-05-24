@@ -15,7 +15,7 @@ function makeFsModule(vol: InstanceType<typeof Volume>) {
 
 const validState = {
   version: "1.0.0",
-  layout: "sidebar" as const,
+  layout: "cyberpunk" as const,
   theme: "cyberpunk",
   accentColor: null,
   fontSans: "Chakra Petch",
@@ -32,7 +32,7 @@ describe("readState", () => {
     const result = await readState("/project", fs);
 
     expect(result.version).toBe("0.0.0");
-    expect(result.layout).toBe("sidebar");
+    expect(result.layout).toBe("cyberpunk");
     expect(result.theme).toBe("cyberpunk");
     expect(result.accentColor).toBeNull();
     expect(result.plugins).toEqual({});
@@ -65,7 +65,7 @@ describe("readState", () => {
 
   it("lança erro descritivo quando campo obrigatório version está ausente", async () => {
     const vol = Volume.fromJSON({
-      "/project/rubrica.json": JSON.stringify({ layout: "sidebar" }),
+      "/project/rubrica.json": JSON.stringify({ layout: "cyberpunk" }),
     });
     const fs = makeFsModule(vol);
 
@@ -81,7 +81,7 @@ describe("readState", () => {
     const result = await readState("/project", fs);
 
     expect(result.version).toBe("1.0.0");
-    expect(result.layout).toBe("sidebar");
+    expect(result.layout).toBe("cyberpunk");
     expect(result.theme).toBe("cyberpunk");
     expect(result.accentColor).toBeNull();
     expect(result.fontSans).toBe("Chakra Petch");
