@@ -264,7 +264,7 @@ function AdminSidebar() {
     .filter(group => group.items.length > 0);
 
   const toggleGroup = (label: string) => {
-    setCollapsedGroups(prev => ({ ...prev, [label]: !prev[label] }));
+    setCollapsedGroups(prev => ({ ...prev, [label]: !(prev[label] ?? true) }));
   };
 
   return (
