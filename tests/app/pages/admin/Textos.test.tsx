@@ -65,7 +65,7 @@ describe("Textos — Ciclo 2: agrupamento por namespace", () => {
 
   it("renderiza seção agrupada para namespace 'about'", () => {
     render(<AdminTextos />);
-    expect(screen.getByText("about")).toBeInTheDocument();
+    expect(screen.getAllByText("about").length).toBeGreaterThanOrEqual(1);
   });
 
   it("exibe a chave de cada item dentro da seção correta", () => {
@@ -146,5 +146,27 @@ describe("Textos — Ciclo 5: salvar via mutation + toast", () => {
     expect(mockUpdate).toHaveBeenCalledWith(
       expect.objectContaining({ key: "home.greeting" }),
     );
+  });
+});
+
+describe("Textos — Ciclo 6: label de origem por chave", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("exibe label do componente quando chave está no manifesto", () => {
+    mockUseQuery.mockReturnValue([
+      { _id: "1", key: "home.availability.label", page: "home", ptBR: "Disponível", enUS: "Available" },
+    ] as any);
+    render(<AdminTextos />);
+    expect(screen.getByText("AvailabilityBadge")).toBeInTheDocument();
+  });
+
+  it("exibe namespace como label quando chave não está no manifesto", () => {
+    mockUseQuery.mockReturnValue([
+      { _id: "2", key: "home.unknownKey", page: "home", ptBR: "Texto", enUS: "Text" },
+    ] as any);
+    render(<AdminTextos />);
+    expect(screen.getAllByText("home").length).toBeGreaterThanOrEqual(2);
   });
 });

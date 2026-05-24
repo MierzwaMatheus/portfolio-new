@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
+import keyManifest from "@/i18n/key-manifest.json";
+import { getKeyOriginLabel } from "@/i18n/utils/keyOriginLabel";
 
 type SiteText = {
   _id: string;
@@ -26,9 +28,11 @@ function groupByPage(texts: SiteText[]): Record<string, SiteText[]> {
 
 function TextItem({
   item,
+  originLabel,
   onSave,
 }: {
   item: SiteText;
+  originLabel: string;
   onSave: (key: string, ptBR: string, enUS: string) => void;
 }) {
   const [ptBR, setPtBR] = useState(item.ptBR);
@@ -38,6 +42,9 @@ function TextItem({
     <div className="border rounded p-3 space-y-2">
       <div className="flex items-center gap-2">
         <span className="text-xs font-mono text-muted-foreground">{item.key}</span>
+        <Badge variant="secondary" className="text-xs">
+          {originLabel}
+        </Badge>
         {!item.enUS && (
           <Badge variant="outline" className="text-xs text-yellow-600 border-yellow-400">
             Sem tradução EN
@@ -127,7 +134,12 @@ export default function AdminTextos() {
               <h2 className="text-lg font-semibold capitalize mb-3">{ns}</h2>
               <div className="space-y-2">
                 {grouped[ns].map((item) => (
-                  <TextItem key={item._id} item={item} onSave={handleSave} />
+                  <TextItem
+                    key={item._id}
+                    item={item}
+                    originLabel={getKeyOriginLabel(item.key, keyManifest as Record<string, { file: string; line: number }[]>)}
+                    onSave={handleSave}
+                  />
                 ))}
               </div>
             </section>
