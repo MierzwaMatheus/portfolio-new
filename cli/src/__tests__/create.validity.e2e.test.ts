@@ -510,6 +510,19 @@ describe("2.12 — arquivos de layout são TypeScript sintaticamente válidos", 
     expect(content).toMatch(/useHome/);
   });
 
+  it("layout bento — pages/Resume.tsx é sintaticamente válido", () => {
+    const filePath = resolve(TEMPLATES_DIR, "bento/pages/Resume.tsx");
+    const result = checkLayoutFileSyntax(filePath);
+    expect(result.errors, result.messages.join(", ")).toBe(0);
+  });
+
+  it("layout bento — pages/Resume.tsx não contém dados pessoais hardcoded", () => {
+    const filePath = resolve(TEMPLATES_DIR, "bento/pages/Resume.tsx");
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com/);
+    expect(content).toMatch(/useResume/);
+  });
+
   it("layout swiss — SwissShared.tsx é válido", () => {
     const filePath = resolve(TEMPLATES_DIR, "swiss/SwissShared.tsx");
     const result = checkLayoutFileSyntax(filePath);
@@ -534,5 +547,57 @@ describe("2.12 — arquivos de layout são TypeScript sintaticamente válidos", 
     const content = readFileSync(filePath, "utf-8");
     expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com/);
     expect(content).toMatch(/useHome|useResume/);
+  });
+
+  it("layout magazine — pages/Resume.tsx é válido", () => {
+    const filePath = resolve(TEMPLATES_DIR, "magazine/pages/Resume.tsx");
+    const result = checkLayoutFileSyntax(filePath);
+    expect(result.errors, result.messages.join(", ")).toBe(0);
+  });
+
+  it("layout magazine — pages/Resume.tsx não contém dados pessoais hardcoded", () => {
+    const filePath = resolve(TEMPLATES_DIR, "magazine/pages/Resume.tsx");
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com/);
+    expect(content).toMatch(/useResume/);
+  });
+
+  it("layout magazine — pages/Portfolio.tsx é válido", () => {
+    const filePath = resolve(TEMPLATES_DIR, "magazine/pages/Portfolio.tsx");
+    const result = checkLayoutFileSyntax(filePath);
+    expect(result.errors, result.messages.join(", ")).toBe(0);
+  });
+
+  it("layout magazine — pages/Portfolio.tsx não contém dados pessoais hardcoded", () => {
+    const filePath = resolve(TEMPLATES_DIR, "magazine/pages/Portfolio.tsx");
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com/);
+    expect(content).toMatch(/usePortfolio/);
+  });
+
+  it("layout magazine — pages/About.tsx é válido", () => {
+    const filePath = resolve(TEMPLATES_DIR, "magazine/pages/About.tsx");
+    const result = checkLayoutFileSyntax(filePath);
+    expect(result.errors, result.messages.join(", ")).toBe(0);
+  });
+
+  it("layout magazine — pages/About.tsx não contém dados pessoais hardcoded", () => {
+    const filePath = resolve(TEMPLATES_DIR, "magazine/pages/About.tsx");
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com/);
+    expect(content).toMatch(/useAbout/);
+  });
+
+  it("layout magazine — pages/Blog.tsx é válido", () => {
+    const filePath = resolve(TEMPLATES_DIR, "magazine/pages/Blog.tsx");
+    const result = checkLayoutFileSyntax(filePath);
+    expect(result.errors, result.messages.join(", ")).toBe(0);
+  });
+
+  it("layout magazine — pages/Blog.tsx não contém dados pessoais hardcoded", () => {
+    const filePath = resolve(TEMPLATES_DIR, "magazine/pages/Blog.tsx");
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).not.toMatch(/Matheus|Mierzwa|mierzwa\.com/);
+    expect(content).toMatch(/useBlogPosts/);
   });
 });
