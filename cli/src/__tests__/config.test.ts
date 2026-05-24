@@ -209,10 +209,9 @@ describe("runConfig — aparência", () => {
 
     vi.mocked(multiselect).mockResolvedValueOnce(["appearance"]);
     vi.mocked(select)
-      .mockResolvedValueOnce("minimal")   // tema
-      .mockResolvedValueOnce("Inter")     // fontSans
-      .mockResolvedValueOnce("JetBrains Mono") // fontMono
-      .mockResolvedValueOnce("0.5rem");   // radius
+      .mockResolvedValueOnce("editorial-cream") // tema
+      .mockResolvedValueOnce("Inter")           // fontSans
+      .mockResolvedValueOnce("JetBrains Mono"); // fontMono
 
     const applyThemeMock = vi.fn().mockResolvedValue(undefined);
     const applyFontMock = vi.fn().mockResolvedValue(undefined);
@@ -238,7 +237,7 @@ describe("runConfig — aparência", () => {
   });
 
   it("usa valores atuais do estado como defaults nos prompts de aparência", async () => {
-    const state = { version: "1.0.0", layout: "cyberpunk", theme: "editorial", accentColor: null, fontSans: "Playfair Display", fontMono: "Fira Code", radius: "0.75rem", plugins: {} };
+    const state = { version: "1.0.0", layout: "cyberpunk", theme: "editorial-cream", fontSans: "Playfair Display", fontMono: "Fira Code", plugins: {} };
     const vol = Volume.fromJSON({
       "/project/rubrica.json": JSON.stringify(state),
       "/project/src/index.css": ":root {}",
@@ -248,10 +247,9 @@ describe("runConfig — aparência", () => {
 
     vi.mocked(multiselect).mockResolvedValueOnce(["appearance"]);
     vi.mocked(select)
-      .mockResolvedValueOnce("editorial")
+      .mockResolvedValueOnce("editorial-cream")
       .mockResolvedValueOnce("Playfair Display")
-      .mockResolvedValueOnce("Fira Code")
-      .mockResolvedValueOnce("0.75rem");
+      .mockResolvedValueOnce("Fira Code");
 
     const applyThemeMock = vi.fn().mockResolvedValue(undefined);
     const applyFontMock = vi.fn().mockResolvedValue(undefined);
@@ -273,7 +271,7 @@ describe("runConfig — aparência", () => {
 
     // Verifica que o select de tema foi chamado com o tema atual como initialValue
     expect(select).toHaveBeenCalledWith(
-      expect.objectContaining({ initialValue: "editorial" })
+      expect.objectContaining({ initialValue: "editorial-cream" })
     );
   });
 });
@@ -450,7 +448,7 @@ describe("runConfig — persistência em rubrica.json", () => {
   });
 
   it("chama writeState com tema e fontes atualizados após trocar aparência", async () => {
-    const state = { version: "1.0.0", layout: "cyberpunk", theme: "cyberpunk", accentColor: null, fontSans: "Inter", fontMono: "JetBrains Mono", radius: "0.5rem", plugins: {} };
+    const state = { version: "1.0.0", layout: "cyberpunk", theme: "editorial-cream", fontSans: "Inter", fontMono: "JetBrains Mono", plugins: {} };
     const vol = Volume.fromJSON({
       "/project/rubrica.json": JSON.stringify(state),
       "/project/src/index.css": ":root {}",
@@ -460,10 +458,9 @@ describe("runConfig — persistência em rubrica.json", () => {
 
     vi.mocked(multiselect).mockResolvedValueOnce(["appearance"]);
     vi.mocked(select)
-      .mockResolvedValueOnce("forest")
+      .mockResolvedValueOnce("midnight-blue")
       .mockResolvedValueOnce("DM Sans")
-      .mockResolvedValueOnce("IBM Plex Mono")
-      .mockResolvedValueOnce("0rem");
+      .mockResolvedValueOnce("IBM Plex Mono");
 
     const applyThemeMock = vi.fn().mockResolvedValue(undefined);
     const applyFontMock = vi.fn().mockResolvedValue(undefined);
@@ -486,10 +483,9 @@ describe("runConfig — persistência em rubrica.json", () => {
     expect(writeStateMock).toHaveBeenCalledWith(
       "/project",
       expect.objectContaining({
-        theme: "forest",
+        theme: "midnight-blue",
         fontSans: "DM Sans",
         fontMono: "IBM Plex Mono",
-        radius: "0rem",
       }),
       expect.anything()
     );
