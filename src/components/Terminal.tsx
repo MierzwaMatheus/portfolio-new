@@ -5,11 +5,10 @@ import { X } from "lucide-react";
 import { useBlogPosts } from "@/hooks/useBlog";
 import { blogRepository } from "@/repositories/instances";
 import { useTheme } from "@/contexts/ThemeContext";
-import { useTerminal, TerminalLine, TerminalOwnerInfo } from "@/hooks/useTerminal";
+import { useTerminal, TerminalLine } from "@/hooks/useTerminal";
 
 interface TerminalProps {
   onClose: () => void;
-  ownerInfo?: TerminalOwnerInfo;
 }
 
 function LineText({ line }: { line: TerminalLine }) {
@@ -27,19 +26,16 @@ function LineText({ line }: { line: TerminalLine }) {
   );
 }
 
-export function Terminal({ onClose, ownerInfo }: TerminalProps) {
+export function Terminal({ onClose }: TerminalProps) {
   const [, navigate] = useLocation();
   const { toggleTheme } = useTheme();
   const { posts } = useBlogPosts(blogRepository);
-
-  const slug = ownerInfo?.slug ?? "portfolio";
 
   const { lines, input, setInput, handleKeyDown } = useTerminal({
     posts,
     onNavigate: navigate,
     onClose,
     onThemeToggle: toggleTheme,
-    ownerInfo,
   });
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -72,7 +68,7 @@ export function Terminal({ onClose, ownerInfo }: TerminalProps) {
           <span className="w-3 h-3 rounded-full bg-yellow-400" />
           <span className="w-3 h-3 rounded-full bg-green-500" />
           <span className="flex-1 text-center text-xs text-white/40 font-mono">
-            {slug} — terminal
+            matheus-mierzwa — terminal
           </span>
           <button onClick={onClose} className="text-white/30 hover:text-white/70 transition-colors">
             <X size={14} />
@@ -90,7 +86,7 @@ export function Terminal({ onClose, ownerInfo }: TerminalProps) {
         {/* Input */}
         <div className="flex items-center gap-2 px-4 py-3 border-t border-white/10 bg-[#111]">
           <span className="font-mono text-sm text-green-400 shrink-0">
-            visitor@{slug}:~$
+            visitor@matheus-mierzwa:~$
           </span>
           <input
             ref={inputRef}

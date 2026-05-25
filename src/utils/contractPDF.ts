@@ -16,16 +16,12 @@ export interface ContactInfo {
   githubUrl?: string;
 }
 
-export function formatClauseContent(text: string): string {
+function formatClauseContent(text: string): string {
   return text
     .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
     .replace(/^#{1,6}\s+(.+)$/gm, "<strong>$1</strong>")
-    .replace(/^\d+\. (.+)$/gm, "<oli>$1</oli>")
     .replace(/^- (.+)$/gm, "<li>$1</li>")
-    .replace(/(<li>[^]*?<\/li>\n?)+/gm, (match) => `<ul>${match.replace(/\n/g, "")}</ul>`)
-    .replace(/(<oli>[^]*?<\/oli>\n{0,2})+/g, (match) =>
-      `<ol>${match.replace(/<oli>/g, "<li>").replace(/<\/oli>/g, "</li>").replace(/\n/g, "")}</ol>`,
-    )
+    .replace(/(<li>[^]*?<\/li>\n?)+/gm, (match) => `<ul>${match}</ul>`)
     .replace(/---/g, "")
     .replace(/\n\n/g, "</p><p>")
     .replace(/\n/g, "<br/>")
@@ -33,37 +29,25 @@ export function formatClauseContent(text: string): string {
     .replace(/$/, "</p>")
     .replace(/<p><\/p>/g, "")
     .replace(/<p>(<ul>)/g, "$1")
-    .replace(/(<\/ul>)<\/p>/g, "$1")
-    .replace(/<p>(<ol>)/g, "$1")
-    .replace(/(<\/ol>)<\/p>/g, "$1");
+    .replace(/(<\/ul>)<\/p>/g, "$1");
 }
 
 function extractClauseTitle(clause: string): { title: string; body: string } {
   const match = clause.match(/^#{1,6}\s+(CLÁUSULA[^:\n]+(?::[^\n]*)?)?\n?([\s\S]*)/i)
     ?? clause.match(/^(CLÁUSULA[^\n]+)\n?([\s\S]*)/i);
   if (match) {
-    return { title: (match[1] ?? "").replace(/^#{1,6}\s+/, "").trim(), body: (match[2] ?? "").trim() };
+    return { title: match[1].replace(/^#{1,6}\s+/, "").trim(), body: match[2].trim() };
   }
   return { title: "", body: clause.trim() };
-}
-
-export function parseTemplateContent(content: string): { header: string; clauses: string[] } {
-  const parts = content.split(/(?=### )/);
-  const header = parts[0] ?? '';
-  const clauses = parts.slice(1).map(c => c.trim() + '\n');
-  return { header, clauses };
 }
 
 export function generateContractHTML(
   proposal: ProposalData,
   acceptanceData: PDFAcceptanceData,
   signatureDataUrl: string,
-  contactInfo?: ContactInfo,
-  templateContent?: string,
+  contactInfo?: ContactInfo
 ): string {
-  const contractContent = templateContent !== undefined
-    ? parseTemplateContent(templateContent)
-    : generateContractContent(proposal, acceptanceData);
+  const contractContent = generateContractContent(proposal, acceptanceData);
   const signedAt = new Date(acceptanceData.accepted_at).toLocaleString("pt-BR", {
     timeZone: "America/Sao_Paulo",
     day: "2-digit",
@@ -77,9 +61,9 @@ export function generateContractHTML(
   const contractVersion = (proposal as any).version ?? 1;
 
   const ci = contactInfo ?? {};
-  const displayName = ci.name || "";
+  const displayName = ci.name || "MATHEUS MIERZWA";
   const displayEmail = ci.email || "";
-  const displayLocation = ci.location || "";
+  const displayLocation = ci.location || "Barueri/SP";
   const displayLinkedin = ci.linkedinUrl ? ci.linkedinUrl.replace(/^https?:\/\/(www\.)?/, "") : "";
   const displayGithub = ci.githubUrl ? ci.githubUrl.replace(/^https?:\/\/(www\.)?/, "") : "";
 
@@ -318,7 +302,8 @@ export function generateContractHTML(
 
   <div class="header">
     <div class="header-left">
-      ${displayName ? `<h1>${displayName.toUpperCase()}</h1>` : ""}
+      <h1>${displayName.toUpperCase()}</h1>
+      <p>Desenvolvimento de Software · CNPJ 57.900.589/0001-00</p>
       ${displayLocation ? `<p>${displayLocation}</p>` : ""}
     </div>
     <div class="header-right">
@@ -403,10 +388,9 @@ export async function printContractPDF(
   proposal: ProposalData,
   acceptanceData: PDFAcceptanceData,
   signatureDataUrl: string,
-  contactInfo?: ContactInfo,
-  templateContent?: string,
+  contactInfo?: ContactInfo
 ): Promise<void> {
-  const html = generateContractHTML(proposal, acceptanceData, signatureDataUrl, contactInfo, templateContent);
+  const html = generateContractHTML(proposal, acceptanceData, signatureDataUrl, contactInfo);
   const blob = new Blob([html], { type: "text/html;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const win = window.open(url, "_blank");

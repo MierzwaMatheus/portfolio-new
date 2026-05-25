@@ -43,7 +43,7 @@ export default function NotFound() {
   const { t, tValue } = useTranslation();
   const label = useGlitch("404", hovered);
 
-  const lines = Object.values((tValue("notFound.lines") as Record<string, string>) ?? {}).map((text, i) => ({
+  const lines = ((tValue("notFound.lines") as string[]) ?? []).map((text, i) => ({
     text,
     delay: LINE_DELAYS[i],
     color: LINE_COLORS[i],

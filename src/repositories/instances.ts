@@ -4,7 +4,6 @@ import { ConvexHomeRepository } from "./implementations/ConvexHomeRepository";
 import { ConvexAboutRepository } from "./implementations/ConvexAboutRepository";
 import { ConvexResumeRepository } from "./implementations/ConvexResumeRepository";
 import { ConvexSidebarRepository } from "./implementations/ConvexSidebarRepository";
-import { ConvexSiteConfigRepository } from "./implementations/ConvexSiteConfigRepository";
 
 import { StaticPortfolioRepository } from "./implementations/StaticPortfolioRepository";
 import { StaticBlogRepository } from "./implementations/StaticBlogRepository";
@@ -12,7 +11,6 @@ import { StaticHomeRepository } from "./implementations/StaticHomeRepository";
 import { StaticAboutRepository } from "./implementations/StaticAboutRepository";
 import { StaticResumeRepository } from "./implementations/StaticResumeRepository";
 import { StaticSidebarRepository } from "./implementations/StaticSidebarRepository";
-import { StaticSiteConfigRepository } from "./implementations/StaticSiteConfigRepository";
 
 const isProduction = import.meta.env.PROD;
 
@@ -39,7 +37,3 @@ export const resumeRepository = isProduction
 export const sidebarRepository = isProduction
   ? new StaticSidebarRepository()
   : new ConvexSidebarRepository();
-
-export const siteConfigRepository = isProduction
-  ? new StaticSiteConfigRepository()
-  : new ConvexSiteConfigRepository();

@@ -55,8 +55,6 @@ export function useHome(repository: HomeRepository) {
     isLoadingAvailability;
 
   // Deriva role traduzido baseado no locale atual (sem refetch)
-  const contactName = contactInfo?.name ?? "";
-
   const contactRole = useMemo(() => {
     if (!contactInfo) return "";
     return (
@@ -124,7 +122,6 @@ export function useHome(repository: HomeRepository) {
   }, [availabilityRaw, locale]);
 
   return {
-    contactName,
     contactRole,
     aboutText,
     services,
@@ -132,6 +129,5 @@ export function useHome(repository: HomeRepository) {
     availability,
     contactWizardEnabled,
     isLoading,
-    contactInfo: contactInfo ?? null,
   };
 }

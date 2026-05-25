@@ -7,10 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Lock, Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
-import { useTranslation } from "@/i18n/hooks/useTranslation";
 
 export default function Login() {
-  const { t } = useTranslation();
   const { isAuthenticated, isLoading: isAuthLoading, roles } = useAuth();
   const { signIn } = useAuthActions();
   const [, setLocation] = useLocation();
@@ -43,7 +41,7 @@ export default function Login() {
       await signIn("password", { email, password, flow: "signIn" });
       // AuthContext + the useEffect above will handle redirect once role resolves
     } catch (err) {
-      setError(t("auth.invalidCredentials"));
+      setError("Credenciais inválidas. Verifique seu email e senha.");
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -61,15 +59,15 @@ export default function Login() {
               <Lock className="h-6 w-6 text-neon-purple" />
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-center text-white">{t("auth.adminArea")}</CardTitle>
+          <CardTitle className="text-2xl font-bold text-center text-white">Área Administrativa</CardTitle>
           <CardDescription className="text-center text-gray-400">
-            {t("auth.enterCredentials")}
+            Entre com suas credenciais para acessar o painel
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">{t("contactWizard.contact.email")}</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
@@ -81,7 +79,7 @@ export default function Login() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">{t("auth.password")}</Label>
+              <Label htmlFor="password">Senha</Label>
               <Input
                 id="password"
                 type="password"
@@ -102,10 +100,10 @@ export default function Login() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {t("auth.signingIn")}
+                  Entrando...
                 </>
               ) : (
-                t("auth.signIn")
+                "Entrar"
               )}
             </Button>
           </CardFooter>

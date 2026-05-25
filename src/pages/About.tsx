@@ -55,7 +55,7 @@ export default function About() {
     <>
       <SEO
         title="Sobre Mim"
-        description={t("about.seoDescription")}
+        description="Conheça minha trajetória, dia-a-dia e respostas para perguntas frequentes sobre meu trabalho como desenvolvedor."
         url="/sobre"
       />
       <motion.div
@@ -165,7 +165,7 @@ export default function About() {
                   {isMobile && hoveredItem !== routineItem.id && (
                     <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
                       <div className="bg-white/20 backdrop-blur-sm text-center px-3 py-1 rounded-full text-xs text-white">
-                        {t("about.tapToKnowMore")}
+                        Toque para Saber Mais
                       </div>
                     </div>
                   )}

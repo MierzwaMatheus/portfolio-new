@@ -12,8 +12,7 @@ export type PluginId =
   | 'i18n'
   | 'playground'
   | 'testimonials'
-  | 'testimonials-intake'
-  | 'contract-templates';
+  | 'testimonials-intake';
 
 export interface PluginDefinition {
   id: PluginId;
@@ -163,15 +162,6 @@ export const PLUGIN_REGISTRY: PluginDefinition[] = [
     publicRoutes: [],
     minRole: 'admin',
     parentId: 'testimonials',
-  },
-  {
-    id: 'contract-templates',
-    label: 'Templates de Contrato',
-    description: 'Templates editáveis para geração de contratos PDF',
-    defaultEnabled: false,
-    tables: ['contractTemplates'],
-    adminRoutes: ['/admin/contracts'],
-    minRole: 'admin',
   },
 ];
 

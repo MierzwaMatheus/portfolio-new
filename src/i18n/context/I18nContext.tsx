@@ -1,11 +1,8 @@
 import { createContext, useContext, useState, useEffect, useMemo, ReactNode } from 'react';
-import { useQuery } from 'convex/react';
-import { api } from '../../../convex/_generated/api';
 import { LocaleDetector } from '../interfaces/LocaleDetector';
 import { TranslationsRepository } from '../repositories/TranslationsRepository';
 import { TranslationService } from '../interfaces/TranslationService';
 import { StaticTranslationsRepository } from '../implementations/StaticTranslationsRepository';
-import { DynamicTranslationsRepository } from '../implementations/DynamicTranslationsRepository';
 import { BrowserLocaleDetector } from '../implementations/BrowserLocaleDetector';
 import { NoopTranslationService } from '../implementations/NoopTranslationService';
 import { CachedTranslationService } from '../implementations/CachedTranslationService';
@@ -33,15 +30,9 @@ interface I18nProviderProps {
 export function I18nProvider({
   children,
   localeDetector = new BrowserLocaleDetector(),
-  translationsRepository,
+  translationsRepository = new StaticTranslationsRepository(),
   translationService,
 }: I18nProviderProps) {
-  const siteTextsRecords = useQuery(api.siteTexts.getAll);
-  const resolvedRepository: TranslationsRepository = translationsRepository
-    ?? (siteTextsRecords !== undefined
-      ? new DynamicTranslationsRepository(siteTextsRecords)
-      : new StaticTranslationsRepository());
-
   const [locale, setLocaleState] = useState<Locale>('en-US');
   const [isLoading, setIsLoading] = useState(true);
 
@@ -79,12 +70,12 @@ export function I18nProvider({
   };
 
   const t = (key: string): string => {
-    const translation = resolvedRepository.getStaticTranslation(key, locale);
+    const translation = translationsRepository.getStaticTranslation(key, locale);
     return translation || key;
   };
 
   const tValue = (key: string): any => {
-    return resolvedRepository.getStaticValue(key, locale);
+    return translationsRepository.getStaticValue(key, locale);
   };
 
   return (

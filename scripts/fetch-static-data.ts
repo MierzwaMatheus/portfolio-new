@@ -65,10 +65,6 @@ async function main() {
 
   write('about.json', { services, testimonials, faq, dailyRoutine });
 
-  // Site config (public keys — usado pelo StaticSiteConfigRepository em produção)
-  const siteConfig = await client.query(api.siteConfig.getPublic);
-  write('site-config.json', siteConfig ?? []);
-
   // Plugin states
   const pluginStates = await client.query(api.plugins.getPluginStates);
   write('plugins.json', pluginStates);

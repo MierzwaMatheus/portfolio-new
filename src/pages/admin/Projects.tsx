@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect } from "react";
-import { useSearch } from "wouter";
+import { useState, useRef } from "react";
 import { DeleteConfirmDialog } from "@/components/admin/DeleteConfirmDialog";
 import { AdminLayout } from "./Dashboard";
 import { Button } from "@/components/ui/button";
@@ -280,14 +279,7 @@ export default function AdminProjects() {
   const restoreProject = useMutation(api.projects.restore);
   const reorderProjects = useMutation(api.projects.reorder);
 
-  const search = useSearch();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  useEffect(() => {
-    if (search.includes("create=true")) {
-      setIsDialogOpen(true);
-    }
-  }, [search]);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: Id<"projects">; name: string } | null>(null);
   // Track image picker selections as { id, url } pairs to render thumbnails locally

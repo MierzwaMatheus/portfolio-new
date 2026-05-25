@@ -19,7 +19,7 @@
   --color-popover: hsl(var(--popover));
   --color-popover-foreground: hsl(var(--popover-foreground));
   
-  --color-primary: var(--primary);
+  --color-primary: hsl(var(--primary));
   --color-primary-foreground: hsl(var(--primary-foreground));
   
   --color-secondary: hsl(var(--secondary));
@@ -28,7 +28,7 @@
   --color-muted: hsl(var(--muted));
   --color-muted-foreground: hsl(var(--muted-foreground));
   
-  --color-accent: var(--accent);
+  --color-accent: hsl(var(--accent));
   --color-accent-foreground: hsl(var(--accent-foreground));
   
   --color-destructive: hsl(var(--destructive));
@@ -47,7 +47,9 @@
   --color-sidebar-border: hsl(var(--sidebar-border));
   --color-sidebar-ring: hsl(var(--sidebar-ring));
 
-  /* Contract colors (--primary, --accent) are hex vars set by applyTheme CLI */
+  /* Custom Neon Colors in HSL */
+  --color-neon-purple: hsl(var(--neon-purple));
+  --color-neon-lime: hsl(var(--neon-lime));
   
   --font-sans: "Chakra Petch", sans-serif;
   --font-mono: "Chakra Petch", monospace;
@@ -105,8 +107,11 @@
   --sidebar-border: 0 0% 15%;
   --sidebar-ring: 263 90% 66%;
 
-  --bg: hsl(var(--background));
-  --text: hsl(var(--foreground));
+  /* Neon Colors Definition */
+  /* Purple 500: #a855f7 -> 271 91% 65% */
+  --neon-purple: 271 91% 65%;
+  /* Lime 400: #bef264 -> 82 85% 67% */
+  --neon-lime: 82 85% 67%;
 }
 
 .dark {
@@ -145,7 +150,7 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/30 selection:text-[var(--bg)];
+    @apply bg-background text-foreground font-sans antialiased selection:bg-neon-purple/30 selection:text-white;
   }
   
   /* Custom Scrollbar */
@@ -196,7 +201,7 @@
 
   /* Utility classes for the theme */
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-neon-purple to-neon-lime;
   }
   
   .card-gradient {

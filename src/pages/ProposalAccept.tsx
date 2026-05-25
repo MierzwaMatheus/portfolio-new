@@ -15,7 +15,6 @@ import { toast } from "sonner";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 import ReactMarkdown from "react-markdown";
 import { ContractModal } from "@/components/ContractModal";
-import { applyProposalToTemplate, resolveTemplateContent } from "@/utils/contractGenerator";
 import { printContractPDF } from "@/utils/contractPDF";
 
 function toLegacyProposal(p: any) {
@@ -59,7 +58,6 @@ export default function ProposalAccept() {
   const generateUploadUrl = useMutation(api.proposals.generateSignatureUploadUrl);
   const CONVEX_SITE_URL = (import.meta.env.VITE_CONVEX_URL as string)?.replace('.convex.cloud', '.convex.site');
   const contactInfo = useQuery(api.contactInfo.get);
-  const defaultTemplate = useQuery(api.contractTemplates.getDefault);
 
   // Recover token from sessionStorage
   useEffect(() => {
@@ -77,10 +75,6 @@ export default function ProposalAccept() {
   const isLoading = queryResult === undefined;
   const rawProposal: any = queryResult ?? null;
   const proposal: any = useMemo(() => toLegacyProposal(rawProposal), [rawProposal]);
-  const resolvedTemplateContent = useMemo(
-    () => resolveTemplateContent(rawProposal ?? {}, defaultTemplate ?? undefined),
-    [rawProposal, defaultTemplate]
-  );
 
   // If proposal requires password and we have no token, redirect back to view
   useEffect(() => {
@@ -393,7 +387,6 @@ export default function ProposalAccept() {
           sessionToken={sessionToken}
           onSign={(sig) => handleDigitalSignature(sig)}
           isSigning={isSigning}
-          templateContent={resolvedTemplateContent}
         />
       )}
     </div>
@@ -485,11 +478,7 @@ export default function ProposalAccept() {
         proposal_version: String(rawProposal?.version ?? 1),
       };
 
-      const rawContent = resolveTemplateContent(rawProposal, defaultTemplate);
-      const templateContent = rawContent
-        ? applyProposalToTemplate(rawContent, proposal, acceptanceData)
-        : undefined;
-      await printContractPDF(proposal, acceptanceData, signatureDataUrl, contactInfo ?? undefined, templateContent);
+      await printContractPDF(proposal, acceptanceData, signatureDataUrl, contactInfo ?? undefined);
 
       toast.success("Contrato assinado digitalmente e PDF gerado com sucesso!");
 
