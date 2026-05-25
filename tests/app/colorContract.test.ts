@@ -106,3 +106,12 @@ describe("colorContract — tokens Tailwind", () => {
     expect(css).not.toMatch(/neon-purple|neon-lime/);
   });
 });
+
+// ---- Ciclo 4: bento Layout usa --font-sans ----------------------------------------
+
+describe("colorContract — bento Layout tipografia", () => {
+  it("Layout.tsx do bento usa var(--font-sans) para tipografia principal", () => {
+    const content = readTemplate("templates/layouts/bento/Layout.tsx");
+    expect(content, "Layout.tsx deve declarar var(--font-sans) no container raiz").toMatch(/var\(--font-sans\)/);
+  });
+});
