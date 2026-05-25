@@ -12,7 +12,7 @@ const source = fs.readFileSync(
 describe("sidebar i18n keys", () => {
   it("sidebar.terminalHint exists in pt-BR", () => {
     expect(repo.getStaticTranslation("sidebar.terminalHint", "pt-BR")).toBe(
-      "Press ~ for terminal",
+      "Pressione ~ para o terminal",
     );
   });
 
