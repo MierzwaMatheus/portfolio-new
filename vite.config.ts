@@ -22,7 +22,7 @@ export default defineConfig({
   build: {
     outDir: "dist",        // dist na raiz (padrão do Vite e da Vercel)
     emptyOutDir: true,
-    sourcemap: isDev,
+    sourcemap: process.env.NODE_ENV !== "production",
   },
 
   server: {
