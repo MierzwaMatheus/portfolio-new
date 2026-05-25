@@ -70,7 +70,7 @@ function BrutPrompt({
 
 export default function Home() {
   const { t } = useTranslation();
-  const { contactRole, aboutText, services, testimonials } =
+  const { contactName, contactRole, aboutText, services, testimonials } =
     useHome(homeRepository);
 
   const primaryStack = services.map((s) => s.title);
@@ -88,22 +88,21 @@ export default function Home() {
       }}
     >
       {/* ASCII banner */}
-      <pre
+      <div
         style={{
           margin: 0,
           color: "var(--primary)",
-          fontSize: 14,
-          fontWeight: 700,
-          lineHeight: 1.05,
+          fontSize: 36,
+          fontWeight: 900,
+          lineHeight: 1.1,
           fontFamily: "var(--font-mono)",
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
           overflow: "hidden",
         }}
-      >{` ███╗   ███╗ █████╗ ████████╗██╗  ██╗███████╗██╗   ██╗███████╗
- ████╗ ████║██╔══██╗╚══██╔══╝██║  ██║██╔════╝██║   ██║██╔════╝
- ██╔████╔██║███████║   ██║   ███████║█████╗  ██║   ██║███████║
- ██║╚██╔╝██║██╔══██║   ██║   ██╔══██║██╔══╝  ██║   ██║╚════██║
- ██║ ╚═╝ ██║██║  ██║   ██║   ██║  ██║███████║╚██████╔╝███████║
- ╚═╝     ╚═╝╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚══════╝ ╚═════╝ ╚══════╝`}</pre>
+      >
+        {contactName}
+      </div>
       <div style={{ fontSize: 11, opacity: 0.6, marginTop: 6 }}>
         {`// ${contactRole}`}
       </div>

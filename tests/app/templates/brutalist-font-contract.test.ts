@@ -17,3 +17,21 @@ describe("brutalist template — contrato de fonte CSS", () => {
     });
   });
 });
+
+describe("brutalist Home — banner dinâmico", () => {
+  it("Home.tsx não contém MATHEUS hardcoded", () => {
+    const src = readFileSync(
+      resolve(root, "templates/layouts/brutalist/pages/Home.tsx"),
+      "utf8"
+    );
+    expect(src).not.toContain("MATHEUS");
+  });
+
+  it("Home.tsx usa contactName do hook", () => {
+    const src = readFileSync(
+      resolve(root, "templates/layouts/brutalist/pages/Home.tsx"),
+      "utf8"
+    );
+    expect(src).toContain("contactName");
+  });
+});
