@@ -32,6 +32,11 @@ const TEMPLATE_FILES = [
   "templates/layouts/swiss/Layout.tsx",
   "templates/layouts/swiss/Sidebar.tsx",
   "templates/layouts/swiss/SwissShared.tsx",
+  "templates/layouts/swiss/pages/Home.tsx",
+  "templates/layouts/swiss/pages/About.tsx",
+  "templates/layouts/swiss/pages/Resume.tsx",
+  "templates/layouts/swiss/pages/Portfolio.tsx",
+  "templates/layouts/swiss/pages/Blog.tsx",
 ];
 
 const FORBIDDEN_PATTERNS: Array<[string, RegExp]> = [
