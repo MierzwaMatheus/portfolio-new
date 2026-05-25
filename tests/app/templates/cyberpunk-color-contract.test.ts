@@ -9,6 +9,11 @@ const sidebarSrc = readFileSync(
   "utf8"
 );
 
+const layoutSrc = readFileSync(
+  resolve(root, "templates/layouts/cyberpunk/Layout.tsx"),
+  "utf8"
+);
+
 describe("cyberpunk Sidebar — contrato de cores CSS", () => {
   it("não usa classe Tailwind text-primary", () => {
     expect(sidebarSrc).not.toMatch(/\btext-primary\b/);
@@ -24,5 +29,16 @@ describe("cyberpunk Sidebar — contrato de cores CSS", () => {
 
   it("não usa classe Tailwind text-accent (sem /)", () => {
     expect(sidebarSrc).not.toMatch(/\btext-accent\b(?!\/)/);
+  });
+});
+
+describe("cyberpunk — contrato de fontes CSS", () => {
+  it("Sidebar.tsx não usa classe Tailwind font-mono sem CSS variable", () => {
+    // Permite font-mono somente dentro de var(--font-mono), não como classe Tailwind isolada
+    expect(sidebarSrc).not.toMatch(/(?<!--)font-mono(?!\])/);
+  });
+
+  it("Layout.tsx usa var(--font-sans) no container raiz", () => {
+    expect(layoutSrc).toContain("var(--font-sans)");
   });
 });
