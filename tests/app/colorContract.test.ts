@@ -20,12 +20,18 @@ const TEMPLATE_FILES = [
   "templates/layouts/bento/pages/Resume.tsx",
   "templates/layouts/magazine/Layout.tsx",
   "templates/layouts/magazine/Masthead.tsx",
+  "templates/layouts/magazine/pages/Home.tsx",
+  "templates/layouts/magazine/pages/Resume.tsx",
+  "templates/layouts/magazine/pages/About.tsx",
+  "templates/layouts/magazine/pages/Portfolio.tsx",
+  "templates/layouts/magazine/pages/Blog.tsx",
   "templates/layouts/brutalist/Layout.tsx",
   "templates/layouts/brutalist/Navbar.tsx",
   "templates/layouts/cyberpunk/Layout.tsx",
   "templates/layouts/cyberpunk/Sidebar.tsx",
   "templates/layouts/swiss/Layout.tsx",
   "templates/layouts/swiss/Sidebar.tsx",
+  "templates/layouts/swiss/SwissShared.tsx",
 ];
 
 const FORBIDDEN_PATTERNS: Array<[string, RegExp]> = [
@@ -44,6 +50,14 @@ const FORBIDDEN_PATTERNS: Array<[string, RegExp]> = [
   ["text-gray hardcoded", /\btext-gray-\d+\b/],
   ["bg-white/ hardcoded", /\bbg-white\/\d/],
   ["border-white/ hardcoded", /\bborder-white\/\d/],
+  ["--bento-card", /--bento-card\b/],
+  ["--bento-border", /--bento-border\b/],
+  ["--bento-dock", /--bento-dock\b/],
+  ["--bento-font", /--bento-font\b/],
+  ["--swiss-font", /--swiss-font\b/],
+  ["--mag-body", /--mag-body\b/],
+  ["--mag-display", /--mag-display\b/],
+  ["--mag-mono", /--mag-mono\b/],
 ];
 
 describe("colorContract — templates", () => {
