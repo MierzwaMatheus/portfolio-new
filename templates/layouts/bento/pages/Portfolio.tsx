@@ -20,10 +20,10 @@ function BentoCard({
     <div
       style={{
         gridColumn: span === "auto" ? "auto" : `span ${span}`,
-        background: "hsl(var(--card))",
+        background: "color-mix(in srgb, var(--text) 10%, var(--bg))",
         borderRadius: radius,
         padding,
-        border: "0.5px solid hsl(var(--border))",
+        border: "0.5px solid color-mix(in srgb, var(--text) 20%, transparent)",
         display: "flex",
         flexDirection: "column",
         position: "relative",
@@ -79,7 +79,7 @@ export default function BentoPortfolio() {
               fontSize: 10.5,
               letterSpacing: "0.16em",
               textTransform: "uppercase",
-              color: "hsl(var(--accent-foreground))",
+              color: "var(--text)",
               marginBottom: 12,
             }}
           >
@@ -123,11 +123,9 @@ export default function BentoPortfolio() {
                 fontWeight: 500,
                 cursor: "pointer",
                 background: !activeFilter
-                  ? "hsl(var(--primary))"
-                  : "hsl(var(--border))",
-                color: !activeFilter
-                  ? "hsl(var(--primary-foreground))"
-                  : "hsl(var(--foreground))",
+                  ? "var(--primary)"
+                  : "color-mix(in srgb, var(--text) 20%, transparent)",
+                color: !activeFilter ? "var(--bg)" : "var(--text)",
               }}
             >
               Todos
@@ -144,12 +142,9 @@ export default function BentoPortfolio() {
                   cursor: "pointer",
                   background:
                     f === activeFilter
-                      ? "hsl(var(--primary))"
-                      : "hsl(var(--border))",
-                  color:
-                    f === activeFilter
-                      ? "hsl(var(--primary-foreground))"
-                      : "hsl(var(--foreground))",
+                      ? "var(--primary)"
+                      : "color-mix(in srgb, var(--text) 20%, transparent)",
+                  color: f === activeFilter ? "var(--bg)" : "var(--text)",
                 }}
               >
                 {f}
@@ -179,7 +174,7 @@ export default function BentoPortfolio() {
               <div
                 style={{
                   height: 320,
-                  background: "hsl(var(--muted))",
+                  background: "color-mix(in srgb, var(--text) 10%, transparent)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -202,8 +197,8 @@ export default function BentoPortfolio() {
                     left: 14,
                     padding: "5px 10px",
                     borderRadius: 999,
-                    background: "hsl(var(--accent))",
-                    color: "hsl(var(--accent-foreground))",
+                    background: "var(--accent)",
+                    color: "var(--text)",
                     fontSize: 10,
                     fontWeight: 700,
                     letterSpacing: "0.14em",
@@ -241,7 +236,7 @@ export default function BentoPortfolio() {
                       style={{
                         padding: "4px 10px",
                         borderRadius: 8,
-                        background: "hsl(var(--border))",
+                        background: "color-mix(in srgb, var(--text) 20%, transparent)",
                         fontSize: 10.5,
                       }}
                     >
@@ -259,7 +254,7 @@ export default function BentoPortfolio() {
               <div
                 style={{
                   height: 140,
-                  background: "hsl(var(--muted))",
+                  background: "color-mix(in srgb, var(--text) 10%, transparent)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -296,7 +291,7 @@ export default function BentoPortfolio() {
                       style={{
                         padding: "2px 8px",
                         borderRadius: 6,
-                        background: "hsl(var(--border))",
+                        background: "color-mix(in srgb, var(--text) 20%, transparent)",
                         fontSize: 10,
                       }}
                     >
@@ -324,8 +319,8 @@ export default function BentoPortfolio() {
                     width: 38,
                     height: 38,
                     borderRadius: 11,
-                    background: "hsl(var(--primary))",
-                    color: "hsl(var(--primary-foreground))",
+                    background: "var(--primary)",
+                    color: "var(--bg)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -357,7 +352,7 @@ export default function BentoPortfolio() {
                     style={{
                       padding: "2px 8px",
                       borderRadius: 6,
-                      background: "hsl(var(--border))",
+                      background: "color-mix(in srgb, var(--text) 20%, transparent)",
                       fontSize: 10,
                     }}
                   >

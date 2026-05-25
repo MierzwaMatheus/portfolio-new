@@ -8,7 +8,7 @@ interface LayoutProps {
 
 export function Layout({ children, className }: LayoutProps) {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)]">
       <main className={cn("pb-28", className)}>
         {children}
       </main>

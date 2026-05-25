@@ -44,8 +44,8 @@ function NavItems({ location }: { location: string }) {
                 "text-[11px] font-mono tracking-[0.18em] uppercase pb-1.5 transition-colors",
                 "border-b-2",
                 active
-                  ? "border-primary text-foreground opacity-100"
-                  : "border-transparent text-foreground opacity-60 hover:opacity-90"
+                  ? "border-primary text-[var(--text)] opacity-100"
+                  : "border-transparent text-[var(--text)] opacity-60 hover:opacity-90"
               )}
             >
               {NAV_LABELS[item.key] ?? item.key}
@@ -65,9 +65,9 @@ export function Masthead() {
   const spaced = siteName.toUpperCase().split("").join(" ");
 
   return (
-    <header className="border-b border-foreground/20">
+    <header className="border-b border-[var(--text)]/20">
       {/* Metadata strip */}
-      <div className="flex justify-between items-center px-12 py-[18px] text-[10.5px] font-mono tracking-[0.22em] uppercase text-foreground/55 border-b border-foreground/20">
+      <div className="flex justify-between items-center px-12 py-[18px] text-[10.5px] font-mono tracking-[0.22em] uppercase text-[var(--text)]/55 border-b border-[var(--text)]/20">
         <span>Vol. 01 · No. 26</span>
         <span className="hidden sm:block">Portfolio Profissional</span>
         <span>Est. MMXX</span>
@@ -75,7 +75,7 @@ export function Masthead() {
 
       {/* Display title */}
       <div className="px-12 pt-8 pb-3 text-center">
-        <div className="font-sans text-[clamp(3rem,8vw,5.25rem)] font-medium tracking-[0.04em] text-foreground leading-none">
+        <div className="font-sans text-[clamp(3rem,8vw,5.25rem)] font-medium tracking-[0.04em] text-[var(--text)] leading-none">
           {spaced || "PORTFOLIO"}
         </div>
       </div>
@@ -90,21 +90,21 @@ export function Masthead() {
         <Sheet>
           <SheetTrigger asChild>
             <button
-              className="flex items-center gap-2 text-[11px] font-mono tracking-widest uppercase text-foreground/70 border border-foreground/20 px-4 py-2"
+              className="flex items-center gap-2 text-[11px] font-mono tracking-widest uppercase text-[var(--text)]/70 border border-[var(--text)]/20 px-4 py-2"
               aria-label="Abrir menu"
             >
               <Menu className="h-3.5 w-3.5" />
               Menu
             </button>
           </SheetTrigger>
-          <SheetContent side="top" className="bg-background border-b border-foreground/20 pt-12">
+          <SheetContent side="top" className="bg-[var(--bg)] border-b border-[var(--text)]/20 pt-12">
             <VisuallyHidden>
               <SheetTitle>Navegação</SheetTitle>
             </VisuallyHidden>
             <nav className="flex flex-col gap-1 pb-4">
               {NAV_ITEMS_KEYS.map((item) => (
                 <Link key={item.key} href={item.href}>
-                  <a className="block text-sm font-mono tracking-widest uppercase py-3 border-b border-foreground/10 text-foreground/80 hover:text-foreground transition-colors">
+                  <a className="block text-sm font-mono tracking-widest uppercase py-3 border-b border-[var(--text)]/10 text-[var(--text)]/80 hover:text-[var(--text)] transition-colors">
                     {NAV_LABELS[item.key] ?? item.key}
                   </a>
                 </Link>

@@ -23,10 +23,10 @@ function BentoCard({
     <div
       style={{
         gridColumn: span === "auto" ? "auto" : `span ${span}`,
-        background: tint || "var(--bento-card, hsl(var(--card)))",
+        background: tint || "var(--bento-card, color-mix(in srgb, var(--text) 10%, var(--bg)))",
         borderRadius: radius,
         padding,
-        border: "0.5px solid var(--bento-border, hsl(var(--border)))",
+        border: "0.5px solid var(--bento-border, color-mix(in srgb, var(--text) 20%, transparent))",
         display: "flex",
         flexDirection: "column",
         position: "relative",
@@ -77,8 +77,8 @@ export default function BentoHome() {
           style={{
             gridRow: "span 2",
             background:
-              "linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 200%)",
-            color: "hsl(var(--primary-foreground))",
+              "linear-gradient(135deg, var(--primary) 0%, var(--accent) 200%)",
+            color: "var(--bg)",
           }}
         >
           <div
@@ -107,8 +107,8 @@ export default function BentoHome() {
             <em
               style={{
                 fontStyle: "normal",
-                background: "hsl(var(--background))",
-                color: "hsl(var(--primary))",
+                background: "var(--bg)",
+                color: "var(--primary)",
                 padding: "0 12px",
                 borderRadius: 12,
               }}
@@ -147,13 +147,13 @@ export default function BentoHome() {
               width: 92,
               height: 92,
               borderRadius: "50%",
-              background: "hsl(var(--primary))",
+              background: "var(--primary)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: 28,
               fontWeight: 700,
-              color: "hsl(var(--primary-foreground))",
+              color: "var(--bg)",
             }}
           >
             {contactInfo?.name
@@ -175,7 +175,7 @@ export default function BentoHome() {
                   width: 34,
                   height: 34,
                   borderRadius: 12,
-                  background: "hsl(var(--border))",
+                  background: "color-mix(in srgb, var(--text) 20%, transparent)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -193,7 +193,7 @@ export default function BentoHome() {
                   width: 34,
                   height: 34,
                   borderRadius: 12,
-                  background: "hsl(var(--border))",
+                  background: "color-mix(in srgb, var(--text) 20%, transparent)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -210,8 +210,8 @@ export default function BentoHome() {
           <BentoCard
             span={2}
             padding={18}
-            tint="hsl(var(--accent))"
-            style={{ color: "hsl(var(--accent-foreground))" }}
+            tint="var(--accent)"
+            style={{ color: "var(--text)" }}
           >
             <Mail size={18} />
             <div style={{ fontSize: 10.5, marginTop: 8, opacity: 0.75 }}>contato</div>
@@ -241,7 +241,7 @@ export default function BentoHome() {
             <BentoCard
               key={s.title}
               padding={26}
-              style={i === 0 ? { background: "hsl(var(--muted))" } : {}}
+              style={i === 0 ? { background: "color-mix(in srgb, var(--text) 10%, transparent)" } : {}}
             >
               <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
                 <div
@@ -249,8 +249,8 @@ export default function BentoHome() {
                     width: 38,
                     height: 38,
                     borderRadius: 11,
-                    background: "hsl(var(--primary))",
-                    color: "hsl(var(--primary-foreground))",
+                    background: "var(--primary)",
+                    color: "var(--bg)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -302,8 +302,8 @@ export default function BentoHome() {
           <BentoCard
             span={6}
             padding={28}
-            tint="hsl(var(--primary))"
-            style={{ color: "hsl(var(--primary-foreground))" }}
+            tint="var(--primary)"
+            style={{ color: "var(--bg)" }}
           >
             <Quote size={26} />
             <p
@@ -330,7 +330,7 @@ export default function BentoHome() {
                   width: 36,
                   height: 36,
                   borderRadius: "50%",
-                  background: "hsl(var(--background) / 0.2)",
+                  background: "color-mix(in srgb, var(--bg) 20%, transparent)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
@@ -354,7 +354,7 @@ export default function BentoHome() {
                     width: 26,
                     height: 26,
                     borderRadius: "50%",
-                    background: "hsl(var(--primary) / 0.15)",
+                    background: "color-mix(in srgb, var(--primary) 15%, transparent)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -396,7 +396,7 @@ export default function BentoHome() {
             style={{
               padding: "8px 16px",
               borderRadius: 999,
-              border: "1px solid hsl(var(--border))",
+              border: "1px solid color-mix(in srgb, var(--text) 20%, transparent)",
               fontSize: 13,
               fontWeight: 500,
               textDecoration: "none",

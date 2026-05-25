@@ -21,10 +21,10 @@ function BentoCard({
     <div
       style={{
         gridColumn: span === "auto" ? "auto" : `span ${span}`,
-        background: tint || "hsl(var(--card))",
+        background: tint || "color-mix(in srgb, var(--text) 10%, var(--bg))",
         borderRadius: radius,
         padding,
-        border: "0.5px solid hsl(var(--border))",
+        border: "0.5px solid color-mix(in srgb, var(--text) 20%, transparent)",
         display: "flex",
         flexDirection: "column",
         position: "relative",
@@ -65,7 +65,7 @@ export default function BentoAbout() {
         <BentoCard
           span={8}
           padding={32}
-          style={{ background: "hsl(var(--muted))" }}
+          style={{ background: "color-mix(in srgb, var(--text) 10%, transparent)" }}
         >
           <div
             style={{
@@ -73,7 +73,7 @@ export default function BentoAbout() {
               fontSize: 10.5,
               letterSpacing: "0.16em",
               textTransform: "uppercase",
-              color: "hsl(var(--primary))",
+              color: "var(--primary)",
               marginBottom: 14,
             }}
           >
@@ -114,7 +114,7 @@ export default function BentoAbout() {
                 style={{
                   padding: "10px 14px",
                   borderRadius: 12,
-                  background: "hsl(var(--border))",
+                  background: "color-mix(in srgb, var(--text) 20%, transparent)",
                   fontSize: 12,
                 }}
               >
@@ -165,11 +165,11 @@ export default function BentoAbout() {
                     gridRow: rowSpans[i] > 1 ? `span ${rowSpans[i]}` : undefined,
                     background:
                       i === 0
-                        ? "hsl(var(--primary))"
+                        ? "var(--primary)"
                         : i % 3 === 0
-                        ? "hsl(var(--muted))"
-                        : "hsl(var(--card))",
-                    color: i === 0 ? "hsl(var(--primary-foreground))" : undefined,
+                        ? "color-mix(in srgb, var(--text) 10%, transparent)"
+                        : "color-mix(in srgb, var(--text) 10%, var(--bg))",
+                    color: i === 0 ? "var(--bg)" : undefined,
                   }}
                 >
                   <div style={{ fontSize: 12, fontWeight: 600, lineHeight: 1.3 }}>
@@ -213,8 +213,8 @@ export default function BentoAbout() {
                 style={
                   i === 0
                     ? {
-                        background: "hsl(var(--primary))",
-                        color: "hsl(var(--primary-foreground))",
+                        background: "var(--primary)",
+                        color: "var(--bg)",
                       }
                     : {}
                 }

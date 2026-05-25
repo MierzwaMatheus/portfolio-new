@@ -8,7 +8,7 @@ interface LayoutProps {
 
 export function Layout({ children, className }: LayoutProps) {
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col lg:flex-row">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col lg:flex-row">
       <Sidebar />
       <main className={cn(
         "flex-1 w-full lg:pl-32 pt-4 lg:pt-0 min-h-screen transition-all duration-300",

@@ -8,7 +8,7 @@ interface LayoutProps {
 
 export function Layout({ children, className }: LayoutProps) {
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text)] flex flex-col font-sans">
       <SwissNav />
       <main className={cn("flex-1 w-full", className)}>
         {children}

@@ -40,9 +40,9 @@ function NavItems({ location }: { location: string }) {
           <Link key={item.key} href={item.href}>
             <a
               className={cn(
-                "flex items-baseline gap-3 px-4 py-3 text-sm font-semibold tracking-tight transition-colors border-r border-border",
-                "hover:bg-foreground hover:text-background",
-                active ? "bg-foreground text-background" : "text-foreground"
+                "flex items-baseline gap-3 px-4 py-3 text-sm font-semibold tracking-tight transition-colors border-r border-[var(--text)]/20",
+                "hover:bg-[var(--text)] hover:text-[var(--bg)]",
+                active ? "bg-[var(--text)] text-[var(--bg)]" : "text-[var(--text)]"
               )}
             >
               <span className="text-[10px] font-normal opacity-50 tabular-nums">
@@ -62,11 +62,11 @@ export function SwissNav() {
   const { contactInfo } = useSidebar(sidebarRepository);
 
   return (
-    <header className="border-b-2 border-foreground">
+    <header className="border-b-2 border-[var(--text)]">
       {/* Masthead */}
-      <div className="grid grid-cols-2 border-b border-foreground px-4 py-2">
+      <div className="grid grid-cols-2 border-b border-[var(--text)] px-4 py-2">
         <div className="text-xs font-black tracking-widest uppercase">
-          <span className="bg-foreground text-background px-1.5 mr-1.5">R</span>
+          <span className="bg-[var(--text)] text-[var(--bg)] px-1.5 mr-1.5">R</span>
           {contactInfo?.name ?? "Rubrica"}
         </div>
         <div className="text-xs font-semibold tracking-widest uppercase text-right opacity-60">
@@ -90,7 +90,7 @@ export function SwissNav() {
               <Menu size={20} />
             </button>
           </SheetTrigger>
-          <SheetContent side="left" className="p-0 w-64 bg-background border-r-2 border-foreground">
+          <SheetContent side="left" className="p-0 w-64 bg-[var(--bg)] border-r-2 border-[var(--text)]">
             <VisuallyHidden>
               <SheetTitle>Navegação</SheetTitle>
             </VisuallyHidden>

@@ -8,6 +8,57 @@ function readTemplate(rel: string) {
   return readFileSync(resolve(ROOT, rel), "utf-8");
 }
 
+// ---- Ciclo 3: templates sem padrões de cor proibidos --------------------------------
+
+const TEMPLATE_FILES = [
+  "templates/layouts/bento/Layout.tsx",
+  "templates/layouts/bento/FloatingDock.tsx",
+  "templates/layouts/bento/pages/Home.tsx",
+  "templates/layouts/bento/pages/About.tsx",
+  "templates/layouts/bento/pages/Blog.tsx",
+  "templates/layouts/bento/pages/Portfolio.tsx",
+  "templates/layouts/bento/pages/Resume.tsx",
+  "templates/layouts/magazine/Layout.tsx",
+  "templates/layouts/magazine/Masthead.tsx",
+  "templates/layouts/brutalist/Layout.tsx",
+  "templates/layouts/brutalist/Navbar.tsx",
+  "templates/layouts/cyberpunk/Layout.tsx",
+  "templates/layouts/cyberpunk/Sidebar.tsx",
+  "templates/layouts/swiss/Layout.tsx",
+  "templates/layouts/swiss/Sidebar.tsx",
+];
+
+const FORBIDDEN_PATTERNS: Array<[string, RegExp]> = [
+  ["--background", /--background\b/],
+  ["--foreground", /--foreground\b/],
+  ["--muted", /--muted\b/],
+  ["--card", /--card\b/],
+  ["--border", /--border\b/],
+  ["--primary-foreground", /--primary-foreground\b/],
+  ["--accent-foreground", /--accent-foreground\b/],
+  ["--neon-purple", /neon-purple/],
+  ["--neon-lime", /neon-lime/],
+  ["bg-background", /bg-background\b/],
+  ["text-foreground", /text-foreground\b/],
+  ["text-white hardcoded", /\btext-white\b/],
+  ["text-gray hardcoded", /\btext-gray-\d+\b/],
+  ["bg-white/ hardcoded", /\bbg-white\/\d/],
+  ["border-white/ hardcoded", /\bborder-white\/\d/],
+];
+
+describe("colorContract — templates", () => {
+  for (const file of TEMPLATE_FILES) {
+    describe(file, () => {
+      const content = readTemplate(file);
+      for (const [label, pattern] of FORBIDDEN_PATTERNS) {
+        it(`não usa "${label}"`, () => {
+          expect(content, `${file} contém padrão proibido "${label}"`).not.toMatch(pattern);
+        });
+      }
+    });
+  }
+});
+
 // ---- Ciclo 2: tokens Tailwind renomeados -----------------------------------------
 
 describe("colorContract — tokens Tailwind", () => {

@@ -21,10 +21,10 @@ function BentoCard({
     <div
       style={{
         gridColumn: span === "auto" ? "auto" : `span ${span}`,
-        background: tint || "hsl(var(--card))",
+        background: tint || "color-mix(in srgb, var(--text) 10%, var(--bg))",
         borderRadius: radius,
         padding,
-        border: "0.5px solid hsl(var(--border))",
+        border: "0.5px solid color-mix(in srgb, var(--text) 20%, transparent)",
         display: "flex",
         flexDirection: "column",
         position: "relative",
@@ -76,7 +76,7 @@ export default function BentoResume() {
               fontSize: 10.5,
               letterSpacing: "0.16em",
               textTransform: "uppercase",
-              color: "hsl(var(--accent-foreground))",
+              color: "var(--text)",
               marginBottom: 12,
             }}
           >
@@ -101,8 +101,8 @@ export default function BentoResume() {
         <BentoCard
           span={3}
           padding={22}
-          tint="hsl(var(--primary))"
-          style={{ color: "hsl(var(--primary-foreground))" }}
+          tint="var(--primary)"
+          style={{ color: "var(--bg)" }}
         >
           <div style={{ fontSize: 56, fontWeight: 700, lineHeight: 0.9 }}>
             {experiences.length}+
@@ -121,8 +121,8 @@ export default function BentoResume() {
         <BentoCard
           span={2}
           padding={20}
-          tint="hsl(var(--accent))"
-          style={{ color: "hsl(var(--accent-foreground))" }}
+          tint="var(--accent)"
+          style={{ color: "var(--text)" }}
         >
           <Languages size={18} />
           <div style={{ fontSize: 30, fontWeight: 700, marginTop: 8 }}>{languages.length}</div>
@@ -155,7 +155,7 @@ export default function BentoResume() {
               <BentoCard
                 key={exp.id}
                 padding={22}
-                style={idx === 0 ? { background: "hsl(var(--muted))" } : {}}
+                style={idx === 0 ? { background: "color-mix(in srgb, var(--text) 10%, transparent)" } : {}}
               >
                 <div
                   style={{
@@ -181,7 +181,7 @@ export default function BentoResume() {
                 <div
                   style={{
                     fontSize: 12,
-                    color: "hsl(var(--primary))",
+                    color: "var(--primary)",
                     fontWeight: 600,
                     marginBottom: 12,
                   }}
@@ -204,7 +204,7 @@ export default function BentoResume() {
                         style={{
                           position: "absolute",
                           left: 0,
-                          color: "hsl(var(--accent-foreground))",
+                          color: "var(--text)",
                         }}
                       >
                         ▸
@@ -265,12 +265,9 @@ export default function BentoResume() {
                       borderRadius: 10,
                       background:
                         level >= 85
-                          ? "hsl(var(--primary))"
-                          : "hsl(var(--border))",
-                      color:
-                        level >= 85
-                          ? "hsl(var(--primary-foreground))"
-                          : "hsl(var(--foreground))",
+                          ? "var(--primary)"
+                          : "color-mix(in srgb, var(--text) 20%, transparent)",
+                      color: level >= 85 ? "var(--bg)" : "var(--text)",
                       fontSize: 11,
                       fontWeight: 500,
                       display: "flex",
@@ -311,7 +308,7 @@ export default function BentoResume() {
                       style={{
                         padding: "5px 10px",
                         borderRadius: 999,
-                        background: "hsl(var(--border))",
+                        background: "color-mix(in srgb, var(--text) 20%, transparent)",
                         fontSize: 10.5,
                         fontWeight: 500,
                       }}
@@ -328,7 +325,7 @@ export default function BentoResume() {
               style={{
                 marginTop: 18,
                 paddingTop: 16,
-                borderTop: "0.5px solid hsl(var(--border))",
+                borderTop: "0.5px solid color-mix(in srgb, var(--text) 20%, transparent)",
               }}
             >
               <h4 style={{ fontSize: 14, margin: "0 0 10px", fontWeight: 700 }}>Idiomas</h4>
@@ -381,7 +378,7 @@ export default function BentoResume() {
                   style={{
                     marginBottom: 14,
                     paddingBottom: 14,
-                    borderBottom: "0.5px solid hsl(var(--border))",
+                    borderBottom: "0.5px solid color-mix(in srgb, var(--text) 20%, transparent)",
                   }}
                 >
                   <div style={{ display: "flex", justifyContent: "space-between" }}>
@@ -399,7 +396,7 @@ export default function BentoResume() {
                   <div
                     style={{
                       fontSize: 12,
-                      color: "hsl(var(--accent-foreground))",
+                      color: "var(--text)",
                       marginTop: 2,
                     }}
                   >
@@ -433,12 +430,12 @@ export default function BentoResume() {
                     key={c.id}
                     style={{
                       padding: "3px 0",
-                      borderBottom: "0.5px dotted hsl(var(--border))",
+                      borderBottom: "0.5px dotted color-mix(in srgb, var(--text) 20%, transparent)",
                     }}
                   >
                     <span
                       style={{
-                        color: "hsl(var(--primary))",
+                        color: "var(--primary)",
                         marginRight: 6,
                       }}
                     >
@@ -452,7 +449,7 @@ export default function BentoResume() {
           </BentoCard>
         )}
         {volunteering.length > 0 && (
-          <BentoCard span={3} padding={22} style={{ background: "hsl(var(--muted))" }}>
+          <BentoCard span={3} padding={22} style={{ background: "color-mix(in srgb, var(--text) 10%, transparent)" }}>
             <Heart size={18} />
             <h3 style={{ fontSize: 14, margin: "10px 0 10px", fontWeight: 700 }}>
               Voluntariado
@@ -468,7 +465,7 @@ export default function BentoResume() {
                     lineHeight: 1.5,
                     opacity: 0.85,
                     padding: "6px 0",
-                    borderTop: i > 0 ? "0.5px dotted hsl(var(--border))" : "none",
+                    borderTop: i > 0 ? "0.5px dotted color-mix(in srgb, var(--text) 20%, transparent)" : "none",
                   }}
                 >
                   {text}

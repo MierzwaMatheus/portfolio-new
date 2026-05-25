@@ -22,10 +22,10 @@ function BentoCard({
     <div
       style={{
         gridColumn: span === "auto" ? "auto" : `span ${span}`,
-        background: tint || "hsl(var(--card))",
+        background: tint || "color-mix(in srgb, var(--text) 10%, var(--bg))",
         borderRadius: radius,
         padding,
-        border: "0.5px solid hsl(var(--border))",
+        border: "0.5px solid color-mix(in srgb, var(--text) 20%, transparent)",
         display: "flex",
         flexDirection: "column",
         position: "relative",
@@ -73,7 +73,7 @@ export default function BentoBlog() {
               fontSize: 10.5,
               letterSpacing: "0.16em",
               textTransform: "uppercase",
-              color: "hsl(var(--accent-foreground))",
+              color: "var(--text)",
               marginBottom: 12,
             }}
           >
@@ -99,7 +99,7 @@ export default function BentoBlog() {
                 flex: 1,
                 padding: "8px 12px",
                 borderRadius: 10,
-                background: "hsl(var(--border))",
+                background: "color-mix(in srgb, var(--text) 20%, transparent)",
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
@@ -113,8 +113,8 @@ export default function BentoBlog() {
               style={{
                 padding: "8px 12px",
                 borderRadius: 10,
-                background: "hsl(var(--accent))",
-                color: "hsl(var(--accent-foreground))",
+                background: "var(--accent)",
+                color: "var(--text)",
                 display: "flex",
                 alignItems: "center",
                 gap: 6,
@@ -133,9 +133,9 @@ export default function BentoBlog() {
           <BentoCard
             span={7}
             padding={0}
-            tint="hsl(var(--primary))"
+            tint="var(--primary)"
             style={{
-              color: "hsl(var(--primary-foreground))",
+              color: "var(--bg)",
               overflow: "hidden",
               display: "flex",
               flexDirection: "row",
@@ -194,8 +194,8 @@ export default function BentoBlog() {
                     display: "inline-flex",
                     alignItems: "center",
                     gap: 8,
-                    background: "hsl(var(--background))",
-                    color: "hsl(var(--primary))",
+                    background: "var(--bg)",
+                    color: "var(--primary)",
                     padding: "10px 18px",
                     borderRadius: 10,
                     fontSize: 12,
@@ -238,7 +238,7 @@ export default function BentoBlog() {
                 key={p.id}
                 span={span}
                 padding={isBig ? 24 : 18}
-                style={i % 5 === 2 ? { background: "hsl(var(--muted))" } : {}}
+                style={i % 5 === 2 ? { background: "color-mix(in srgb, var(--text) 10%, transparent)" } : {}}
               >
                 <div
                   style={{
@@ -286,7 +286,7 @@ export default function BentoBlog() {
                       style={{
                         padding: "2px 8px",
                         borderRadius: 6,
-                        background: "hsl(var(--border))",
+                        background: "color-mix(in srgb, var(--text) 20%, transparent)",
                         fontSize: 10,
                       }}
                     >

@@ -15,7 +15,7 @@ export function FloatingDock() {
 
   return (
     <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
-      <div className="flex items-center gap-1 rounded-[28px] border border-border/40 bg-background/80 px-3 py-2.5 shadow-2xl backdrop-blur-xl">
+      <div className="flex items-center gap-1 rounded-[28px] border border-[var(--text)]/20 bg-[var(--bg)]/80 px-3 py-2.5 shadow-2xl backdrop-blur-xl">
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
           const active = location === href;
           return (
@@ -24,8 +24,8 @@ export function FloatingDock() {
                 className={cn(
                   "flex flex-col items-center gap-1 rounded-[18px] px-3.5 py-2 text-[10.5px] font-semibold tracking-wide transition-colors",
                   active
-                    ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "bg-primary text-[var(--bg)]"
+                    : "text-[var(--text)]/40 hover:text-[var(--text)]"
                 )}
               >
                 <Icon size={18} strokeWidth={1.7} />

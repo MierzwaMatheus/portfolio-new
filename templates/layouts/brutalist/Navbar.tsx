@@ -12,9 +12,9 @@ export function Navbar() {
   return (
     <nav
       style={{ fontFamily: "var(--font-mono, monospace)" }}
-      className="border-b-2 border-foreground bg-background text-foreground"
+      className="border-b-2 border-[var(--text)] bg-[var(--bg)] text-[var(--text)]"
     >
-      <div className="flex items-center px-4 py-2 border-b border-foreground text-xs gap-4">
+      <div className="flex items-center px-4 py-2 border-b border-[var(--text)] text-xs gap-4">
         <span className="opacity-70">[●][○][○]</span>
         <span className="flex-1 text-xs">rubrica:~/portfolio</span>
         <span className="opacity-50">tty1 · 80x40</span>
@@ -34,10 +34,10 @@ function NavTab({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-2 px-5 py-2.5 border-r border-foreground no-underline transition-colors"
+      className="flex items-center gap-2 px-5 py-2.5 border-r border-[var(--text)] no-underline transition-colors"
       style={{
-        background: active ? "var(--foreground)" : "transparent",
-        color: active ? "var(--background)" : "var(--foreground)",
+        background: active ? "var(--text)" : "transparent",
+        color: active ? "var(--bg)" : "var(--text)",
         fontWeight: active ? 700 : 400,
       }}
     >
