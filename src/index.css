@@ -69,20 +69,17 @@
   --popover: 0 0% 4%;
   --popover-foreground: 0 0% 90%;
   
-  /* Violet 500: #8b5cf6 -> 263 90% 66% */
-  --primary: 263 90% 66%;
   --primary-foreground: 0 0% 100%;
-  
+
   /* Gray 800: #1f2937 -> 215 28% 17% */
   --secondary: 215 28% 17%;
   --secondary-foreground: 0 0% 90%;
-  
+
   /* Neutral 900: #171717 -> 0 0% 9% */
   --muted: 0 0% 9%;
   /* Neutral 400: #a3a3a3 -> 0 0% 64% */
   --muted-foreground: 0 0% 64%;
-  
-  --accent: 0 0% 9%;
+
   --accent-foreground: 0 0% 90%;
   
   /* #ef4444 -> 0 84% 60% */
@@ -118,13 +115,11 @@
   --card-foreground: 0 0% 90%;
   --popover: 0 0% 4%;
   --popover-foreground: 0 0% 90%;
-  --primary: 263 90% 66%;
   --primary-foreground: 0 0% 100%;
   --secondary: 215 28% 17%;
   --secondary-foreground: 0 0% 90%;
   --muted: 0 0% 9%;
   --muted-foreground: 0 0% 64%;
-  --accent: 0 0% 9%;
   --accent-foreground: 0 0% 90%;
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 100%;
