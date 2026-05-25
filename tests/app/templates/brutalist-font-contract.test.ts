@@ -18,6 +18,26 @@ describe("brutalist template — contrato de fonte CSS", () => {
   });
 });
 
+describe("brutalist Layout — footer sem link hardcoded", () => {
+  it("Layout.tsx não contém link do repositório rubrica", () => {
+    const src = readFileSync(
+      resolve(root, "templates/layouts/brutalist/Layout.tsx"),
+      "utf8"
+    );
+    expect(src).not.toContain("github.com/rubrica-app/rubrica");
+  });
+});
+
+describe("PublicRoute — sem duplo Layout", () => {
+  it("PublicRoute.tsx não envolve children em <Layout>", () => {
+    const src = readFileSync(
+      resolve(root, "src/components/PublicRoute.tsx"),
+      "utf8"
+    );
+    expect(src).not.toContain("<Layout>");
+  });
+});
+
 describe("brutalist Home — banner dinâmico", () => {
   it("Home.tsx não contém MATHEUS hardcoded", () => {
     const src = readFileSync(

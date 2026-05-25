@@ -18,7 +18,7 @@ export function Layout({ children, className }: LayoutProps) {
       </main>
       <footer className="border-t-2 border-[var(--text)] px-4 py-2.5 flex justify-between text-xs opacity-65">
         <span>UTF-8 · LF · monospace</span>
-        <span>github.com/rubrica-app/rubrica</span>
+        <span />
         <span>v1.0.0 · MIT</span>
       </footer>
     </div>
