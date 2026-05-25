@@ -265,6 +265,47 @@ export async function runSetup(deps: RunSetupDeps = {}): Promise<void> {
     // não crítico — textos podem ser populados manualmente
   }
 
+  // Seed de identidade no Convex (siteConfig + contactInfo) a partir do rubrica.json
+  const identity = state.identity as Record<string, string> | undefined;
+  if (identity?.siteName) {
+    try {
+      execFileSync(
+        "npx",
+        ["convex", "run", "siteConfig:setBatch", JSON.stringify({
+          items: [
+            { key: "site_title", value: identity.siteName },
+            { key: "site_name", value: identity.siteName },
+            { key: "site_url", value: identity.siteUrl || "" },
+            { key: "site_description", value: identity.siteDescription || "" },
+            { key: "author_name", value: identity.authorName || "" },
+            { key: "author_email", value: identity.authorEmail || "" },
+            { key: "twitter_handle", value: identity.twitterHandle || "" },
+            { key: "lang", value: identity.lang || "pt-BR" },
+          ],
+        })],
+        { stdio: "pipe" }
+      );
+    } catch {
+      // não crítico — configurável pelo admin
+    }
+
+    if (identity.authorName) {
+      try {
+        execFileSync(
+          "npx",
+          ["convex", "run", "contactInfo:update", JSON.stringify({
+            name: identity.authorName,
+            email: identity.authorEmail || "",
+            showEmail: false,
+          })],
+          { stdio: "pipe" }
+        );
+      } catch {
+        // não crítico
+      }
+    }
+  }
+
   // 13. Vercel — sempre presentes (opcionais)
   const vercelHookUrl = await text({
     message: "VERCEL_DEPLOY_HOOK_URL (Enter para pular):",

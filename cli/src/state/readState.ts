@@ -7,6 +7,16 @@ export interface FsModule {
   mkdir: (path: string, options: { recursive: boolean }) => Promise<void>;
 }
 
+export type RubricaIdentity = {
+  siteName: string;
+  siteUrl: string;
+  siteDescription: string;
+  authorName: string;
+  authorEmail: string;
+  twitterHandle: string;
+  lang: string;
+};
+
 export type RubricaState = {
   version: string;
   layout: "cyberpunk" | "brutalist" | "swiss" | "bento";
@@ -14,6 +24,7 @@ export type RubricaState = {
   fontSans: string;
   fontMono: string;
   plugins: Record<string, boolean>;
+  identity?: RubricaIdentity;
   [key: string]: unknown;
 };
 

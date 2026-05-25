@@ -279,6 +279,15 @@ export async function runCreate(
       fontSans,
       fontMono,
       plugins: pluginsRecord,
+      identity: {
+        siteName: identity.siteName,
+        siteUrl: identity.siteUrl,
+        siteDescription: identity.siteDescription,
+        authorName: identity.authorName,
+        authorEmail: identity.authorEmail,
+        twitterHandle: identity.twitterHandle,
+        lang: identity.lang,
+      },
     },
     fs as Parameters<typeof defaultWriteState>[2]
   );

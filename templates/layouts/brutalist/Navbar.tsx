@@ -1,12 +1,14 @@
 import { Link, useRoute } from "wouter";
+import { usePlugin } from "@/contexts/PluginsContext";
+import type { PluginId } from "../../../convex/pluginRegistry";
 
-const NAV_ITEMS = [
-  { href: "/", label: "início" },
-  { href: "/curriculo", label: "currículo" },
-  { href: "/portfolio", label: "portfólio" },
-  { href: "/sobre", label: "sobre-mim" },
-  { href: "/blog", label: "blog" },
-] as const;
+const NAV_ITEMS: Array<{ href: string; label: string; pluginId: PluginId | null }> = [
+  { href: "/", label: "início", pluginId: null },
+  { href: "/curriculo", label: "currículo", pluginId: "resume" },
+  { href: "/portfolio", label: "portfólio", pluginId: "portfolio" },
+  { href: "/sobre", label: "sobre-mim", pluginId: "about" },
+  { href: "/blog", label: "blog", pluginId: "blog" },
+];
 
 export function Navbar() {
   return (
@@ -21,7 +23,7 @@ export function Navbar() {
       </div>
       <div className="flex text-xs overflow-x-auto">
         {NAV_ITEMS.map((item) => (
-          <NavTab key={item.href} href={item.href} label={item.label} />
+          <NavTab key={item.href} href={item.href} label={item.label} pluginId={item.pluginId} />
         ))}
         <div className="flex-1" />
       </div>
@@ -29,8 +31,13 @@ export function Navbar() {
   );
 }
 
-function NavTab({ href, label }: { href: string; label: string }) {
+function NavTab({ href, label, pluginId }: { href: string; label: string; pluginId: PluginId | null }) {
+  const resolved = (pluginId ?? "blog") as PluginId;
+  const enabled = usePlugin(resolved);
   const [active] = useRoute(href === "/" ? "/" : `${href}*`);
+
+  if (pluginId !== null && !enabled) return null;
+
   return (
     <Link
       href={href}

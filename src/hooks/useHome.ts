@@ -132,5 +132,6 @@ export function useHome(repository: HomeRepository) {
     availability,
     contactWizardEnabled,
     isLoading,
+    contactInfo: contactInfo ?? null,
   };
 }

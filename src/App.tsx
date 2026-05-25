@@ -20,6 +20,7 @@ import AdminAbout from "./pages/admin/About";
 import AdminAiResumes from "./pages/admin/AiResumes";
 import AdminLogs from "./pages/admin/Logs";
 import { AuthProvider } from "./contexts/AuthContext";
+import { ThemeApplier } from "./components/ThemeApplier";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { I18nProvider } from "./i18n/context/I18nContext";
 import Resume from "./pages/Resume";
@@ -390,6 +391,7 @@ function App() {
       <ErrorBoundary>
         <ConvexClientProvider>
           <QueryProvider>
+            <ThemeApplier />
             <AuthProvider>
               <I18nProvider translationService={translationService}>
                 <ThemeProvider defaultTheme="dark">

@@ -1,6 +1,8 @@
 import { useHome } from "@/hooks/useHome";
 import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { homeRepository } from "@/repositories/instances";
+import { useState, useEffect } from "react";
+import figlet from "figlet";
 
 function AsciiRule({ char = "─", label }: { char?: string; label?: string }) {
   return (
@@ -68,9 +70,60 @@ function BrutPrompt({
   );
 }
 
+function AsciiBanner({ name }: { name: string }) {
+  const [art, setArt] = useState<string>("");
+
+  useEffect(() => {
+    if (!name) return;
+    figlet.text(
+      name.toUpperCase(),
+      { font: "Big" },
+      (_err, result) => {
+        if (result) setArt(result);
+      }
+    );
+  }, [name]);
+
+  if (!art) {
+    return (
+      <div
+        style={{
+          margin: 0,
+          color: "var(--primary)",
+          fontSize: "clamp(32px, 6vw, 72px)",
+          fontWeight: 900,
+          lineHeight: 1.05,
+          fontFamily: "var(--font-mono)",
+          letterSpacing: "0.12em",
+          textTransform: "uppercase",
+          overflow: "hidden",
+        }}
+      >
+        {name}
+      </div>
+    );
+  }
+
+  return (
+    <pre
+      style={{
+        margin: 0,
+        color: "var(--primary)",
+        fontSize: 13,
+        fontWeight: 700,
+        lineHeight: 1.05,
+        fontFamily: "var(--font-mono)",
+        overflow: "hidden",
+      }}
+    >
+      {art}
+    </pre>
+  );
+}
+
 export default function Home() {
   const { t } = useTranslation();
-  const { contactName, contactRole, aboutText, services, testimonials } =
+  const { contactName, contactRole, aboutText, services, testimonials, contactInfo } =
     useHome(homeRepository);
 
   const primaryStack = services.map((s) => s.title);
@@ -87,22 +140,7 @@ export default function Home() {
         padding: "24px 28px",
       }}
     >
-      {/* ASCII banner */}
-      <div
-        style={{
-          margin: 0,
-          color: "var(--primary)",
-          fontSize: 36,
-          fontWeight: 900,
-          lineHeight: 1.1,
-          fontFamily: "var(--font-mono)",
-          letterSpacing: "0.12em",
-          textTransform: "uppercase",
-          overflow: "hidden",
-        }}
-      >
-        {contactName}
-      </div>
+      <AsciiBanner name={contactName} />
       <div style={{ fontSize: 11, opacity: 0.6, marginTop: 6 }}>
         {`// ${contactRole}`}
       </div>
@@ -252,7 +290,27 @@ export default function Home() {
       />
 
       <div style={{ marginTop: 16 }}>
-        <BrutPrompt cmd="echo $CONTACT" />
+        <BrutPrompt
+          cmd="echo $CONTACT"
+          output={
+            contactInfo && (contactInfo.show_email || contactInfo.show_phone) ? (
+              <div style={{ display: "flex", gap: 20, marginTop: 4, fontSize: 12 }}>
+                {contactInfo.show_email && contactInfo.email && (
+                  <span>
+                    <span style={{ color: "var(--accent)" }}>email=</span>
+                    {contactInfo.email}
+                  </span>
+                )}
+                {contactInfo.show_phone && contactInfo.phone && (
+                  <span>
+                    <span style={{ color: "var(--accent)" }}>phone=</span>
+                    {contactInfo.phone}
+                  </span>
+                )}
+              </div>
+            ) : undefined
+          }
+        />
         <div style={{ marginTop: 8, opacity: 0.5, fontSize: 12 }}>
           <span style={{ color: "var(--accent)" }}>user@rubrica</span>
           <span>:~$ </span>
