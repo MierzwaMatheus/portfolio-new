@@ -8,14 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { useLocation } from "wouter";
 import { toast } from "sonner";
 import { DEFAULT_RESCISION_POLICY } from "@/constants/rescisionPolicy";
 import ReactMarkdown from "react-markdown";
 import { ContractModal } from "@/components/ContractModal";
-import { generatePaymentMethods } from "@/utils/contractGenerator";
+import { generatePaymentMethods, applyProposalToTemplate, resolveTemplateContent } from "@/utils/contractGenerator";
 import { printContractPDF } from "@/utils/contractPDF";
 
 // Build a snake_case adapter so existing utils (contractGenerator, ContractModal) still work
@@ -68,6 +68,14 @@ export default function Proposal() {
   const isLoading = queryResult === undefined;
   const rawProposal: any = queryResult ?? null;
 
+  const snapshotTemplateOnView = useMutation(api.proposals.snapshotTemplateOnView);
+
+  useEffect(() => {
+    if (rawProposal && !rawProposal.templateSnapshot && slug) {
+      snapshotTemplateOnView({ slug });
+    }
+  }, [rawProposal?._id, rawProposal?.templateSnapshot]);
+
   // requiresPassword and gating
   const requiresPassword = !!rawProposal?.requiresPassword;
   const hasValidSession = !!rawProposal?.hasValidSession;
@@ -81,6 +89,8 @@ export default function Proposal() {
     rawProposal?.isAccepted && slug && sessionToken ? { slug, token: sessionToken } : "skip" as any
   ) ?? null;
   const contactInfo = useQuery(api.contactInfo.get);
+
+  const defaultTemplate = useQuery(api.contractTemplates.getDefault);
 
   const acceptanceData: any = useMemo(() => {
     if (!acceptanceDataRaw) return null;
@@ -149,7 +159,11 @@ export default function Proposal() {
     if (!proposal || !acceptanceData) return;
     try {
       const signatureUrl = acceptanceDataRaw?.signatureUrl ?? "";
-      await printContractPDF(proposal, acceptanceData, signatureUrl, contactInfo ?? undefined);
+      const rawContent = resolveTemplateContent(rawProposal, defaultTemplate);
+      const templateContent = rawContent
+        ? applyProposalToTemplate(rawContent, proposal, acceptanceData)
+        : undefined;
+      await printContractPDF(proposal, acceptanceData, signatureUrl, contactInfo ?? undefined, templateContent);
     } catch (error: any) {
       console.error("Error generating PDF:", error);
       toast.error(error.message || "Erro ao gerar PDF");
@@ -302,17 +316,21 @@ export default function Proposal() {
                   <span className="w-1 h-8 bg-neon-purple rounded-full" />
                   Apresentação
                 </h2>
-                <div className="text-lg text-gray-300 leading-relaxed space-y-4">
-                  <p>Olá, tudo bem?</p>
-                  <p>
-                  Antes de tudo, agradeço o interesse! Sou Matheus Mierzwa, Arquiteto de Soluções Digitais e Tech Lead Frontend com mais de 4 anos de experiência transformando desafios complexos em ecossistemas digitais robustos.
-                  </p>
-                  <p>
-                  Minha expertise vai além de código. Desenho arquiteturas escaláveis,lidero equipes técnicas, defino padrões de excelência e conduzo decisões estratégicas que impactam produtos inteiros. Especializado em React, TypeScript, infraestrutura moderna e integração inteligente de IA.
-                  </p>
-                  <p>
-                  Meu objetivo é simples: transformar sua visão em uma solução que seja simultaneamente elegante, escalável e inteligente. Vamos onversar sobre como isso pode funcionar no seu projeto?
-                  </p>
+                <div className="text-lg text-gray-300 leading-relaxed space-y-4 whitespace-pre-line">
+                  {contactInfo?.proposalIntro || (
+                    <>
+                      <p>Olá, tudo bem?</p>
+                      <p>
+                        Antes de tudo, agradeço o interesse! Estamos aqui para transformar sua visão em uma solução elegante, escalável e inteligente.
+                      </p>
+                      <p>
+                        Nossa expertise vai além de código — desenhamos arquiteturas escaláveis, definimos padrões de excelência e conduzimos decisões estratégicas que impactam produtos inteiros.
+                      </p>
+                      <p>
+                        Vamos conversar sobre como isso pode funcionar no seu projeto?
+                      </p>
+                    </>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -510,7 +528,7 @@ export default function Proposal() {
 
           <motion.footer variants={itemVariants} className="text-center border-t border-white/10 pt-8 pb-4">
             <p className="text-gray-500 text-sm">
-              © 2025 Matheus Mierzwa. Todos os direitos reservados.
+              © {new Date().getFullYear()} {contactInfo?.name}. Todos os direitos reservados.
             </p>
             <p className="text-gray-600 text-xs mt-2">
               Esta proposta é confidencial e destinada apenas ao cliente especificado.
@@ -542,7 +560,11 @@ export default function Proposal() {
   async function handleDigitalSignature(signatureDataUrl: string) {
     if (!proposal || !acceptanceData) return;
     try {
-      await printContractPDF(proposal, acceptanceData, signatureDataUrl, contactInfo ?? undefined);
+      const rawContent = resolveTemplateContent(rawProposal, defaultTemplate);
+      const templateContent = rawContent
+        ? applyProposalToTemplate(rawContent, proposal, acceptanceData)
+        : undefined;
+      await printContractPDF(proposal, acceptanceData, signatureDataUrl, contactInfo ?? undefined, templateContent);
       toast.success("PDF do contrato gerado com sucesso!");
     } catch (error: any) {
       console.error("Error generating PDF:", error);

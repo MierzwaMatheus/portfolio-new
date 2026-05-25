@@ -36,6 +36,9 @@ export default function AdminHome() {
 
   const { translateFields, isTranslating } = useTranslateContent();
   const [aboutText, setAboutText] = useState("");
+  const [heroTags, setHeroTags] = useState<Array<{ label: string; color: string }>>([]);
+  const [newTagLabel, setNewTagLabel] = useState("");
+  const [newTagColor, setNewTagColor] = useState<"primary" | "secondary">("primary");
   const [availabilityEnabled, setAvailabilityEnabled] = useState(false);
   const [availabilityLabelPT, setAvailabilityLabelPT] = useState("");
   const [availabilityLabelEN, setAvailabilityLabelEN] = useState("");
@@ -53,6 +56,11 @@ export default function AdminHome() {
         } else {
           setAboutText(typeof value === "string" ? value : "");
         }
+      }
+
+      const heroTagsEntry = homeContentList.find((c: any) => c.key === "hero_tags");
+      if (heroTagsEntry && Array.isArray(heroTagsEntry.value)) {
+        setHeroTags(heroTagsEntry.value);
       }
 
       const availabilityEntry = homeContentList.find((c: any) => c.key === "availability_status");
@@ -154,6 +162,26 @@ export default function AdminHome() {
     }
   };
 
+  const handleAddTag = () => {
+    const label = newTagLabel.trim();
+    if (!label) return;
+    setHeroTags(prev => [...prev, { label, color: newTagColor }]);
+    setNewTagLabel("");
+  };
+
+  const handleRemoveTag = (index: number) => {
+    setHeroTags(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSaveHeroTags = async () => {
+    try {
+      await setHomeContent({ key: "hero_tags", value: heroTags });
+      toast.success("Tags salvas com sucesso!");
+    } catch (error) {
+      toast.error("Erro ao salvar tags.");
+    }
+  };
+
   const handleSaveAvailability = async () => {
     try {
       await setHomeContent({
@@ -216,6 +244,60 @@ export default function AdminHome() {
                 <div className="flex justify-end">
                   <Button onClick={handleSaveAbout} disabled={isTranslating} className="bg-neon-purple hover:bg-neon-purple/90 text-white">
                     {isTranslating ? 'Traduzindo...' : 'Salvar'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="bg-card border-white/10">
+              <CardHeader>
+                <CardTitle className="text-white">Tags da Hero Section</CardTitle>
+                <p className="text-gray-400 text-sm">Especialidades exibidas na seção principal da home</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex flex-wrap gap-2">
+                  {heroTags.map((tag, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10"
+                    >
+                      <span className={`w-2 h-2 rounded-full ${tag.color === "secondary" ? "bg-neon-purple" : "bg-neon-lime"}`} />
+                      <span className="text-sm text-gray-200">{tag.label}</span>
+                      <button
+                        onClick={() => handleRemoveTag(i)}
+                        className="text-gray-500 hover:text-red-400 transition-colors ml-1"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  {heroTags.length === 0 && (
+                    <p className="text-gray-500 text-sm">Nenhuma tag adicionada.</p>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Input
+                    value={newTagLabel}
+                    onChange={(e) => setNewTagLabel(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleAddTag()}
+                    placeholder="Ex: Design Gráfico, React, Fotografia..."
+                    className="bg-white/5 border-white/10 text-white flex-1"
+                  />
+                  <select
+                    value={newTagColor}
+                    onChange={(e) => setNewTagColor(e.target.value as "primary" | "secondary")}
+                    className="bg-white/5 border border-white/10 text-white rounded-md px-3 text-sm"
+                  >
+                    <option value="primary">Verde</option>
+                    <option value="secondary">Roxo</option>
+                  </select>
+                  <Button onClick={handleAddTag} variant="outline" className="border-white/10 hover:bg-white/5 text-white">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex justify-end">
+                  <Button onClick={handleSaveHeroTags} className="bg-neon-purple hover:bg-neon-purple/90 text-white">
+                    Salvar Tags
                   </Button>
                 </div>
               </CardContent>
