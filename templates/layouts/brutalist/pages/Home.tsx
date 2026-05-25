@@ -3,6 +3,9 @@ import { useTranslation } from "@/i18n/hooks/useTranslation";
 import { homeRepository } from "@/repositories/instances";
 import { useState, useEffect } from "react";
 import figlet from "figlet";
+// @ts-ignore — importable font bundle
+import BigFont from "figlet/importable-fonts/Big.js";
+figlet.parseFont("Big", BigFont);
 
 function AsciiRule({ char = "─", label }: { char?: string; label?: string }) {
   return (
