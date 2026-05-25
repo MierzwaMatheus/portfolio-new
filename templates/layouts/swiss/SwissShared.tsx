@@ -21,7 +21,7 @@ export function SwissNav() {
         gridTemplateColumns: "repeat(5, 1fr)",
         borderTop: "2px solid var(--text)",
         borderBottom: "2px solid var(--text)",
-        fontFamily: "var(--swiss-font)",
+        fontFamily: "var(--font-sans)",
       }}
     >
       {NAV_ITEMS.map((it, i) => {
@@ -80,7 +80,7 @@ export function SwissCorners({ page, idx, total = 5 }: { page: string; idx: numb
           position: "absolute",
           top: 14,
           left: 18,
-          fontFamily: "var(--swiss-font)",
+          fontFamily: "var(--font-sans)",
           fontSize: 10,
           fontWeight: 800,
           letterSpacing: "0.02em",
@@ -106,7 +106,7 @@ export function SwissCorners({ page, idx, total = 5 }: { page: string; idx: numb
           position: "absolute",
           top: 14,
           right: 18,
-          fontFamily: "var(--swiss-font)",
+          fontFamily: "var(--font-sans)",
           fontSize: 10,
           fontWeight: 700,
           letterSpacing: "0.02em",
@@ -145,7 +145,7 @@ export function SwissMasthead() {
       <div style={{ gridColumn: "span 2" }}>
         <div
           style={{
-            fontFamily: "var(--swiss-font)",
+            fontFamily: "var(--font-sans)",
             fontSize: 11,
             fontWeight: 400,
             letterSpacing: "0.06em",
@@ -158,7 +158,7 @@ export function SwissMasthead() {
         </div>
         <div
           style={{
-            fontFamily: "var(--swiss-font)",
+            fontFamily: "var(--font-sans)",
             fontSize: 56,
             fontWeight: 900,
             letterSpacing: "-0.04em",
@@ -180,7 +180,7 @@ export function SwissMasthead() {
       <div style={{ gridColumn: "span 2", textAlign: "right" }}>
         <div
           style={{
-            fontFamily: "var(--swiss-font)",
+            fontFamily: "var(--font-sans)",
             fontSize: 11,
             fontWeight: 400,
             letterSpacing: "0.06em",
@@ -193,7 +193,7 @@ export function SwissMasthead() {
         </div>
         <div
           style={{
-            fontFamily: "var(--swiss-font)",
+            fontFamily: "var(--font-sans)",
             fontSize: 18,
             fontWeight: 600,
             letterSpacing: "-0.01em",
@@ -218,7 +218,7 @@ export function SwissFooter() {
         display: "grid",
         gridTemplateColumns: "repeat(4, 1fr)",
         gap: 12,
-        fontFamily: "var(--swiss-font)",
+        fontFamily: "var(--font-sans)",
         fontSize: 10.5,
         fontWeight: 500,
         textTransform: "uppercase",
@@ -274,7 +274,7 @@ export function SwissShell({
       style={{
         background: "var(--bg)",
         color: "var(--text)",
-        fontFamily: "var(--swiss-font)",
+        fontFamily: "var(--font-sans)",
         position: "relative",
         minHeight: "100%",
       }}
