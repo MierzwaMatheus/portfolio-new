@@ -23,10 +23,10 @@ function BentoCard({
     <div
       style={{
         gridColumn: span === "auto" ? "auto" : `span ${span}`,
-        background: tint || "var(--bento-card, color-mix(in srgb, var(--text) 10%, var(--bg)))",
+        background: tint || "color-mix(in srgb, var(--text) 10%, var(--bg))",
         borderRadius: radius,
         padding,
-        border: "0.5px solid var(--bento-border, color-mix(in srgb, var(--text) 20%, transparent))",
+        border: "0.5px solid color-mix(in srgb, var(--text) 20%, transparent)",
         display: "flex",
         flexDirection: "column",
         position: "relative",
