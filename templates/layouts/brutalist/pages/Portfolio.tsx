@@ -10,7 +10,7 @@ function AsciiRule({ char = "─", label }: { char?: string; label?: string }) {
         alignItems: "center",
         gap: 8,
         margin: "14px 0",
-        fontFamily: "var(--brut-mono)",
+        fontFamily: "var(--font-mono)",
         fontSize: 11,
         opacity: 0.7,
         color: "var(--text)",
@@ -52,7 +52,7 @@ function BrutPrompt({
   return (
     <div
       style={{
-        fontFamily: "var(--brut-mono)",
+        fontFamily: "var(--font-mono)",
         fontSize: 13,
         lineHeight: 1.55,
         whiteSpace: "pre-wrap",
@@ -87,7 +87,7 @@ export default function Portfolio() {
         minHeight: "100%",
         background: "var(--bg)",
         color: "var(--text)",
-        fontFamily: "var(--brut-mono)",
+        fontFamily: "var(--font-mono)",
         fontSize: 13,
         lineHeight: 1.55,
         padding: "24px 28px",
@@ -235,7 +235,7 @@ export default function Portfolio() {
               >
                 {p.description}
               </p>
-              <div style={{ fontSize: 11.5, fontFamily: "var(--brut-mono)" }}>
+              <div style={{ fontSize: 11.5, fontFamily: "var(--font-mono)" }}>
                 <span style={{ color: "var(--accent)" }}>stack=</span>
                 <span style={{ opacity: 0.5 }}>[</span>
                 {p.tags.map((t, j) => (

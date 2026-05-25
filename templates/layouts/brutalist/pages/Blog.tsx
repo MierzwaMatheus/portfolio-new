@@ -9,7 +9,7 @@ function AsciiRule({ char = "─", label }: { char?: string; label?: string }) {
         alignItems: "center",
         gap: 8,
         margin: "14px 0",
-        fontFamily: "var(--brut-mono)",
+        fontFamily: "var(--font-mono)",
         fontSize: 11,
         opacity: 0.7,
         color: "var(--text)",
@@ -51,7 +51,7 @@ function BrutPrompt({
   return (
     <div
       style={{
-        fontFamily: "var(--brut-mono)",
+        fontFamily: "var(--font-mono)",
         fontSize: 13,
         lineHeight: 1.55,
         whiteSpace: "pre-wrap",
@@ -81,7 +81,7 @@ export default function Blog() {
         minHeight: "100%",
         background: "var(--bg)",
         color: "var(--text)",
-        fontFamily: "var(--brut-mono)",
+        fontFamily: "var(--font-mono)",
         fontSize: 13,
         lineHeight: 1.55,
         padding: "24px 28px",

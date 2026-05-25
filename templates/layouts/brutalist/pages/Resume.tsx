@@ -9,7 +9,7 @@ function AsciiRule({ char = "─", label }: { char?: string; label?: string }) {
         alignItems: "center",
         gap: 8,
         margin: "14px 0",
-        fontFamily: "var(--brut-mono)",
+        fontFamily: "var(--font-mono)",
         fontSize: 11,
         opacity: 0.7,
         color: "var(--text)",
@@ -51,7 +51,7 @@ function BrutPrompt({
   return (
     <div
       style={{
-        fontFamily: "var(--brut-mono)",
+        fontFamily: "var(--font-mono)",
         fontSize: 13,
         lineHeight: 1.55,
         whiteSpace: "pre-wrap",
@@ -70,7 +70,7 @@ function BrutPrompt({
 function AsciiBar({ value, width = 24 }: { value: number; width?: number }) {
   const filled = Math.round((value / 100) * width);
   return (
-    <span style={{ fontFamily: "var(--brut-mono)" }}>
+    <span style={{ fontFamily: "var(--font-mono)" }}>
       <span style={{ color: "var(--primary)" }}>{"█".repeat(filled)}</span>
       <span style={{ opacity: 0.25 }}>{"░".repeat(width - filled)}</span>
     </span>
@@ -94,7 +94,7 @@ export default function Resume() {
         minHeight: "100%",
         background: "var(--bg)",
         color: "var(--text)",
-        fontFamily: "var(--brut-mono)",
+        fontFamily: "var(--font-mono)",
         fontSize: 13,
         lineHeight: 1.55,
         padding: "24px 28px",
