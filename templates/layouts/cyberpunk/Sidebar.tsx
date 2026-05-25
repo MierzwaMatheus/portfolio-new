@@ -133,7 +133,7 @@ const NAV_ITEMS = NAV_ITEMS_KEYS
 
           <div className="w-full rounded-lg bg-[var(--text)]/5 border border-[var(--text)]/5 flex items-center justify-center px-4 py-3 backdrop-blur-sm">
             <div className="text-xs text-center text-[var(--text)]/40 w-full">
-              <div className="font-mono text-[var(--accent)]/70 mb-1">
+              <div className="font-[family-name:var(--font-mono)] text-[var(--accent)]/70 mb-1">
                 &lt;code&gt;
               </div>
               {isLoading ? (
@@ -148,7 +148,7 @@ const NAV_ITEMS = NAV_ITEMS_KEYS
                   </div>
                 </>
               )}
-              <div className="font-mono text-[var(--accent)]/70 mt-1">
+              <div className="font-[family-name:var(--font-mono)] text-[var(--accent)]/70 mt-1">
                 &lt;/code&gt;
               </div>
             </div>
@@ -305,7 +305,7 @@ const NAV_ITEMS = NAV_ITEMS_KEYS
           {wizardEnabled && (
             <Button
               onClick={() => openWizard({ sourceContext: "sidebar" })}
-              className="w-full bg-[var(--primary)]/20 hover:bg-[var(--primary)]/30 border border-[var(--primary)]/50 text-[var(--primary)] h-9 text-xs font-mono uppercase tracking-wider mb-2"
+              className="w-full bg-[var(--primary)]/20 hover:bg-[var(--primary)]/30 border border-[var(--primary)]/50 text-[var(--primary)] h-9 text-xs font-[family-name:var(--font-mono)] uppercase tracking-wider mb-2"
             >
               <MessageSquare className="mr-2 h-3 w-3" />
               {t("contactWizard.trigger")}
@@ -322,7 +322,7 @@ const NAV_ITEMS = NAV_ITEMS_KEYS
             {t("sidebar.downloadCV")}
           </Button>
 
-          <p className="text-center text-[10px] text-[var(--text)]/20 font-mono mt-1">
+          <p className="text-center text-[10px] text-[var(--text)]/20 font-[family-name:var(--font-mono)] mt-1">
             Press <kbd className="px-1 py-0.5 rounded bg-[var(--text)]/10 text-[var(--text)]/40">~</kbd> for terminal
           </p>
         </div>
